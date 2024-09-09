@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env bash
 source .env.dev
 generate-api-crate () {
     rm -rf "$PWD"/"$1"
