@@ -1,0 +1,19 @@
+[package]
+name = "queue-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.7"
+axum-extra = { version = "0.9", features = [ "typed-header" ] }
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = [ "derive" ] }
+serde_json = "1.0"
+tower = "0.5.1"
+tower-http = { version = "0.5.0", features = ["add-extension", "trace", "fs"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1.0", features = ["serde", "v4"] }
+reqwest = "0.12.5"
+anyhow = "1.0"
+thiserror = "1.0.63"
