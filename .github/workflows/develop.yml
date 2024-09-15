@@ -11,6 +11,6 @@ jobs:
   test-queue-app:
     uses: ./.github/workflows/_test-queue-app.yml
 
-  verify-judge-control-app:
+  test-judge-control-app:
     uses: ./.github/workflows/_test-judge-control-app.yml
     
