@@ -1,0 +1,16 @@
+name: CI (develop)
+
+on:
+    push:
+      branches: [ "develop" ]
+    pull_request:
+      branches: [ "develop" ]  
+
+jobs:
+
+  test-queue-app:
+    uses: ./.github/workflows/_test-queue-app.yml
+
+  test-judge-control-app:
+    uses: ./.github/workflows/_test-judge-control-app.yml
+    
