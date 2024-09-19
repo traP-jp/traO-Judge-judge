@@ -1,6 +1,7 @@
 ## 関連Issue
 
 - close `#{Issue_id}`
+(- related `#{Issue_id}`)
 
 ## 概要
 
