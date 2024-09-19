@@ -1,4 +1,4 @@
-name: _test-judge-control-app
+name: _test-judge-control-app-release
 
 on:
   workflow_call:
@@ -35,6 +35,6 @@ jobs:
     - name: Run test
       run: cargo test --verbose
     - name: Lint with clippy
-      run: cargo clippy --all-targets --all-features -- -A dead_code
+      run: cargo clippy --all-targets --all-features
     - name: Check formatting
       run: cargo fmt --all --check

@@ -35,6 +35,6 @@ jobs:
     - name: Run test
       run: cargo test --verbose
     - name: Lint with clippy
-      run: cargo clippy --all-targets --all-features
+      run: cargo clippy --all-targets --all-features -- -A dead_code
     - name: Check formatting
       run: cargo fmt --all --check
