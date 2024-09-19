@@ -1,4 +1,4 @@
-name: _test-queue-app
+name: _test-queue-app-release
 
 on:
   workflow_call:
