@@ -1,6 +1,6 @@
 #![allow(drop_bounds)]
-use std::path::PathBuf;
 use anyhow::Result;
+use std::path::PathBuf;
 use uuid::Uuid;
 
 pub trait File: Sized + Drop {
@@ -15,5 +15,9 @@ pub trait FileLink: File {}
 
 pub trait FileFactory: Sized {
     fn new(path: PathBuf) -> Result<Self>;
-    fn get_file_entity<FileType: File>(&self, uuid: Uuid, args: FileType::InitArgs) -> Result<FileType>;
+    fn get_file_entity<FileType: File>(
+        &self,
+        uuid: Uuid,
+        args: FileType::InitArgs,
+    ) -> Result<FileType>;
 }
