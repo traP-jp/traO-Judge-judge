@@ -1,7 +1,13 @@
-name: _test-judge-control-app
+name: _test-judge-control-app-release
 
 on:
-  workflow_call:
+  push:
+    branches:
+      - release
+      - develop
+  pull_request:
+    branches:
+      - release
 
 env:
   CARGO_TERM_COLOR: always

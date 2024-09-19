@@ -1,7 +1,13 @@
 name: _test-queue-app
 
 on:
-  workflow_call:
+  push:
+    branches:
+      - release
+      - develop
+  pull_request:
+    branches:
+      - release
 
 env:
   CARGO_TERM_COLOR: always
