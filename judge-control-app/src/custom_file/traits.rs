@@ -19,3 +19,16 @@ pub trait FileFactory: Sized {
         original: FileType,
     ) -> Result<FileType>;
 }
+
+pub enum CustomFile {
+    Directory(Directory),
+    TextFile(TextFile),
+}
+
+pub struct Directory {
+    path: PathBuf,
+}
+
+pub struct TextFile {
+    path: PathBuf,
+}
