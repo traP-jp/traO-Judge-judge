@@ -6,18 +6,11 @@ use uuid::Uuid;
 pub trait File: Sized + Drop {
     type InitArgs;
     fn new(path: PathBuf, args: Self::InitArgs) -> Result<Self>;
-    fn get_path(&self) -> PathBuf;
+    fn get_hardlink_to(&self, path: PathBuf) -> Result<Self>;
 }
-
-pub trait FileEntity: File {}
-
-pub trait FileLink: File {}
 
 pub trait FileFactory: Sized {
     fn new(path: PathBuf) -> Result<Self>;
-    fn get_file_entity<FileType: File>(
-        &self,
-        uuid: Uuid,
-        args: FileType::InitArgs,
-    ) -> Result<FileType>;
+    fn get_file<FileType: File>(&self, uuid: Uuid, args: FileType::InitArgs) -> Result<FileType>;
+    fn get_hardlink_of<FileType: File>(&self, uuid: Uuid, original: FileType) -> Result<FileType>;
 }
