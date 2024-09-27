@@ -32,3 +32,44 @@ pub struct Directory {
 pub struct TextFile {
     path: PathBuf,
 }
+
+impl File for Directory {
+    type InitArgs = todo!();
+    fn new(path: PathBuf, args: Self::InitArgs) -> Result<Self> {
+        todo!();
+    }
+    fn get_hardlink_to(&self, path: PathBuf) -> Result<Self> {
+        todo!();
+    }
+}
+
+impl File for TextFile {
+    type InitArgs = todo!();
+    fn new(path: PathBuf, args: Self::InitArgs) -> Result<Self> {
+        todo!();
+    }
+    fn get_hardlink_to(&self, path: PathBuf) -> Result<Self> {
+        todo!();
+    }
+}
+
+impl Drop for Directory {
+    fn drop(&mut self) {
+        todo!();
+    }
+}
+
+impl Drop for TextFile {
+    fn drop(&mut self) {
+        todo!();
+    }
+}
+
+impl TextFile {
+    fn read(&self) -> String {
+        todo!();
+    }
+    fn write(&self, contents: String) {
+        todo!();
+    }
+}
