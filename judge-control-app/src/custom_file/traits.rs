@@ -6,7 +6,7 @@ use uuid::Uuid;
 pub trait File: Sized + Drop {
     type InitArgs;
     fn new(path: PathBuf, args: Self::InitArgs) -> Result<Self>;
-    fn hard_link(&self, path: PathBuf) -> Result<Self>;
+    fn get_hardlink_to(&self, path: PathBuf) -> Result<Self>;
 }
 
 pub trait FileFactory: Sized {
