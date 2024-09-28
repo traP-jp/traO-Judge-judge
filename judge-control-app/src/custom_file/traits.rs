@@ -1,5 +1,5 @@
 #![allow(drop_bounds)]
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use std::path::PathBuf;
 use uuid::Uuid;
 
@@ -36,40 +36,48 @@ pub struct TextFile {
 impl File for Directory {
     type InitArgs = todo!();
     fn new(path: PathBuf, args: Self::InitArgs) -> Result<Self> {
-        todo!();
+        std::fs::create_dir_all(&path)?;
+        Ok(Directory { path })
     }
     fn get_hardlink_to(&self, path: PathBuf) -> Result<Self> {
-        todo!();
+        Err(anyhow!("hard link not allowed for directory"))
     }
 }
 
 impl File for TextFile {
     type InitArgs = todo!();
     fn new(path: PathBuf, args: Self::InitArgs) -> Result<Self> {
-        todo!();
+        std::fs::File::create(&path)?;
+        Ok(TextFile { path })
     }
     fn get_hardlink_to(&self, path: PathBuf) -> Result<Self> {
-        todo!();
+        std::fs::hard_link(&self.path, &path)?;
+        TextFile::new(path, todo!())
     }
 }
 
 impl Drop for Directory {
     fn drop(&mut self) {
-        todo!();
+        std::fs::remove_dir_all(&self.path);
     }
 }
 
 impl Drop for TextFile {
     fn drop(&mut self) {
-        todo!();
+        std::fs::remove_file(&self.path);
     }
 }
 
 impl TextFile {
-    fn read(&self) -> String {
-        todo!();
+    fn read(&self) -> Result<String> {
+        let mut f = OpenOptions::new().read(true).open(&self.path)?;
+        let mut contents = String::new();
+        f.read_to_string(&mut contents)?;
+        Ok(contents)
     }
-    fn write(&self, contents: String) {
-        todo!();
+    fn write(&self, contents: String) -> Result<()> {
+        let mut f = OpenOptions::new().write(true).open(&self.path)?;
+        f.write_all(contents.as_bytes())?;
+        Ok(())
     }
 }
