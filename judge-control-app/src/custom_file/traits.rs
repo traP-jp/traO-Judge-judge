@@ -65,13 +65,17 @@ impl File for TextFile {
 
 impl Drop for Directory {
     fn drop(&mut self) {
-        std::fs::remove_dir_all(&self.path);
+        if let Err(e) = std::fs::remove_dir_all(&self.path) {
+            eprintln!("{:?}", e);
+        }
     }
 }
 
 impl Drop for TextFile {
     fn drop(&mut self) {
-        std::fs::remove_file(&self.path);
+        if let Err(e) = std::fs::remove_file(&self.path) {
+            eprintln!("{:?}", e);
+        }
     }
 }
 
