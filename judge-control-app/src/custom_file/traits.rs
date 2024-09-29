@@ -88,3 +88,25 @@ impl TextFile {
         Ok(())
     }
 }
+
+pub struct FileManager {
+    path: PathBuf,
+}
+
+impl FileFactory for FileManager {
+    fn new(path: PathBuf) -> Result<Self> {
+        if path.is_dir() {
+            Ok(FileManager { path })
+        } else {
+            Err(anyhow!("path must be an existing dir"))
+        }
+    }
+    fn get_file<FileType: File>(&self, uuid: Uuid, args: FileType::InitArgs) -> Result<FileType> {
+        let path = self.path.join(uuid.to_string());
+        FileType::new(path, args)
+    }
+    fn get_hardlink_of<FileType: File>(&self, uuid: Uuid, original: FileType) -> Result<FileType> {
+        let path = self.path.join(uuid.to_string());
+        original.get_hardlink_to(path)
+    }
+}
