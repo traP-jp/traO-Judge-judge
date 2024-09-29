@@ -23,11 +23,6 @@ pub trait FileFactory: Sized {
     ) -> Result<FileType>;
 }
 
-pub enum CustomFile {
-    Directory(Directory),
-    TextFile(TextFile),
-}
-
 pub struct Directory {
     path: PathBuf,
 }
