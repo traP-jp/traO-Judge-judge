@@ -11,6 +11,11 @@ pub trait File: Sized + Drop {
 
 pub trait FileFactory: Sized {
     fn new(path: PathBuf) -> Result<Self>;
-    fn create_file<FileType: File>(&self, uuid: Uuid, args: FileType::InitArgs) -> Result<FileType>;
-    fn create_hardlink_of<FileType: File>(&self, uuid: Uuid, original: FileType) -> Result<FileType>;
+    fn create_file<FileType: File>(&self, uuid: Uuid, args: FileType::InitArgs)
+        -> Result<FileType>;
+    fn create_hardlink_of<FileType: File>(
+        &self,
+        uuid: Uuid,
+        original: FileType,
+    ) -> Result<FileType>;
 }
