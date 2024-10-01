@@ -12,7 +12,7 @@ fi
 
 # Download the API schema
 curl "${JUDGE_TO_BACKEND_API}" > judge-api-server/judge-api.yaml
-curl "${JUDGE_TO_BACKEND_API}" > backend-api-schema/backend-api.yaml
+curl "${BACKEND_TO_JUDGE_API}" > backend-api-schema/backend-api.yaml
 
 # Generate the API server crate
 docker run --rm \
