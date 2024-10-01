@@ -20,6 +20,7 @@ docker run --rm \
   -i /local/judge-api-server/judge-api.yaml \
   -g rust-axum \
   -o /local/judge-api-server \
+  --additional-properties=packageName=judge_api_server \
 
 # Generate the API schema crate
 docker run --rm \
@@ -27,3 +28,4 @@ docker run --rm \
   -i /local/backend-api-schema/backend-api.yaml \
   -g rust \
   -o /local/backend-api-schema \
+  --additional-properties=packageName=backend_api_schema \
