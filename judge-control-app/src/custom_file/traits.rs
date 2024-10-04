@@ -19,7 +19,7 @@ pub trait FileFactory: Sized {
     fn create_hardlink_of<FileType: File>(
         &self,
         uuid: Uuid,
-        original: FileType,
+        original: &FileType,
     ) -> Result<FileType>;
 }
 
@@ -107,7 +107,7 @@ impl FileFactory for FileManager {
         FileType::new(path, args)
     }
     // path/{uuid} に original のハードリンクを作成
-    fn create_hardlink_of<FileType: File>(&self, uuid: Uuid, original: FileType) -> Result<FileType> {
+    fn create_hardlink_of<FileType: File>(&self, uuid: Uuid, original: &FileType) -> Result<FileType> {
         let path = self.path.join(uuid.to_string());
         original.create_hardlink_to(path)
     }
