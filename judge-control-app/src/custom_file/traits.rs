@@ -54,7 +54,7 @@ impl File for TextFile {
     }
     fn create_hardlink_to(&self, path: PathBuf) -> Result<Self> {
         std::fs::hard_link(&self.path, &path)?;
-        TextFile::new(path, None)
+        Ok(TextFile { path })
     }
 }
 
