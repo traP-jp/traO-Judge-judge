@@ -37,7 +37,7 @@ impl File for Directory {
         std::fs::create_dir_all(&path)?;
         Ok(Directory { path })
     }
-    fn get_hardlink_to(&self, _path: PathBuf) -> Result<Self> {
+    fn create_hardlink_to(&self, _path: PathBuf) -> Result<Self> {
         Err(anyhow!("hard link not allowed for directory"))
     }
 }
@@ -52,7 +52,7 @@ impl File for TextFile {
         }
         Ok(res)
     }
-    fn get_hardlink_to(&self, path: PathBuf) -> Result<Self> {
+    fn create_hardlink_to(&self, path: PathBuf) -> Result<Self> {
         std::fs::hard_link(&self.path, &path)?;
         TextFile::new(path, None)
     }
@@ -100,12 +100,12 @@ impl FileFactory for FileManager {
             Err(anyhow!("path must be an existing dir"))
         }
     }
-    fn get_file<FileType: File>(&self, uuid: Uuid, args: FileType::InitArgs) -> Result<FileType> {
+    fn create_file<FileType: File>(&self, uuid: Uuid, args: FileType::InitArgs) -> Result<FileType> {
         let path = self.path.join(uuid.to_string());
         FileType::new(path, args)
     }
-    fn get_hardlink_of<FileType: File>(&self, uuid: Uuid, original: FileType) -> Result<FileType> {
+    fn create_hardlink_of<FileType: File>(&self, uuid: Uuid, original: FileType) -> Result<FileType> {
         let path = self.path.join(uuid.to_string());
-        original.get_hardlink_to(path)
+        original.create_hardlink_to(path)
     }
 }
