@@ -16,6 +16,6 @@ pub trait FileFactory: Sized {
     fn create_hardlink_of<FileType: File>(
         &self,
         uuid: Uuid,
-        original: FileType,
+        original: &FileType,
     ) -> Result<FileType>;
 }
