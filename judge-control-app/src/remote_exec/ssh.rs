@@ -71,13 +71,16 @@ impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::{Ok, Result};
     use std::time::Duration;
     use uuid::Uuid;
 
     #[tokio::test]
     async fn test_ssh_connection() {
         let uuid = Uuid::new_v4();
+        if !check_docker_installed().await {
+            return;
+        }
+        start_docker_daemon().await.unwrap();
         build_ssh_docker_image(uuid).await.unwrap();
         let result = run_ssh_docker_container(uuid).await;
         remove_docker_image(uuid).await.unwrap();
@@ -97,6 +100,16 @@ mod tests {
         stop_ssh_docker_container(uuid).await.unwrap();
         assert!(resp.is_ok());
         assert_eq!(resp.unwrap(), "TEST_FLAG\n");
+    }
+
+    async fn check_docker_installed() -> bool {
+        let output = std::process::Command::new("docker").arg("--version").output().unwrap();
+        output.status.success()
+    }
+
+    async fn start_docker_daemon() -> Result<()> {
+        let _ = std::process::Command::new("dockerd").output()?;
+        Ok(())
     }
 
     async fn build_ssh_docker_image(uuid: Uuid) -> Result<()> {
