@@ -80,7 +80,7 @@ mod tests {
         if !check_docker_installed().await {
             return;
         }
-        start_docker_daemon().await.unwrap();
+        //start_docker_daemon().await.unwrap();
         build_ssh_docker_image(uuid).await.unwrap();
         let result = run_ssh_docker_container(uuid).await;
         remove_docker_image(uuid).await.unwrap();
