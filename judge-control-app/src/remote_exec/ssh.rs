@@ -80,7 +80,7 @@ mod tests {
         if !check_docker_installed().await {
             return;
         }
-        start_docker_daemon().await.unwrap();
+        //start_docker_daemon().await.unwrap();
         build_ssh_docker_image(uuid).await.unwrap();
         let result = run_ssh_docker_container(uuid).await;
         remove_docker_image(uuid).await.unwrap();
@@ -108,7 +108,9 @@ mod tests {
     }
 
     async fn start_docker_daemon() -> Result<()> {
-        let _ = std::process::Command::new("dockerd").output()?;
+        let _ = std::process::Command::new("systemctl")
+            .args(&["start", "docker"])
+            .output()?;
         Ok(())
     }
 
