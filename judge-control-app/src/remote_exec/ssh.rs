@@ -80,7 +80,14 @@ mod tests {
         if !check_docker_installed().await {
             return;
         }
-        //start_docker_daemon().await.unwrap();
+        if !check_docker_running().await {
+            if check_su_privilege().await {
+                start_docker_daemon().await.unwrap();
+            } else {
+                eprintln!("Neither docker is running nor you have su privilege");
+                return;
+            }
+        }
         build_ssh_docker_image(uuid).await.unwrap();
         let result = run_ssh_docker_container(uuid).await;
         remove_docker_image(uuid).await.unwrap();
@@ -115,6 +122,22 @@ mod tests {
             .args(&["start", "docker"])
             .output()?;
         Ok(())
+    }
+
+    async fn check_docker_running() -> bool {
+        let output = std::process::Command::new("systemctl")
+            .args(&["is-active", "docker"])
+            .output().unwrap();
+        output.status.success()
+    }
+
+    async fn check_su_privilege() -> bool {
+        let output = std::process::Command::new("su")
+            .arg("-c")
+            .arg("whoami")
+            .output()
+            .unwrap();
+        output.status.success()
     }
 
     async fn build_ssh_docker_image(uuid: Uuid) -> Result<()> {
