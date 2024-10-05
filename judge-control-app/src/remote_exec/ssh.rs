@@ -103,7 +103,10 @@ mod tests {
     }
 
     async fn check_docker_installed() -> bool {
-        let output = std::process::Command::new("docker").arg("--version").output().unwrap();
+        let output = std::process::Command::new("docker")
+            .arg("--version")
+            .output()
+            .unwrap();
         output.status.success()
     }
 
