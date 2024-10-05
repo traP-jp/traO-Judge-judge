@@ -23,21 +23,15 @@ impl<AddrType: ToSocketAddrs> RemoteExec<AddrType> for SshConnection<AddrType> {
     ) -> Result<String> {
         let connect_future = async move {
             // SSH接続の確立
-            let channel = self
-                .connect()
-                .await?;
+            let channel = self.connect().await?;
             // 時間制限付きでコマンドを実行
-            let exec_with_timeout_future = timeout(
-                execution_time_limit,
-                self.exec_inner(cmd, channel)).await?;
+            let exec_with_timeout_future =
+                timeout(execution_time_limit, self.exec_inner(cmd, channel)).await?;
             let result = exec_with_timeout_future.context("Execution time limit exceeded")?;
             Ok(result)
         };
         // 接続時間制限付きでSSH接続
-        let connect_with_timeout_future = timeout(
-            connection_time_limit,
-            connect_future
-        );
+        let connect_with_timeout_future = timeout(connection_time_limit, connect_future);
         let result = connect_with_timeout_future
             .await
             .context("Connection time limit exceeded")?;
@@ -65,9 +59,11 @@ impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
 
     // コマンドの実行
     async fn exec_inner(&self, cmd: &str, mut chan: Channel) -> Result<String> {
-        chan.exec(cmd).context("Failed to execute the command via SSH")?;
+        chan.exec(cmd)
+            .context("Failed to execute the command via SSH")?;
         let mut output = String::new();
-        chan.read_to_string(&mut output).context("Failed to read the output from SSH")?;
+        chan.read_to_string(&mut output)
+            .context("Failed to read the output from SSH")?;
         Ok(output)
     }
 }
@@ -75,9 +71,9 @@ impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::{Ok, Result};
     use std::time::Duration;
     use uuid::Uuid;
-    use anyhow::{Ok, Result};
 
     #[tokio::test]
     async fn test_ssh_connection() {
@@ -91,7 +87,12 @@ mod tests {
             username: "root".to_string(),
             password: "password".to_string(),
         };
-        let resp = ssh.exec("cat /flag", Duration::from_secs(60), Duration::from_secs(60))
+        let resp = ssh
+            .exec(
+                "cat /flag",
+                Duration::from_secs(60),
+                Duration::from_secs(60),
+            )
             .await;
         stop_ssh_docker_container(uuid).await.unwrap();
         assert!(resp.is_ok());
@@ -100,12 +101,7 @@ mod tests {
 
     async fn build_ssh_docker_image(uuid: Uuid) -> Result<()> {
         let _ = std::process::Command::new("docker")
-            .args(&[
-                "build",
-                "-t",
-                &format!("ssh-server-test-{}", uuid),
-                "-",
-            ])
+            .args(&["build", "-t", &format!("ssh-server-test-{}", uuid), "-"])
             .current_dir("tests/ssh_server")
             .output()?;
         Ok(())
