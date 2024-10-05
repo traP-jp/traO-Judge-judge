@@ -127,7 +127,8 @@ mod tests {
     async fn check_docker_running() -> bool {
         let output = std::process::Command::new("systemctl")
             .args(&["is-active", "docker"])
-            .output().unwrap();
+            .output()
+            .unwrap();
         output.status.success()
     }
 
