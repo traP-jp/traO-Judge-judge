@@ -71,3 +71,71 @@ impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
         Ok(output)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+    use uuid::Uuid;
+    use anyhow::{Ok, Result};
+
+    #[tokio::test]
+    async fn test_ssh_connection() {
+        let uuid = Uuid::new_v4();
+        build_ssh_docker_image(uuid).await.unwrap();
+        let result = run_ssh_docker_container(uuid).await;
+        remove_docker_image(uuid).await.unwrap();
+        assert!(result.is_ok());
+        let mut ssh = SshConnection {
+            addrs: "localhost:2022",
+            username: "root".to_string(),
+            password: "password".to_string(),
+        };
+        let resp = ssh.exec("cat /flag", Duration::from_secs(60), Duration::from_secs(60))
+            .await;
+        stop_ssh_docker_container(uuid).await.unwrap();
+        assert!(resp.is_ok());
+        assert_eq!(resp.unwrap(), "TEST_FLAG\n");
+    }
+
+    async fn build_ssh_docker_image(uuid: Uuid) -> Result<()> {
+        let _ = std::process::Command::new("docker")
+            .args(&[
+                "build",
+                "-t",
+                &format!("ssh-server-test-{}", uuid),
+                "-",
+            ])
+            .current_dir("tests/ssh_server")
+            .output()?;
+        Ok(())
+    }
+
+    async fn remove_docker_image(uuid: Uuid) -> Result<()> {
+        let _ = std::process::Command::new("docker")
+            .args(&["rmi", &format!("ssh-server-test-{}", uuid)])
+            .output()?;
+        Ok(())
+    }
+
+    async fn run_ssh_docker_container(uuid: Uuid) -> Result<()> {
+        let _ = std::process::Command::new("docker")
+            .args(&[
+                "run",
+                "--rm",
+                "-d",
+                "--name",
+                &format!("ssh-server-test-{}", uuid),
+                &format!("ssh-server-test-{}", uuid),
+            ])
+            .output()?;
+        Ok(())
+    }
+
+    async fn stop_ssh_docker_container(uuid: Uuid) -> Result<()> {
+        let output = std::process::Command::new("docker")
+            .args(&["stop", &format!("ssh-server-test-{}", uuid)])
+            .output()?;
+        Ok(())
+    }
+}
