@@ -35,7 +35,11 @@ async fn test_ssh_connection_timeout() {
         password: "password".to_string(),
     };
     let resp = ssh
-        .exec("sleep 1", Duration::from_millis(1), Duration::from_millis(1))
+        .exec(
+            "sleep 1",
+            Duration::from_millis(1),
+            Duration::from_millis(1),
+        )
         .await;
     stop_ssh_docker_container(uuid).await.unwrap();
     assert!(resp.is_err_and(|e| match e {
