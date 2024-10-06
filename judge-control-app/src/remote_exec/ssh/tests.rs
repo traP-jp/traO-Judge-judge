@@ -25,6 +25,26 @@ async fn test_ssh_connection() {
     assert_eq!(resp.unwrap(), "TEST_FLAG\n");
 }
 
+#[tokio::test]
+async fn test_ssh_connection_timeout() {
+    let uuid = Uuid::new_v4();
+    activate_container(uuid).await;
+    let mut ssh = SshConnection {
+        addrs: "localhost:2022",
+        username: "root".to_string(),
+        password: "password".to_string(),
+    };
+    let resp = ssh
+        .exec("sleep 1", Duration::from_millis(1), Duration::from_millis(1))
+        .await;
+    stop_ssh_docker_container(uuid).await.unwrap();
+    assert!(resp.is_err_and(|e| match e {
+        super::SshExecError::RemoteServerError(_) => true,
+        _ => false,
+    }));
+    return;
+}
+
 async fn activate_container(uuid: Uuid) -> () {
     if !check_docker_installed().await {
         return;
