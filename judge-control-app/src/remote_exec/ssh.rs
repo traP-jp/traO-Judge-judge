@@ -103,10 +103,15 @@ impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
             Ok(output)
         };
         let timeout_future = async move {
-            let result = timeout(execution_time_limit, exec_future)
+            let start_time = tokio::time::Instant::now();
+            let result = timeout(execution_time_limit + Duration::from_secs(1), exec_future)
                 .await
                 .map_err(|e| anyhow::Error::from(e))
                 .context("Execution time limit exceeded")?;
+            let elapsed = tokio::time::Instant::now().duration_since(start_time);
+            if elapsed >= execution_time_limit {
+                return Err(anyhow::anyhow!("Execution time limit exceeded"));
+            }
             result
         };
         let result: Result<String, RemoteServerError> = timeout_future
