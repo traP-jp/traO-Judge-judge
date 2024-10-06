@@ -6,11 +6,11 @@ use anyhow::{Context, Result};
 use ssh2::{Channel, Session};
 use std::io::Read;
 use std::time::Duration;
+use thiserror::Error as ThisError;
 use tokio::{
     net::{TcpStream, ToSocketAddrs},
     time::timeout,
 };
-use thiserror::Error as ThisError;
 
 pub struct SshConnection<AddrType: ToSocketAddrs> {
     pub addrs: AddrType,
@@ -55,9 +55,11 @@ impl<AddrType: ToSocketAddrs> RemoteExec<AddrType, SshExecError> for SshConnecti
 
 impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
     // SSH接続の確立
-    async fn connect_with_timeout(&self, connection_time_limit: Duration) -> Result<Channel, InternalServerError> {
+    async fn connect_with_timeout(
+        &self,
+        connection_time_limit: Duration,
+    ) -> Result<Channel, InternalServerError> {
         let connect_future = async move {
-
             let tcp = TcpStream::connect(&self.addrs)
                 .await
                 .context("Failed to connect to the SSH server")?;
@@ -73,10 +75,7 @@ impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
             Ok(chan)
         };
         let timeout_future = async move {
-            let result = timeout(
-                connection_time_limit,
-                connect_future
-            )
+            let result = timeout(connection_time_limit, connect_future)
                 .await
                 .map_err(|e| anyhow::Error::from(e))
                 .context("Connection time limit exceeded")?;
@@ -104,10 +103,7 @@ impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
             Ok(output)
         };
         let timeout_future = async move {
-            let result = timeout(
-                execution_time_limit,
-                exec_future
-            )
+            let result = timeout(execution_time_limit, exec_future)
                 .await
                 .map_err(|e| anyhow::Error::from(e))
                 .context("Execution time limit exceeded")?;

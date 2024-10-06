@@ -1,6 +1,6 @@
+use std::error::Error;
 use std::time::Duration;
 use tokio::net::ToSocketAddrs;
-use std::error::Error;
 
 pub trait RemoteExec<AddrType: ToSocketAddrs, ErrorType: Error> {
     async fn exec(
