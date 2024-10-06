@@ -21,7 +21,7 @@ pub struct SshConnection<AddrType: ToSocketAddrs> {
 #[derive(ThisError, Debug)]
 pub enum SshExecError {
     #[error("Execution in remote SSH server failed")]
-    RemoteExecutionFailed(#[from] RemoteServerError),
+    RemoteServerError(#[from] RemoteServerError),
     #[error("Internal error while SSH execution")]
     InternalServerError(#[from] InternalServerError),
 }
@@ -48,7 +48,7 @@ impl<AddrType: ToSocketAddrs> RemoteExec<AddrType, SshExecError> for SshConnecti
         let output = self
             .exec_inner_with_timeout(cmd, channel, execution_time_limit)
             .await
-            .map_err(|e| SshExecError::RemoteExecutionFailed(e))?;
+            .map_err(|e| SshExecError::RemoteServerError(e))?;
         Ok(output)
     }
 }
