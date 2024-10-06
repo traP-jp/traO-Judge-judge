@@ -8,21 +8,7 @@ use uuid::Uuid;
 #[tokio::test]
 async fn test_ssh_connection() {
     let uuid = Uuid::new_v4();
-    if !check_docker_installed().await {
-        return;
-    }
-    if !check_docker_running().await {
-        if check_su_privilege().await {
-            start_docker_daemon().await.unwrap();
-        } else {
-            eprintln!("Neither docker is running nor you have su privilege");
-            return;
-        }
-    }
-    build_ssh_docker_image(uuid).await.unwrap();
-    let result = run_ssh_docker_container(uuid).await;
-    remove_docker_image(uuid).await.unwrap();
-    assert!(result.is_ok());
+    activate_container(uuid).await;
     let mut ssh = SshConnection {
         addrs: "localhost:2022",
         username: "root".to_string(),
@@ -38,6 +24,24 @@ async fn test_ssh_connection() {
     stop_ssh_docker_container(uuid).await.unwrap();
     assert!(resp.is_ok());
     assert_eq!(resp.unwrap(), "TEST_FLAG\n");
+}
+
+async fn activate_container(uuid: Uuid) -> () {
+    if !check_docker_installed().await {
+        return;
+    }
+    if !check_docker_running().await {
+        if check_su_privilege().await {
+            start_docker_daemon().await.unwrap();
+        } else {
+            eprintln!("Neither docker is running nor you have su privilege");
+            return;
+        }
+    }
+    build_ssh_docker_image(uuid).await.unwrap();
+    let result = run_ssh_docker_container(uuid).await;
+    remove_docker_image(uuid).await.unwrap();
+    assert!(result.is_ok());
 }
 
 async fn check_docker_installed() -> bool {
