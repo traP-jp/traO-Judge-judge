@@ -1,3 +1,4 @@
+#[allow(clippy::unwrap_used)]
 
 use super::super::{ssh::SshConnection, traits::RemoteExec};
 use anyhow::Result;
