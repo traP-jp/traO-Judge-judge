@@ -172,7 +172,7 @@ mod tests {
     }
 
     async fn stop_ssh_docker_container(uuid: Uuid) -> Result<()> {
-        let output = std::process::Command::new("docker")
+        let _ = std::process::Command::new("docker")
             .args(&["stop", &format!("ssh-server-test-{}", uuid)])
             .output()?;
         Ok(())
