@@ -44,11 +44,11 @@ impl<AddrType: ToSocketAddrs> RemoteExec<AddrType, SshExecError> for SshConnecti
         let channel = self
             .connect_with_timeout(connection_time_limit)
             .await
-            .map_err(|e| SshExecError::InternalServerError(e))?;
+            .map_err(SshExecError::InternalServerError)?;
         let output = self
             .exec_inner_with_timeout(cmd, channel, execution_time_limit)
             .await
-            .map_err(|e| SshExecError::RemoteServerError(e))?;
+            .map_err(SshExecError::RemoteServerError)?;
         Ok(output)
     }
 }
@@ -75,15 +75,15 @@ impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
             Ok(chan)
         };
         let timeout_future = async move {
-            let result = timeout(connection_time_limit, connect_future)
+            
+            timeout(connection_time_limit, connect_future)
                 .await
-                .map_err(|e| anyhow::Error::from(e))
-                .context("Connection time limit exceeded")?;
-            result
+                .map_err(anyhow::Error::from)
+                .context("Connection time limit exceeded")?
         };
         let result: Result<Channel, InternalServerError> = timeout_future
             .await
-            .map_err(|e| InternalServerError(e).into());
+            .map_err(InternalServerError);
         result
     }
 
@@ -106,7 +106,7 @@ impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
             let start_time = tokio::time::Instant::now();
             let result = timeout(execution_time_limit + Duration::from_secs(1), exec_future)
                 .await
-                .map_err(|e| anyhow::Error::from(e))
+                .map_err(anyhow::Error::from)
                 .context("Execution time limit exceeded")?;
             let elapsed = tokio::time::Instant::now().duration_since(start_time);
             if elapsed >= execution_time_limit {
@@ -116,7 +116,7 @@ impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
         };
         let result: Result<String, RemoteServerError> = timeout_future
             .await
-            .map_err(|e| RemoteServerError(e).into());
+            .map_err(RemoteServerError);
         result
     }
 }

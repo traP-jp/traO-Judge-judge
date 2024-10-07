@@ -49,7 +49,7 @@ async fn test_ssh_connection_timeout() {
     return;
 }
 
-async fn activate_container(uuid: Uuid) -> () {
+async fn activate_container(uuid: Uuid) {
     if !check_docker_installed().await {
         return;
     }
@@ -77,14 +77,14 @@ async fn check_docker_installed() -> bool {
 
 async fn start_docker_daemon() -> Result<()> {
     let _ = std::process::Command::new("systemctl")
-        .args(&["start", "docker"])
+        .args(["start", "docker"])
         .output()?;
     Ok(())
 }
 
 async fn check_docker_running() -> bool {
     let output = std::process::Command::new("systemctl")
-        .args(&["is-active", "docker"])
+        .args(["is-active", "docker"])
         .output()
         .unwrap();
     output.status.success()
@@ -101,7 +101,7 @@ async fn check_su_privilege() -> bool {
 
 async fn build_ssh_docker_image(uuid: Uuid) -> Result<()> {
     let _ = std::process::Command::new("docker")
-        .args(&["build", "-t", &format!("ssh-server-test-{}", uuid), "."])
+        .args(["build", "-t", &format!("ssh-server-test-{}", uuid), "."])
         .current_dir("tests/ssh_server")
         .output()?;
     Ok(())
@@ -109,14 +109,14 @@ async fn build_ssh_docker_image(uuid: Uuid) -> Result<()> {
 
 async fn remove_docker_image(uuid: Uuid) -> Result<()> {
     let _ = std::process::Command::new("docker")
-        .args(&["rmi", &format!("ssh-server-test-{}", uuid)])
+        .args(["rmi", &format!("ssh-server-test-{}", uuid)])
         .output()?;
     Ok(())
 }
 
 async fn run_ssh_docker_container(uuid: Uuid) -> Result<()> {
     let _ = std::process::Command::new("docker")
-        .args(&[
+        .args([
             "run",
             "-d",
             "-p",
@@ -131,7 +131,7 @@ async fn run_ssh_docker_container(uuid: Uuid) -> Result<()> {
 
 async fn stop_ssh_docker_container(uuid: Uuid) -> Result<()> {
     let _ = std::process::Command::new("docker")
-        .args(&["stop", &format!("ssh-server-test-{}", uuid)])
+        .args(["stop", &format!("ssh-server-test-{}", uuid)])
         .output()?;
     Ok(())
 }
