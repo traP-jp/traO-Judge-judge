@@ -75,15 +75,13 @@ impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
             Ok(chan)
         };
         let timeout_future = async move {
-            
             timeout(connection_time_limit, connect_future)
                 .await
                 .map_err(anyhow::Error::from)
                 .context("Connection time limit exceeded")?
         };
-        let result: Result<Channel, InternalServerError> = timeout_future
-            .await
-            .map_err(InternalServerError);
+        let result: Result<Channel, InternalServerError> =
+            timeout_future.await.map_err(InternalServerError);
         result
     }
 
@@ -114,9 +112,8 @@ impl<AddrType: ToSocketAddrs> SshConnection<AddrType> {
             }
             result
         };
-        let result: Result<String, RemoteServerError> = timeout_future
-            .await
-            .map_err(RemoteServerError);
+        let result: Result<String, RemoteServerError> =
+            timeout_future.await.map_err(RemoteServerError);
         result
     }
 }
