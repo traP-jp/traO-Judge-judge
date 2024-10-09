@@ -17,3 +17,4 @@ uuid = { version = "1.0", features = ["serde", "v4"] }
 reqwest = "0.12.5"
 anyhow = "1.0"
 thiserror = "1.0.63"
+ssh2 = "0.9.4"

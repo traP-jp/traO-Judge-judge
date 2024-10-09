@@ -1,5 +1,5 @@
 mod custom_file;
-mod telnet;
+mod remote_exec;
 mod text_resource_repository;
 
 fn main() {
