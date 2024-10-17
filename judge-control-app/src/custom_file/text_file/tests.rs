@@ -1,29 +1,27 @@
-use std::path::PathBuf;
+use std::{
+    path::PathBuf,
+    sync::{Arc, RwLock},
+};
 
-use crate::custom_file::traits::File;
-
-use super::TextFile;
+use crate::custom_file::{
+    text_file::{TextFileEntity, TextFileLink},
+    traits::File,
+};
 
 #[test]
-fn drop_from_leaves() -> anyhow::Result<()> {
-    let v = {
-        let a = TextFile::new(PathBuf::from("a.txt"), "hello!".to_string())?;
+fn drop_not_leaf_node() -> anyhow::Result<()> {
+    let a = Arc::new(RwLock::new(TextFileEntity::new(
+        PathBuf::from("a.txt"),
+        "hello".to_string(),
+    )?));
 
-        let b1 = a.create_symlink_to(PathBuf::from("b1.txt"))?;
-        let b2 = a.create_symlink_to(PathBuf::from("b2.txt"))?;
-        let b3 = a.create_symlink_to(PathBuf::from("b3.txt"))?;
+    let b = TextFileLink::new(PathBuf::from("b.txt"), a.clone())?;
 
-        let c1 = b1.create_symlink_to(PathBuf::from("c1.txt"))?;
-        let c2 = b1.create_symlink_to(PathBuf::from("c2.txt"))?;
-        let c3 = b1.create_symlink_to(PathBuf::from("c3.txt"))?;
+    let c = b.create_symlink_to(PathBuf::from("c.txt"))?;
 
-        vec![a, b1, b2, b3, c1, c2, c3];
-    };
+    drop(b);
 
-    // たとえば
-    // "b2.txt"→ "b3.txt"→ "c1.txt"→ "c2.txt"→ "c3.txt"→ "b1.txt"→ "a.txt"
-    // のように，葉から drop することが確認できる．
-    drop(v);
+    println!("b is dropped.");
 
     Ok(())
 }
