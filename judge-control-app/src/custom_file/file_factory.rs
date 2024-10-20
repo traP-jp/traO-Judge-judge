@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-struct FileFactory {
+pub struct FileFactory {
     path: PathBuf,
 }
 

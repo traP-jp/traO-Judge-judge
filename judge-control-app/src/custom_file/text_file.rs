@@ -6,7 +6,7 @@ use std::{
 
 use super::traits::{File, FileEntity, FileLink};
 
-struct TextFileEntity {
+pub struct TextFileEntity {
     path: PathBuf,
 }
 
@@ -28,7 +28,7 @@ impl Drop for TextFileEntity {
     }
 }
 
-struct TextFileLink {
+pub struct TextFileLink {
     path: PathBuf,
     entity: Arc<RwLock<TextFileEntity>>,
 }
