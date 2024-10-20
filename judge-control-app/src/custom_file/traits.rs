@@ -18,7 +18,7 @@ pub trait FileFactory: Sized {
     fn new(path: PathBuf) -> Result<Self>;
     fn create_file<FileType: File>(&self, uuid: Uuid, args: FileType::InitArgs)
         -> Result<FileType>;
-    fn create_symlink_of<FileType: File>(
+    fn create_symlink_of<FileType: FileLink>(
         &self,
         uuid: Uuid,
         original: &FileType,
