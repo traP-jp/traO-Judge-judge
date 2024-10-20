@@ -1,28 +1,56 @@
-use std::path::PathBuf;
+use std::{
+    path::PathBuf,
+    sync::{Arc, RwLock},
+};
 
-use anyhow::{anyhow, Result};
+use super::traits::{File, FileEntity, FileLink};
 
-use super::traits::File;
-
-pub struct Directory {
+struct DirectoryEntity {
     path: PathBuf,
 }
 
-impl File for Directory {
+impl FileEntity for DirectoryEntity {}
+
+impl File for DirectoryEntity {
     type InitArgs = ();
-    fn new(path: PathBuf, _args: Self::InitArgs) -> Result<Self> {
+    fn new(path: PathBuf, _args: Self::InitArgs) -> anyhow::Result<Self> {
         std::fs::create_dir_all(&path)?;
-        Ok(Directory { path })
-    }
-    fn create_hardlink_to(&self, _path: PathBuf) -> Result<Self> {
-        Err(anyhow!("hard link not allowed for directory"))
+        Ok(Self { path })
     }
 }
 
-impl Drop for Directory {
+impl Drop for DirectoryEntity {
     fn drop(&mut self) {
-        if let Err(e) = std::fs::remove_dir_all(&self.path) {
-            eprintln!("{:?}", e);
-        }
+        let _ = std::fs::remove_dir_all(&self.path);
+        unimplemented!("error handling for file deletion failure");
+    }
+}
+
+struct DirectoryLink {
+    path: PathBuf,
+    entity: Arc<RwLock<DirectoryEntity>>,
+}
+
+impl FileLink for DirectoryLink {
+    fn create_symlink_to(&self, path: PathBuf) -> anyhow::Result<Self> {
+        Self::new(path, self.entity.clone())
+    }
+}
+
+impl File for DirectoryLink {
+    type InitArgs = Arc<RwLock<DirectoryEntity>>;
+    fn new(path: PathBuf, args: Self::InitArgs) -> anyhow::Result<Self> {
+        std::os::unix::fs::symlink(&args.read().unwrap().path, &path)?;
+        Ok(Self {
+            path,
+            entity: args.clone(),
+        })
+    }
+}
+
+impl Drop for DirectoryLink {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.path);
+        unimplemented!("error handling for file deletion failure");
     }
 }

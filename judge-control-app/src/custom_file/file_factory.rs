@@ -1,39 +1,27 @@
 use std::path::PathBuf;
 
-use anyhow::{anyhow, Result};
-use uuid::Uuid;
-
-use super::traits::{self, File};
-
-pub struct FileFactory {
+struct FileFactory {
     path: PathBuf,
 }
 
-impl traits::FileFactory for FileFactory {
-    // ベースとなる path を指定
-    fn new(path: PathBuf) -> Result<Self> {
-        if path.is_dir() {
-            Ok(FileFactory { path })
-        } else {
-            Err(anyhow!("path must be an existing dir"))
-        }
+impl super::traits::FileFactory for FileFactory {
+    fn new(path: std::path::PathBuf) -> anyhow::Result<Self> {
+        Ok(Self { path })
     }
-    // path/{uuid} にファイルまたはディレクトリを作成
-    fn create_file<FileType: File>(
+    fn create_file<FileType: super::traits::File>(
         &self,
-        uuid: Uuid,
+        uuid: uuid::Uuid,
         args: FileType::InitArgs,
-    ) -> Result<FileType> {
+    ) -> anyhow::Result<FileType> {
         let path = self.path.join(uuid.to_string());
         FileType::new(path, args)
     }
-    // path/{uuid} に original のハードリンクを作成
-    fn create_hardlink_of<FileType: File>(
+    fn create_symlink_of<FileType: super::traits::FileLink>(
         &self,
-        uuid: Uuid,
+        uuid: uuid::Uuid,
         original: &FileType,
-    ) -> Result<FileType> {
+    ) -> anyhow::Result<FileType> {
         let path = self.path.join(uuid.to_string());
-        original.create_hardlink_to(path)
+        original.create_symlink_to(path)
     }
 }

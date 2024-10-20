@@ -1,49 +1,58 @@
 use std::{
-    io::{Read, Write},
+    io::Write,
     path::PathBuf,
+    sync::{Arc, RwLock},
 };
 
-use anyhow::Result;
+use super::traits::{File, FileEntity, FileLink};
 
-use super::traits::File;
-
-pub struct TextFile {
+struct TextFileEntity {
     path: PathBuf,
 }
 
-impl File for TextFile {
-    type InitArgs = Option<String>;
-    fn new(path: PathBuf, args: Self::InitArgs) -> Result<Self> {
-        std::fs::File::create(&path)?;
-        let res = TextFile { path };
-        if let Some(contents) = args {
-            res.write(contents)?;
-        }
-        Ok(res)
-    }
-    fn create_hardlink_to(&self, path: PathBuf) -> Result<Self> {
-        std::fs::hard_link(&self.path, &path)?;
-        Ok(TextFile { path })
-    }
-}
-impl Drop for TextFile {
-    fn drop(&mut self) {
-        if let Err(e) = std::fs::remove_file(&self.path) {
-            eprintln!("{:?}", e);
-        }
+impl FileEntity for TextFileEntity {}
+
+impl File for TextFileEntity {
+    type InitArgs = String;
+    fn new(path: PathBuf, args: Self::InitArgs) -> anyhow::Result<Self> {
+        let mut file = std::fs::File::create(&path)?;
+        file.write_all(args.as_bytes())?;
+        Ok(Self { path })
     }
 }
 
-impl TextFile {
-    fn read(&self) -> Result<String> {
-        let mut file = std::fs::OpenOptions::new().read(true).open(&self.path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-        Ok(contents)
+impl Drop for TextFileEntity {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.path);
+        unimplemented!("error handling for file deletion failure");
     }
-    fn write(&self, contents: String) -> Result<()> {
-        let mut file = std::fs::OpenOptions::new().write(true).open(&self.path)?;
-        file.write_all(contents.as_bytes())?;
-        Ok(())
+}
+
+struct TextFileLink {
+    path: PathBuf,
+    entity: Arc<RwLock<TextFileEntity>>,
+}
+
+impl FileLink for TextFileLink {
+    fn create_symlink_to(&self, path: PathBuf) -> anyhow::Result<Self> {
+        Self::new(path, self.entity.clone())
+    }
+}
+
+impl File for TextFileLink {
+    type InitArgs = Arc<RwLock<TextFileEntity>>;
+    fn new(path: PathBuf, args: Self::InitArgs) -> anyhow::Result<Self> {
+        std::os::unix::fs::symlink(&args.read().unwrap().path, &path)?;
+        Ok(Self {
+            path,
+            entity: args.clone(),
+        })
+    }
+}
+
+impl Drop for TextFileLink {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.path);
+        unimplemented!("error handling for file deletion failure");
     }
 }
