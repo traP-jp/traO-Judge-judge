@@ -6,6 +6,11 @@ use uuid::Uuid;
 pub trait File: Sized + Drop {
     type InitArgs;
     fn new(path: PathBuf, args: Self::InitArgs) -> Result<Self>;
+}
+
+pub trait FileEntity: File {}
+
+pub trait FileLink: File {
     fn create_symlink_to(&self, path: PathBuf) -> Result<Self>;
 }
 

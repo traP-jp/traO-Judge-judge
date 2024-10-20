@@ -7,11 +7,13 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use super::traits::File;
+use super::traits::{File, FileEntity, FileLink};
 
 struct TextFileEntity {
     path: PathBuf,
 }
+
+impl FileEntity for TextFileEntity {}
 
 impl File for TextFileEntity {
     type InitArgs = String;
@@ -19,9 +21,6 @@ impl File for TextFileEntity {
         let mut file = std::fs::File::create(&path)?;
         file.write_all(args.as_bytes())?;
         Ok(Self { path })
-    }
-    fn create_symlink_to(&self, path: PathBuf) -> anyhow::Result<Self> {
-        unimplemented!();
     }
 }
 
@@ -37,6 +36,12 @@ struct TextFileLink {
     entity: Arc<RwLock<TextFileEntity>>,
 }
 
+impl FileLink for TextFileLink {
+    fn create_symlink_to(&self, path: PathBuf) -> anyhow::Result<Self> {
+        Self::new(path, self.entity.clone())
+    }
+}
+
 impl File for TextFileLink {
     type InitArgs = Arc<RwLock<TextFileEntity>>;
     fn new(path: PathBuf, args: Self::InitArgs) -> anyhow::Result<Self> {
@@ -45,9 +50,6 @@ impl File for TextFileLink {
             path,
             entity: args.clone(),
         })
-    }
-    fn create_symlink_to(&self, path: PathBuf) -> anyhow::Result<Self> {
-        Self::new(path, self.entity.clone())
     }
 }
 

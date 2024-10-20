@@ -5,7 +5,7 @@ use std::{
 
 use crate::custom_file::{
     text_file::{TextFileEntity, TextFileLink},
-    traits::File,
+    traits::{File, FileLink},
 };
 
 #[test]
