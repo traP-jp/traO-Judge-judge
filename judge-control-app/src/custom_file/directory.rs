@@ -13,7 +13,7 @@ impl FileEntity for DirectoryEntity {}
 
 impl File for DirectoryEntity {
     type InitArgs = ();
-    fn new(path: PathBuf, args: Self::InitArgs) -> anyhow::Result<Self> {
+    fn new(path: PathBuf, _args: Self::InitArgs) -> anyhow::Result<Self> {
         std::fs::create_dir_all(&path)?;
         Ok(Self { path })
     }
@@ -21,7 +21,8 @@ impl File for DirectoryEntity {
 
 impl Drop for DirectoryEntity {
     fn drop(&mut self) {
-        std::fs::remove_dir_all(&self.path);
+        let _ = std::fs::remove_dir_all(&self.path);
+        unimplemented!("error handling for file deletion failure");
     }
 }
 
@@ -49,6 +50,7 @@ impl File for DirectoryLink {
 
 impl Drop for DirectoryLink {
     fn drop(&mut self) {
-        std::fs::remove_dir_all(&self.path);
+        let _ = std::fs::remove_dir_all(&self.path);
+        unimplemented!("error handling for file deletion failure");
     }
 }

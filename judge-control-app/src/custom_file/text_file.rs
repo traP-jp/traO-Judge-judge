@@ -26,8 +26,8 @@ impl File for TextFileEntity {
 
 impl Drop for TextFileEntity {
     fn drop(&mut self) {
-        std::fs::remove_file(&self.path);
-        eprintln!("Entity {:?} dropped.", self.path);
+        let _ = std::fs::remove_file(&self.path);
+        unimplemented!("error handling for file deletion failure");
     }
 }
 
@@ -55,7 +55,7 @@ impl File for TextFileLink {
 
 impl Drop for TextFileLink {
     fn drop(&mut self) {
-        std::fs::remove_file(&self.path);
-        eprintln!("Link {:?} dropped.", self.path);
+        let _ = std::fs::remove_file(&self.path);
+        unimplemented!("error handling for file deletion failure");
     }
 }
