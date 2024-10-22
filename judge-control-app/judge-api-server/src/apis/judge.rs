@@ -12,9 +12,8 @@ use crate::{models, types::*};
 #[allow(clippy::large_enum_variant)]
 pub enum JudgeResponse {
     /// OK
-    Status200_OK
+    Status200_OK,
 }
-
 
 /// Judge
 #[async_trait]
@@ -24,10 +23,10 @@ pub trait Judge {
     ///
     /// Judge - POST /v1/judge
     async fn judge(
-    &self,
-    method: Method,
-    host: Host,
-    cookies: CookieJar,
-            body: models::Judge,
+        &self,
+        method: Method,
+        host: Host,
+        cookies: CookieJar,
+        body: models::Judge,
     ) -> Result<JudgeResponse, String>;
 }
