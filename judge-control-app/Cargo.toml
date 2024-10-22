@@ -18,3 +18,5 @@ reqwest = "0.12.5"
 anyhow = "1.0"
 thiserror = "1.0.63"
 ssh2 = "0.9.4"
+backend_api_schema = { path = "backend-api-schema" }
+judge_api_server = { path = "judge-api-server" }
