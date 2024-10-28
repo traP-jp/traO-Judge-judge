@@ -12,7 +12,7 @@ pub enum JudgeStatus {
 pub struct SubmitResult {
     pub judge_id: uuid::Uuid,
     pub test_results: Vec<TestResult>,
-    pub total_result: Box<TestResult>,
+    pub total_result: TestResult,
 }
 
 pub struct TestResult {
