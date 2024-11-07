@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ../.env.dev
+source .env.dev
 
 # Create directories if they don't exist
 if [ ! -d "judge-api-server" ]; then
