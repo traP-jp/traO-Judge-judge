@@ -24,14 +24,20 @@ impl<
         RepoType: RepoTrait<ExternalAccessKey>,
     > TextEntityFactory<ExternalAccessKey, RepoType>
 {
-    pub fn new(cache_directory: PathBuf, cache_directory_size_limit: Byte, repo: RepoType, cache_dir_margin_ratio: f64) -> Self {
+    pub fn new(
+        cache_directory: PathBuf,
+        cache_directory_size_limit: Byte,
+        repo: RepoType,
+        cache_dir_margin_ratio: f64,
+    ) -> Self {
         if 0.0 >= cache_dir_margin_ratio || cache_dir_margin_ratio >= 1.0 {
             panic!("cache_dir_margin_ratio must be in the range (0.0, 1.0)");
         }
         Self {
             cache: DynamicallySizedLRUCache::new(),
             cache_directory,
-            cache_directory_size_maximum: (cache_directory_size_limit.as_u64() as f64 * cache_dir_margin_ratio) as u64,
+            cache_directory_size_maximum: (cache_directory_size_limit.as_u64() as f64
+                * cache_dir_margin_ratio) as u64,
             repo,
             _phantom: std::marker::PhantomData,
         }
@@ -79,8 +85,7 @@ impl<
         if dir_size_u64 > self.cache_directory_size_maximum {
             self.cache.remove_one()?;
             Ok(true)
-        }
-        else {
+        } else {
             Ok(false)
         }
     }

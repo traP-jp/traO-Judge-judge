@@ -1,6 +1,6 @@
-use crate::custom_rc::text_entity_factory::TextEntityFactory;
 use crate::custom_rc::dir_entity_factory::DirEntityFactory;
 use crate::custom_rc::file_link::FileLink;
+use crate::custom_rc::text_entity_factory::TextEntityFactory;
 use crate::text_resource_repository::traits::TextResourceRepository as RepoTrait;
 
 pub struct FileLinkFactory<
@@ -38,13 +38,16 @@ impl<
 impl<
         ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
         RepoType: RepoTrait<ExternalAccessKey>,
-    > crate::custom_rc::traits::FileLinkFactory<
-        ExternalAccessKey,
-        RepoType,
-        FileLink
-    > for FileLinkFactory<ExternalAccessKey, RepoType> {
-    fn get_text_file_link(&mut self, text_resource_id: ExternalAccessKey) -> anyhow::Result<FileLink> {
-        let text_file_entity = self.text_entity_factory.get_text_file_entity(text_resource_id)?;
+    > crate::custom_rc::traits::FileLinkFactory<ExternalAccessKey, RepoType, FileLink>
+    for FileLinkFactory<ExternalAccessKey, RepoType>
+{
+    fn get_text_file_link(
+        &mut self,
+        text_resource_id: ExternalAccessKey,
+    ) -> anyhow::Result<FileLink> {
+        let text_file_entity = self
+            .text_entity_factory
+            .get_text_file_entity(text_resource_id)?;
         Ok(FileLink::new_text_file_link(text_file_entity))
     }
 

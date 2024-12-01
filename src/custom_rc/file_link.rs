@@ -1,4 +1,4 @@
-use crate::custom_rc::file_entity::{TextFileEntity, DirectoryEntity};
+use crate::custom_rc::file_entity::{DirectoryEntity, TextFileEntity};
 use std::sync::Arc;
 
 enum FileEntity {
