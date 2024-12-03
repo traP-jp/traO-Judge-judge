@@ -1,17 +1,17 @@
 use crate::custom_rc::file_entity::*;
 use std::sync::Arc;
 
-enum FileEntity <'a> {
+enum FileEntity {
     TextFileEntity(Arc<TextFileEntity>),
     DirectoryEntity(DirectoryEntity),
-    SymlinkEntity(SymlinkEntity, &'a FileEntity<'a>),
+    SymlinkEntity(SymlinkEntity, Box<FileLink>),
 }
 
-pub struct FileLink <'a> {
-    file_entity: FileEntity<'a>,
+pub struct FileLink {
+    file_entity: FileEntity,
 }
 
-impl<'a> FileLink<'a> {
+impl FileLink {
     pub fn new_text_file_link(text_file_entity: Arc<TextFileEntity>) -> Self {
         Self {
             file_entity: FileEntity::TextFileEntity(text_file_entity),
@@ -25,8 +25,8 @@ impl<'a> FileLink<'a> {
     }
 }
 
-impl<'a> crate::custom_rc::FileLink<'a> for FileLink<'a> {
-    fn symlink_to(&'a self, path: &std::path::PathBuf) -> anyhow::Result<Self>
+impl crate::custom_rc::FileLink for FileLink {
+    fn symlink_to(self, path: &std::path::PathBuf) -> anyhow::Result<Self>
     {
         let target_path = match &self.file_entity {
             FileEntity::TextFileEntity(text_file_entity) => text_file_entity.path.clone(),
@@ -34,7 +34,7 @@ impl<'a> crate::custom_rc::FileLink<'a> for FileLink<'a> {
             FileEntity::SymlinkEntity(symlink_entity, _) => symlink_entity.path.clone(),
         };
         let symlink_entity = SymlinkEntity::new(path.clone(), &target_path)?;
-        let file_entity: FileEntity<'a> = FileEntity::SymlinkEntity(symlink_entity, &self.file_entity);
+        let file_entity: FileEntity = FileEntity::SymlinkEntity(symlink_entity, Box::new(self));
         Ok(FileLink { file_entity })
     }
 }
