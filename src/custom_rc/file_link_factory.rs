@@ -36,22 +36,23 @@ impl<
 }
 
 impl<
+        'a,
         ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
         RepoType: RepoTrait<ExternalAccessKey>,
-    > crate::custom_rc::traits::FileLinkFactory<ExternalAccessKey, RepoType, FileLink>
+    > crate::custom_rc::traits::FileLinkFactory<'a, ExternalAccessKey, RepoType, FileLink<'a>>
     for FileLinkFactory<ExternalAccessKey, RepoType>
 {
     fn get_text_file_link(
         &mut self,
         text_resource_id: ExternalAccessKey,
-    ) -> anyhow::Result<FileLink> {
+    ) -> anyhow::Result<FileLink<'a>> {
         let text_file_entity = self
             .text_entity_factory
             .get_text_file_entity(text_resource_id)?;
         Ok(FileLink::new_text_file_link(text_file_entity))
     }
 
-    fn get_directory_link(&self) -> anyhow::Result<FileLink> {
+    fn get_directory_link(&self) -> anyhow::Result<FileLink<'a>> {
         let directory_entity = self.dir_entity_factory.get_dir_entity()?;
         Ok(FileLink::new_directory_link(directory_entity))
     }

@@ -67,3 +67,37 @@ impl Drop for DirectoryEntity {
         }
     }
 }
+
+pub struct SymlinkEntity {
+    pub path: PathBuf,
+}
+
+impl SymlinkEntity {
+    pub fn new(path: PathBuf, target: &PathBuf) -> Result<Self> {
+        std::os::unix::fs::symlink(&target, &path)
+            .with_context(|| {
+                format!(
+                    "Failed to create symlink while creating SymlinkEntity : {:?}",
+                    path
+                )
+            })
+            .map(|_| Self { path })
+    }
+}
+
+impl Drop for SymlinkEntity {
+    fn drop(&mut self) {
+        let result = std::fs::remove_file(&self.path).context(format!(
+            "Failed to remove symlink while dropping SymlinkEntity : {:?}",
+            self.path
+        ));
+        match result {
+            Ok(_) => {
+                return;
+            }
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+        }
+    }
+}
