@@ -1,8 +1,6 @@
 use crate::custom_rc::file_entity::*;
 use std::sync::Arc;
 
-use super::file_entity;
-
 enum FileEntity <'a> {
     TextFileEntity(Arc<TextFileEntity>),
     DirectoryEntity(DirectoryEntity),
@@ -27,7 +25,7 @@ impl<'a> FileLink<'a> {
     }
 }
 
-impl<'a> crate::custom_rc::traits::FileLink<'a> for FileLink<'a> {
+impl<'a> crate::custom_rc::FileLink<'a> for FileLink<'a> {
     fn symlink_to(&'a self, path: &std::path::PathBuf) -> anyhow::Result<Self>
     {
         let target_path = match &self.file_entity {

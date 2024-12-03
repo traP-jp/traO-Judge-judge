@@ -1,7 +1,7 @@
 use crate::custom_rc::dir_entity_factory::DirEntityFactory;
 use crate::custom_rc::file_link::FileLink;
 use crate::custom_rc::text_entity_factory::TextEntityFactory;
-use crate::text_resource_repository::traits::TextResourceRepository as RepoTrait;
+use crate::text_resource_repository::TextResourceRepository as RepoTrait;
 
 pub struct FileLinkFactory<
     ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
@@ -39,7 +39,7 @@ impl<
         'a,
         ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
         RepoType: RepoTrait<ExternalAccessKey>,
-    > crate::custom_rc::traits::FileLinkFactory<'a, ExternalAccessKey, RepoType, FileLink<'a>>
+    > crate::custom_rc::FileLinkFactory<'a, ExternalAccessKey, RepoType, FileLink<'a>>
     for FileLinkFactory<ExternalAccessKey, RepoType>
 {
     fn get_text_file_link(
