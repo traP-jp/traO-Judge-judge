@@ -1,7 +1,6 @@
 use crate::custom_rc::file_entity::DirectoryEntity;
 use anyhow::Result;
 use std::path::PathBuf;
-use std::sync::Arc;
 
 pub struct DirEntityFactory {
     pub path: PathBuf,
