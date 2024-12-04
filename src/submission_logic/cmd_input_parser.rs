@@ -4,15 +4,16 @@ use uuid::Uuid;
 
 #[derive(Clone)]
 pub enum FileLinkRecipe<ExternalAccessKey> {
-    TextFile(ExternalAccessKey, usize, Uuid),
-    Directory(Uuid),
+    TextFile(ExternalAccessKey, usize, PathBuf),
+    Directory(PathBuf),
 }
 
 #[derive(Clone)]
 pub struct CmdInput<ExternalAccessKey> {
     pub cmd: String,
     pub envs: std::collections::HashMap<String, String>,
-    pub file_links: std::collections::HashMap<PathBuf, FileLinkRecipe<ExternalAccessKey>>,
+    pub file_links: std::collections::HashMap<Uuid, FileLinkRecipe<ExternalAccessKey>>,
+    
 
 }
 

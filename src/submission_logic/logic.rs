@@ -54,10 +54,10 @@ impl <
     async fn create_file_links(&self, cmd_input: CmdInput<ExternalAccessKey>) -> Result<HashMap<Uuid, (PathBuf, FileLinkType)>> {
         let text_file_creating_futures: Vec<_> = cmd_input.file_links
             .iter()
-            .filter_map(|(path, recipe)| {
+            .filter_map(|(id, recipe)| {
                 let file_link_factory = &self.file_link_factory;
                 match recipe {
-                    super::cmd_input_parser::FileLinkRecipe::TextFile(text_resource_id, replica, id) => {
+                    super::cmd_input_parser::FileLinkRecipe::TextFile(text_resource_id, replica, path) => {
                         Some(async move {
                             (
                                 id.clone(),
@@ -91,13 +91,13 @@ impl <
     async fn create_directories(&self, cmd_input: CmdInput<ExternalAccessKey>) -> Result<HashMap<Uuid, (PathBuf, FileLinkType)>> {
         let directory_creating_futures: Vec<_> = cmd_input.file_links
             .iter()
-            .filter_map(|(path, recipe)| {
+            .filter_map(|(id, recipe)| {
                 let file_link_factory = &self.file_link_factory;
                 match recipe {
                     super::cmd_input_parser::FileLinkRecipe::TextFile(_, _, _) => {
                         None
                     }
-                    super::cmd_input_parser::FileLinkRecipe::Directory(id) => {
+                    super::cmd_input_parser::FileLinkRecipe::Directory(path) => {
                         Some(async move {
                             (
                                 id.clone(),
