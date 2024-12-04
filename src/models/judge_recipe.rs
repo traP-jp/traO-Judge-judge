@@ -1,9 +1,9 @@
 pub struct Execution {
     pub optional_info: OptionalInfo,
     pub shell_script_id: uuid::Uuid,
-    pub directory_count: f64,
-    pub text_resource_count: f64,
-    pub one_time_text_count: f64,
+    pub directory_count: i64,
+    pub text_resource_count: i64,
+    pub one_time_text_count: i64,
 }
 
 pub struct ExecutionConfigMap {
@@ -12,7 +12,7 @@ pub struct ExecutionConfigMap {
 }
 pub struct SubmissionInput<JobOrderingType: Ord> {
     pub judge_id: uuid::Uuid,
-    pub test_count: f64,
+    pub test_count: i64,
     pub before_test_execs: Execution,
     pub on_test_execs: Execution,
     pub after_test_execs: Execution,

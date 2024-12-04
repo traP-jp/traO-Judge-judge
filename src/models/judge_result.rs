@@ -18,7 +18,7 @@ pub struct SubmissionOutput {
 pub struct TestResult {
     pub status: JudgeStatus,
     pub text: Option<String>,
-    pub score: f64,
+    pub score: i64,
     pub exec_time: f64,
     pub memory_size: f64,
 }
