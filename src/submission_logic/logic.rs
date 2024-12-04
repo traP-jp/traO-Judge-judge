@@ -57,13 +57,17 @@ impl <
             .filter_map(|(id, recipe)| {
                 let file_link_factory = &self.file_link_factory;
                 match recipe {
-                    super::cmd_input_parser::FileLinkRecipe::TextFile(text_resource_id, replica, path) => {
+                    super::cmd_input_parser::FileLinkRecipe::TextFile(recipe) => {
+                        let text_resource_id = recipe.text_resource_id.clone();
+                        let replica = recipe.replica;
+                        let cache = recipe.cache;
+                        let path = recipe.path.clone();
                         Some(async move {
                             (
                                 id.clone(),
                                 path.clone(),
                                 file_link_factory
-                                    .get_text_file_links(text_resource_id.clone(), *replica)
+                                    .get_text_file_links(text_resource_id.clone(), replica, cache)
                                     .await,
                             )
                         })
@@ -94,14 +98,14 @@ impl <
             .filter_map(|(id, recipe)| {
                 let file_link_factory = &self.file_link_factory;
                 match recipe {
-                    super::cmd_input_parser::FileLinkRecipe::TextFile(_, _, _) => {
+                    super::cmd_input_parser::FileLinkRecipe::TextFile(_) => {
                         None
                     }
                     super::cmd_input_parser::FileLinkRecipe::Directory(path) => {
                         Some(async move {
                             (
                                 id.clone(),
-                                path.clone(),
+                                path.path.clone(),
                                 file_link_factory
                                     .get_directory_link()
                                     .await,

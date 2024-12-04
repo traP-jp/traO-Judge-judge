@@ -23,11 +23,13 @@ pub trait FileLinkFactory<
     async fn get_text_file_link(
         &self,
         text_resource_id: ExternalAccessKey,
+        cache: bool,
     ) -> Result<FileLinkType>;
     async fn get_text_file_links(
         &self,
         text_resource_id: ExternalAccessKey,
         count: usize,
+        cache: bool,
     ) -> Result<Vec<FileLinkType>>;
     async fn get_directory_link(&self) -> Result<FileLinkType>;
 }
