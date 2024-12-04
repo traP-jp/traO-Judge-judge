@@ -21,11 +21,11 @@ pub trait FileLinkFactory<
 >
 {
     async fn get_text_file_link(
-        &mut self,
+        &self,
         text_resource_id: ExternalAccessKey,
     ) -> Result<FileLinkType>;
     async fn get_text_file_links(
-        &mut self,
+        &self,
         text_resource_id: ExternalAccessKey,
         count: usize,
     ) -> Result<Vec<FileLinkType>>;
