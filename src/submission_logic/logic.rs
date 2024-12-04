@@ -1,5 +1,9 @@
+mod models;
+use models::*;
+
 use crate::container::Container as ContainerTrait;
-use crate::custom_rc::{FileLink as FileLinkTrait, FileLinkFactory as FileLinkFactoryTrait};
+use crate::remote_exec::ExecutionOutput;
+use crate::custom_rc::{file_link, FileLink as FileLinkTrait, FileLinkFactory as FileLinkFactoryTrait, SymlinkLink as SymlinkLinkTrait};
 use crate::submission_logic::cmd_input_parser::{get_cmd_input, models::*};
 use crate::text_resource_repository::TextResourceRepository as TextResourceRepositoryTrait;
 use crate::models::{judge_recipe::SubmissionInput, judge_result::SubmissionOutput};
@@ -8,7 +12,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 use std::collections::VecDeque;
 use std::future::Future;
-use std::sync::MutexGuard;
+use tokio::sync::MutexGuard;
 use tokio::sync::oneshot::{self, Receiver, Sender};
 use tokio::sync::Mutex;
 use uuid::Uuid;
@@ -23,11 +27,13 @@ pub struct Logic<
     ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
     TextResourceRepositoryType: TextResourceRepositoryTrait<ExternalAccessKey>,
     FileLinkType: FileLinkTrait,
+    SymlinkLinkType: SymlinkLinkTrait<'a, FileLinkType>,
     FileLinkFactoryType: FileLinkFactoryTrait<ExternalAccessKey, TextResourceRepositoryType, FileLinkType>,
 > {
     job_scheduler: Mutex<JobScheduler<'a, ContainerType, JobOrderingType>>,
     file_link_factory: FileLinkFactoryType,
-    _phantom: std::marker::PhantomData<(ExternalAccessKey, TextResourceRepositoryType, FileLinkType)>,
+    shell_command: String,
+    _phantom: std::marker::PhantomData<(ExternalAccessKey, TextResourceRepositoryType, FileLinkType, SymlinkLinkType)>,
 }
 
 impl <
@@ -37,21 +43,24 @@ impl <
     ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
     TextResourceRepositoryType: TextResourceRepositoryTrait<ExternalAccessKey>,
     FileLinkType: FileLinkTrait,
+    SymlinkLinkType: SymlinkLinkTrait<'a, FileLinkType>,
     FileLinkFactoryType: FileLinkFactoryTrait<ExternalAccessKey, TextResourceRepositoryType, FileLinkType>,
-> Logic<'a, ContainerType, JobOrderingType, ExternalAccessKey, TextResourceRepositoryType, FileLinkType, FileLinkFactoryType> {
+> Logic<'a, ContainerType, JobOrderingType, ExternalAccessKey, TextResourceRepositoryType, FileLinkType, SymlinkLinkType, FileLinkFactoryType> {
     pub fn new(
         job_scheduler: JobScheduler<'a, ContainerType, JobOrderingType>,
         file_link_factory: FileLinkFactoryType,
+        shell_command: String,
     ) -> Self {
         Self {
             job_scheduler: Mutex::new(job_scheduler),
             file_link_factory,
+            shell_command,
             _phantom: std::marker::PhantomData,
         }
     }
 
 
-    async fn create_file_links(&self, cmd_input: CmdInput<ExternalAccessKey>) -> Result<HashMap<Uuid, (PathBuf, FileLinkType)>> {
+    async fn create_text_file_links(&self, cmd_input: CmdInput<ExternalAccessKey>) -> Result<HashMap<Uuid, (PathBuf, FileLinkType)>> {
         let text_file_creating_futures: Vec<_> = cmd_input.file_links
             .iter()
             .filter_map(|(id, recipe)| {
@@ -92,7 +101,7 @@ impl <
         Ok(file_links_map)
     }
 
-    async fn create_directories(&self, cmd_input: CmdInput<ExternalAccessKey>) -> Result<HashMap<Uuid, (PathBuf, FileLinkType)>> {
+    async fn create_directory_link(&self, cmd_input: CmdInput<ExternalAccessKey>) -> Result<HashMap<Uuid, (PathBuf, FileLinkType)>> {
         let directory_creating_futures: Vec<_> = cmd_input.file_links
             .iter()
             .filter_map(|(id, recipe)| {
@@ -126,6 +135,44 @@ impl <
         }
         Ok(file_links_map)
     }
+
+    async fn create_file_links(&self, cmd_input: CmdInput<ExternalAccessKey>) -> Result<HashMap<Uuid, (PathBuf, FileLinkType)>> {
+        let text_file_links = self.create_text_file_links(cmd_input.clone());
+        let directory_link = self.create_directory_link(cmd_input.clone());
+        let (text_file_links, directory_link) = join(text_file_links, directory_link).await;
+        let text_file_links = text_file_links?;
+        let directory_link = directory_link?;
+        let merged_file_links = text_file_links.into_iter()
+            .chain(directory_link.into_iter())
+            .collect::<HashMap<Uuid, (PathBuf, FileLinkType)>>();
+        Ok(merged_file_links)
+    }
+
+    async fn single_exec(
+        &self, single_exec_args: SingleExecutionArgs<'a, FileLinkType, JobOrderingType>,
+    ) -> Result<ExecutionOutput> {
+        let container_rx;
+        {
+            let order = single_exec_args.job_order.clone();
+            let mut job_scheduler = self.job_scheduler.lock().await;
+            container_rx = job_scheduler.get_container_waiting_rx(order);
+        }
+        let container = container_rx.await
+            .context("Failed to acquire container")?;
+        let result = container.execute::<
+            FileLinkType,
+            SymlinkLinkType
+        >(
+            &single_exec_args.cmd,
+            single_exec_args.envs,
+            single_exec_args.connection_time_limit,
+            single_exec_args.execution_time_limit,
+            single_exec_args.file_links,
+        )
+            .await
+            .context("Failed to execute command");
+        result
+    }
 }
 
 impl <
@@ -135,6 +182,7 @@ impl <
     ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
     TextResourceRepositoryType: TextResourceRepositoryTrait<ExternalAccessKey>,
     FileLinkType: FileLinkTrait,
+    SymlinkLinkType: SymlinkLinkTrait<'a, FileLinkType>,
     FileLinkFactoryType: FileLinkFactoryTrait<ExternalAccessKey, TextResourceRepositoryType, FileLinkType>,
 > 
 super::Logic<ContainerType, JobOrderingType>
@@ -145,6 +193,7 @@ for Logic<
     ExternalAccessKey,
     TextResourceRepositoryType,
     FileLinkType,
+    SymlinkLinkType,
     FileLinkFactoryType,
 > {
     async fn add_container(&self, id: Uuid, container: ContainerType) -> Result<()> {
@@ -160,25 +209,8 @@ for Logic<
     }
 
     async fn exec(&self, sub_input: SubmissionInput<JobOrderingType>, connection_time_limit: Duration, execution_time_limit: Duration) -> Result<SubmissionOutput> {
-        let container_rx;
-        {
-            let order = sub_input.job_order.clone();
-            let mut job_scheduler = self.job_scheduler.lock().await;
-            container_rx = job_scheduler.get_container_waiting_rx(order);
-        }
-        let mut container = container_rx.await
-            .context("Failed to acquire container")?;
         let cmd_input: CmdInput<ExternalAccessKey> = super::cmd_input_parser::get_cmd_input(&sub_input);
-        let file_links = join(
-            self.create_file_links(cmd_input.clone()),
-            self.create_directories(cmd_input.clone()),
-        ).await;
-        let (file_links, directories) = file_links;
-        let file_links = file_links?;
-        let directories = directories?;
-        let merged_file_links = file_links.into_iter()
-            .chain(directories.into_iter())
-            .collect::<HashMap<Uuid, (PathBuf, FileLinkType)>>();
+        let file_links = self.create_file_links(cmd_input.clone()).await?;
         unimplemented!()
     }
 

@@ -24,6 +24,7 @@ pub enum FileLinkRecipe<ExternalAccessKey> {
 #[derive(Clone)]
 pub struct SingleExecutionConfig {
     pub file_ids: Vec<Uuid>,
+    pub hook_sh_id: Uuid,
     pub cmd: String,
     pub envs: std::collections::HashMap<String, String>,
 }
