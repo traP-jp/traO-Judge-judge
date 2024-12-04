@@ -21,3 +21,4 @@ ssh2 = "0.9.4"
 backend_api_schema = { path = "backend-api-schema" }
 judge_api_server = { path = "judge-api-server" }
 byte-unit = "5.1.6"
+futures = "0.3.31"
