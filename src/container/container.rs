@@ -1,9 +1,10 @@
 use std::path::PathBuf;
 use anyhow::Context;
 
-use crate::remote_exec::RemoteExecutor as RemoteExecutorTrait;
+use crate::{custom_rc::SymlinkLink as SymlinkLinkTrait, remote_exec::RemoteExecutor as RemoteExecutorTrait};
 use super::Container as ContainerTrait;
 use crate::custom_rc::FileLink as FileLinkTrait;
+use tokio::sync::MutexGuard;
 
 struct Container<RemoteExecutorType: RemoteExecutorTrait> {
     pub symlink_base_path: PathBuf,
@@ -19,26 +20,25 @@ impl<RemoteExecutorType: RemoteExecutorTrait> Container<RemoteExecutorType> {
     }
 }
 
-impl<RemoteExecutorType: RemoteExecutorTrait> ContainerTrait for Container<RemoteExecutorType> {
-    fn execute<
-        'a,
-        FileLinkType: FileLinkTrait<'a>,
+impl<'a, RemoteExecutorType: RemoteExecutorTrait> ContainerTrait<'a> for Container<RemoteExecutorType> {
+    async fn execute<
+        FileLinkType: FileLinkTrait,
+        SymlinkLinkType: SymlinkLinkTrait<'a, FileLinkType>,
     >(
         &self,
         cmd : &str,
         envs: std::collections::HashMap<String, String>,
         connection_time_limit: std::time::Duration,
         execution_time_limit: std::time::Duration,
-        file_links: &'a std::collections::HashMap<PathBuf, FileLinkType>,
+        file_links: std::collections::HashMap<PathBuf, MutexGuard<'a, FileLinkType>>,
     ) -> anyhow::Result<crate::remote_exec::ExecutionOutput> {
-        let _symlinks = file_links
-            .iter()
-            .map(|(path, file_link)| {
-                let symlink_path = self.symlink_base_path.join(path);
-                file_link.symlink_to(&symlink_path)
-            })
-            .collect::<anyhow::Result<Vec<_>>>()
-            .context("Failed to create symlinks")?;
+        let mut _symlinks = Vec::new();
+        for (destination, target) in file_links {
+            let symlink = SymlinkLinkType::new(target, destination)
+                .await
+                .context("Failed to create symlink")?;
+            _symlinks.push(symlink);
+        }
         self.remote_executor.execute(
             cmd,
             envs,
