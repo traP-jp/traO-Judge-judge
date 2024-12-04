@@ -10,7 +10,7 @@ pub struct ExecutionConfigMap {
     pub text_resource_ids: Vec<uuid::Uuid>,
     pub one_time_text_contents: Vec<String>,
 }
-pub struct Judge {
+pub struct SubmissionInput<JobOrderingType: Ord> {
     pub judge_id: uuid::Uuid,
     pub test_count: f64,
     pub before_test_execs: Execution,
@@ -19,6 +19,7 @@ pub struct Judge {
     pub before_test_config_map: ExecutionConfigMap,
     pub on_test_config_maps: Vec<ExecutionConfigMap>,
     pub after_test_config_map: ExecutionConfigMap,
+    pub job_order: JobOrderingType,
 }
 
 pub struct OptionalInfo {

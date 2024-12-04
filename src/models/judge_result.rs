@@ -9,7 +9,7 @@ pub enum JudgeStatus {
     InternalError,
 }
 
-pub struct SubmitResult {
+pub struct SubmissionOutput {
     pub judge_id: uuid::Uuid,
     pub test_results: Vec<TestResult>,
     pub total_result: TestResult,
