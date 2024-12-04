@@ -1,6 +1,6 @@
 use crate::container::Container as ContainerTrait;
 use crate::custom_rc::{FileLink as FileLinkTrait, FileLinkFactory as FileLinkFactoryTrait};
-use crate::submission_logic::cmd_input_parser::CmdInput;
+use crate::submission_logic::cmd_input_parser::{get_cmd_input, models::*};
 use crate::text_resource_repository::TextResourceRepository as TextResourceRepositoryTrait;
 use crate::models::{judge_recipe::SubmissionInput, judge_result::SubmissionOutput};
 use anyhow::{Context, Result};
@@ -57,7 +57,7 @@ impl <
             .filter_map(|(id, recipe)| {
                 let file_link_factory = &self.file_link_factory;
                 match recipe {
-                    super::cmd_input_parser::FileLinkRecipe::TextFile(recipe) => {
+                    FileLinkRecipe::TextFile(recipe) => {
                         let text_resource_id = recipe.text_resource_id.clone();
                         let replica = recipe.replica;
                         let cache = recipe.cache;
@@ -72,7 +72,7 @@ impl <
                             )
                         })
                     }
-                    super::cmd_input_parser::FileLinkRecipe::Directory(_) => {
+                    FileLinkRecipe::Directory(_) => {
                         None
                     }
                 }
@@ -98,10 +98,10 @@ impl <
             .filter_map(|(id, recipe)| {
                 let file_link_factory = &self.file_link_factory;
                 match recipe {
-                    super::cmd_input_parser::FileLinkRecipe::TextFile(_) => {
+                    FileLinkRecipe::TextFile(_) => {
                         None
                     }
-                    super::cmd_input_parser::FileLinkRecipe::Directory(path) => {
+                    FileLinkRecipe::Directory(path) => {
                         Some(async move {
                             (
                                 id.clone(),
