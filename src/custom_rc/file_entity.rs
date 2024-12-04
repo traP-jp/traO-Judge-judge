@@ -5,7 +5,7 @@ pub struct TextFileEntity {
 }
 
 impl TextFileEntity {
-    pub fn new(path: PathBuf, content: &str) -> Result<Self> {
+    pub async fn new(path: PathBuf, content: &str) -> Result<Self> {
         std::fs::write(&path, content)
             .with_context(|| {
                 format!(
@@ -39,7 +39,7 @@ pub struct DirectoryEntity {
 }
 
 impl DirectoryEntity {
-    pub fn new(path: PathBuf) -> Result<Self> {
+    pub async fn new(path: PathBuf) -> Result<Self> {
         std::fs::create_dir_all(&path)
             .with_context(|| {
                 format!(
@@ -73,7 +73,7 @@ pub struct SymlinkEntity {
 }
 
 impl SymlinkEntity {
-    pub fn new(path: PathBuf, target: &PathBuf) -> Result<Self> {
+    pub async fn new(path: PathBuf, target: &PathBuf) -> Result<Self> {
         std::os::unix::fs::symlink(&target, &path)
             .with_context(|| {
                 format!(

@@ -43,19 +43,23 @@ impl<
         }
     }
 
-    pub fn get_text_file_entity(
+    pub async fn get_text_file_entity(
         &mut self,
         text_resource_id: ExternalAccessKey,
     ) -> Result<Arc<TextFileEntity>> {
         if let Some(entity) = self.cache.get(&text_resource_id) {
             return Ok(entity.clone());
         } else {
-            let text = self.repo.get_text(&text_resource_id).with_context(|| {
-                format!(
-                    "Failed to get text from repository : {:?}",
-                    text_resource_id.to_string()
-                )
-            })?;
+            let text = self
+                .repo
+                .get_text(&text_resource_id)
+                .await
+                .with_context(|| {
+                    format!(
+                        "Failed to get text from repository : {:?}",
+                        text_resource_id.to_string()
+                    )
+                })?;
             let path = self.cache_directory.join(format!(
                 "{:?}-{:?}",
                 text_resource_id.to_string().chars().filter(|c| {
@@ -66,7 +70,7 @@ impl<
                 },),
                 Uuid::new_v4().to_string()
             ));
-            let entity = Arc::new(TextFileEntity::new(path, &text)?);
+            let entity = Arc::new(TextFileEntity::new(path, &text).await?);
             self.cache.insert(text_resource_id, entity.clone());
             while self.pop_if_needed()? {}
             Ok(entity)

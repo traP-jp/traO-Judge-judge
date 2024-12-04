@@ -6,9 +6,12 @@ mod text_entity_factory;
 use crate::text_resource_repository::TextResourceRepository as RepoTrait;
 use anyhow::Result;
 use std::path::PathBuf;
+use tokio::sync::MutexGuard;
 
-pub trait FileLink: Sized {
-    fn symlink_to(self, path: &PathBuf) -> Result<Self>;
+pub trait FileLink: Sized {}
+
+pub trait SymlinkLink<'a, FileLink>: Sized {
+    async fn new(target: MutexGuard<'a, FileLink>, destination: PathBuf) -> Result<Self>;
 }
 
 pub trait FileLinkFactory<
@@ -17,6 +20,14 @@ pub trait FileLinkFactory<
     FileLinkType: FileLink,
 >
 {
-    fn get_text_file_link(&mut self, text_resource_id: ExternalAccessKey) -> Result<FileLinkType>;
-    fn get_directory_link(&self) -> Result<FileLinkType>;
+    async fn get_text_file_link(
+        &mut self,
+        text_resource_id: ExternalAccessKey,
+    ) -> Result<FileLinkType>;
+    async fn get_text_file_links(
+        &mut self,
+        text_resource_id: ExternalAccessKey,
+        count: usize,
+    ) -> Result<Vec<FileLinkType>>;
+    async fn get_directory_link(&self) -> Result<FileLinkType>;
 }

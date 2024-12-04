@@ -40,18 +40,38 @@ impl<
     > crate::custom_rc::FileLinkFactory<ExternalAccessKey, RepoType, super::file_link::FileLink>
     for FileLinkFactory<ExternalAccessKey, RepoType>
 {
-    fn get_text_file_link(
+    async fn get_text_file_link(
         &mut self,
         text_resource_id: ExternalAccessKey,
     ) -> anyhow::Result<super::file_link::FileLink> {
         let text_file_entity = self
             .text_entity_factory
-            .get_text_file_entity(text_resource_id)?;
-        Ok(super::file_link::FileLink::new_text_file_link(text_file_entity))
+            .get_text_file_entity(text_resource_id)
+            .await?;
+        Ok(super::file_link::FileLink::new_text_file_link(
+            text_file_entity,
+        ))
     }
 
-    fn get_directory_link(&self) -> anyhow::Result<super::file_link::FileLink> {
-        let directory_entity = self.dir_entity_factory.get_dir_entity()?;
-        Ok(super::file_link::FileLink::new_directory_link(directory_entity))
+    async fn get_text_file_links(
+        &mut self,
+        text_resource_id: ExternalAccessKey,
+        count: usize,
+    ) -> anyhow::Result<Vec<super::file_link::FileLink>> {
+        let text_file_entity = self
+            .text_entity_factory
+            .get_text_file_entity(text_resource_id)
+            .await?;
+        Ok(super::file_link::FileLink::new_text_file_links(
+            text_file_entity,
+            count,
+        ))
+    }
+
+    async fn get_directory_link(&self) -> anyhow::Result<super::file_link::FileLink> {
+        let directory_entity = self.dir_entity_factory.get_dir_entity().await?;
+        Ok(super::file_link::FileLink::new_directory_link(
+            directory_entity,
+        ))
     }
 }
