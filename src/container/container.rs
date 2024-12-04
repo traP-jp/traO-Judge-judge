@@ -20,8 +20,9 @@ impl<RemoteExecutorType: RemoteExecutorTrait> Container<RemoteExecutorType> {
     }
 }
 
-impl<'a, RemoteExecutorType: RemoteExecutorTrait> ContainerTrait<'a> for Container<RemoteExecutorType> {
+impl<RemoteExecutorType: RemoteExecutorTrait> ContainerTrait for Container<RemoteExecutorType> {
     async fn execute<
+        'a,
         FileLinkType: FileLinkTrait,
         SymlinkLinkType: SymlinkLinkTrait<'a, FileLinkType>,
     >(

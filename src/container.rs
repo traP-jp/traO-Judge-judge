@@ -1,4 +1,5 @@
 pub mod container;
+pub 
 use std::path::PathBuf;
 use crate::custom_rc::FileLink;
 use std::collections::HashMap;
@@ -7,8 +8,9 @@ use crate::remote_exec::ExecutionOutput;
 use tokio::sync::MutexGuard;
 use crate::custom_rc::SymlinkLink;
 
-pub trait Container<'a> {
+pub trait Container {
     async fn execute<
+        'a,
         FileLinkType: FileLink,
         SymlinkLinkType: SymlinkLink<'a, FileLinkType>,
     >(
