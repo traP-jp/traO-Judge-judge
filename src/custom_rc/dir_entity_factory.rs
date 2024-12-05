@@ -12,6 +12,6 @@ impl DirEntityFactory {
     }
 
     pub async fn get_dir_entity(&self) -> Result<DirectoryEntity> {
-        Ok(DirectoryEntity::new(self.path.clone()).await?)
+        DirectoryEntity::new(self.path.clone()).await
     }
 }

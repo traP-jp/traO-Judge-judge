@@ -46,7 +46,7 @@ impl crate::custom_rc::FileLink for FileLink {}
 
 pub struct SymlinkLink<'a> {
     file_entity: SymlinkEntity,
-    target: MutexGuard<'a, FileLink>,
+    _target: MutexGuard<'a, FileLink>,
 }
 
 impl<'a> super::SymlinkLink<'a, FileLink> for SymlinkLink<'a> {
@@ -57,7 +57,7 @@ impl<'a> super::SymlinkLink<'a, FileLink> for SymlinkLink<'a> {
         let symlink_entity = SymlinkEntity::new(target_path, &destination).await?;
         Ok(Self {
             file_entity: symlink_entity,
-            target,
+            _target: target,
         })
     }
 

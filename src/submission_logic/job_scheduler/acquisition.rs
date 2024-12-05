@@ -10,8 +10,8 @@ pub struct JobAcquisition<'a, ContainerType: ContainerTrait, JobOrderingType: Or
     pub id: Uuid,
 }
 
-impl<'a, ContainerType: ContainerTrait, JobOrderingType: Ord> PartialEq
-    for JobAcquisition<'a, ContainerType, JobOrderingType>
+impl<ContainerType: ContainerTrait, JobOrderingType: Ord> PartialEq
+    for JobAcquisition<'_, ContainerType, JobOrderingType>
 {
     fn eq(&self, other: &Self) -> bool {
         self.ordering == other.ordering

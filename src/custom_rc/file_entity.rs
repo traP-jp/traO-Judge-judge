@@ -24,9 +24,7 @@ impl Drop for TextFileEntity {
             self.path
         ));
         match result {
-            Ok(_) => {
-                return;
-            }
+            Ok(_) => {}
             Err(e) => {
                 eprintln!("{:?}", e);
             }
