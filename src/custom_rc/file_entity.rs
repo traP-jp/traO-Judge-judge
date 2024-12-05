@@ -58,9 +58,7 @@ impl Drop for DirectoryEntity {
             self.path
         ));
         match result {
-            Ok(_) => {
-                return;
-            }
+            Ok(_) => {}
             Err(e) => {
                 eprintln!("{:?}", e);
             }
@@ -74,7 +72,7 @@ pub struct SymlinkEntity {
 
 impl SymlinkEntity {
     pub async fn new(path: PathBuf, target: &PathBuf) -> Result<Self> {
-        std::os::unix::fs::symlink(&target, &path)
+        std::os::unix::fs::symlink(target, &path)
             .with_context(|| {
                 format!(
                     "Failed to create symlink while creating SymlinkEntity : {:?}",
@@ -92,9 +90,7 @@ impl Drop for SymlinkEntity {
             self.path
         ));
         match result {
-            Ok(_) => {
-                return;
-            }
+            Ok(_) => {}
             Err(e) => {
                 eprintln!("{:?}", e);
             }

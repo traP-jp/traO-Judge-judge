@@ -44,6 +44,7 @@ impl<RemoteExecutorType: RemoteExecutorTrait> ContainerTrait for Container<Remot
         }
         self.remote_executor
             .execute(cmd, envs, connection_time_limit, execution_time_limit)
+            .await
             .context("Failed to execute command")
     }
 }

@@ -18,21 +18,21 @@ impl<'a, ContainerType: ContainerTrait, JobOrderingType: Ord> PartialEq
     }
 }
 
-impl<'a, ContainerType: ContainerTrait, JobOrderingType: Ord> Eq
-    for JobAcquisition<'a, ContainerType, JobOrderingType>
+impl<ContainerType: ContainerTrait, JobOrderingType: Ord> Eq
+    for JobAcquisition<'_, ContainerType, JobOrderingType>
 {
 }
 
-impl<'a, ContainerType: ContainerTrait, JobOrderingType: Ord> PartialOrd
-    for JobAcquisition<'a, ContainerType, JobOrderingType>
+impl<ContainerType: ContainerTrait, JobOrderingType: Ord> PartialOrd
+    for JobAcquisition<'_, ContainerType, JobOrderingType>
 {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.ordering.cmp(&other.ordering))
     }
 }
 
-impl<'a, ContainerType: ContainerTrait, JobOrderingType: Ord> Ord
-    for JobAcquisition<'a, ContainerType, JobOrderingType>
+impl<ContainerType: ContainerTrait, JobOrderingType: Ord> Ord
+    for JobAcquisition<'_, ContainerType, JobOrderingType>
 {
     fn cmp(&self, other: &Self) -> Ordering {
         self.ordering.cmp(&other.ordering)

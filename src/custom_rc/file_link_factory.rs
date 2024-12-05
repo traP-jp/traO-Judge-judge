@@ -1,7 +1,6 @@
 use crate::custom_rc::dir_entity_factory::DirEntityFactory;
 use crate::custom_rc::text_entity_factory::TextEntityFactory;
 use crate::text_resource_repository::TextResourceRepository as RepoTrait;
-use tokio::sync::Mutex;
 
 pub struct FileLinkFactory<
     ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,

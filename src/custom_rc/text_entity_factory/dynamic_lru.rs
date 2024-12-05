@@ -24,7 +24,6 @@ impl<K: Eq + std::hash::Hash + Clone, V: Clone> DynamicallySizedLRUCache<K, V> {
         self.last_accessed_order.insert(unix_timestamp, key.clone());
         self.last_accessed_time.insert(key.clone(), unix_timestamp);
         self.cache.insert(key, value);
-        ()
     }
 
     pub fn get(&mut self, key: &K) -> Option<V> {

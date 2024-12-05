@@ -95,7 +95,7 @@ impl<
                         let path = recipe.path.clone();
                         Some(async move {
                             (
-                                id.clone(),
+                                *id,
                                 path.clone(),
                                 file_link_factory
                                     .get_text_file_links(text_resource_id.clone(), replica, cache)
@@ -113,7 +113,7 @@ impl<
         for (id, path, file_link) in file_links {
             let file_link_vec = file_link.context("Failed to create file link")?;
             for file_link in file_link_vec {
-                file_links_map.insert(id.clone(), (path.clone(), file_link));
+                file_links_map.insert(id, (path.clone(), file_link));
             }
         }
         Ok(file_links_map)
@@ -132,7 +132,7 @@ impl<
                     FileLinkRecipe::TextFile(_) => None,
                     FileLinkRecipe::Directory(path) => Some(async move {
                         (
-                            id.clone(),
+                            *id,
                             path.path.clone(),
                             file_link_factory.get_directory_link().await,
                         )
@@ -145,7 +145,7 @@ impl<
         let mut file_links_map = HashMap::new();
         for (id, path, file_link) in file_links {
             let file_link_vec = file_link.context("Failed to create file link")?;
-            file_links_map.insert(id.clone(), (path.clone(), file_link_vec));
+            file_links_map.insert(id, (path.clone(), file_link_vec));
         }
         Ok(file_links_map)
     }
@@ -177,7 +177,7 @@ impl<
             container_rx = job_scheduler.get_container_waiting_rx(order);
         }
         let container = container_rx.await.context("Failed to acquire container")?;
-        let result = container
+        container
             .execute::<FileLinkType, SymlinkLinkType>(
                 &single_exec_args.cmd,
                 single_exec_args.envs,
@@ -186,8 +186,7 @@ impl<
                 single_exec_args.file_links,
             )
             .await
-            .context("Failed to execute command");
-        result
+            .context("Failed to execute command")
     }
 }
 

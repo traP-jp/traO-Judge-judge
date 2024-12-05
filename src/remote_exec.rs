@@ -13,6 +13,7 @@ pub enum ExecutionOutput {
 
 pub trait RemoteExecutor {
     async fn execute(
+        &self,
         cmd: &str,
         envs: std::collections::HashMap<String, String>,
         connection_time_limit: std::time::Duration,

@@ -1,3 +1,4 @@
+#![allow(clippy::module_inception)]
 pub mod container;
 use crate::custom_rc::FileLink;
 use crate::custom_rc::SymlinkLink;

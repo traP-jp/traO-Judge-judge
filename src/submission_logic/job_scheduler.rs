@@ -46,7 +46,7 @@ impl<'a, ContainerType: ContainerTrait, JobOrderType: Ord + Clone>
         let (containers, job_acquisition_queue) =
             (&self.containers, &mut self.job_acquisition_queue);
         let mut available_containers: Vec<(&Uuid, MutexGuard<'a, ContainerType>)> = containers
-            .into_iter()
+            .iter()
             .filter_map(|(id, container)| {
                 let unlocked_container: Result<MutexGuard<'a, ContainerType>, _> =
                     container.try_lock();
@@ -56,7 +56,7 @@ impl<'a, ContainerType: ContainerTrait, JobOrderType: Ord + Clone>
                 }
             })
             .collect();
-        while available_containers.len() > 0 {
+        while available_containers.is_empty() {
             let job_acquisition = job_acquisition_queue.pop();
             match job_acquisition {
                 None => break,
