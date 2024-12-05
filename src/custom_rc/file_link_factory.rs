@@ -1,6 +1,7 @@
 use crate::custom_rc::dir_entity_factory::DirEntityFactory;
 use crate::custom_rc::text_entity_factory::TextEntityFactory;
 use crate::text_resource_repository::TextResourceRepository as RepoTrait;
+use tokio::sync::Mutex;
 
 pub struct FileLinkFactory<
     ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
@@ -41,12 +42,13 @@ impl<
     for FileLinkFactory<ExternalAccessKey, RepoType>
 {
     async fn get_text_file_link(
-        &mut self,
+        &self,
         text_resource_id: ExternalAccessKey,
+        cache: bool,
     ) -> anyhow::Result<super::file_link::FileLink> {
         let text_file_entity = self
             .text_entity_factory
-            .get_text_file_entity(text_resource_id)
+            .get_text_file_entity(text_resource_id, cache)
             .await?;
         Ok(super::file_link::FileLink::new_text_file_link(
             text_file_entity,
@@ -54,13 +56,14 @@ impl<
     }
 
     async fn get_text_file_links(
-        &mut self,
+        &self,
         text_resource_id: ExternalAccessKey,
         count: usize,
+        cache: bool,
     ) -> anyhow::Result<Vec<super::file_link::FileLink>> {
         let text_file_entity = self
             .text_entity_factory
-            .get_text_file_entity(text_resource_id)
+            .get_text_file_entity(text_resource_id, cache)
             .await?;
         Ok(super::file_link::FileLink::new_text_file_links(
             text_file_entity,

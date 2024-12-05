@@ -6,13 +6,14 @@ use byte_unit::Byte;
 use dynamic_lru::DynamicallySizedLRUCache;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 use uuid::Uuid;
 
 pub struct TextEntityFactory<
     ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
     RepoType: RepoTrait<ExternalAccessKey>,
 > {
-    cache: DynamicallySizedLRUCache<ExternalAccessKey, Arc<TextFileEntity>>,
+    cache: Mutex<DynamicallySizedLRUCache<ExternalAccessKey, Arc<TextFileEntity>>>,
     cache_directory: PathBuf,
     cache_directory_size_maximum: u64,
     repo: RepoType,
@@ -34,7 +35,7 @@ impl<
             panic!("cache_dir_margin_ratio must be in the range (0.0, 1.0)");
         }
         Self {
-            cache: DynamicallySizedLRUCache::new(),
+            cache: Mutex::new(DynamicallySizedLRUCache::new()),
             cache_directory,
             cache_directory_size_maximum: (cache_directory_size_limit.as_u64() as f64
                 * cache_dir_margin_ratio) as u64,
@@ -44,40 +45,49 @@ impl<
     }
 
     pub async fn get_text_file_entity(
-        &mut self,
+        &self,
         text_resource_id: ExternalAccessKey,
+        cache: bool,
     ) -> Result<Arc<TextFileEntity>> {
-        if let Some(entity) = self.cache.get(&text_resource_id) {
+        if let Some(entity) = self.cache.lock().await.get(&text_resource_id) {
             return Ok(entity.clone());
-        } else {
-            let text = self
-                .repo
-                .get_text(&text_resource_id)
-                .await
-                .with_context(|| {
-                    format!(
-                        "Failed to get text from repository : {:?}",
-                        text_resource_id.to_string()
-                    )
-                })?;
-            let path = self.cache_directory.join(format!(
-                "{:?}-{:?}",
-                text_resource_id.to_string().chars().filter(|c| {
-                    match c {
-                        'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' => true,
-                        _ => false,
-                    }
-                },),
-                Uuid::new_v4().to_string()
-            ));
-            let entity = Arc::new(TextFileEntity::new(path, &text).await?);
-            self.cache.insert(text_resource_id, entity.clone());
-            while self.pop_if_needed()? {}
-            Ok(entity)
         }
+        let text = self
+            .repo
+            .get_text(&text_resource_id)
+            .await
+            .with_context(|| {
+                format!(
+                    "Failed to get text from repository : {:?}",
+                    text_resource_id.to_string()
+                )
+            })?;
+        let path = self.cache_directory.join(format!(
+            "{:?}-{:?}",
+            text_resource_id.to_string().chars().filter(|c| {
+                match c {
+                    'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' => true,
+                    _ => false,
+                }
+            },),
+            Uuid::new_v4().to_string()
+        ));
+        let entity = Arc::new(TextFileEntity::new(path, &text).await?);
+        if cache {
+            self.cache
+                .lock()
+                .await
+                .insert(text_resource_id, entity.clone());
+        }
+        while self
+            .pop_if_needed()
+            .await
+            .context("Failed to pop resource from cache")?
+        {}
+        Ok(entity)
     }
 
-    fn pop_if_needed(&mut self) -> Result<bool> {
+    async fn pop_if_needed(&self) -> Result<bool> {
         let dir_size_u64 = std::fs::metadata::<PathBuf>(self.cache_directory.clone())
             .with_context(|| {
                 format!(
@@ -87,7 +97,7 @@ impl<
             })?
             .len();
         if dir_size_u64 > self.cache_directory_size_maximum {
-            self.cache.remove_one()?;
+            self.cache.lock().await.remove_one()?;
             Ok(true)
         } else {
             Ok(false)
