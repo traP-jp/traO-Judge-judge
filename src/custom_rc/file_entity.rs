@@ -81,6 +81,24 @@ impl SymlinkEntity {
             })
             .map(|_| Self { path })
     }
+
+    pub async fn readonly(&self) -> Result<()> {
+        let metadata = std::fs::metadata(&self.path).with_context(|| {
+            format!(
+                "Failed to get metadata of symlink while making it readonly : {:?}",
+                self.path
+            )
+        })?;
+        let mut permissions = metadata.permissions();
+        permissions.set_readonly(true);
+        std::fs::set_permissions(&self.path, permissions).with_context(|| {
+            format!(
+                "Failed to set permissions of symlink while making it readonly : {:?}",
+                self.path
+            )
+        })?;
+        Ok(())
+    }
 }
 
 impl Drop for SymlinkEntity {

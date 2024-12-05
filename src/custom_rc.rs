@@ -12,6 +12,7 @@ pub trait FileLink: Sized {}
 
 pub trait SymlinkLink<'a, FileLink>: Sized {
     async fn new(target: MutexGuard<'a, FileLink>, destination: PathBuf) -> Result<Self>;
+    async fn force_readonly(&self) -> Result<()>;
 }
 
 pub trait FileLinkFactory<

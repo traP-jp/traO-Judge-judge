@@ -60,4 +60,8 @@ impl<'a> super::SymlinkLink<'a, FileLink> for SymlinkLink<'a> {
             target,
         })
     }
+
+    async fn force_readonly(&self) -> Result<()> {
+        self.file_entity.readonly().await
+    }
 }
