@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 use uuid::Uuid;
 
-
 #[derive(Clone)]
 pub struct TextFileRecipe<ExternalAccessKey> {
     pub text_resource_id: ExternalAccessKey,
@@ -28,8 +27,6 @@ pub struct SingleExecutionConfig {
     pub cmd: String,
     pub envs: std::collections::HashMap<String, String>,
 }
-
-
 
 #[derive(Clone)]
 pub struct CmdInput<ExternalAccessKey> {

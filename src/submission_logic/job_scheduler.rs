@@ -1,25 +1,27 @@
 mod acquisition;
 use super::job_scheduler::acquisition::JobAcquisition;
-use std::collections::{BinaryHeap, HashMap};
 use crate::container::Container as ContainerTrait;
+use anyhow::{Context, Result};
+use std::collections::{BinaryHeap, HashMap};
+use std::sync::Arc;
 use tokio::sync::oneshot::{self, Receiver, Sender};
 use tokio::sync::{Mutex, MutexGuard};
-use std::sync::Arc;
 use uuid::Uuid;
-use anyhow::{Result, Context};
 
 pub struct JobScheduler<'a, ContainerType: ContainerTrait, JobOrderType: Ord + Clone> {
     containers: HashMap<Uuid, Arc<Mutex<ContainerType>>>,
     job_acquisition_queue: BinaryHeap<JobAcquisition<'a, ContainerType, JobOrderType>>,
 }
 
-impl<'a, ContainerType: ContainerTrait, JobOrderType: Ord + Clone> JobScheduler<'a, ContainerType, JobOrderType> {
-    pub fn get_container_waiting_rx(&mut self, ordering: JobOrderType) -> Receiver<MutexGuard<'a, ContainerType>> {
-        let (
-            tx,
-            rx
-        ): (Sender<MutexGuard<'a, ContainerType>>, _) = oneshot::channel();
-        let job_acquisition: JobAcquisition<'a, ContainerType, JobOrderType> = JobAcquisition{
+impl<'a, ContainerType: ContainerTrait, JobOrderType: Ord + Clone>
+    JobScheduler<'a, ContainerType, JobOrderType>
+{
+    pub fn get_container_waiting_rx(
+        &mut self,
+        ordering: JobOrderType,
+    ) -> Receiver<MutexGuard<'a, ContainerType>> {
+        let (tx, rx): (Sender<MutexGuard<'a, ContainerType>>, _) = oneshot::channel();
+        let job_acquisition: JobAcquisition<'a, ContainerType, JobOrderType> = JobAcquisition {
             sender: tx,
             ordering,
             id: Uuid::new_v4(),
@@ -41,11 +43,13 @@ impl<'a, ContainerType: ContainerTrait, JobOrderType: Ord + Clone> JobScheduler<
     }
 
     pub async fn distribute(&'a mut self) -> Result<()> {
-        let (containers, job_acquisition_queue) = (&self.containers, &mut self.job_acquisition_queue);
+        let (containers, job_acquisition_queue) =
+            (&self.containers, &mut self.job_acquisition_queue);
         let mut available_containers: Vec<(&Uuid, MutexGuard<'a, ContainerType>)> = containers
             .into_iter()
             .filter_map(|(id, container)| {
-                let unlocked_container: Result<MutexGuard<'a, ContainerType>, _> = container.try_lock();
+                let unlocked_container: Result<MutexGuard<'a, ContainerType>, _> =
+                    container.try_lock();
                 match unlocked_container {
                     Ok(guard) => Some((id, guard)),
                     Err(_) => None,
@@ -53,14 +57,15 @@ impl<'a, ContainerType: ContainerTrait, JobOrderType: Ord + Clone> JobScheduler<
             })
             .collect();
         while available_containers.len() > 0 {
-            let job_acquisition = job_acquisition_queue
-                .pop();
+            let job_acquisition = job_acquisition_queue.pop();
             match job_acquisition {
                 None => break,
                 Some(job_acquisition) => {
-                    let container: (&Uuid, MutexGuard<'a, ContainerType>) = available_containers.pop().unwrap();
-                    job_acquisition.sender.send(container.1)
-                        .map_err(|_| anyhow::anyhow!("Failed to send container to job acquisition"))?;
+                    let container: (&Uuid, MutexGuard<'a, ContainerType>) =
+                        available_containers.pop().unwrap();
+                    job_acquisition.sender.send(container.1).map_err(|_| {
+                        anyhow::anyhow!("Failed to send container to job acquisition")
+                    })?;
                 }
             }
         }

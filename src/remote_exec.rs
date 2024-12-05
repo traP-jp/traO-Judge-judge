@@ -1,9 +1,9 @@
 use anyhow::Result;
 
 pub struct SuccessfulExecutionOutput {
-    stdout: String,
-    stderr: String,
-    exit_code: i32,
+    pub stdout: String,
+    pub stderr: String,
+    pub exit_code: i32,
 }
 
 pub enum ExecutionOutput {
@@ -12,11 +12,10 @@ pub enum ExecutionOutput {
 }
 
 pub trait RemoteExecutor {
-    fn execute(
-        &self,
+    async fn execute(
         cmd: &str,
         envs: std::collections::HashMap<String, String>,
         connection_time_limit: std::time::Duration,
-        execution_time_limit: std::time::Duration
+        execution_time_limit: std::time::Duration,
     ) -> Result<ExecutionOutput>;
 }

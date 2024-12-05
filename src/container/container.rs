@@ -1,9 +1,11 @@
-use std::path::PathBuf;
 use anyhow::Context;
+use std::path::PathBuf;
 
-use crate::{custom_rc::SymlinkLink as SymlinkLinkTrait, remote_exec::RemoteExecutor as RemoteExecutorTrait};
 use super::Container as ContainerTrait;
 use crate::custom_rc::FileLink as FileLinkTrait;
+use crate::{
+    custom_rc::SymlinkLink as SymlinkLinkTrait, remote_exec::RemoteExecutor as RemoteExecutorTrait,
+};
 use tokio::sync::MutexGuard;
 
 struct Container<RemoteExecutorType: RemoteExecutorTrait> {
@@ -27,7 +29,7 @@ impl<RemoteExecutorType: RemoteExecutorTrait> ContainerTrait for Container<Remot
         SymlinkLinkType: SymlinkLinkTrait<'a, FileLinkType>,
     >(
         &self,
-        cmd : &str,
+        cmd: &str,
         envs: std::collections::HashMap<String, String>,
         connection_time_limit: std::time::Duration,
         execution_time_limit: std::time::Duration,
@@ -40,12 +42,8 @@ impl<RemoteExecutorType: RemoteExecutorTrait> ContainerTrait for Container<Remot
                 .context("Failed to create symlink")?;
             _symlinks.push(symlink);
         }
-        self.remote_executor.execute(
-            cmd,
-            envs,
-            connection_time_limit,
-            execution_time_limit,
-        )
+        self.remote_executor
+            .execute(cmd, envs, connection_time_limit, execution_time_limit)
             .context("Failed to execute command")
     }
 }
