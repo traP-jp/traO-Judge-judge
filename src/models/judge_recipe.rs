@@ -1,24 +1,25 @@
 pub struct Execution {
-    pub optional_info: Option<OptionalInfo>,
+    pub optional_info: OptionalInfo,
     pub shell_script_id: uuid::Uuid,
-    pub directory_count: f64,
-    pub text_resource_count: f64,
-    pub one_time_text_count: f64,
+    pub directory_count: i64,
+    pub text_resource_count: i64,
+    pub one_time_text_count: i64,
 }
 
 pub struct ExecutionConfigMap {
-    pub text_resource_ids: Option<Vec<uuid::Uuid>>,
-    pub one_time_text_contents: Option<Vec<String>>,
+    pub text_resource_ids: Vec<uuid::Uuid>,
+    pub one_time_text_contents: Vec<String>,
 }
-pub struct Judge {
+pub struct SubmissionInput<JobOrderingType: Ord> {
     pub judge_id: uuid::Uuid,
-    pub test_count: f64,
+    pub test_count: i64,
     pub before_test_execs: Execution,
     pub on_test_execs: Execution,
     pub after_test_execs: Execution,
     pub before_test_config_map: ExecutionConfigMap,
     pub on_test_config_maps: Vec<ExecutionConfigMap>,
     pub after_test_config_map: ExecutionConfigMap,
+    pub job_order: JobOrderingType,
 }
 
 pub struct OptionalInfo {
