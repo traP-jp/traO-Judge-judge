@@ -19,8 +19,5 @@ pub trait Container {
 }
 
 pub trait ContainerFactory<ContainerType: Container, Priority: Ord> {
-    async fn get(
-        &self,
-        priority: Priority
-    ) -> Result<ContainerType>;
+    async fn get(&self, priority: Priority) -> Result<ContainerType>;
 }
