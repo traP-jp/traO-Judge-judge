@@ -20,3 +20,11 @@ pub trait FileFactory<
     fn new_textfile(path: PathBuf, key: ExternalAccessKey) -> Result<WriteableFileType>;
     fn new_directory(path: PathBuf) -> Result<WriteableFileType>;
 }
+
+pub enum File<
+    WriteableFileType: WriteableFile<ReadonlyFileType>,
+    ReadonlyFileType: ReadonlyFile,
+> {
+    Writeable(WriteableFileType),
+    Readonly(ReadonlyFileType),
+}
