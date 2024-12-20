@@ -6,14 +6,14 @@ use anyhow::{Result, Context};
 #[derive(Clone)]
 pub struct ReadonlyFile {
     pub path: PathBuf,
-    pub entity: Arc<FileEntity>,
+    pub entity: ReadonlyFileEntity,
 }
 
 impl ReadonlyFile {
-    pub fn new(path: PathBuf, entity: Arc<FileEntity>) -> Result<Self> {
-        let target_path = match &*entity {
-            FileEntity::TextFile(_) => path,
-            FileEntity::Directory(_) => path,
+    pub fn new(path: PathBuf, entity: ReadonlyFileEntity) -> Result<Self> {
+        let target_path = match &entity {
+            ReadonlyFileEntity::TextFile(file) => file.path.clone(),
+            ReadonlyFileEntity::Directory(dir) => dir.path.clone(),
         };
         std::os::unix::fs::symlink(&target_path, &path)
             .with_context(|| format!("Failed to create symlink from {:?} to {:?}", target_path, path))?;
@@ -23,7 +23,7 @@ impl ReadonlyFile {
 
 impl super::File for ReadonlyFile {
     fn path(&self) -> PathBuf {
-        &self.path.clone()
+        self.path.clone()
     }
 }
 

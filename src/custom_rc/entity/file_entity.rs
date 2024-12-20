@@ -3,6 +3,7 @@ use std::path::PathBuf;
 pub struct TextFileEntity {
     pub path: PathBuf,
 }
+use std::sync::Arc;
 
 impl TextFileEntity {
     pub async fn new(path: PathBuf, content: &str) -> Result<Self> {
@@ -64,7 +65,13 @@ impl Drop for DirectoryEntity {
     }
 }
 
-pub enum FileEntity {
+pub enum WriteableFileEntity {
     TextFile(TextFileEntity),
     Directory(DirectoryEntity),
+}
+
+#[derive(Clone)]
+pub enum ReadonlyFileEntity {
+    TextFile(Arc<TextFileEntity>),
+    Directory(Arc<DirectoryEntity>),
 }

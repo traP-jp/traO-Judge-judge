@@ -11,29 +11,26 @@ use crate::text_resource_repository::TextResourceRepository as RepoTrait;
 use anyhow::{Context, Result};
 use byte_unit::Byte;
 use std::path::PathBuf;
+use tokio::sync::Mutex;
 
 pub struct FileFactory<
-    WriteableFileType: super::WriteableFile<ReadonlyFileType>,
-    ReadonlyFileType: super::ReadonlyFile,
     RepoType: RepoTrait<ExternalAccessKey>,
     ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
 >
  {
     directory_factory: DirEntityFactory,
-    text_factory: TextEntityFactory<ExternalAccessKey, RepoType>,
+    text_factory: Mutex<TextEntityFactory<ExternalAccessKey, RepoType>>,
     _phantom: std::marker::PhantomData<(
-        WriteableFileType,
-        ReadonlyFileType,
+        WriteableFile,
+        ReadonlyFile,
     )>,
 }
 
 
 impl<
-    WriteableFileType: super::WriteableFile<ReadonlyFileType>,
-    ReadonlyFileType: super::ReadonlyFile,
     RepoType: RepoTrait<ExternalAccessKey>,
     ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
-> FileFactory<WriteableFileType, ReadonlyFileType, RepoType, ExternalAccessKey>
+> FileFactory<RepoType, ExternalAccessKey>
 {
     pub fn new(
         base_path: PathBuf,
@@ -44,39 +41,43 @@ impl<
         let text_factory_path = base_path.clone().join("text_factory");
         Self {
             directory_factory: DirEntityFactory::new(dir_factory_path),
-            text_factory: TextEntityFactory::new(
+            text_factory: Mutex::new(TextEntityFactory::new(
                 text_factory_path,
                 text_factory_limit,
                 repo,
                 0.1,
-            ),
+            )),
             _phantom: std::marker::PhantomData,
         }
     }
 }
 
 impl<
-    WriteableFileType: super::WriteableFile<ReadonlyFileType>,
-    ReadonlyFileType: super::ReadonlyFile,
     RepoType: RepoTrait<ExternalAccessKey>,
     ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
 > super::FileFactory<
-    WriteableFileType,
-    ReadonlyFileType,
+    WriteableFile,
+    ReadonlyFile,
     ExternalAccessKey
 > for FileFactory<
-    WriteableFileType,
-    ReadonlyFileType,
     RepoType,
     ExternalAccessKey
 > {
-    fn new_textfile(path: PathBuf, key: ExternalAccessKey) -> Result<WriteableFileType> {
-        let file = TextFileEntity::new(path, key);
-        Ok(WriteableFileType::new(file))
+    async fn new_textfile(&self, path: PathBuf, key: ExternalAccessKey) -> Result<ReadonlyFile> {
+        let file = {
+            let text_entity_factory = self.text_factory.lock().await;
+            text_entity_factory
+                .get_text_file_entity(key, true)
+                .await?
+        };
+        ReadonlyFile::new(path, ReadonlyFileEntity::TextFile(file))
     }
 
-    fn new_directory(path: PathBuf) -> Result<WriteableFileType> {
-        let dir = DirEntityFactory::new(path);
-        Ok(WriteableFileType::new(dir))
+    async fn new_directory(&self, path: PathBuf) -> Result<WriteableFile> {
+        let dir = self.directory_factory
+            .get_dir_entity()
+            .await
+            .context("Failed to get directory entity")?;
+        WriteableFile::new(path, WriteableFileEntity::Directory(dir))
     }
 }

@@ -11,7 +11,7 @@ pub trait File {
 }
 
 pub trait WriteableFile<ReadonlyFileType: ReadonlyFile>: File {
-    fn to_readonly(&self) -> ReadonlyFileType;
+    fn to_readonly(self) -> Result<ReadonlyFileType>;
 }
 
 pub trait ReadonlyFile: Clone + File {}
@@ -26,8 +26,8 @@ pub trait FileFactory<
     ReadonlyFileType: ReadonlyFile,
     ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
 > {
-    fn new_textfile(path: PathBuf, key: ExternalAccessKey) -> Result<WriteableFileType>;
-    fn new_directory(path: PathBuf) -> Result<WriteableFileType>;
+    async fn new_textfile(&self, path: PathBuf, key: ExternalAccessKey) -> Result<ReadonlyFileType>;
+    async fn new_directory(&self, path: PathBuf) -> Result<WriteableFileType>;
 }
 
 pub enum FileEnum<

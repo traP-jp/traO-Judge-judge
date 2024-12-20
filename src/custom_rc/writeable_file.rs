@@ -7,14 +7,14 @@ use anyhow::{Result, Context};
 
 pub struct WriteableFile {
     pub path: PathBuf,
-    pub entity: FileEntity,
+    pub entity: WriteableFileEntity,
 }
 
 impl WriteableFile {
-    pub fn new(path: PathBuf, entity: FileEntity) -> Result<Self> {
-        let target_path = match entity {
-            FileEntity::TextFile(_) => path,
-            FileEntity::Directory(_) => path,
+    pub fn new(path: PathBuf, entity: WriteableFileEntity) -> Result<Self> {
+        let target_path = match &entity {
+            WriteableFileEntity::TextFile(file) => file.path.clone(),
+            WriteableFileEntity::Directory(dir) => dir.path.clone(),
         };
         std::os::unix::fs::symlink(&target_path, &path)
             .with_context(|| format!("Failed to create symlink from {:?} to {:?}", target_path, path))?;
@@ -29,7 +29,14 @@ impl super::File for WriteableFile {
 }
 
 impl super::WriteableFile<ReadonlyFile> for WriteableFile {
-    fn to_readonly(&self) -> ReadonlyFile {
-        ReadonlyFile::new(self.path.clone(), Arc::new(self.entity.clone()))
+    fn to_readonly(self) -> Result<ReadonlyFile> {
+        ReadonlyFile::new(
+            self.path.clone(),
+            ReadonlyFileEntity::from( match self.entity {
+                WriteableFileEntity::TextFile(file) => ReadonlyFileEntity::TextFile(Arc::new(file)),
+                WriteableFileEntity::Directory(dir) => ReadonlyFileEntity::Directory(Arc::new(dir)),
+            })
+        )
+            .context("Failed to create readonly file")
     }
 }
