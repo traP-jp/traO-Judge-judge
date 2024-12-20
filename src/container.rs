@@ -2,6 +2,7 @@ use crate::remote_exec::ExecutionOutput;
 use anyhow::Result;
 use std::collections::HashMap;
 use crate::custom_rc::{ReadonlyFile, WriteableFile, FileLink};
+use crate::spmc_oneshot::SpmcReceiver;
 
 pub trait Container {
     async fn execute<
@@ -21,5 +22,5 @@ pub trait Container {
 }
 
 pub trait ContainerFactory<ContainerType: Container, Priority: Ord> {
-    async fn get(&self, priority: Priority) -> Result<ContainerType>;
+    async fn get_resv(&self, priority: Priority) -> Result<SpmcReceiver<ContainerType>>;
 }
