@@ -22,6 +22,12 @@ impl WriteableFile {
     }
 }
 
+impl super::File for WriteableFile {
+    fn path(&self) -> PathBuf {
+        self.path.clone()
+    }
+}
+
 impl super::WriteableFile<ReadonlyFile> for WriteableFile {
     fn to_readonly(&self) -> ReadonlyFile {
         ReadonlyFile::new(self.path.clone(), Arc::new(self.entity.clone()))

@@ -21,4 +21,10 @@ impl ReadonlyFile {
     }
 }
 
+impl super::File for ReadonlyFile {
+    fn path(&self) -> PathBuf {
+        &self.path.clone()
+    }
+}
+
 impl super::ReadonlyFile for ReadonlyFile {}
