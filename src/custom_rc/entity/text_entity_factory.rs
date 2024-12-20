@@ -1,5 +1,5 @@
 mod dynamic_lru;
-use crate::custom_rc::file_entity::TextFileEntity;
+use super::file_entity::TextFileEntity;
 use crate::text_resource_repository::TextResourceRepository as RepoTrait;
 use anyhow::{Context, Result};
 use byte_unit::Byte;

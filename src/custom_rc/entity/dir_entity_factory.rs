@@ -1,4 +1,4 @@
-use crate::custom_rc::file_entity::DirectoryEntity;
+use super::file_entity::DirectoryEntity;
 use anyhow::Result;
 use std::path::PathBuf;
 
