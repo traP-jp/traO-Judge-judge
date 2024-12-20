@@ -1,5 +1,4 @@
 #![allow(clippy::module_inception)]
-pub mod container;
 use crate::custom_rc::FileLink;
 use crate::custom_rc::SymlinkLink;
 use crate::remote_exec::ExecutionOutput;
@@ -17,4 +16,11 @@ pub trait Container {
         execution_time_limit: std::time::Duration,
         file_links: HashMap<PathBuf, MutexGuard<'a, FileLinkType>>,
     ) -> Result<ExecutionOutput>;
+}
+
+pub trait ContainerFactory<ContainerType: Container, Priority: Ord> {
+    async fn get(
+        &self,
+        priority: Priority
+    ) -> Result<ContainerType>;
 }
