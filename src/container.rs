@@ -1,8 +1,8 @@
+use crate::custom_rc::{FileLink, ReadonlyFile, WriteableFile};
 use crate::remote_exec::ExecutionOutput;
+use crate::spmc_oneshot::SpmcReceiver;
 use anyhow::Result;
 use std::collections::HashMap;
-use crate::custom_rc::{ReadonlyFile, WriteableFile, FileLink};
-use crate::spmc_oneshot::SpmcReceiver;
 use std::path::PathBuf;
 use uuid::Uuid;
 
@@ -12,7 +12,7 @@ pub trait Container {
         WriteableFileType: WriteableFile<ReadonlyFileType>,
         ReadonlyFileLinkType: FileLink<ReadonlyFileType>,
         WriteableFileLinkType: FileLink<WriteableFileType>,
-    > (
+    >(
         &self,
         cmd: &str,
         envs: HashMap<String, String>,
@@ -20,10 +20,7 @@ pub trait Container {
         execution_time_limit: std::time::Duration,
         readonly_files: HashMap<Uuid, (PathBuf, ReadonlyFileType)>,
         writeable_files: HashMap<Uuid, (PathBuf, WriteableFileType)>,
-    ) -> Result<(
-        ExecutionOutput,
-        HashMap<Uuid, ReadonlyFileType>,
-    )>;
+    ) -> Result<(ExecutionOutput, HashMap<Uuid, ReadonlyFileType>)>;
 
     fn resource_destination_path(&self) -> PathBuf;
 }

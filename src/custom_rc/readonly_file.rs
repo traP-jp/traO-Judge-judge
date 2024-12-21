@@ -1,6 +1,6 @@
 use super::entity::file_entity::*;
+use anyhow::{Context, Result};
 use std::path::PathBuf;
-use anyhow::{Result, Context};
 
 #[derive(Clone)]
 pub struct ReadonlyFile {
@@ -14,9 +14,16 @@ impl ReadonlyFile {
             ReadonlyFileEntity::TextFile(file) => file.path.clone(),
             ReadonlyFileEntity::Directory(dir) => dir.path.clone(),
         };
-        std::os::unix::fs::symlink(&target_path, &path)
-            .with_context(|| format!("Failed to create symlink from {:?} to {:?}", target_path, path))?;
-        Ok(Self { path, _entity: entity })
+        std::os::unix::fs::symlink(&target_path, &path).with_context(|| {
+            format!(
+                "Failed to create symlink from {:?} to {:?}",
+                target_path, path
+            )
+        })?;
+        Ok(Self {
+            path,
+            _entity: entity,
+        })
     }
 }
 

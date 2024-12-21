@@ -9,9 +9,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
-pub struct TextEntityFactory<
-    RepoType: RepoTrait,
-> {
+pub struct TextEntityFactory<RepoType: RepoTrait> {
     cache: Mutex<DynamicallySizedLRUCache<Uuid, Arc<TextFileEntity>>>,
     cache_directory: PathBuf,
     cache_directory_size_maximum: u64,
@@ -19,10 +17,7 @@ pub struct TextEntityFactory<
     _phantom: std::marker::PhantomData<Uuid>,
 }
 
-impl<
-        RepoType: RepoTrait,
-    > TextEntityFactory<RepoType>
-{
+impl<RepoType: RepoTrait> TextEntityFactory<RepoType> {
     pub fn new(
         cache_directory: PathBuf,
         cache_directory_size_limit: Byte,

@@ -1,5 +1,5 @@
+use anyhow::{Context, Result};
 use std::path::PathBuf;
-use anyhow::{Result, Context};
 
 pub struct FileLink<FileType: super::File> {
     path: PathBuf,

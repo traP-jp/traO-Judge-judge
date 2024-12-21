@@ -16,6 +16,10 @@ impl WriteableEntityFactory {
     }
 
     pub async fn get_text_file_entity(&self, content: &str) -> Result<TextFileEntity> {
-        TextFileEntity::new(self.base_path.join(uuid::Uuid::new_v4().to_string()), content).await
+        TextFileEntity::new(
+            self.base_path.join(uuid::Uuid::new_v4().to_string()),
+            content,
+        )
+        .await
     }
 }

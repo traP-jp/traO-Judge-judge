@@ -1,10 +1,10 @@
 mod extra_envs;
-mod heuristics;
-mod models;
-mod single_run;
 mod file_preparation;
-mod output_parser;
+mod heuristics;
 pub mod logic;
+mod models;
+mod output_parser;
+mod single_run;
 
 use crate::container::Container as ContainerTrait;
 use crate::models::{judge_recipe::SubmissionInput, judge_result::SubmissionOutput};

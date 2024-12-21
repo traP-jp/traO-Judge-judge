@@ -1,8 +1,8 @@
 mod entity;
-pub mod readonly_file;
-pub mod writeable_file;
 pub mod file_factory;
 pub mod file_link;
+pub mod readonly_file;
+pub mod writeable_file;
 use anyhow::Result;
 use std::path::PathBuf;
 use uuid::Uuid;
@@ -25,7 +25,8 @@ pub trait FileLink<FileType: File>: Sized {
 pub trait FileFactory<
     WriteableFileType: WriteableFile<ReadonlyFileType>,
     ReadonlyFileType: ReadonlyFile,
-> {
+>
+{
     async fn new_textfile(&self, key: &Uuid) -> Result<ReadonlyFileType>;
     async fn new_textfile_from_raw(&self, raw: &str) -> Result<WriteableFileType>;
     async fn new_directory(&self) -> Result<WriteableFileType>;

@@ -19,10 +19,7 @@ impl Ord for JudgePriority {
     }
 }
 
-impl From<(
-    SubmissionInput,
-    Phase
-)> for JudgePriority {
+impl From<(SubmissionInput, Phase)> for JudgePriority {
     fn from(inputs: (SubmissionInput, Phase)) -> Self {
         Self {
             posted_at: inputs.0.posted_at,

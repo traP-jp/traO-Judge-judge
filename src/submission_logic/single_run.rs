@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-use anyhow::{Result, Context};
-use crate::custom_rc::{ReadonlyFile, WriteableFile, FileLink};
+use crate::custom_rc::{FileLink, ReadonlyFile, WriteableFile};
 use crate::remote_exec::ExecutionOutput;
+use anyhow::{Context, Result};
+use std::collections::HashMap;
 use uuid::Uuid;
 
 pub async fn single_run<
@@ -10,7 +10,7 @@ pub async fn single_run<
     WriteableFileType: WriteableFile<ReadonlyFileType>,
     ReadonlyFileLinkType: FileLink<ReadonlyFileType>,
     WriteableFileLinkType: FileLink<WriteableFileType>,
-> (
+>(
     cmd: &str,
     envs: HashMap<String, String>,
     connection_time_limit: std::time::Duration,
@@ -21,9 +21,7 @@ pub async fn single_run<
     readonly_files: HashMap<Uuid, ReadonlyFileType>,
 ) -> Result<(ExecutionOutput, HashMap<Uuid, ReadonlyFileType>)> {
     // acquire container
-    let container = container_rx
-        .await
-        .context("Failed to receive container")?;
+    let container = container_rx.await.context("Failed to receive container")?;
     let destination_path = container.resource_destination_path();
 
     // prepare readonly files
