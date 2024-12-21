@@ -12,14 +12,14 @@ use anyhow::{Context, Result};
 use byte_unit::Byte;
 use std::path::PathBuf;
 use tokio::sync::Mutex;
+use uuid::Uuid;
 
 pub struct FileFactory<
-    RepoType: RepoTrait<ExternalAccessKey>,
-    ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
+    RepoType: RepoTrait,
 >
  {
     directory_factory: DirEntityFactory,
-    text_factory: Mutex<TextEntityFactory<ExternalAccessKey, RepoType>>,
+    text_factory: Mutex<TextEntityFactory<RepoType>>,
     _phantom: std::marker::PhantomData<(
         WriteableFile,
         ReadonlyFile,
@@ -28,9 +28,8 @@ pub struct FileFactory<
 
 
 impl<
-    RepoType: RepoTrait<ExternalAccessKey>,
-    ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
-> FileFactory<RepoType, ExternalAccessKey>
+    RepoType: RepoTrait,
+> FileFactory<RepoType>
 {
     pub fn new(
         base_path: PathBuf,
@@ -53,17 +52,14 @@ impl<
 }
 
 impl<
-    RepoType: RepoTrait<ExternalAccessKey>,
-    ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
+    RepoType: RepoTrait,
 > super::FileFactory<
     WriteableFile,
     ReadonlyFile,
-    ExternalAccessKey
 > for FileFactory<
     RepoType,
-    ExternalAccessKey
 > {
-    async fn new_textfile(&self, path: PathBuf, key: ExternalAccessKey) -> Result<ReadonlyFile> {
+    async fn new_textfile(&self, path: PathBuf, key: Uuid) -> Result<ReadonlyFile> {
         let file = {
             let text_entity_factory = self.text_factory.lock().await;
             text_entity_factory

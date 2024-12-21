@@ -5,7 +5,6 @@ pub struct Logic<
     'a,
 
     ContainerType: crate::container::Container,
-    ExternalAccessKeyType: Eq + std::hash::Hash + Clone + ToString,
     ContainerFactoryType: crate::container::ContainerFactory<ContainerType, SingleRunPriorityType>,
     
     ReadonlyFileType: crate::custom_rc::ReadonlyFile,
@@ -13,11 +12,10 @@ pub struct Logic<
     ReadonlyFileLinkType: crate::custom_rc::FileLink<'a, ReadonlyFileType>,
     WriteableFileLinkType: crate::custom_rc::FileLink<'a, WriteableFileType>,
     
-    RepoType: crate::text_resource_repository::TextResourceRepository<ExternalAccessKeyType>,
+    RepoType: crate::text_resource_repository::TextResourceRepository,
     FileFactoryType: crate::custom_rc::FileFactory<
         WriteableFileType,
         ReadonlyFileType,
-        ExternalAccessKeyType,
     >,
 
     SingleRunPriorityType: Ord + Clone + From<(
@@ -31,7 +29,6 @@ pub struct Logic<
         &'a (),
         ContainerType,
         SingleRunPriorityType,
-        ExternalAccessKeyType,
         ReadonlyFileType,
         WriteableFileType,
         ReadonlyFileLinkType,
@@ -44,7 +41,6 @@ impl <
     'a,
 
     ContainerType: crate::container::Container,
-    ExternalAccessKeyType: Eq + std::hash::Hash + Clone + ToString,
     ContainerFactoryType: crate::container::ContainerFactory<ContainerType, SingleRunPriorityType>,
     
     ReadonlyFileType: crate::custom_rc::ReadonlyFile,
@@ -52,11 +48,10 @@ impl <
     ReadonlyFileLinkType: crate::custom_rc::FileLink<'a, ReadonlyFileType>,
     WriteableFileLinkType: crate::custom_rc::FileLink<'a, WriteableFileType>,
     
-    RepoType: crate::text_resource_repository::TextResourceRepository<ExternalAccessKeyType>,
+    RepoType: crate::text_resource_repository::TextResourceRepository,
     FileFactoryType: crate::custom_rc::FileFactory<
         WriteableFileType,
         ReadonlyFileType,
-        ExternalAccessKeyType,
     >,
 
     SingleRunPriorityType: Ord + Clone + From<(
@@ -67,7 +62,6 @@ impl <
     'a,
 
     ContainerType,
-    ExternalAccessKeyType,
     ContainerFactoryType,
     ReadonlyFileType,
     WriteableFileType,
@@ -94,7 +88,6 @@ impl <
     'a,
 
     ContainerType: crate::container::Container,
-    ExternalAccessKeyType: Eq + std::hash::Hash + Clone + ToString,
     ContainerFactoryType: crate::container::ContainerFactory<ContainerType, SingleRunPriorityType>,
 
     ReadonlyFileType: crate::custom_rc::ReadonlyFile,
@@ -102,11 +95,10 @@ impl <
     ReadonlyFileLinkType: crate::custom_rc::FileLink<'a, ReadonlyFileType>,
     WriteableFileLinkType: crate::custom_rc::FileLink<'a, WriteableFileType>,
 
-    RepoType: crate::text_resource_repository::TextResourceRepository<ExternalAccessKeyType>,
+    RepoType: crate::text_resource_repository::TextResourceRepository,
     FileFactoryType: crate::custom_rc::FileFactory<
         WriteableFileType,
         ReadonlyFileType,
-        ExternalAccessKeyType,
     >,
 
     SingleRunPriorityType: Ord + Clone + From<(
@@ -119,7 +111,6 @@ impl <
     'a,
 
     ContainerType,
-    ExternalAccessKeyType,
     ContainerFactoryType,
     ReadonlyFileType,
     WriteableFileType,
@@ -168,8 +159,7 @@ impl <
             )
             .await
             .context("Failed to receive container")?;
-        
-        
+    
         unimplemented!()
     }
 }

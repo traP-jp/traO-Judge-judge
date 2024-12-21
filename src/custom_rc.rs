@@ -5,6 +5,7 @@ pub mod file_factory;
 pub mod file_link;
 use anyhow::Result;
 use std::path::PathBuf;
+use uuid::Uuid;
 
 pub trait File {
     fn path(&self) -> PathBuf;
@@ -24,9 +25,8 @@ pub trait FileLink<'a, FileType: File>: Sized {
 pub trait FileFactory<
     WriteableFileType: WriteableFile<ReadonlyFileType>,
     ReadonlyFileType: ReadonlyFile,
-    ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
 > {
-    async fn new_textfile(&self, path: PathBuf, key: ExternalAccessKey) -> Result<ReadonlyFileType>;
+    async fn new_textfile(&self, path: PathBuf, key: Uuid) -> Result<ReadonlyFileType>;
     async fn new_directory(&self, path: PathBuf) -> Result<WriteableFileType>;
 }
 

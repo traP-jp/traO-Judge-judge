@@ -1,5 +1,6 @@
 use anyhow::Result;
+use uuid::Uuid;
 
-pub trait TextResourceRepository<KeyType> {
-    async fn get_text(&self, key: &KeyType) -> Result<String>;
+pub trait TextResourceRepository {
+    async fn get_text(&self, key: &Uuid) -> Result<String>;
 }
