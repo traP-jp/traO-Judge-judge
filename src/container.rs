@@ -1,4 +1,4 @@
-use crate::custom_rc::{FileLink, ReadonlyFile, WriteableFile};
+use crate::custom_rc::{FileLink, ReadonlyFile, WritableFile};
 use crate::remote_exec::ExecutionOutput;
 use crate::spmc_oneshot::SpmcReceiver;
 use anyhow::Result;
@@ -9,9 +9,9 @@ use uuid::Uuid;
 pub trait Container {
     async fn execute<
         ReadonlyFileType: ReadonlyFile,
-        WriteableFileType: WriteableFile<ReadonlyFileType>,
+        WritableFileType: WritableFile<ReadonlyFileType>,
         ReadonlyFileLinkType: FileLink<ReadonlyFileType>,
-        WriteableFileLinkType: FileLink<WriteableFileType>,
+        WritableFileLinkType: FileLink<WritableFileType>,
     >(
         &self,
         cmd: &str,
@@ -19,7 +19,7 @@ pub trait Container {
         connection_time_limit: std::time::Duration,
         execution_time_limit: std::time::Duration,
         readonly_files: HashMap<Uuid, (PathBuf, ReadonlyFileType)>,
-        writeable_files: HashMap<Uuid, (PathBuf, WriteableFileType)>,
+        writable_files: HashMap<Uuid, (PathBuf, WritableFileType)>,
     ) -> Result<(ExecutionOutput, HashMap<Uuid, ReadonlyFileType>)>;
 
     fn resource_destination_path(&self) -> PathBuf;

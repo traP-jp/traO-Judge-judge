@@ -8,12 +8,12 @@ pub struct Logic<
     ContainerType: crate::container::Container,
     ContainerFactoryType: crate::container::ContainerFactory<ContainerType, SingleRunPriorityType>,
     ReadonlyFileType: crate::custom_rc::ReadonlyFile,
-    WriteableFileType: crate::custom_rc::WriteableFile<ReadonlyFileType>,
+    WritableFileType: crate::custom_rc::WritableFile<ReadonlyFileType>,
     ReadonlyFileLinkType: crate::custom_rc::FileLink<ReadonlyFileType>,
-    WriteableFileLinkType: crate::custom_rc::FileLink<WriteableFileType>,
+    WritableFileLinkType: crate::custom_rc::FileLink<WritableFileType>,
     RepoType: crate::text_resource_repository::TextResourceRepository,
     FileFactoryType: crate::custom_rc::FileFactory<
-        WriteableFileType,
+        WritableFileType,
         ReadonlyFileType,
     >,
 
@@ -28,9 +28,9 @@ pub struct Logic<
         ContainerType,
         SingleRunPriorityType,
         ReadonlyFileType,
-        WriteableFileType,
+        WritableFileType,
         ReadonlyFileLinkType,
-        WriteableFileLinkType,
+        WritableFileLinkType,
         RepoType,
     )>,
 }
@@ -39,11 +39,11 @@ impl<
         ContainerType: crate::container::Container,
         ContainerFactoryType: crate::container::ContainerFactory<ContainerType, SingleRunPriorityType>,
         ReadonlyFileType: crate::custom_rc::ReadonlyFile,
-        WriteableFileType: crate::custom_rc::WriteableFile<ReadonlyFileType>,
+        WritableFileType: crate::custom_rc::WritableFile<ReadonlyFileType>,
         ReadonlyFileLinkType: crate::custom_rc::FileLink<ReadonlyFileType>,
-        WriteableFileLinkType: crate::custom_rc::FileLink<WriteableFileType>,
+        WritableFileLinkType: crate::custom_rc::FileLink<WritableFileType>,
         RepoType: crate::text_resource_repository::TextResourceRepository,
-        FileFactoryType: crate::custom_rc::FileFactory<WriteableFileType, ReadonlyFileType>,
+        FileFactoryType: crate::custom_rc::FileFactory<WritableFileType, ReadonlyFileType>,
         SingleRunPriorityType: Ord
             + Clone
             + From<(
@@ -55,9 +55,9 @@ impl<
         ContainerType,
         ContainerFactoryType,
         ReadonlyFileType,
-        WriteableFileType,
+        WritableFileType,
         ReadonlyFileLinkType,
-        WriteableFileLinkType,
+        WritableFileLinkType,
         RepoType,
         FileFactoryType,
         SingleRunPriorityType,
@@ -76,11 +76,11 @@ impl<
         ContainerType: crate::container::Container,
         ContainerFactoryType: crate::container::ContainerFactory<ContainerType, SingleRunPriorityType>,
         ReadonlyFileType: crate::custom_rc::ReadonlyFile,
-        WriteableFileType: crate::custom_rc::WriteableFile<ReadonlyFileType>,
+        WritableFileType: crate::custom_rc::WritableFile<ReadonlyFileType>,
         ReadonlyFileLinkType: crate::custom_rc::FileLink<ReadonlyFileType>,
-        WriteableFileLinkType: crate::custom_rc::FileLink<WriteableFileType>,
+        WritableFileLinkType: crate::custom_rc::FileLink<WritableFileType>,
         RepoType: crate::text_resource_repository::TextResourceRepository,
-        FileFactoryType: crate::custom_rc::FileFactory<WriteableFileType, ReadonlyFileType>,
+        FileFactoryType: crate::custom_rc::FileFactory<WritableFileType, ReadonlyFileType>,
         SingleRunPriorityType: Ord
             + Clone
             + From<(
@@ -92,9 +92,9 @@ impl<
         ContainerType,
         ContainerFactoryType,
         ReadonlyFileType,
-        WriteableFileType,
+        WritableFileType,
         ReadonlyFileLinkType,
-        WriteableFileLinkType,
+        WritableFileLinkType,
         RepoType,
         FileFactoryType,
         SingleRunPriorityType,
@@ -135,8 +135,8 @@ impl<
             .context("Failed to receive container")?;
 
         // prepare before test files
-        let (before_test_readonly_files, before_test_writeable_files, before_test_filename_dict) =
-            prepare_files::<ReadonlyFileType, WriteableFileType, FileFactoryType>(
+        let (before_test_readonly_files, before_test_writable_files, before_test_filename_dict) =
+            prepare_files::<ReadonlyFileType, WritableFileType, FileFactoryType>(
                 &self.file_factory,
                 &input.before_test_execs,
                 &input.before_test_config_map,
@@ -149,9 +149,9 @@ impl<
             super::single_run::single_run::<
                 ContainerType,
                 ReadonlyFileType,
-                WriteableFileType,
+                WritableFileType,
                 ReadonlyFileLinkType,
-                WriteableFileLinkType,
+                WritableFileLinkType,
             >(
                 "sh $SHELLHOOK",
                 get_extra_envs(&input.before_test_execs.optional_info),
@@ -159,11 +159,11 @@ impl<
                 execution_time_limit,
                 before_test_container_rx,
                 before_test_filename_dict.clone(),
-                before_test_writeable_files,
+                before_test_writable_files,
                 before_test_readonly_files,
             ),
             futures::future::join_all((0..input.test_count).map(|i| {
-                prepare_files::<ReadonlyFileType, WriteableFileType, FileFactoryType>(
+                prepare_files::<ReadonlyFileType, WritableFileType, FileFactoryType>(
                     &self.file_factory,
                     &input.on_test_execs,
                     &input.on_test_config_maps[i as usize],
@@ -196,7 +196,7 @@ impl<
                     .zip(test_files)
                     .zip(test_container_rxs)
                     .map(|((_, test_files), container_rx)| {
-                        let (mut readonly_files, writeable_files, mut filename_dict) = test_files;
+                        let (mut readonly_files, writable_files, mut filename_dict) = test_files;
                         readonly_files.extend(before_test_readonly_files.clone());
                         filename_dict.extend(before_test_filename_dict.clone().into_iter().map(
                             |(uuid, filename)| (uuid, "BEFORE_TEST_".to_string() + &filename),
@@ -205,9 +205,9 @@ impl<
                             super::single_run::single_run::<
                                 ContainerType,
                                 ReadonlyFileType,
-                                WriteableFileType,
+                                WritableFileType,
                                 ReadonlyFileLinkType,
-                                WriteableFileLinkType,
+                                WritableFileLinkType,
                             >(
                                 "sh $SHELLHOOK",
                                 get_extra_envs(&input.on_test_execs.optional_info),
@@ -215,14 +215,14 @@ impl<
                                 execution_time_limit,
                                 container_rx,
                                 filename_dict.clone(),
-                                writeable_files,
+                                writable_files,
                                 readonly_files,
                             ),
                             async move { filename_dict },
                         )
                     })
             ),
-            prepare_files::<ReadonlyFileType, WriteableFileType, FileFactoryType>(
+            prepare_files::<ReadonlyFileType, WritableFileType, FileFactoryType>(
                 &self.file_factory,
                 &input.after_test_execs,
                 &input.after_test_config_map
@@ -265,7 +265,7 @@ impl<
         // prepare after test files
         let (
             mut after_test_readonly_files,
-            after_test_writeable_files,
+            after_test_writable_files,
             mut after_test_filename_dict,
         ) = after_test_files.context("Failed to prepare after test files")?;
 
@@ -298,9 +298,9 @@ impl<
         let (after_test_output, _) = super::single_run::single_run::<
             ContainerType,
             ReadonlyFileType,
-            WriteableFileType,
+            WritableFileType,
             ReadonlyFileLinkType,
-            WriteableFileLinkType,
+            WritableFileLinkType,
         >(
             "sh $SHELLHOOK",
             get_extra_envs(&input.after_test_execs.optional_info),
@@ -308,7 +308,7 @@ impl<
             execution_time_limit,
             after_test_container_rx,
             after_test_filename_dict.clone(),
-            after_test_writeable_files,
+            after_test_writable_files,
             after_test_readonly_files,
         )
         .await
