@@ -7,8 +7,8 @@ use uuid::Uuid;
 pub async fn single_run<
     'a,
     ContainerType: crate::container::Container,
-    WriteableFileType: WriteableFile<ReadonlyFileType>,
     ReadonlyFileType: ReadonlyFile,
+    WriteableFileType: WriteableFile<ReadonlyFileType>,
     ReadonlyFileLinkType: FileLink<'a, ReadonlyFileType>,
     WriteableFileLinkType: FileLink<'a, WriteableFileType>,
 > (

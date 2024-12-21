@@ -26,8 +26,9 @@ pub trait FileFactory<
     WriteableFileType: WriteableFile<ReadonlyFileType>,
     ReadonlyFileType: ReadonlyFile,
 > {
-    async fn new_textfile(&self, path: PathBuf, key: Uuid) -> Result<ReadonlyFileType>;
-    async fn new_directory(&self, path: PathBuf) -> Result<WriteableFileType>;
+    async fn new_textfile(&self, key: &Uuid) -> Result<ReadonlyFileType>;
+    async fn new_textfile_from_raw(&self, raw: &str) -> Result<WriteableFileType>;
+    async fn new_directory(&self) -> Result<WriteableFileType>;
 }
 
 pub enum FileEnum<

@@ -6,13 +6,17 @@ pub enum JudgeStatus {
     OutputLimitExceeded,
     RuntimeError,
     CompileError,
+    Critical(CriticalError),
+}
+
+pub enum CriticalError {
+    WriterError,
     InternalError,
 }
 
 pub struct SubmissionOutput {
     pub judge_id: uuid::Uuid,
-    pub test_results: Vec<TestResult>,
-    pub total_result: TestResult,
+    pub result: JudgeResult,
 }
 
 pub struct TestResult {
@@ -21,4 +25,15 @@ pub struct TestResult {
     pub score: i64,
     pub exec_time: f64,
     pub memory_size: f64,
+}
+
+pub type BeforeTestResult = TestResult;
+pub type OnTestResult = Vec<TestResult>;
+pub type AfterTestResult = TestResult;
+
+pub enum JudgeResult {
+    Success(BeforeTestResult, OnTestResult, AfterTestResult),
+    BeforeTestFailure(BeforeTestResult),
+    OnTestFailure(BeforeTestResult, OnTestResult),
+    AfterTestFailure(BeforeTestResult, OnTestResult, AfterTestResult),
 }
