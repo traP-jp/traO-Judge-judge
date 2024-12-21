@@ -30,5 +30,6 @@ pub trait Container {
 }
 
 pub trait ContainerFactory<ContainerType: Container, Priority: Ord> {
+    // 任意の2つのrxの組について、priorityによる順序とget_rxの呼び出し順が同じなら、その順に割り当てられる必要がある。
     async fn get_rx(&self, priority: Priority) -> Result<SpmcReceiver<ContainerType>>;
 }
