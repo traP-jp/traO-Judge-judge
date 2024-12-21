@@ -1,7 +1,7 @@
 use tokio::sync::oneshot::Sender;
 pub struct OneshotSenderWithOrd<PriorityType: Ord, ItemType> {
     pub priority: PriorityType,
-    pub sender: Sender<ItemType>,
+    pub _sender: Sender<ItemType>,
 }
 
 impl <

@@ -1,12 +1,11 @@
 use super::entity::file_entity::*;
 use std::path::PathBuf;
-use std::sync::Arc;
 use anyhow::{Result, Context};
 
 #[derive(Clone)]
 pub struct ReadonlyFile {
     pub path: PathBuf,
-    pub entity: ReadonlyFileEntity,
+    pub _entity: ReadonlyFileEntity,
 }
 
 impl ReadonlyFile {
@@ -17,7 +16,7 @@ impl ReadonlyFile {
         };
         std::os::unix::fs::symlink(&target_path, &path)
             .with_context(|| format!("Failed to create symlink from {:?} to {:?}", target_path, path))?;
-        Ok(Self { path, entity })
+        Ok(Self { path, _entity: entity })
     }
 }
 

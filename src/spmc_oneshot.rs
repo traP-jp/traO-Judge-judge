@@ -38,7 +38,7 @@ impl <
         let sender = {
             let mut heap = self.channel.lock().await;
             match heap.heap.pop() {
-                Some(OneshotSenderWithOrd { sender: top_sender, .. }) => {
+                Some(OneshotSenderWithOrd { _sender: top_sender, .. }) => {
                     Some(top_sender)
                 },
                 None => None,
@@ -68,7 +68,7 @@ impl <
         let (sender, receiver) = tokio::sync::oneshot::channel();
         let sender_with_ord = OneshotSenderWithOrd {
             priority,
-            sender,
+            _sender: sender,
         };
         let mut heap = self.channel.lock().await;
         heap.heap.push(sender_with_ord);

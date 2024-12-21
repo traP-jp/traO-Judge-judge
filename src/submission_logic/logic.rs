@@ -3,8 +3,6 @@ use super::file_preparation::prepare_files;
 use super::extra_envs::get_extra_envs;
 use super::output_parser::parse_output;
 use crate::models::judge_result::*;
-use crate::remote_exec::*;
-use std::collections::HashMap;
 
 pub struct Logic<
     ContainerType: crate::container::Container,

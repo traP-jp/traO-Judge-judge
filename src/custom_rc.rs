@@ -30,11 +30,3 @@ pub trait FileFactory<
     async fn new_textfile_from_raw(&self, raw: &str) -> Result<WriteableFileType>;
     async fn new_directory(&self) -> Result<WriteableFileType>;
 }
-
-pub enum FileEnum<
-    WriteableFileType: WriteableFile<ReadonlyFileType>,
-    ReadonlyFileType: ReadonlyFile,
-> {
-    Writeable(WriteableFileType),
-    Readonly(ReadonlyFileType),
-}
