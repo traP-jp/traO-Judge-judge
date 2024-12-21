@@ -3,6 +3,7 @@ use std::path::PathBuf;
 pub struct TextFileEntity {
     pub path: PathBuf,
 }
+use std::sync::Arc;
 
 impl TextFileEntity {
     pub async fn new(path: PathBuf, content: &str) -> Result<Self> {
@@ -64,52 +65,13 @@ impl Drop for DirectoryEntity {
     }
 }
 
-pub struct SymlinkEntity {
-    pub path: PathBuf,
+pub enum WriteableFileEntity {
+    TextFile(TextFileEntity),
+    Directory(DirectoryEntity),
 }
 
-impl SymlinkEntity {
-    pub async fn new(path: PathBuf, target: &PathBuf) -> Result<Self> {
-        std::os::unix::fs::symlink(target, &path)
-            .with_context(|| {
-                format!(
-                    "Failed to create symlink while creating SymlinkEntity : {:?}",
-                    path
-                )
-            })
-            .map(|_| Self { path })
-    }
-
-    pub async fn readonly(&self) -> Result<()> {
-        let metadata = std::fs::metadata(&self.path).with_context(|| {
-            format!(
-                "Failed to get metadata of symlink while making it readonly : {:?}",
-                self.path
-            )
-        })?;
-        let mut permissions = metadata.permissions();
-        permissions.set_readonly(true);
-        std::fs::set_permissions(&self.path, permissions).with_context(|| {
-            format!(
-                "Failed to set permissions of symlink while making it readonly : {:?}",
-                self.path
-            )
-        })?;
-        Ok(())
-    }
-}
-
-impl Drop for SymlinkEntity {
-    fn drop(&mut self) {
-        let result = std::fs::remove_file(&self.path).context(format!(
-            "Failed to remove symlink while dropping SymlinkEntity : {:?}",
-            self.path
-        ));
-        match result {
-            Ok(_) => {}
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-        }
-    }
+#[derive(Clone)]
+pub enum ReadonlyFileEntity {
+    TextFile(Arc<TextFileEntity>),
+    Directory(Arc<DirectoryEntity>),
 }

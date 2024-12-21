@@ -1,20 +1,21 @@
-mod cmd_input_parser;
-mod job_scheduler;
+mod extra_envs;
+mod file_preparation;
+mod heuristics;
 pub mod logic;
+mod models;
+mod output_parser;
+mod single_run;
 
 use crate::container::Container as ContainerTrait;
 use crate::models::{judge_recipe::SubmissionInput, judge_result::SubmissionOutput};
 use anyhow::Result;
 use std::time::Duration;
-use uuid::Uuid;
 
-pub trait Logic<ContainerType: ContainerTrait, JudgeOrderingType: Ord + Clone> {
-    async fn exec(
+pub trait Logic<ContainerType: ContainerTrait> {
+    async fn judge(
         &self,
-        judge: SubmissionInput<JudgeOrderingType>,
+        judge: SubmissionInput,
         connection_time_limit: Duration,
         execution_time_limit: Duration,
     ) -> Result<SubmissionOutput>;
-    async fn add_container(&self, id: Uuid, container: ContainerType) -> Result<()>;
-    async fn release_container(&self, id: Uuid) -> Result<()>;
 }

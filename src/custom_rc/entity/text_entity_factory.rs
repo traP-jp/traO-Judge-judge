@@ -1,5 +1,5 @@
 mod dynamic_lru;
-use crate::custom_rc::file_entity::TextFileEntity;
+use super::file_entity::TextFileEntity;
 use crate::text_resource_repository::TextResourceRepository as RepoTrait;
 use anyhow::{Context, Result};
 use byte_unit::Byte;
@@ -9,22 +9,15 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
-pub struct TextEntityFactory<
-    ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
-    RepoType: RepoTrait<ExternalAccessKey>,
-> {
-    cache: Mutex<DynamicallySizedLRUCache<ExternalAccessKey, Arc<TextFileEntity>>>,
+pub struct TextEntityFactory<RepoType: RepoTrait> {
+    cache: Mutex<DynamicallySizedLRUCache<Uuid, Arc<TextFileEntity>>>,
     cache_directory: PathBuf,
     cache_directory_size_maximum: u64,
     repo: RepoType,
-    _phantom: std::marker::PhantomData<ExternalAccessKey>,
+    _phantom: std::marker::PhantomData<Uuid>,
 }
 
-impl<
-        ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
-        RepoType: RepoTrait<ExternalAccessKey>,
-    > TextEntityFactory<ExternalAccessKey, RepoType>
-{
+impl<RepoType: RepoTrait> TextEntityFactory<RepoType> {
     pub fn new(
         cache_directory: PathBuf,
         cache_directory_size_limit: Byte,
@@ -46,7 +39,7 @@ impl<
 
     pub async fn get_text_file_entity(
         &self,
-        text_resource_id: ExternalAccessKey,
+        text_resource_id: Uuid,
         cache: bool,
     ) -> Result<Arc<TextFileEntity>> {
         if let Some(entity) = self.cache.lock().await.get(&text_resource_id) {

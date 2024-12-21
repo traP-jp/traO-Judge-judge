@@ -1,67 +1,22 @@
-use crate::custom_rc::file_entity::*;
 use anyhow::{Context, Result};
 use std::path::PathBuf;
-use std::sync::Arc;
-use tokio::sync::MutexGuard;
 
-enum FileEntity {
-    TextFileEntity(Arc<TextFileEntity>),
-    DirectoryEntity(DirectoryEntity),
+pub struct FileLink<FileType: super::File> {
+    path: PathBuf,
+    file: FileType,
 }
 
-pub struct FileLink {
-    file_entity: FileEntity,
-}
-
-impl FileLink {
-    pub fn new_text_file_link(text_file_entity: Arc<TextFileEntity>) -> Self {
-        Self {
-            file_entity: FileEntity::TextFileEntity(text_file_entity),
-        }
+impl<FileType: super::File> super::FileLink<FileType> for FileLink<FileType> {
+    fn link(file: FileType, path: PathBuf) -> Result<Self> {
+        let target = file.path();
+        std::os::unix::fs::symlink(&target, &path)
+            .with_context(|| format!("Failed to create symlink from {:?} to {:?}", target, path))?;
+        Ok(Self { path, file })
     }
 
-    pub fn new_text_file_links(text_file_entity: Arc<TextFileEntity>, count: usize) -> Vec<Self> {
-        (0..count)
-            .map(|_| Self::new_text_file_link(text_file_entity.clone()))
-            .collect()
-    }
-
-    pub fn new_directory_link(directory_entity: DirectoryEntity) -> Self {
-        Self {
-            file_entity: FileEntity::DirectoryEntity(directory_entity),
-        }
-    }
-
-    fn get_path(&self, destination: &PathBuf) -> anyhow::Result<PathBuf> {
-        match &self.file_entity {
-            FileEntity::TextFileEntity(text_file_entity) => Ok(text_file_entity.path.clone()),
-            FileEntity::DirectoryEntity(directory_entity) => {
-                Ok(directory_entity.path.join(destination))
-            }
-        }
-    }
-}
-
-impl crate::custom_rc::FileLink for FileLink {}
-
-pub struct SymlinkLink<'a> {
-    file_entity: SymlinkEntity,
-    _target: MutexGuard<'a, FileLink>,
-}
-
-impl<'a> super::SymlinkLink<'a, FileLink> for SymlinkLink<'a> {
-    async fn new(target: MutexGuard<'a, FileLink>, destination: PathBuf) -> Result<Self> {
-        let target_path = target
-            .get_path(&destination)
-            .context("Failed to get path from target")?;
-        let symlink_entity = SymlinkEntity::new(target_path, &destination).await?;
-        Ok(Self {
-            file_entity: symlink_entity,
-            _target: target,
-        })
-    }
-
-    async fn force_readonly(&self) -> Result<()> {
-        self.file_entity.readonly().await
+    fn unlink(self) -> Result<FileType> {
+        std::fs::remove_file(&self.path)
+            .with_context(|| format!("Failed to remove symlink {:?}", self.path))?;
+        Ok(self.file)
     }
 }

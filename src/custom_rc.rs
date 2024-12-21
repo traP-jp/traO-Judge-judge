@@ -1,36 +1,33 @@
-mod dir_entity_factory;
-mod file_entity;
+mod entity;
+pub mod file_factory;
 pub mod file_link;
-pub mod file_link_factory;
-mod text_entity_factory;
-use crate::text_resource_repository::TextResourceRepository as RepoTrait;
+pub mod readonly_file;
+pub mod writeable_file;
 use anyhow::Result;
 use std::path::PathBuf;
-use tokio::sync::MutexGuard;
+use uuid::Uuid;
 
-pub trait FileLink: Sized {}
-
-pub trait SymlinkLink<'a, FileLink>: Sized {
-    async fn new(target: MutexGuard<'a, FileLink>, destination: PathBuf) -> Result<Self>;
-    async fn force_readonly(&self) -> Result<()>;
+pub trait File {
+    fn path(&self) -> PathBuf;
 }
 
-pub trait FileLinkFactory<
-    ExternalAccessKey: Eq + std::hash::Hash + Clone + ToString,
-    RepoType: RepoTrait<ExternalAccessKey>,
-    FileLinkType: FileLink,
+pub trait WriteableFile<ReadonlyFileType: ReadonlyFile>: File {
+    async fn to_readonly(self) -> Result<ReadonlyFileType>;
+}
+
+pub trait ReadonlyFile: Clone + File {}
+
+pub trait FileLink<FileType: File>: Sized {
+    fn link(file: FileType, path: PathBuf) -> Result<Self>;
+    fn unlink(self) -> Result<FileType>;
+}
+
+pub trait FileFactory<
+    WriteableFileType: WriteableFile<ReadonlyFileType>,
+    ReadonlyFileType: ReadonlyFile,
 >
 {
-    async fn get_text_file_link(
-        &self,
-        text_resource_id: ExternalAccessKey,
-        cache: bool,
-    ) -> Result<FileLinkType>;
-    async fn get_text_file_links(
-        &self,
-        text_resource_id: ExternalAccessKey,
-        count: usize,
-        cache: bool,
-    ) -> Result<Vec<FileLinkType>>;
-    async fn get_directory_link(&self) -> Result<FileLinkType>;
+    async fn new_textfile(&self, key: &Uuid) -> Result<ReadonlyFileType>;
+    async fn new_textfile_from_raw(&self, raw: &str) -> Result<WriteableFileType>;
+    async fn new_directory(&self) -> Result<WriteableFileType>;
 }
