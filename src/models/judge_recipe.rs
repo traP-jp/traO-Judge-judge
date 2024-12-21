@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct Execution {
     pub optional_info: OptionalInfo,
     pub shell_script_id: uuid::Uuid,
@@ -6,11 +7,14 @@ pub struct Execution {
     pub one_time_text_count: i64,
 }
 
+#[derive(Clone)]
 pub struct ExecutionConfigMap {
     pub text_resource_ids: Vec<uuid::Uuid>,
     pub one_time_text_contents: Vec<String>,
 }
-pub struct SubmissionInput<JobOrderingType: Ord> {
+
+#[derive(Clone)]
+pub struct SubmissionInput {
     pub judge_id: uuid::Uuid,
     pub test_count: i64,
     pub before_test_execs: Execution,
@@ -19,9 +23,10 @@ pub struct SubmissionInput<JobOrderingType: Ord> {
     pub before_test_config_map: ExecutionConfigMap,
     pub on_test_config_maps: Vec<ExecutionConfigMap>,
     pub after_test_config_map: ExecutionConfigMap,
-    pub job_order: JobOrderingType,
+    pub posted_at: chrono::NaiveDateTime,
 }
 
+#[derive(Clone)]
 pub struct OptionalInfo {
     pub exec_time: Option<f64>,
     pub memory_size: Option<f64>,

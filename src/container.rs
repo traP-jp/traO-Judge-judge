@@ -3,24 +3,32 @@ use anyhow::Result;
 use std::collections::HashMap;
 use crate::custom_rc::{ReadonlyFile, WriteableFile, FileLink};
 use crate::spmc_oneshot::SpmcReceiver;
+use std::path::PathBuf;
+use uuid::Uuid;
 
 pub trait Container {
     async fn execute<
+        'a,
         ReadonlyFileType: ReadonlyFile,
         WriteableFileType: WriteableFile<ReadonlyFileType>,
-        ReadonlyFileLinkType: FileLink<ReadonlyFileType>,
-        WriteableFileLinkType: FileLink<WriteableFileType>,
+        ReadonlyFileLinkType: FileLink<'a, ReadonlyFileType>,
+        WriteableFileLinkType: FileLink<'a, WriteableFileType>,
     > (
         &self,
         cmd: &str,
         envs: HashMap<String, String>,
         connection_time_limit: std::time::Duration,
         execution_time_limit: std::time::Duration,
-        readonly_files: &Vec<ReadonlyFileType>,
-        writeable_files: &Vec<WriteableFileType>,
-    ) -> Result<ExecutionOutput>;
+        readonly_files: HashMap<Uuid, (PathBuf, ReadonlyFileType)>,
+        writeable_files: HashMap<Uuid, (PathBuf, WriteableFileType)>,
+    ) -> Result<(
+        ExecutionOutput,
+        HashMap<Uuid, ReadonlyFileType>,
+    )>;
+
+    fn resource_destination_path(&self) -> PathBuf;
 }
 
 pub trait ContainerFactory<ContainerType: Container, Priority: Ord> {
-    async fn get_resv(&self, priority: Priority) -> Result<SpmcReceiver<ContainerType>>;
+    async fn get_rx(&self, priority: Priority) -> Result<SpmcReceiver<ContainerType>>;
 }

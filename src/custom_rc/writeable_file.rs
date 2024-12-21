@@ -29,7 +29,7 @@ impl super::File for WriteableFile {
 }
 
 impl super::WriteableFile<ReadonlyFile> for WriteableFile {
-    fn to_readonly(self) -> Result<ReadonlyFile> {
+    async fn to_readonly(self) -> Result<ReadonlyFile> {
         ReadonlyFile::new(
             self.path.clone(),
             ReadonlyFileEntity::from( match self.entity {

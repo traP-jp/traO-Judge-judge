@@ -11,14 +11,14 @@ pub trait File {
 }
 
 pub trait WriteableFile<ReadonlyFileType: ReadonlyFile>: File {
-    fn to_readonly(self) -> Result<ReadonlyFileType>;
+    async fn to_readonly(self) -> Result<ReadonlyFileType>;
 }
 
 pub trait ReadonlyFile: Clone + File {}
 
-pub trait FileLink<FileType: File>: Sized {
-    fn link(file: FileType, path: PathBuf) -> Result<Self>;
-    fn unlink(self) -> Result<FileType>;
+pub trait FileLink<'a, FileType: File>: Sized {
+    fn link(file: &'a mut FileType, path: PathBuf) -> Result<Self>;
+    fn unlink(self) -> Result<()>;
 }
 
 pub trait FileFactory<
