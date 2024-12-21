@@ -7,12 +7,10 @@ use anyhow::{Context, Result};
 pub struct Logic<
     ContainerType: crate::container::Container,
     ContainerFactoryType: crate::container::ContainerFactory<ContainerType, SingleRunPriorityType>,
-    
     ReadonlyFileType: crate::custom_rc::ReadonlyFile,
     WriteableFileType: crate::custom_rc::WriteableFile<ReadonlyFileType>,
     ReadonlyFileLinkType: crate::custom_rc::FileLink<ReadonlyFileType>,
     WriteableFileLinkType: crate::custom_rc::FileLink<WriteableFileType>,
-    
     RepoType: crate::text_resource_repository::TextResourceRepository,
     FileFactoryType: crate::custom_rc::FileFactory<
         WriteableFileType,
