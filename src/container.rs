@@ -8,11 +8,10 @@ use uuid::Uuid;
 
 pub trait Container {
     async fn execute<
-        'a,
         ReadonlyFileType: ReadonlyFile,
         WriteableFileType: WriteableFile<ReadonlyFileType>,
-        ReadonlyFileLinkType: FileLink<'a, ReadonlyFileType>,
-        WriteableFileLinkType: FileLink<'a, WriteableFileType>,
+        ReadonlyFileLinkType: FileLink<ReadonlyFileType>,
+        WriteableFileLinkType: FileLink<WriteableFileType>,
     > (
         &self,
         cmd: &str,

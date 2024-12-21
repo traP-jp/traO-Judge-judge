@@ -17,9 +17,9 @@ pub trait WriteableFile<ReadonlyFileType: ReadonlyFile>: File {
 
 pub trait ReadonlyFile: Clone + File {}
 
-pub trait FileLink<'a, FileType: File>: Sized {
-    fn link(file: &'a mut FileType, path: PathBuf) -> Result<Self>;
-    fn unlink(self) -> Result<()>;
+pub trait FileLink<FileType: File>: Sized {
+    fn link(file: FileType, path: PathBuf) -> Result<Self>;
+    fn unlink(self) -> Result<FileType>;
 }
 
 pub trait FileFactory<

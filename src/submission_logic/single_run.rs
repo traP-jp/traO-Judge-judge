@@ -5,12 +5,11 @@ use crate::remote_exec::ExecutionOutput;
 use uuid::Uuid;
 
 pub async fn single_run<
-    'a,
     ContainerType: crate::container::Container,
     ReadonlyFileType: ReadonlyFile,
     WriteableFileType: WriteableFile<ReadonlyFileType>,
-    ReadonlyFileLinkType: FileLink<'a, ReadonlyFileType>,
-    WriteableFileLinkType: FileLink<'a, WriteableFileType>,
+    ReadonlyFileLinkType: FileLink<ReadonlyFileType>,
+    WriteableFileLinkType: FileLink<WriteableFileType>,
 > (
     cmd: &str,
     envs: HashMap<String, String>,

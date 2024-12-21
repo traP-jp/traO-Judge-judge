@@ -7,15 +7,13 @@ use crate::remote_exec::*;
 use std::collections::HashMap;
 
 pub struct Logic<
-    'a,
-
     ContainerType: crate::container::Container,
     ContainerFactoryType: crate::container::ContainerFactory<ContainerType, SingleRunPriorityType>,
     
     ReadonlyFileType: crate::custom_rc::ReadonlyFile,
     WriteableFileType: crate::custom_rc::WriteableFile<ReadonlyFileType>,
-    ReadonlyFileLinkType: crate::custom_rc::FileLink<'a, ReadonlyFileType>,
-    WriteableFileLinkType: crate::custom_rc::FileLink<'a, WriteableFileType>,
+    ReadonlyFileLinkType: crate::custom_rc::FileLink<ReadonlyFileType>,
+    WriteableFileLinkType: crate::custom_rc::FileLink<WriteableFileType>,
     
     RepoType: crate::text_resource_repository::TextResourceRepository,
     FileFactoryType: crate::custom_rc::FileFactory<
@@ -31,7 +29,6 @@ pub struct Logic<
     container_factory: ContainerFactoryType,
     file_factory: FileFactoryType,
     _phantom: std::marker::PhantomData<(
-        &'a (),
         ContainerType,
         SingleRunPriorityType,
         ReadonlyFileType,
@@ -43,15 +40,13 @@ pub struct Logic<
 }
 
 impl <
-    'a,
-
     ContainerType: crate::container::Container,
     ContainerFactoryType: crate::container::ContainerFactory<ContainerType, SingleRunPriorityType>,
     
     ReadonlyFileType: crate::custom_rc::ReadonlyFile,
     WriteableFileType: crate::custom_rc::WriteableFile<ReadonlyFileType>,
-    ReadonlyFileLinkType: crate::custom_rc::FileLink<'a, ReadonlyFileType>,
-    WriteableFileLinkType: crate::custom_rc::FileLink<'a, WriteableFileType>,
+    ReadonlyFileLinkType: crate::custom_rc::FileLink<ReadonlyFileType>,
+    WriteableFileLinkType: crate::custom_rc::FileLink<WriteableFileType>,
     
     RepoType: crate::text_resource_repository::TextResourceRepository,
     FileFactoryType: crate::custom_rc::FileFactory<
@@ -64,8 +59,6 @@ impl <
         super::models::Phase
     )>,
 > Logic<
-    'a,
-
     ContainerType,
     ContainerFactoryType,
     ReadonlyFileType,
@@ -90,15 +83,13 @@ impl <
 }
 
 impl <
-    'a,
-
     ContainerType: crate::container::Container,
     ContainerFactoryType: crate::container::ContainerFactory<ContainerType, SingleRunPriorityType>,
 
     ReadonlyFileType: crate::custom_rc::ReadonlyFile,
     WriteableFileType: crate::custom_rc::WriteableFile<ReadonlyFileType>,
-    ReadonlyFileLinkType: crate::custom_rc::FileLink<'a, ReadonlyFileType>,
-    WriteableFileLinkType: crate::custom_rc::FileLink<'a, WriteableFileType>,
+    ReadonlyFileLinkType: crate::custom_rc::FileLink<ReadonlyFileType>,
+    WriteableFileLinkType: crate::custom_rc::FileLink<WriteableFileType>,
 
     RepoType: crate::text_resource_repository::TextResourceRepository,
     FileFactoryType: crate::custom_rc::FileFactory<
@@ -113,8 +104,6 @@ impl <
 > super::Logic<
     ContainerType,
 > for Logic<
-    'a,
-
     ContainerType,
     ContainerFactoryType,
     ReadonlyFileType,
