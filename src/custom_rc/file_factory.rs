@@ -1,7 +1,7 @@
 use super::{
     entity::{
         file_entity::*,
-        dir_entity_factory::*,
+        writeable_entity_factory::*,
         text_entity_factory::*,
     },
     readonly_file::*,
@@ -18,8 +18,9 @@ pub struct FileFactory<
     RepoType: RepoTrait,
 >
  {
-    directory_factory: DirEntityFactory,
+    writeable_entity_factory: WriteableEntityFactory,
     text_factory: Mutex<TextEntityFactory<RepoType>>,
+    base_path: PathBuf,
     _phantom: std::marker::PhantomData<(
         WriteableFile,
         ReadonlyFile,
@@ -39,13 +40,14 @@ impl<
         let dir_factory_path = base_path.clone().join("dir_factory");
         let text_factory_path = base_path.clone().join("text_factory");
         Self {
-            directory_factory: DirEntityFactory::new(dir_factory_path),
+            writeable_entity_factory: WriteableEntityFactory::new(dir_factory_path),
             text_factory: Mutex::new(TextEntityFactory::new(
                 text_factory_path,
                 text_factory_limit,
                 repo,
                 0.1,
             )),
+            base_path: base_path.join("files"),
             _phantom: std::marker::PhantomData,
         }
     }
@@ -59,21 +61,33 @@ impl<
 > for FileFactory<
     RepoType,
 > {
-    async fn new_textfile(&self, path: PathBuf, key: Uuid) -> Result<ReadonlyFile> {
+    async fn new_textfile(&self, key: &Uuid) -> Result<ReadonlyFile> {
         let file = {
             let text_entity_factory = self.text_factory.lock().await;
             text_entity_factory
-                .get_text_file_entity(key, true)
+                .get_text_file_entity(key.clone(), true)
                 .await?
         };
+        
+        let path = self.base_path.join(Uuid::new_v4().to_string());
         ReadonlyFile::new(path, ReadonlyFileEntity::TextFile(file))
     }
 
-    async fn new_directory(&self, path: PathBuf) -> Result<WriteableFile> {
-        let dir = self.directory_factory
+    async fn new_directory(&self) -> Result<WriteableFile> {
+        let dir = self.writeable_entity_factory
             .get_dir_entity()
             .await
             .context("Failed to get directory entity")?;
+        let path = self.base_path.join(Uuid::new_v4().to_string());
         WriteableFile::new(path, WriteableFileEntity::Directory(dir))
+    }
+
+    async fn new_textfile_from_raw(&self, raw: &str) -> Result<WriteableFile> {
+        let file = self.writeable_entity_factory
+            .get_text_file_entity(raw)
+            .await
+            .context("Failed to get text file entity")?;
+        let path = self.base_path.join(Uuid::new_v4().to_string());
+        WriteableFile::new(path, WriteableFileEntity::TextFile(file))
     }
 }
