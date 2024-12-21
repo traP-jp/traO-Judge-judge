@@ -65,7 +65,7 @@ impl Drop for DirectoryEntity {
     }
 }
 
-pub enum WriteableFileEntity {
+pub enum WritableFileEntity {
     TextFile(TextFileEntity),
     Directory(DirectoryEntity),
 }

@@ -1,4 +1,4 @@
-use crate::custom_rc::{FileFactory, ReadonlyFile, WriteableFile};
+use crate::custom_rc::{FileFactory, ReadonlyFile, WritableFile};
 use crate::models::judge_recipe::{Execution, ExecutionConfigMap};
 use anyhow::{Context, Result};
 use std::collections::HashMap;
@@ -6,15 +6,15 @@ use uuid::Uuid;
 
 pub async fn prepare_files<
     ReadonlyFileType: ReadonlyFile,
-    WriteableFileType: WriteableFile<ReadonlyFileType>,
-    FileFactoryType: FileFactory<WriteableFileType, ReadonlyFileType>,
+    WritableFileType: WritableFile<ReadonlyFileType>,
+    FileFactoryType: FileFactory<WritableFileType, ReadonlyFileType>,
 >(
     file_factory: &FileFactoryType,
     execution: &Execution,
     execution_config: &ExecutionConfigMap,
 ) -> Result<(
     HashMap<Uuid, ReadonlyFileType>,
-    HashMap<Uuid, WriteableFileType>,
+    HashMap<Uuid, WritableFileType>,
     HashMap<Uuid, String>,
 )> {
     let (text_files, onetime_text_files, directories, shellhook) = futures::join!(
@@ -64,27 +64,27 @@ pub async fn prepare_files<
     let shellhook = shellhook.with_context(|| "Failed to create shellhook")?;
 
     let mut all_readonly_files = text_files;
-    let mut all_writeable_files = one_time_text_files;
-    all_writeable_files.extend(directories);
+    let mut all_writable_files = one_time_text_files;
+    all_writable_files.extend(directories);
     all_readonly_files.insert("SHELLHOOK".to_string(), shellhook);
 
     // set uuids
     let mut all_readonly_files_uuid = HashMap::new();
-    let mut all_writeable_files_uuid = HashMap::new();
+    let mut all_writable_files_uuid = HashMap::new();
     let mut filename_dict = HashMap::new();
     for (name, file) in all_readonly_files {
         let uuid = Uuid::new_v4();
         all_readonly_files_uuid.insert(uuid, file);
         filename_dict.insert(uuid, name);
     }
-    for (name, file) in all_writeable_files {
+    for (name, file) in all_writable_files {
         let uuid = Uuid::new_v4();
-        all_writeable_files_uuid.insert(uuid, file);
+        all_writable_files_uuid.insert(uuid, file);
         filename_dict.insert(uuid, name);
     }
     Ok((
         all_readonly_files_uuid,
-        all_writeable_files_uuid,
+        all_writable_files_uuid,
         filename_dict,
     ))
 }

@@ -4,16 +4,16 @@ use anyhow::{Context, Result};
 use std::path::PathBuf;
 use std::sync::Arc;
 
-pub struct WriteableFile {
+pub struct WritableFile {
     pub path: PathBuf,
-    pub entity: WriteableFileEntity,
+    pub entity: WritableFileEntity,
 }
 
-impl WriteableFile {
-    pub fn new(path: PathBuf, entity: WriteableFileEntity) -> Result<Self> {
+impl WritableFile {
+    pub fn new(path: PathBuf, entity: WritableFileEntity) -> Result<Self> {
         let target_path = match &entity {
-            WriteableFileEntity::TextFile(file) => file.path.clone(),
-            WriteableFileEntity::Directory(dir) => dir.path.clone(),
+            WritableFileEntity::TextFile(file) => file.path.clone(),
+            WritableFileEntity::Directory(dir) => dir.path.clone(),
         };
         std::os::unix::fs::symlink(&target_path, &path).with_context(|| {
             format!(
@@ -25,19 +25,19 @@ impl WriteableFile {
     }
 }
 
-impl super::File for WriteableFile {
+impl super::File for WritableFile {
     fn path(&self) -> PathBuf {
         self.path.clone()
     }
 }
 
-impl super::WriteableFile<ReadonlyFile> for WriteableFile {
+impl super::WritableFile<ReadonlyFile> for WritableFile {
     async fn to_readonly(self) -> Result<ReadonlyFile> {
         ReadonlyFile::new(
             self.path.clone(),
             ReadonlyFileEntity::from(match self.entity {
-                WriteableFileEntity::TextFile(file) => ReadonlyFileEntity::TextFile(Arc::new(file)),
-                WriteableFileEntity::Directory(dir) => ReadonlyFileEntity::Directory(Arc::new(dir)),
+                WritableFileEntity::TextFile(file) => ReadonlyFileEntity::TextFile(Arc::new(file)),
+                WritableFileEntity::Directory(dir) => ReadonlyFileEntity::Directory(Arc::new(dir)),
             }),
         )
         .context("Failed to create readonly file")

@@ -2,11 +2,11 @@ use super::file_entity::*;
 use anyhow::Result;
 use std::path::PathBuf;
 
-pub struct WriteableEntityFactory {
+pub struct WritableEntityFactory {
     base_path: PathBuf,
 }
 
-impl WriteableEntityFactory {
+impl WritableEntityFactory {
     pub fn new(path: PathBuf) -> Self {
         Self { base_path: path }
     }
