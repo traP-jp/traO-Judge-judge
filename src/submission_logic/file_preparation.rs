@@ -43,22 +43,18 @@ pub async fn prepare_files<
             Ok((name, file))
         })
         .collect::<Result<HashMap<_, _>>>()?;
-    let one_time_text_files = futures::future::join_all(
-        onetime_text_files
-            .into_iter()
-            .enumerate()
-            .map(|(i, writable_file)| {
-                async move {
-                    let name = format!("ONETIME_TEXT_{}", i).to_string();
-                    let readonly = writable_file
-                        .with_context(|| format!("Failed to create onetime text file {}", i))?
-                        .to_readonly()
-                        .await
-                        .with_context(|| format!("Failed to convert onetime text file {}", i))?;
-                    Ok((name, readonly))
-                }
-            }),
-    )
+    let one_time_text_files =
+        futures::future::join_all(onetime_text_files.into_iter().enumerate().map(
+            |(i, writable_file)| async move {
+                let name = format!("ONETIME_TEXT_{}", i).to_string();
+                let readonly = writable_file
+                    .with_context(|| format!("Failed to create onetime text file {}", i))?
+                    .to_readonly()
+                    .await
+                    .with_context(|| format!("Failed to convert onetime text file {}", i))?;
+                Ok((name, readonly))
+            },
+        ))
         .await
         .into_iter()
         .collect::<Result<HashMap<_, _>>>()?;
