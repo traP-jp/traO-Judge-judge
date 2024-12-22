@@ -1,9 +1,4 @@
-[package]
-name = "judge-control-app"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
+[workspace.dependencies]
 axum = "0.7"
 axum-extra = { version = "0.9", features = [ "typed-header" ] }
 tokio = { version = "1.0", features = ["full"] }
@@ -23,3 +18,10 @@ judge_api_server = { path = "judge-api-server" }
 byte-unit = "5.1.6"
 futures = "0.3.31"
 chrono = "0.4.39"
+
+[workspace]
+members = [
+    "judge-control-app",
+    "writerutil",
+]
+resolver = "2"
