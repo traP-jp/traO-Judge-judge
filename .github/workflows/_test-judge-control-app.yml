@@ -29,7 +29,7 @@ jobs:
     
     
     - name: Build test
-      run: cargo build -p judge-control-app
+      run: cargo build -p judge_control_app
     - name: Run test
       run: cargo test
     - name: Lint with clippy

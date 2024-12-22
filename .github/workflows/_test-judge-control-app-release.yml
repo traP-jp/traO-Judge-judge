@@ -31,7 +31,7 @@ jobs:
     
     
     - name: Build test
-      run: cargo build --release --verbose -p judge-control-app
+      run: cargo build --release --verbose -p judge_control_app
     - name: Run test
       run: cargo test --verbose
     - name: Lint with clippy
