@@ -43,14 +43,24 @@ pub async fn prepare_files<
             Ok((name, file))
         })
         .collect::<Result<HashMap<_, _>>>()?;
-    let one_time_text_files = onetime_text_files
+    let one_time_text_files = futures::future::join_all(
+        onetime_text_files
+            .into_iter()
+            .enumerate()
+            .map(|(i, writable_file)| {
+                async move {
+                    let name = format!("ONETIME_TEXT_{}", i).to_string();
+                    let readonly = writable_file
+                        .with_context(|| format!("Failed to create onetime text file {}", i))?
+                        .to_readonly()
+                        .await
+                        .with_context(|| format!("Failed to convert onetime text file {}", i))?;
+                    Ok((name, readonly))
+                }
+            }),
+    )
+        .await
         .into_iter()
-        .enumerate()
-        .map(|(i, file)| {
-            let name = format!("ONETIME_TEXT_{}", i).to_string();
-            let file = file.with_context(|| format!("Failed to create onetime text file {}", i))?;
-            Ok((name, file))
-        })
         .collect::<Result<HashMap<_, _>>>()?;
     let directories = directories
         .into_iter()
@@ -64,8 +74,8 @@ pub async fn prepare_files<
     let shellhook = shellhook.with_context(|| "Failed to create shellhook")?;
 
     let mut all_readonly_files = text_files;
-    let mut all_writable_files = one_time_text_files;
-    all_writable_files.extend(directories);
+    let all_writable_files = directories;
+    all_readonly_files.extend(one_time_text_files);
     all_readonly_files.insert("SHELLHOOK".to_string(), shellhook);
 
     // set uuids
