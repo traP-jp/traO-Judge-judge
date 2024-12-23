@@ -1,0 +1,23 @@
+[package]
+name = "judge_control_app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = {workspace = true}
+axum-extra = {workspace = true}
+tokio = {workspace = true}
+serde = {workspace = true}
+serde_json = {workspace = true}
+tower = {workspace = true}
+tower-http = {workspace = true}
+tracing = {workspace = true}
+tracing-subscriber = {workspace = true}
+uuid = {workspace = true}
+reqwest = {workspace = true}
+anyhow = {workspace = true}
+thiserror = {workspace = true}
+ssh2 = {workspace = true}
+byte-unit = {workspace = true}
+futures = {workspace = true}
+chrono = {workspace = true}
