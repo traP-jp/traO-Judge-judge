@@ -1,3 +1,4 @@
+pub mod alert;
 pub mod container;
 pub mod custom_rc;
 pub mod models;

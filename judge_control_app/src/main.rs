@@ -1,3 +1,4 @@
+mod alert;
 mod container;
 mod custom_rc;
 mod models;
