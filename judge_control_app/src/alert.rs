@@ -1,7 +1,7 @@
 pub trait Alert {
-    async fn send_alert<MessageType: std::fmt::Display>(
+    async fn send_alert<MessageType: std::fmt::Display + Clone>(
         &self,
-        message: MessageType,
+        message: &MessageType,
     );
 }
 
