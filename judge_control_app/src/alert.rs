@@ -1,7 +1,13 @@
-pub trait Alert<BodyType = ()> {
+pub trait Alert {
     async fn send_alert<MessageType: std::fmt::Display>(
         &self,
         message: MessageType,
-        body: BodyType,
+    );
+}
+
+pub trait StructuralAlert<BodyType: serde::Serialize + Clone> {
+    async fn send_alert(
+        &self,
+        body: &BodyType,
     );
 }
