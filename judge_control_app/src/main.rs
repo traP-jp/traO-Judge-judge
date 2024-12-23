@@ -5,6 +5,7 @@ mod remote_exec;
 mod spmc_oneshot;
 mod submission_logic;
 mod text_resource_repository;
+mod alert;
 
 fn main() {
     println!("Hello, world!");
