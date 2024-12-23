@@ -1,3 +1,7 @@
-pub trait Alert {
-    async fn send_alert<T: std::fmt::Display>(&self, message: T);
+pub trait Alert<BodyType = ()> {
+    async fn send_alert<MessageType: std::fmt::Display>(
+        &self,
+        message: MessageType,
+        body: BodyType,
+    );
 }
