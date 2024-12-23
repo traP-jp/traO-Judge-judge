@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 serde = {workspace = true}
 anyhow = {workspace = true}
+judge_control_app = { path = "../judge_control_app" }
