@@ -27,6 +27,20 @@ impl ReadonlyFile {
     }
 }
 
+impl Drop for ReadonlyFile {
+    fn drop(&mut self) {
+        let result = std::fs::remove_file(&self.path).context(format!(
+            "Failed to remove file while dropping ReadonlyFile : {:?}",
+            self.path
+        ));
+        match result {
+            Ok(_) => {}
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+        }
+    }
+}
 impl super::File for ReadonlyFile {
     fn path(&self) -> PathBuf {
         self.path.clone()
