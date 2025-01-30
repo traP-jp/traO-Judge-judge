@@ -2,7 +2,7 @@ use anyhow::Ok;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::EnvFilter;
 
-use trao_judge_backend as lib;
+use backend_app as lib;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

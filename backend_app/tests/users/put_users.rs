@@ -8,7 +8,7 @@ use axum::{
 use http_body_util::BodyExt;
 use serde_json::{json, Value};
 use tower::ServiceExt;
-use trao_judge_backend::{make_router, Repository};
+use backend_app::{make_router, Repository};
 
 #[sqlx::test(fixtures("common"))]
 async fn put_user_me(pool: sqlx::MySqlPool) -> anyhow::Result<()> {
