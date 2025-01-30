@@ -1,34 +1,31 @@
 [package]
-name = "trao-judge-backend"
+name = "backend_app"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-axum = "0.7"
-http-body-util = "0.1.0"
-axum-extra = { version = "0.9", features = [ "typed-header" ] }
-tokio = { version = "1.0", features = ["full"] }
-serde = { version = "1.0", features = [ "derive" ] }
-serde_json = "1.0"
-tower = { version = "0.4", features = ["full"] }
-tower-http = { version = "0.5.0", features = ["add-extension", "trace", "fs"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-uuid = { version = "1.0", features = ["serde", "v7"] }
-reqwest = "0.12.5"
-anyhow = "1.0"
-thiserror = "1.0.63"
-bcrypt = "0.15"
-async-session = "3.0.0"
-sqlx = { version = "0.7", features = [ "mysql", "runtime-async-std-native-tls", "migrate", "chrono", "uuid" ] }
-jsonwebtoken = "9.3.0"
-lettre = "0.11.7"
-fancy-regex = "0.14.0"
-
-[dependencies.async-sqlx-session]
-git = "https://github.com/maxcountryman/async-sqlx-session.git"
-default-features = false
-branch = "sqlx-0.7"
-features = ["mysql"]
+axum = {workspace = true}
+axum-extra = {workspace = true}
+tokio = {workspace = true}
+serde = {workspace = true}
+serde_json = {workspace = true}
+tower = {workspace = true}
+tower-http = {workspace = true}
+tracing = {workspace = true}
+tracing-subscriber = {workspace = true}
+uuid = {workspace = true}
+reqwest = {workspace = true}
+anyhow = {workspace = true}
+thiserror = {workspace = true}
+ssh2 = {workspace = true}
+byte-unit = {workspace = true}
+futures = {workspace = true}
+chrono = {workspace = true}
+http-body-util = {workspace = true}
+bcrypt = {workspace = true}
+async-session = {workspace = true}
+sqlx = { workspace = true }
+jsonwebtoken = {workspace = true}
+lettre = {workspace = true}
+fancy-regex = {workspace = true}
+async-sqlx-session = { workspace = true }

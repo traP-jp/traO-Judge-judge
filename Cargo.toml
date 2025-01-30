@@ -16,10 +16,26 @@ ssh2 = "0.9.4"
 byte-unit = "5.1.6"
 futures = "0.3.31"
 chrono = "0.4.39"
+http-body-util = "0.1.0"
+bcrypt = "0.15"
+async-session = "3.0.0"
+sqlx = { version = "0.7", features = [ "mysql", "runtime-async-std-native-tls", "migrate", "chrono", "uuid" ] }
+jsonwebtoken = "9.3.0"
+lettre = "0.11.7"
+fancy-regex = "0.14.0"
+
+
+[workspace.dependencies.async-sqlx-session]
+git = "https://github.com/maxcountryman/async-sqlx-session.git"
+default-features = false
+branch = "sqlx-0.7"
+features = ["mysql"]
+
 
 [workspace]
 members = [
     "judge_control_app",
     "writerutil",
+    "backend_app",
 ]
 resolver = "2"
