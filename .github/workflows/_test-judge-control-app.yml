@@ -29,10 +29,10 @@ jobs:
     
     
     - name: Build test
-      run: cargo build -p judge_control_app
+      run: export CODEGEN_SKIP=true && cargo build -p judge_control_app
     - name: Run test
-      run: cargo test
+      run: export CODEGEN_SKIP=true && cargo test
     - name: Lint with clippy
-      run: cargo clippy --all-targets --all-features -- -A dead_code
+      run: export CODEGEN_SKIP=true && cargo clippy --all-targets --all-features -- -A dead_code
     - name: Check formatting
-      run: cargo fmt --all --check
+      run: export CODEGEN_SKIP=true && cargo fmt --all --check

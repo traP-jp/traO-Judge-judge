@@ -1,4 +1,7 @@
 fn main() {
+    if std::env::var("CODEGEN_SKIP").is_ok() {
+        return;
+    }
     let schema_dir = std::path::Path::new("../traO-Judge-docs/api").canonicalize().unwrap();
     println!("cargo:rerun-if-changed={}", schema_dir.to_str().unwrap());
     let out_dir = std::path::Path::new("./src").canonicalize().unwrap();
