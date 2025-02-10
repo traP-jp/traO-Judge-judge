@@ -16,10 +16,19 @@ ssh2 = "0.9.4"
 byte-unit = "5.1.6"
 futures = "0.3.31"
 chrono = "0.4.39"
+bytes = "1.1.0"
+prost = "0.13.4"
+prost-types = "0.13.4"
+tonic = "0.12.3"
+tonic-types = "0.12.3"
+tonic-web = "0.12.3"
+tonic-build = "0.12.3"
+
 
 [workspace]
 members = [
     "judge_control_app",
     "writerutil",
+    "grpc_schema",
 ]
 resolver = "2"

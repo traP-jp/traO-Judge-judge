@@ -21,3 +21,4 @@ ssh2 = {workspace = true}
 byte-unit = {workspace = true}
 futures = {workspace = true}
 chrono = {workspace = true}
+grpc_schema = { path = "../grpc_schema" }
