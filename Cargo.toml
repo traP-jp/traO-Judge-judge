@@ -30,6 +30,6 @@ members = [
     "judge_control_app",
     "writerutil",
     "grpc_schema",
-    "core",
+    "judge_core",
 ]
 resolver = "2"
