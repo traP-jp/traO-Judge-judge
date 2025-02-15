@@ -1,0 +1,12 @@
+[package]
+name = "traopy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+pyo3 = { workspace = true }
+uuid = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+judge_core = { path = "../judge_core" }

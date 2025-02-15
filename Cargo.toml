@@ -23,6 +23,7 @@ tonic = "0.12.3"
 tonic-types = "0.12.3"
 tonic-web = "0.12.3"
 tonic-build = "0.12.3"
+pyo3 = { version = "0.23.4", features = ["extension-module"] }
 
 
 [workspace]
@@ -31,5 +32,6 @@ members = [
     "writerutil",
     "grpc_schema",
     "judge_core",
+    "traopy",
 ]
 resolver = "2"
