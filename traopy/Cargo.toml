@@ -3,6 +3,10 @@ name = "traopy"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "traopy"
+crate-type = ["cdylib"]
+
 [dependencies]
 pyo3 = { workspace = true }
 uuid = { workspace = true }
@@ -10,3 +14,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
 judge_core = { path = "../judge_core" }
+
+[features]
+abi3 = ["pyo3/abi3-py37", "generate-import-lib"]
+generate-import-lib = ["pyo3/generate-import-lib"]
