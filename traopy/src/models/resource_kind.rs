@@ -1,10 +1,6 @@
+use super::{empty_directory::*, onetime_text::*, text::*};
 use pyo3::prelude::*;
-use serde::{Serialize, Deserialize};
-use super::{
-    empty_directory::*,
-    onetime_text::*,
-    text::*,
-};
+use serde::{Deserialize, Serialize};
 
 #[pyclass]
 #[derive(Debug, Clone)]
@@ -54,13 +50,11 @@ impl From<PyResourceKind> for SchemaResourceKind {
         match py_resource_kind {
             PyResourceKind::EmptyDirectory(py_empty_directory) => {
                 SchemaResourceKind::EmptyDirectory(py_empty_directory.into())
-            },
+            }
             PyResourceKind::OnetimeTextFile(py_onetime_text) => {
                 SchemaResourceKind::OnetimeTextFile(py_onetime_text.into())
-            },
-            PyResourceKind::TextFile(py_text) => {
-                SchemaResourceKind::TextFile(py_text.into())
-            },
+            }
+            PyResourceKind::TextFile(py_text) => SchemaResourceKind::TextFile(py_text.into()),
         }
     }
 }

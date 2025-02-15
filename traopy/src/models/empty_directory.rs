@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[pyclass]
 #[derive(Debug, Clone)]
@@ -11,9 +11,7 @@ pub struct PyEmptyDirectory {
 impl PyEmptyDirectory {
     #[new]
     pub fn new(name: String) -> Self {
-        PyEmptyDirectory {
-            name,
-        }
+        PyEmptyDirectory { name }
     }
 }
 

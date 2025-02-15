@@ -1,22 +1,19 @@
 use pyo3::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 #[pyclass]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PyScript {
     pub name: String,
-    pub path: PathBuf
+    pub path: PathBuf,
 }
 
 #[pymethods]
 impl PyScript {
     #[new]
     fn new(name: String, path: PathBuf) -> Self {
-        PyScript {
-            name,
-            path,
-        }
+        PyScript { name, path }
     }
 }
 

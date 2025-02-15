@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 #[pyclass]
@@ -13,10 +13,7 @@ pub struct PyText {
 impl PyText {
     #[new]
     pub fn new(name: String, path: PathBuf) -> Self {
-        PyText {
-            name,
-            path,
-        }
+        PyText { name, path }
     }
 }
 

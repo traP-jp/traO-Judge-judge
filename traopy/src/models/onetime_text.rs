@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[pyclass]
 #[derive(Debug, Clone)]
@@ -11,9 +11,7 @@ pub struct PyOnetimeText {
 impl PyOnetimeText {
     #[new]
     pub fn new(name: String) -> Self {
-        PyOnetimeText {
-            name,
-        }
+        PyOnetimeText { name }
     }
 }
 
@@ -29,4 +27,3 @@ impl From<PyOnetimeText> for SchemaOnetimeText {
         }
     }
 }
-

@@ -1,9 +1,9 @@
-use pyo3::prelude::*;
 use crate::models::*;
 use core::panic;
+use pyo3::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use serde::{Serialize, Deserialize};
 
 #[pyclass]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,9 +28,12 @@ impl Environment {
     fn add_resource(&mut self, resource: resource_kind::PyResourceKind) -> output::PyOutput {
         let schema_resource = resource_kind::SchemaResourceKind::from(resource);
         let name = schema_resource.name().clone();
-        let _ = self.resources.insert(name.clone(), schema_resource).is_none_or(|_| {
-            panic!("Resource with name {} already exists", name);
-        });
+        let _ = self
+            .resources
+            .insert(name.clone(), schema_resource)
+            .is_none_or(|_| {
+                panic!("Resource with name {} already exists", name);
+            });
         let output = output::PyOutput::new(name);
         output
     }
@@ -39,9 +42,12 @@ impl Environment {
     fn add_script(&mut self, script: script::PyScript) -> output::PyScriptOutput {
         let schema_script = script::SchemaScript::from(script);
         let name = schema_script.name.clone();
-        let _ = self.scripts.insert(name.clone(), schema_script).is_none_or(|_| {
-            panic!("Script with name {} already exists", name);
-        });
+        let _ = self
+            .scripts
+            .insert(name.clone(), schema_script)
+            .is_none_or(|_| {
+                panic!("Script with name {} already exists", name);
+            });
         let output = output::PyScriptOutput::new(name);
         output
     }
@@ -50,16 +56,24 @@ impl Environment {
     fn add_execution(&mut self, execution: execution::PyExecution) -> output::PyOutput {
         let _ = self.scripts.get(&execution.script.name).unwrap();
         let script_name = execution.script.name.clone();
-        let dependencies = execution.depends_on.iter().map(|dep| {
-            let _ = self.resources.get(&dep.ref_to.name).unwrap().clone();
-            let schema_dep = dependency::SchemaDependency::from(dep.clone());
-            schema_dep
-        }).collect::<Vec<_>>();
-        let schema_execution = execution::SchemaExecution::new(execution.name, script_name, dependencies);
+        let dependencies = execution
+            .depends_on
+            .iter()
+            .map(|dep| {
+                let _ = self.resources.get(&dep.ref_to.name).unwrap().clone();
+                let schema_dep = dependency::SchemaDependency::from(dep.clone());
+                schema_dep
+            })
+            .collect::<Vec<_>>();
+        let schema_execution =
+            execution::SchemaExecution::new(execution.name, script_name, dependencies);
         let name = schema_execution.name.clone();
-        let _ = self.executions.insert(name.clone(), schema_execution).is_none_or(|_| {
-            panic!("Execution with name {} already exists", name);
-        });
+        let _ = self
+            .executions
+            .insert(name.clone(), schema_execution)
+            .is_none_or(|_| {
+                panic!("Execution with name {} already exists", name);
+            });
         let output = output::PyOutput::new(name);
         output
     }

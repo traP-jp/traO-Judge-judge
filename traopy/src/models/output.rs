@@ -8,9 +8,7 @@ pub struct PyOutput {
 
 impl PyOutput {
     pub(crate) fn new(name: String) -> Self {
-        PyOutput {
-            name,
-        }
+        PyOutput { name }
     }
 }
 
@@ -22,8 +20,6 @@ pub struct PyScriptOutput {
 
 impl PyScriptOutput {
     pub(crate) fn new(name: String) -> Self {
-        PyScriptOutput {
-            name,
-        }
+        PyScriptOutput { name }
     }
 }
