@@ -1,7 +1,7 @@
 [project]
-name = "simple-judge"
+name = "traopy-example"
 version = "0.1.0"
-description = "Add your description here"
+description = "Additional module for examples of traopy"
 dependencies = [
     "ipykernel==6.29.5",
 ]

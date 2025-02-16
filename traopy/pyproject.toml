@@ -1,7 +1,7 @@
 [project]
 name = "traopy"
 version = "0.1.0"
-description = "Add your description here"
+description = "Library module for writers of traO-Judge"
 dependencies = []
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -9,13 +9,6 @@ requires-python = ">= 3.8"
 [build-system]
 requires = ["maturin>=1.2,<2.0"]
 build-backend = "maturin"
-
-[tool.rye]
-managed = true
-dev-dependencies = []
-
-[tool.rye.workspace]
-members = ["example"]
 
 [tool.maturin]
 python-source = "python"
