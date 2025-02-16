@@ -1,5 +1,7 @@
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
 
+#[gen_stub_pyclass]
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct PyOutput {
@@ -12,6 +14,7 @@ impl PyOutput {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct PyScriptOutput {

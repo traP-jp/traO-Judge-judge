@@ -1,9 +1,10 @@
 use pyo3::prelude::*;
+use pyo3_stub_gen::define_stub_info_gatherer;
 pub mod environment;
 pub mod models;
 
 #[pymodule]
-fn _lowlevel(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn lowlevel(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<environment::Environment>()?;
     m.add_class::<models::dependency::PyDependency>()?;
     m.add_class::<models::empty_directory::PyEmptyDirectory>()?;
@@ -16,3 +17,5 @@ fn _lowlevel(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<models::text::PyText>()?;
     Ok(())
 }
+
+define_stub_info_gatherer!(stub_info);

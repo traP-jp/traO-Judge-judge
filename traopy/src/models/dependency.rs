@@ -1,7 +1,9 @@
 use super::output::PyOutput;
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
 use serde::{Deserialize, Serialize};
 
+#[gen_stub_pyclass]
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct PyDependency {
@@ -9,6 +11,7 @@ pub struct PyDependency {
     pub envvar_name: String,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PyDependency {
     #[new]

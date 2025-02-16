@@ -1,10 +1,12 @@
 use crate::models::*;
 use core::panic;
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+#[gen_stub_pyclass]
 #[pyclass]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Environment {
@@ -13,6 +15,7 @@ pub struct Environment {
     scripts: HashMap<String, script::SchemaScript>,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Environment {
     #[new]

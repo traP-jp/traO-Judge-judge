@@ -1,7 +1,9 @@
 use super::{dependency::*, output::PyScriptOutput};
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
 use serde::{Deserialize, Serialize};
 
+#[gen_stub_pyclass]
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct PyExecution {
@@ -10,6 +12,7 @@ pub struct PyExecution {
     pub depends_on: Vec<PyDependency>,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PyExecution {
     #[new]

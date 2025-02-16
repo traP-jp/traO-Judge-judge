@@ -1,31 +1,15 @@
 use super::{empty_directory::*, onetime_text::*, text::*};
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
 use serde::{Deserialize, Serialize};
 
+#[gen_stub_pyclass_enum]
 #[pyclass]
 #[derive(Debug, Clone)]
 pub enum PyResourceKind {
     EmptyDirectory(PyEmptyDirectory),
     OnetimeTextFile(PyOnetimeText),
     TextFile(PyText),
-}
-
-#[pymethods]
-impl PyResourceKind {
-    #[staticmethod]
-    fn new_empty_directory(empty_directory: PyEmptyDirectory) -> Self {
-        PyResourceKind::EmptyDirectory(empty_directory)
-    }
-
-    #[staticmethod]
-    fn new_onetime_text_file(onetime_text: PyOnetimeText) -> Self {
-        PyResourceKind::OnetimeTextFile(onetime_text)
-    }
-
-    #[staticmethod]
-    fn new_text_file(text: PyText) -> Self {
-        PyResourceKind::TextFile(text)
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
