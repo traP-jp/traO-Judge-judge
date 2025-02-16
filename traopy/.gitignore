@@ -1,0 +1,17 @@
+# python generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+# Rust
+target/
+
+# venv
+.venv
+
+python/traopy/*
+!python/traopy/__init__.py
+!python/traopy/lowlevel.pyi
+!python/traopy/py.typed
