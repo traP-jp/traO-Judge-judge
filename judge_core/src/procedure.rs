@@ -2,13 +2,13 @@ use uuid::Uuid;
 
 /// All runtime_id must be unique application-wide for each submission.
 pub struct Procedure {
-    pub runtime_texts: Vec<OnetimeText>,
+    pub runtime_texts: Vec<RuntimeText>,
     pub texts: Vec<Text>,
     pub empty_directories: Vec<EmptyDirectory>,
     pub executions: Vec<Execution>,
 }
 
-pub struct OnetimeText {
+pub struct RuntimeText {
     pub content: String,
     pub runtime_id: Uuid,
 }

@@ -1,7 +1,7 @@
 {
   "resources": {
     "output": { "TextFile": { "name": "output", "content": "3\n" } },
-    "actual": { "OnetimeTextFile": { "name": "actual" } },
+    "actual": { "RuntimeTextFile": { "name": "actual" } },
     "input": { "TextFile": { "name": "input", "content": "1 2\n" } }
   },
   "executions": {

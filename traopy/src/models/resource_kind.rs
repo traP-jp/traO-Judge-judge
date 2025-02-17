@@ -8,14 +8,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone)]
 pub enum PyResourceKind {
     EmptyDirectory(PyEmptyDirectory),
-    OnetimeTextFile(PyOnetimeText),
+    RuntimeTextFile(PyRuntimeText),
     TextFile(PyText),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SchemaResourceKind {
     EmptyDirectory(SchemaEmptyDirectory),
-    OnetimeTextFile(SchemaOnetimeText),
+    RuntimeTextFile(SchemaRuntimeText),
     TextFile(SchemaText),
 }
 
@@ -23,7 +23,7 @@ impl SchemaResourceKind {
     pub fn name(&self) -> String {
         match self {
             SchemaResourceKind::EmptyDirectory(empty_directory) => empty_directory.name.clone(),
-            SchemaResourceKind::OnetimeTextFile(runtime_text) => runtime_text.name.clone(),
+            SchemaResourceKind::RuntimeTextFile(runtime_text) => runtime_text.name.clone(),
             SchemaResourceKind::TextFile(text) => text.name.clone(),
         }
     }
@@ -35,8 +35,8 @@ impl From<PyResourceKind> for SchemaResourceKind {
             PyResourceKind::EmptyDirectory(py_empty_directory) => {
                 SchemaResourceKind::EmptyDirectory(py_empty_directory.into())
             }
-            PyResourceKind::OnetimeTextFile(py_runtime_text) => {
-                SchemaResourceKind::OnetimeTextFile(py_runtime_text.into())
+            PyResourceKind::RuntimeTextFile(py_runtime_text) => {
+                SchemaResourceKind::RuntimeTextFile(py_runtime_text.into())
             }
             PyResourceKind::TextFile(py_text) => SchemaResourceKind::TextFile(py_text.into()),
         }

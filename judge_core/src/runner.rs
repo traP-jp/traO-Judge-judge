@@ -102,7 +102,7 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
         let mut file_placement_jobs = HashMap::new();
         {
             for runtime_text in procedure.runtime_texts.iter() {
-                let job = FilePlacementJob::PlaceOnetimeTextFile(runtime_text.content.clone());
+                let job = FilePlacementJob::PlaceRuntimeTextFile(runtime_text.content.clone());
                 file_placement_jobs.insert(runtime_text.runtime_id, job);
             }
             for text in procedure.texts.iter() {
