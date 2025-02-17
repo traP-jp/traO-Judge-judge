@@ -34,11 +34,11 @@ class PyExecution:
     def __new__(cls,name:builtins.str, script:PyScriptOutput, depends_on:typing.Sequence[PyDependency]): ...
     ...
 
-class PyOnetimeText:
-    def __new__(cls,name:builtins.str): ...
+class PyOutput:
     ...
 
-class PyOutput:
+class PyRuntimeText:
+    def __new__(cls,name:builtins.str): ...
     ...
 
 class PyScript:
@@ -54,6 +54,6 @@ class PyText:
 
 class PyResourceKind(Enum):
     EmptyDirectory = auto()
-    OnetimeTextFile = auto()
+    RuntimeTextFile = auto()
     TextFile = auto()
 

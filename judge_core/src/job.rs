@@ -51,7 +51,7 @@ pub enum ExecutionJobError {
 pub enum FilePlacementJob {
     PlaceEmptyDirectory,
     /// Content of the text file
-    PlaceOnetimeTextFile(String),
+    PlaceRuntimeTextFile(String),
     /// Global project-wide unique identifier
     PlaceTextFile(Uuid),
 }

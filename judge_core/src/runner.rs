@@ -40,7 +40,7 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
     ) -> Result<HashMap<Uuid, ExecutionJobOutput>, RunnerRunError> {
         // Create list of all ids
         let mut file_placement_ids = Vec::new();
-        file_placement_ids.extend(procedure.onetime_texts.iter().map(|x| x.runtime_id));
+        file_placement_ids.extend(procedure.runtime_texts.iter().map(|x| x.runtime_id));
         file_placement_ids.extend(procedure.texts.iter().map(|x| x.runtime_id));
         file_placement_ids.extend(procedure.empty_directories.iter().map(|x| x.runtime_id));
         let execution_ids = procedure
@@ -101,9 +101,9 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
         // Create file placement jobs
         let mut file_placement_jobs = HashMap::new();
         {
-            for onetime_text in procedure.onetime_texts.iter() {
-                let job = FilePlacementJob::PlaceOnetimeTextFile(onetime_text.content.clone());
-                file_placement_jobs.insert(onetime_text.runtime_id, job);
+            for runtime_text in procedure.runtime_texts.iter() {
+                let job = FilePlacementJob::PlaceRuntimeTextFile(runtime_text.content.clone());
+                file_placement_jobs.insert(runtime_text.runtime_id, job);
             }
             for text in procedure.texts.iter() {
                 let job = FilePlacementJob::PlaceTextFile(text.resource_id);

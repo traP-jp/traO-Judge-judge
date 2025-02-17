@@ -5,28 +5,28 @@ use serde::{Deserialize, Serialize};
 #[gen_stub_pyclass]
 #[pyclass]
 #[derive(Debug, Clone)]
-pub struct PyOnetimeText {
+pub struct PyRuntimeText {
     pub name: String,
 }
 
 #[gen_stub_pymethods]
 #[pymethods]
-impl PyOnetimeText {
+impl PyRuntimeText {
     #[new]
     pub fn new(name: String) -> Self {
-        PyOnetimeText { name }
+        PyRuntimeText { name }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SchemaOnetimeText {
+pub struct SchemaRuntimeText {
     pub name: String,
 }
 
-impl From<PyOnetimeText> for SchemaOnetimeText {
-    fn from(py_onetime_text: PyOnetimeText) -> Self {
-        SchemaOnetimeText {
-            name: py_onetime_text.name,
+impl From<PyRuntimeText> for SchemaRuntimeText {
+    fn from(py_runtime_text: PyRuntimeText) -> Self {
+        SchemaRuntimeText {
+            name: py_runtime_text.name,
         }
     }
 }
