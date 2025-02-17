@@ -24,9 +24,9 @@ pub struct SchemaOnetimeText {
 }
 
 impl From<PyOnetimeText> for SchemaOnetimeText {
-    fn from(py_onetime_text: PyOnetimeText) -> Self {
+    fn from(py_runtime_text: PyOnetimeText) -> Self {
         SchemaOnetimeText {
-            name: py_onetime_text.name,
+            name: py_runtime_text.name,
         }
     }
 }

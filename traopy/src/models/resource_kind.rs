@@ -1,4 +1,4 @@
-use super::{empty_directory::*, onetime_text::*, text::*};
+use super::{empty_directory::*, runtime_text::*, text::*};
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,7 @@ impl SchemaResourceKind {
     pub fn name(&self) -> String {
         match self {
             SchemaResourceKind::EmptyDirectory(empty_directory) => empty_directory.name.clone(),
-            SchemaResourceKind::OnetimeTextFile(onetime_text) => onetime_text.name.clone(),
+            SchemaResourceKind::OnetimeTextFile(runtime_text) => runtime_text.name.clone(),
             SchemaResourceKind::TextFile(text) => text.name.clone(),
         }
     }
@@ -35,8 +35,8 @@ impl From<PyResourceKind> for SchemaResourceKind {
             PyResourceKind::EmptyDirectory(py_empty_directory) => {
                 SchemaResourceKind::EmptyDirectory(py_empty_directory.into())
             }
-            PyResourceKind::OnetimeTextFile(py_onetime_text) => {
-                SchemaResourceKind::OnetimeTextFile(py_onetime_text.into())
+            PyResourceKind::OnetimeTextFile(py_runtime_text) => {
+                SchemaResourceKind::OnetimeTextFile(py_runtime_text.into())
             }
             PyResourceKind::TextFile(py_text) => SchemaResourceKind::TextFile(py_text.into()),
         }
