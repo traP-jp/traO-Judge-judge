@@ -122,7 +122,6 @@ pub fn transpile(
             script: script,
             depends_on: dependencies,
             dep_id: dep_id,
-            priority: priority,
         };
         executions.push(execution);
     }

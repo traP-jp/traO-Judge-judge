@@ -15,7 +15,6 @@ pub trait JobApi<JobOutcome: Clone>: Clone {
     fn run_future(
         &self,
         job_conf: ExecutionJob<JobOutcome>,
-        priority: i32,
     ) -> impl Future<
         Output = Result<
             impl Future<Output = Result<ExecutionJobFinished<JobOutcome>, ExecutionJobError>>,
