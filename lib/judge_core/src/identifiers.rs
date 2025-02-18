@@ -7,9 +7,7 @@ pub struct DepId {
 
 impl DepId {
     pub fn new() -> Self {
-        Self {
-            id: Uuid::new_v4(),
-        }
+        Self { id: Uuid::new_v4() }
     }
 }
 
@@ -19,7 +17,6 @@ impl std::fmt::Display for DepId {
     }
 }
 
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub struct RuntimeId {
     id: Uuid,
@@ -27,9 +24,7 @@ pub struct RuntimeId {
 
 impl RuntimeId {
     pub fn new() -> Self {
-        Self {
-            id: Uuid::new_v4(),
-        }
+        Self { id: Uuid::new_v4() }
     }
 }
 
@@ -39,7 +34,6 @@ impl std::fmt::Display for RuntimeId {
     }
 }
 
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub struct ResourceId {
     id: Uuid,
@@ -47,9 +41,7 @@ pub struct ResourceId {
 
 impl ResourceId {
     pub fn new() -> Self {
-        Self {
-            id: Uuid::new_v4(),
-        }
+        Self { id: Uuid::new_v4() }
     }
 }
 

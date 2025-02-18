@@ -1,10 +1,13 @@
 use crate::{identifiers::ResourceId, procedure::*};
-use futures::Future;
 use anyhow::Result;
+use futures::Future;
 
 /// ProblemRegistryServer uploads contents of problems to the registry in webservice-backend server.
 pub trait ProblemRegistryServer {
-    fn register(&self, problem: writer_schema::Procedure) -> impl Future<Output = Result<registered::Procedure>>;
+    fn register(
+        &self,
+        problem: writer_schema::Procedure,
+    ) -> impl Future<Output = Result<registered::Procedure>>;
 }
 
 /// ProblemRegistryClient fetches contents of problems from the registry in judge server.

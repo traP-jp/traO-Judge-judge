@@ -1,10 +1,7 @@
 use crate::common::ShellOutput;
+use crate::identifiers::{ResourceId, RuntimeId};
 use futures::future::Future;
 use tokio::sync::broadcast;
-use crate::identifiers::{
-    RuntimeId,
-    ResourceId,
-};
 
 /// JobAPI is a set of shell environment and cache of outcome files of previous jobs.
 ///

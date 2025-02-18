@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use pyo3_stub_gen::define_stub_info_gatherer;
-pub mod procedure;
 pub mod models;
+pub mod procedure;
 
 #[pymodule]
 fn lowlevel(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {

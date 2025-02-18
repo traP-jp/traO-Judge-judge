@@ -1,7 +1,4 @@
-use crate::identifiers::{
-    RuntimeId,
-    ResourceId,
-};
+use crate::identifiers::{ResourceId, RuntimeId};
 
 pub struct Procedure {
     pub runtime_texts: Vec<RuntimeText>,

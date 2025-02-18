@@ -20,7 +20,6 @@ pub fn resource_name(rc_kind: &ResourceKind) -> String {
     }
 }
 
-
 impl From<PyResourceKind> for ResourceKind {
     fn from(py_resource_kind: PyResourceKind) -> Self {
         match py_resource_kind {

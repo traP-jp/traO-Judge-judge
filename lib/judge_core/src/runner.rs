@@ -1,10 +1,10 @@
 use crate::{
     common::ShellOutput,
+    identifiers::RuntimeId,
     job::{
         self, ExecutionJob, FilePlacementJob, JobApi, JobOutcomeAcquisitionResult, JobOutcomeLink,
     },
     procedure::runtime::Procedure,
-    identifiers::RuntimeId,
 };
 use futures::{future::join_all, join, Future};
 use std::collections::HashMap;
@@ -227,7 +227,7 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
         &self,
         file_placement_job_futures: Vec<impl Future<Output = Result<(), RunnerRunError>>>,
         execution_job_futures: HashMap<
-        RuntimeId,
+            RuntimeId,
             impl Future<Output = Result<ExecutionJobOutput, RunnerRunError>>,
         >,
     ) -> Result<HashMap<RuntimeId, ExecutionJobOutput>, RunnerRunError> {

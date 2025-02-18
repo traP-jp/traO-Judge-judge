@@ -1,11 +1,11 @@
 use crate::models::*;
-use judge_core::procedure::writer_schema;
 use core::panic;
+use judge_core::procedure::writer_schema;
+use judge_core::procedure::writer_schema::*;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use judge_core::procedure::writer_schema::*;
 
 #[gen_stub_pyclass]
 #[pyclass]
@@ -79,8 +79,7 @@ impl PyProcedure {
                 schema_dep
             })
             .collect::<Vec<_>>();
-        let schema_execution =
-            execution::new_execution(execution.name, script_name, dependencies);
+        let schema_execution = execution::new_execution(execution.name, script_name, dependencies);
         let name = schema_execution.name.clone();
         let _ = self
             .executions
