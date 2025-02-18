@@ -8,7 +8,7 @@ pub struct Procedure {
 }
 
 pub struct RuntimeText {
-    pub name: String,
+    pub label: String,
     pub dep_id: DepId,
 }
 

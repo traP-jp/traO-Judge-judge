@@ -1,11 +1,10 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Procedure {
-    pub resources: HashMap<String, ResourceKind>,
-    pub executions: HashMap<String, Execution>,
-    pub scripts: HashMap<String, Script>,
+    pub resources: Vec<ResourceKind>,
+    pub executions: Vec<Execution>,
+    pub scripts: Vec<Script>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,6 +35,7 @@ pub enum ResourceKind {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RuntimeText {
     pub name: String,
+    pub label: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
