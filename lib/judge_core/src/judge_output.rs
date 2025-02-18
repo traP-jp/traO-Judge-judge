@@ -38,7 +38,7 @@ pub enum JudgeReport {
 
 /// This is the final response from judge
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum JudgeResponse {
+pub enum ExecutionResponse {
     Report(JudgeReport),
     EarlyExit,
     Error(String),
