@@ -49,13 +49,13 @@ pub enum JudgeOutputParseError {
     #[error("Invalid JSON: {0}")]
     InvalidJson(String),
     #[error("Non-zero exit code")]
-    InvalidExitCode,
+    NonZeroExitCode,
 }
 
 pub fn parse(output: &std::process::Output) -> Result<JudgeReport, JudgeOutputParseError> {
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     if !output.status.success() {
-        return Err(JudgeOutputParseError::InvalidExitCode);
+        return Err(JudgeOutputParseError::NonZeroExitCode);
     }
     let judge_report: JudgeReport = serde_json::from_str(&stdout)
         .map_err(|e| JudgeOutputParseError::InvalidJson(e.to_string()))?;
