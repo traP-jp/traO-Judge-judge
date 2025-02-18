@@ -19,9 +19,21 @@ pub struct PyProcedure {
 impl From<PyProcedure> for Procedure {
     fn from(py_procedure: PyProcedure) -> Self {
         Self {
-            resources: py_procedure.resources.clone(),
-            executions: py_procedure.executions.clone(),
-            scripts: py_procedure.scripts.clone(),
+            resources: py_procedure
+                .resources
+                .iter()
+                .map(|(_, v)| v.clone())
+                .collect(),
+            executions: py_procedure
+                .executions
+                .iter()
+                .map(|(_, v)| v.clone())
+                .collect(),
+            scripts: py_procedure
+                .scripts
+                .iter()
+                .map(|(_, v)| v.clone())
+                .collect(),
         }
     }
 }

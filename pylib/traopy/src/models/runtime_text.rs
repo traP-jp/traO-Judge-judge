@@ -7,14 +7,15 @@ use pyo3_stub_gen::derive::*;
 #[derive(Debug, Clone)]
 pub struct PyRuntimeText {
     pub name: String,
+    pub label: String,
 }
 
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyRuntimeText {
     #[new]
-    pub fn new(name: String) -> Self {
-        PyRuntimeText { name }
+    pub fn new(name: String, label: String) -> Self {
+        PyRuntimeText { name, label }
     }
 }
 
@@ -22,6 +23,7 @@ impl From<PyRuntimeText> for RuntimeText {
     fn from(py_runtime_text: PyRuntimeText) -> Self {
         RuntimeText {
             name: py_runtime_text.name,
+            label: py_runtime_text.label,
         }
     }
 }
