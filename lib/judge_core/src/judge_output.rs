@@ -30,7 +30,9 @@ pub struct DisplayableJudgeResult {
 /// This returns from exec container as stdout
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum JudgeReport {
+    /// Frontend-displayable execution result
     Displayable(DisplayableJudgeResult),
+    /// Not displayed to frontend (e.g. for validation)
     Hidden,
 }
 
