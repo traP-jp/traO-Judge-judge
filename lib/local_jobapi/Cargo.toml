@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+futures = { workspace = true }
+uuid = { workspace = true }
+anyhow = { workspace = true }
+judge_core = { path = "../judge_core" }

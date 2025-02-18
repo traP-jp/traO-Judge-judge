@@ -1,13 +1,14 @@
 use crate::{
-    common::ShellOutput,
     identifiers::RuntimeId,
     job::{
-        self, ExecutionJob, FilePlacementJob, JobApi, JobOutcomeAcquisitionResult, JobOutcomeLink,
+        self, ExecutionJob, ExecutionJobFinished, FilePlacementJob, JobApi,
+        JobOutcomeAcquisitionResult, JobOutcomeLink,
     },
     procedure::runtime::Procedure,
 };
 use futures::{future::join_all, join, Future};
 use std::collections::HashMap;
+use std::process::Output;
 use tokio::sync::broadcast;
 
 pub struct Runner<JobOutcome: Clone, JobApiType: JobApi<JobOutcome>> {
@@ -16,7 +17,8 @@ pub struct Runner<JobOutcome: Clone, JobApiType: JobApi<JobOutcome>> {
 }
 
 pub enum ExecutionJobOutput {
-    Succeeded(ShellOutput),
+    Succeeded(Output),
+    FailedExpectedly(Output),
     EarlyExit,
 }
 
@@ -215,7 +217,11 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
                         job_id
                     )))?;
             // Job API run future
-            let run_future = self.job_api.run_future(job_conf, *priority).await;
+            let run_future = self
+                .job_api
+                .run_future(job_conf, *priority)
+                .await
+                .map_err(|e| RunnerRunError::InternalError(e.to_string()))?;
             // Whole execution job future
             let job_future = Self::run_execution_job(run_future, job_outcome_tx);
             execution_job_futures.insert(job_id, job_future);
@@ -269,7 +275,9 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
             }
             Err(e) => {
                 outcome_broadcast_tx
-                    .send(JobOutcomeAcquisitionResult::Failed(e.to_string()))
+                    .send(JobOutcomeAcquisitionResult::FailedUnexpectedly(
+                        e.to_string(),
+                    ))
                     .map_err(|e| {
                         RunnerRunError::InternalError(format!(
                             "Error while sending a job outcome: {}",
@@ -282,12 +290,14 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
     }
 
     async fn run_execution_job(
-        run_future: impl Future<Output = Result<(JobOutcomeType, ShellOutput), job::ExecutionJobError>>,
+        run_future: impl Future<
+            Output = Result<ExecutionJobFinished<JobOutcomeType>, job::ExecutionJobError>,
+        >,
         outcome_broadcast_tx: broadcast::Sender<JobOutcomeAcquisitionResult<JobOutcomeType>>,
     ) -> Result<ExecutionJobOutput, RunnerRunError> {
         let run_result = run_future.await;
         match run_result {
-            Ok((job_outcome, shell_output)) => {
+            Ok(ExecutionJobFinished::Succeeded(job_outcome, shell_output)) => {
                 outcome_broadcast_tx
                     .send(JobOutcomeAcquisitionResult::Succeeded(job_outcome))
                     .map_err(|e| {
@@ -298,9 +308,33 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
                     })?;
                 Ok(ExecutionJobOutput::Succeeded(shell_output))
             }
+            Ok(ExecutionJobFinished::PrecedingJobFailedExpectedly) => {
+                outcome_broadcast_tx
+                    .send(JobOutcomeAcquisitionResult::FailedExpectedly)
+                    .map_err(|e| {
+                        RunnerRunError::InternalError(format!(
+                            "Error while sending a job outcome: {}",
+                            e
+                        ))
+                    })?;
+                Ok(ExecutionJobOutput::EarlyExit)
+            }
+            Ok(ExecutionJobFinished::FailedExpectedly((_, shell_output))) => {
+                outcome_broadcast_tx
+                    .send(JobOutcomeAcquisitionResult::FailedExpectedly)
+                    .map_err(|e| {
+                        RunnerRunError::InternalError(format!(
+                            "Error while sending a job outcome: {}",
+                            e
+                        ))
+                    })?;
+                Ok(ExecutionJobOutput::FailedExpectedly(shell_output))
+            }
             Err(e) => {
                 outcome_broadcast_tx
-                    .send(JobOutcomeAcquisitionResult::Failed(e.to_string()))
+                    .send(JobOutcomeAcquisitionResult::FailedUnexpectedly(
+                        e.to_string(),
+                    ))
                     .map_err(|e| {
                         RunnerRunError::InternalError(format!(
                             "Error while sending a job outcome: {}",
