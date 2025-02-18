@@ -3,7 +3,7 @@ use crate::{
     job::{
         self, ExecutionJob, FilePlacementJob, JobApi, JobOutcomeAcquisitionResult, JobOutcomeLink,
     },
-    procedure::Procedure,
+    procedure::registered::Procedure,
 };
 use futures::{future::join_all, join, Future};
 use std::collections::HashMap;

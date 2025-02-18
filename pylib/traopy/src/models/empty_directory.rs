@@ -1,6 +1,6 @@
+use judge_core::procedure::writer_schema::EmptyDirectory;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
-use serde::{Deserialize, Serialize};
 
 #[gen_stub_pyclass]
 #[pyclass]
@@ -18,14 +18,9 @@ impl PyEmptyDirectory {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SchemaEmptyDirectory {
-    pub name: String,
-}
-
-impl From<PyEmptyDirectory> for SchemaEmptyDirectory {
+impl From<PyEmptyDirectory> for EmptyDirectory {
     fn from(py_empty_directory: PyEmptyDirectory) -> Self {
-        SchemaEmptyDirectory {
+        EmptyDirectory {
             name: py_empty_directory.name,
         }
     }

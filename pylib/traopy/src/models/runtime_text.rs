@@ -1,6 +1,6 @@
+use judge_core::procedure::writer_schema::RuntimeText;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
-use serde::{Deserialize, Serialize};
 
 #[gen_stub_pyclass]
 #[pyclass]
@@ -18,14 +18,9 @@ impl PyRuntimeText {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SchemaRuntimeText {
-    pub name: String,
-}
-
-impl From<PyRuntimeText> for SchemaRuntimeText {
+impl From<PyRuntimeText> for RuntimeText {
     fn from(py_runtime_text: PyRuntimeText) -> Self {
-        SchemaRuntimeText {
+        RuntimeText {
             name: py_runtime_text.name,
         }
     }

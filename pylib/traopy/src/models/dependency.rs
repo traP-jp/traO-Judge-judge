@@ -1,7 +1,7 @@
 use super::output::PyOutput;
+use judge_core::procedure::writer_schema::Dependency;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
-use serde::{Deserialize, Serialize};
 
 #[gen_stub_pyclass]
 #[pyclass]
@@ -23,15 +23,9 @@ impl PyDependency {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SchemaDependency {
-    pub ref_to: String,
-    pub envvar_name: String,
-}
-
-impl From<PyDependency> for SchemaDependency {
+impl From<PyDependency> for Dependency {
     fn from(py_dependency: PyDependency) -> Self {
-        SchemaDependency {
+        Dependency {
             ref_to: py_dependency.ref_to.name,
             envvar_name: py_dependency.envvar_name,
         }

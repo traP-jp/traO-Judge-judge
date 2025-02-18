@@ -1,26 +1,37 @@
 use crate::models::*;
+use judge_core::procedure::writer_schema;
 use core::panic;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use judge_core::procedure::writer_schema::*;
 
 #[gen_stub_pyclass]
 #[pyclass]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Environment {
-    resources: HashMap<String, resource_kind::SchemaResourceKind>,
-    executions: HashMap<String, execution::SchemaExecution>,
-    scripts: HashMap<String, script::SchemaScript>,
+#[derive(Debug, Clone)]
+pub struct PyProcedure {
+    resources: HashMap<String, ResourceKind>,
+    executions: HashMap<String, Execution>,
+    scripts: HashMap<String, Script>,
+}
+
+impl From<PyProcedure> for Procedure {
+    fn from(py_procedure: PyProcedure) -> Self {
+        Self {
+            resources: py_procedure.resources.clone(),
+            executions: py_procedure.executions.clone(),
+            scripts: py_procedure.scripts.clone(),
+        }
+    }
 }
 
 #[gen_stub_pymethods]
 #[pymethods]
-impl Environment {
+impl PyProcedure {
     #[new]
     fn new() -> Self {
-        Environment {
+        PyProcedure {
             resources: HashMap::new(),
             executions: HashMap::new(),
             scripts: HashMap::new(),
@@ -29,8 +40,8 @@ impl Environment {
 
     #[pyo3(name = "add_resource")]
     fn add_resource(&mut self, resource: resource_kind::PyResourceKind) -> output::PyOutput {
-        let schema_resource = resource_kind::SchemaResourceKind::from(resource);
-        let name = schema_resource.name().clone();
+        let schema_resource = writer_schema::ResourceKind::from(resource);
+        let name = resource_kind::resource_name(&schema_resource);
         let _ = self
             .resources
             .insert(name.clone(), schema_resource)
@@ -43,7 +54,7 @@ impl Environment {
 
     #[pyo3(name = "add_script")]
     fn add_script(&mut self, script: script::PyScript) -> output::PyScriptOutput {
-        let schema_script = script::SchemaScript::from(script);
+        let schema_script = writer_schema::Script::from(script);
         let name = schema_script.name.clone();
         let _ = self
             .scripts
@@ -64,12 +75,12 @@ impl Environment {
             .iter()
             .map(|dep| {
                 let _ = self.resources.get(&dep.ref_to.name).unwrap().clone();
-                let schema_dep = dependency::SchemaDependency::from(dep.clone());
+                let schema_dep = writer_schema::Dependency::from(dep.clone());
                 schema_dep
             })
             .collect::<Vec<_>>();
         let schema_execution =
-            execution::SchemaExecution::new(execution.name, script_name, dependencies);
+            execution::new_execution(execution.name, script_name, dependencies);
         let name = schema_execution.name.clone();
         let _ = self
             .executions
@@ -84,7 +95,8 @@ impl Environment {
     #[pyo3(name = "write_to")]
     fn write_to(&self, path: PathBuf) -> () {
         // output this instance as a json file
-        let json = serde_json::to_string(self).unwrap();
+        let self_serializable = writer_schema::Procedure::from(self.clone());
+        let json = serde_json::to_string(&self_serializable).unwrap();
         std::fs::write(path, json).unwrap();
     }
 }
