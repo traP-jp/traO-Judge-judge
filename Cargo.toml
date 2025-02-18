@@ -29,10 +29,11 @@ pyo3-stub-gen = "0.7.0"
 
 [workspace]
 members = [
-    "judge_control_app",
-    "writerutil",
-    "grpc_schema",
-    "judge_core",
-    "traopy",
+    "lib/jobapi",
+    "lib/local_jobapi",
+    "lib/grpc_schema",
+    "lib/judge_core",
+    "pylib/traopy", 
+    "app/judge_control_app",
 ]
 resolver = "2"

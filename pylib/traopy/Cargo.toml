@@ -14,7 +14,7 @@ uuid = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
-judge_core = { path = "../judge_core" }
+judge_core = { path = "../../lib/judge_core" }
 
 [features]
 abi3 = ["pyo3/abi3-py37", "generate-import-lib"]
