@@ -13,11 +13,7 @@ impl ProblemRegistryServer for RegistryServer {
         &self,
         procedure: writer_schema::Procedure,
     ) -> Result<registered::Procedure, RegistrationError> {
-        let (
-            transpiled_procedure,
-            content_to_register,
-            dep_id_to_name,
-        ) = transpile(procedure)?;
+        let (transpiled_procedure, content_to_register, dep_id_to_name) = transpile(procedure)?;
         {
             let mut registry = self.registry.lock().await;
             for (resource_id, content) in content_to_register {

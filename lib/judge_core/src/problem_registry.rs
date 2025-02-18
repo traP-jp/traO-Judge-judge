@@ -1,4 +1,7 @@
-use crate::{identifiers::{ResourceId, DepId}, procedure::*};
+use crate::{
+    identifiers::{DepId, ResourceId},
+    procedure::*,
+};
 use futures::Future;
 
 /// ProblemRegistryServer uploads contents of problems to the registry in webservice-backend server.
