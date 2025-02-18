@@ -1,5 +1,5 @@
 [package]
-name = "judge_control_app"
+name = "jobapi"
 version = "0.1.0"
 edition = "2021"
 
