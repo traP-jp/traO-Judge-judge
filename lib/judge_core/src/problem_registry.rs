@@ -1,4 +1,4 @@
-use crate::{identifiers::ResourceId, procedure::*};
+use crate::{identifiers::{ResourceId, DepId}, procedure::*};
 use futures::Future;
 
 /// ProblemRegistryServer uploads contents of problems to the registry in webservice-backend server.
@@ -8,6 +8,9 @@ pub trait ProblemRegistryServer {
         &self,
         problem: writer_schema::Procedure,
     ) -> impl Future<Output = Result<registered::Procedure, RegistrationError>>;
+
+    // Convert DepId to names in writer schema
+    fn restore_name(&self, dep_id: DepId) -> impl Future<Output = Option<String>>;
 }
 
 /// ProblemRegistryClient fetches contents of problems from the registry in judge server.

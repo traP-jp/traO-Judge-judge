@@ -13,6 +13,7 @@ pub fn transpile(
     (
         registered::Procedure,
         HashMap<identifiers::ResourceId, String>,
+        HashMap<identifiers::DepId, String>,
     ),
     RegistrationError,
 > {
@@ -134,6 +135,10 @@ pub fn transpile(
     Ok((
         procedure,
         content_to_id
+            .iter()
+            .map(|(k, v)| (v.clone(), k.clone()))
+            .collect(),
+        name_to_id
             .iter()
             .map(|(k, v)| (v.clone(), k.clone()))
             .collect(),
