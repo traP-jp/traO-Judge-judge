@@ -1,6 +1,6 @@
-use crate::common::ShellOutput;
-use crate::identifiers::{ResourceId, RuntimeId};
+use crate::identifiers::ResourceId;
 use futures::future::Future;
+use std::process::Output;
 use tokio::sync::broadcast;
 
 /// JobAPI is a set of shell environment and cache of outcome files of previous jobs.
@@ -16,7 +16,12 @@ pub trait JobApi<JobOutcome: Clone>: Clone {
         &self,
         job_conf: ExecutionJob<JobOutcome>,
         priority: i32,
-    ) -> impl Future<Output = impl Future<Output = Result<(JobOutcome, ShellOutput), ExecutionJobError>>>;
+    ) -> impl Future<
+        Output = Result<
+            impl Future<Output = Result<ExecutionJobFinished<JobOutcome>, ExecutionJobError>>,
+            ExecutionJobPreparationError,
+        >,
+    >;
 
     fn place_file(
         &self,
@@ -25,11 +30,23 @@ pub trait JobApi<JobOutcome: Clone>: Clone {
 }
 
 #[derive(Debug, Clone)]
+pub enum ExecutionJobFinished<JobOutcome: Clone> {
+    /// Job finished successfully.
+    Succeeded(JobOutcome, Output),
+    /// Job failed expectedly.
+    FailedExpectedly((JobOutcome, Output)),
+    /// Preceding job failed expectedly.
+    PrecedingJobFailedExpectedly,
+}
+
+#[derive(Debug, Clone)]
 pub enum JobOutcomeAcquisitionResult<JobOutcome: Clone> {
     /// Received JobOutcome successfully.
     Succeeded(JobOutcome),
-    /// Failed to receive JobOutcome.
-    Failed(String),
+    /// Failed to receive JobOutcome expectedly.
+    FailedExpectedly,
+    /// Failed to receive JobOutcome unexpectedly.
+    FailedUnexpectedly(String),
 }
 
 pub struct JobOutcomeLink<JobOutcome: Clone> {
@@ -43,9 +60,17 @@ pub struct ExecutionJob<JobOutcome: Clone> {
 }
 
 #[derive(Debug, Clone, thiserror::Error)]
+pub enum ExecutionJobPreparationError {
+    #[error("Internal error while preparing a job: {0}")]
+    InternalError(String),
+}
+
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum ExecutionJobError {
     #[error("Internal error while running a job: {0}")]
     InternalError(String),
+    #[error("Preceding job failed unexpectedly: {0}")]
+    PrecedingJobFailed(String),
 }
 
 pub enum FilePlacementJob {
@@ -58,8 +83,8 @@ pub enum FilePlacementJob {
 
 #[derive(Debug, thiserror::Error)]
 pub enum FilePlacementJobError {
-    #[error("Invalid file id: {0}")]
-    InvalidFileId(RuntimeId),
+    #[error("Invalid resource id: {0}")]
+    InvalidResourceId(ResourceId),
     #[error("Internal error while placing a file: {0}")]
     InternalError(String),
 }
