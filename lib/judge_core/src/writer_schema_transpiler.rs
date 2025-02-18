@@ -1,18 +1,21 @@
 #![allow(unused_variables)]
 
 use crate::{
-    *,
     problem_registry::*,
-    procedure::{
-        *,
-        writer_schema::*,
-    }
+    procedure::{writer_schema::*, *},
+    *,
 };
 use std::collections::HashMap;
 
 pub fn transpile(
     problem: writer_schema::Procedure,
-) -> Result<(registered::Procedure, HashMap<identifiers::ResourceId, String>), RegistrationError> {
+) -> Result<
+    (
+        registered::Procedure,
+        HashMap<identifiers::ResourceId, String>,
+    ),
+    RegistrationError,
+> {
     let mut name_to_id = HashMap::new();
     for resource in problem.resources.iter() {
         let name = match resource {
@@ -46,36 +49,48 @@ pub fn transpile(
     for resource in problem.resources.iter() {
         match resource {
             ResourceKind::TextFile(content) => {
-                let dep_id = name_to_id.get(&content.name)
-                    .ok_or(RegistrationError::InvalidSchema("TextFile name not found".to_string()))?
+                let dep_id = name_to_id
+                    .get(&content.name)
+                    .ok_or(RegistrationError::InvalidSchema(
+                        "TextFile name not found".to_string(),
+                    ))?
                     .clone();
                 let text = registered::Text {
-                    resource_id: content_to_id.get(&content.content)
-                        .ok_or(RegistrationError::InvalidSchema("TextFile content not found".to_string()))?
+                    resource_id: content_to_id
+                        .get(&content.content)
+                        .ok_or(RegistrationError::InvalidSchema(
+                            "TextFile content not found".to_string(),
+                        ))?
                         .clone(),
                     dep_id: dep_id.clone(),
                 };
                 texts.push(text);
-            },
+            }
             ResourceKind::EmptyDirectory(empty_dir) => {
-                let dep_id = name_to_id.get(&empty_dir.name)
-                    .ok_or(RegistrationError::InvalidSchema("EmptyDirectory name not found".to_string()))?
+                let dep_id = name_to_id
+                    .get(&empty_dir.name)
+                    .ok_or(RegistrationError::InvalidSchema(
+                        "EmptyDirectory name not found".to_string(),
+                    ))?
                     .clone();
                 let empty_directory = registered::EmptyDirectory {
                     dep_id: dep_id.clone(),
                 };
                 empty_directories.push(empty_directory);
-            },
+            }
             ResourceKind::RuntimeTextFile(runtime_text) => {
-                let dep_id = name_to_id.get(&runtime_text.name)
-                    .ok_or(RegistrationError::InvalidSchema("RuntimeText name not found".to_string()))?
+                let dep_id = name_to_id
+                    .get(&runtime_text.name)
+                    .ok_or(RegistrationError::InvalidSchema(
+                        "RuntimeText name not found".to_string(),
+                    ))?
                     .clone();
                 let runtime_text = registered::RuntimeText {
                     label: runtime_text.label.clone(),
                     dep_id: dep_id.clone(),
                 };
                 runtime_texts.push(runtime_text);
-            },
+            }
         }
     }
     let mut executions = Vec::new();
@@ -83,8 +98,11 @@ pub fn transpile(
         let script = execution.script_name.clone();
         let mut dependencies = Vec::new();
         for dep in execution.depends_on.iter() {
-            let dep_id = name_to_id.get(&dep.ref_to)
-                .ok_or(RegistrationError::InvalidSchema("Dependency name not found".to_string()))?
+            let dep_id = name_to_id
+                .get(&dep.ref_to)
+                .ok_or(RegistrationError::InvalidSchema(
+                    "Dependency name not found".to_string(),
+                ))?
                 .clone();
             let depends_on = registered::DependsOn {
                 dep_id: dep_id.clone(),
@@ -92,8 +110,11 @@ pub fn transpile(
             };
             dependencies.push(depends_on);
         }
-        let dep_id = name_to_id.get(&execution.name)
-            .ok_or(RegistrationError::InvalidSchema("Execution name not found".to_string()))?
+        let dep_id = name_to_id
+            .get(&execution.name)
+            .ok_or(RegistrationError::InvalidSchema(
+                "Execution name not found".to_string(),
+            ))?
             .clone();
         let priority = 0;
         let execution = registered::Execution {
@@ -112,6 +133,9 @@ pub fn transpile(
     };
     Ok((
         procedure,
-        content_to_id.iter().map(|(k, v)| (v.clone(), k.clone())).collect()
+        content_to_id
+            .iter()
+            .map(|(k, v)| (v.clone(), k.clone()))
+            .collect(),
     ))
 }
