@@ -24,9 +24,10 @@ pyo3-stub-gen = "0.7.0"
 members = [
     "lib/jobapi",
     "lib/local_jobapi",
+    "lib/local_problem_registry",
     "lib/grpc_schema",
     "lib/judge_core",
     "pylib/traopy", 
-    "app/judge_control_app",
+    "app/judge_control_app", "lib/local_problem_registry",
 ]
 resolver = "2"

@@ -1,0 +1,9 @@
+[package]
+name = "local_problem_registry"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { workspace = true }
+futures = { workspace = true }
+judge_core = { path = "../judge_core" }
