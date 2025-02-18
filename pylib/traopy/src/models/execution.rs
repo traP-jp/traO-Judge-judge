@@ -1,7 +1,7 @@
 use super::{dependency::*, output::PyScriptOutput};
+use judge_core::procedure::writer_schema::{Dependency, Execution};
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
-use serde::{Deserialize, Serialize};
 
 #[gen_stub_pyclass]
 #[pyclass]
@@ -25,19 +25,10 @@ impl PyExecution {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SchemaExecution {
-    pub name: String,
-    pub script_name: String,
-    pub depends_on: Vec<SchemaDependency>,
-}
-
-impl SchemaExecution {
-    pub fn new(name: String, script_id: String, depends_on: Vec<SchemaDependency>) -> Self {
-        SchemaExecution {
-            name,
-            script_name: script_id,
-            depends_on,
-        }
+pub fn new_execution(name: String, script_id: String, depends_on: Vec<Dependency>) -> Execution {
+    Execution {
+        name,
+        script_name: script_id,
+        depends_on,
     }
 }

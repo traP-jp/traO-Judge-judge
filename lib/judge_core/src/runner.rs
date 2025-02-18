@@ -1,14 +1,14 @@
 use crate::{
     common::ShellOutput,
+    identifiers::RuntimeId,
     job::{
         self, ExecutionJob, FilePlacementJob, JobApi, JobOutcomeAcquisitionResult, JobOutcomeLink,
     },
-    procedure::Procedure,
+    procedure::runtime::Procedure,
 };
 use futures::{future::join_all, join, Future};
 use std::collections::HashMap;
 use tokio::sync::broadcast;
-use uuid::Uuid;
 
 pub struct Runner<JobOutcome: Clone, JobApiType: JobApi<JobOutcome>> {
     job_api: JobApiType,
@@ -37,7 +37,7 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
     pub async fn run(
         &self,
         procedure: Procedure,
-    ) -> Result<HashMap<Uuid, ExecutionJobOutput>, RunnerRunError> {
+    ) -> Result<HashMap<RuntimeId, ExecutionJobOutput>, RunnerRunError> {
         // Create list of all ids
         let mut file_placement_ids = Vec::new();
         file_placement_ids.extend(procedure.runtime_texts.iter().map(|x| x.runtime_id));
@@ -47,7 +47,7 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
             .executions
             .iter()
             .map(|x| x.runtime_id)
-            .collect::<Vec<Uuid>>();
+            .collect::<Vec<RuntimeId>>();
         let mut all_ids = file_placement_ids.clone();
         all_ids.extend(execution_ids.clone());
         // Create txs of job outcomes
@@ -158,9 +158,9 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
 
     pub fn file_placement_job_futures<'a>(
         &'a self,
-        file_placement_jobs: HashMap<Uuid, FilePlacementJob>,
+        file_placement_jobs: HashMap<RuntimeId, FilePlacementJob>,
         mut outcome_txs: HashMap<
-            Uuid,
+            RuntimeId,
             broadcast::Sender<JobOutcomeAcquisitionResult<JobOutcomeType>>,
         >,
     ) -> Result<Vec<impl Future<Output = Result<(), RunnerRunError>> + 'a>, RunnerRunError> {
@@ -186,14 +186,14 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
 
     pub async fn execution_job_futures<'a>(
         &'a self,
-        execution_jobs: HashMap<Uuid, ExecutionJob<JobOutcomeType>>,
+        execution_jobs: HashMap<RuntimeId, ExecutionJob<JobOutcomeType>>,
         mut outcome_txs: HashMap<
-            Uuid,
+            RuntimeId,
             broadcast::Sender<JobOutcomeAcquisitionResult<JobOutcomeType>>,
         >,
-        priorities: HashMap<Uuid, i32>,
+        priorities: HashMap<RuntimeId, i32>,
     ) -> Result<
-        HashMap<Uuid, impl Future<Output = Result<ExecutionJobOutput, RunnerRunError>> + 'a>,
+        HashMap<RuntimeId, impl Future<Output = Result<ExecutionJobOutput, RunnerRunError>> + 'a>,
         RunnerRunError,
     > {
         // Execution job futures
@@ -227,10 +227,10 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
         &self,
         file_placement_job_futures: Vec<impl Future<Output = Result<(), RunnerRunError>>>,
         execution_job_futures: HashMap<
-            Uuid,
+            RuntimeId,
             impl Future<Output = Result<ExecutionJobOutput, RunnerRunError>>,
         >,
-    ) -> Result<HashMap<Uuid, ExecutionJobOutput>, RunnerRunError> {
+    ) -> Result<HashMap<RuntimeId, ExecutionJobOutput>, RunnerRunError> {
         // Run jobs
         let execution_job_results = join!(
             join_all(file_placement_job_futures),
@@ -246,7 +246,7 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
             let job_result = job_result.map(|job_outcome| (job_id, job_outcome));
             job_result
         })
-        .collect::<Result<HashMap<Uuid, ExecutionJobOutput>, RunnerRunError>>()?;
+        .collect::<Result<HashMap<RuntimeId, ExecutionJobOutput>, RunnerRunError>>()?;
         return Ok(execution_job_results);
     }
 
