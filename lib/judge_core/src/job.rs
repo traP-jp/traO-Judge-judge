@@ -1,7 +1,10 @@
 use crate::common::ShellOutput;
 use futures::future::Future;
 use tokio::sync::broadcast;
-use uuid::Uuid;
+use crate::identifiers::{
+    RuntimeId,
+    ResourceId,
+};
 
 /// JobAPI is a set of shell environment and cache of outcome files of previous jobs.
 ///
@@ -53,13 +56,13 @@ pub enum FilePlacementJob {
     /// Content of the text file
     PlaceRuntimeTextFile(String),
     /// Global project-wide unique identifier
-    PlaceTextFile(Uuid),
+    PlaceTextFile(ResourceId),
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum FilePlacementJobError {
     #[error("Invalid file id: {0}")]
-    InvalidFileId(Uuid),
+    InvalidFileId(RuntimeId),
     #[error("Internal error while placing a file: {0}")]
     InternalError(String),
 }

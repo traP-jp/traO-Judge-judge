@@ -1,5 +1,5 @@
 use crate::identifiers::{
-    DepId,
+    RuntimeId,
     ResourceId,
 };
 
@@ -11,27 +11,27 @@ pub struct Procedure {
 }
 
 pub struct RuntimeText {
-    pub name: String,
-    pub dep_id: DepId,
+    pub content: String,
+    pub runtime_id: RuntimeId,
 }
 
 pub struct Text {
     pub resource_id: ResourceId,
-    pub dep_id: DepId,
+    pub runtime_id: RuntimeId,
 }
 
 pub struct EmptyDirectory {
-    pub dep_id: DepId,
+    pub runtime_id: RuntimeId,
 }
 
 pub struct Execution {
     pub script: String,
     pub depends_on: Vec<DependsOn>,
-    pub dep_id: DepId,
+    pub runtime_id: RuntimeId,
     pub priority: i32,
 }
 
 pub struct DependsOn {
-    pub dep_id: DepId,
+    pub runtime_id: RuntimeId,
     pub envvar_name: String,
 }
