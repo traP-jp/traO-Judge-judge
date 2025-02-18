@@ -118,7 +118,6 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
         }
         // Create execution jobs
         let mut execution_jobs = HashMap::new();
-        let mut priorities = HashMap::new();
         for execution in procedure.executions.iter() {
             let mut depends_on_with_names = Vec::new();
             for depends_on in execution.depends_on.iter() {
@@ -144,13 +143,12 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
                 depends_on_with_names,
             };
             execution_jobs.insert(execution.runtime_id, job);
-            priorities.insert(execution.runtime_id, execution.priority);
         }
         // Run futures
         let file_placement_job_futures =
             self.file_placement_job_futures(file_placement_jobs, file_placement_outcome_txs)?;
         let execution_job_futures = self
-            .execution_job_futures(execution_jobs, execution_outcome_txs, priorities)
+            .execution_job_futures(execution_jobs, execution_outcome_txs)
             .await?;
         let execution_job_results = self
             .run_all_futures(file_placement_job_futures, execution_job_futures)
@@ -193,7 +191,6 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
             RuntimeId,
             broadcast::Sender<JobOutcomeAcquisitionResult<JobOutcomeType>>,
         >,
-        priorities: HashMap<RuntimeId, i32>,
     ) -> Result<
         HashMap<RuntimeId, impl Future<Output = Result<ExecutionJobOutput, RunnerRunError>> + 'a>,
         RunnerRunError,
@@ -201,13 +198,6 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
         // Execution job futures
         let mut execution_job_futures = HashMap::new();
         for (job_id, job_conf) in execution_jobs.into_iter() {
-            // Get priority of the job
-            let priority = priorities
-                .get(&job_id)
-                .ok_or(RunnerRunError::InternalError(format!(
-                    "Job {} is not found in priorities",
-                    job_id
-                )))?;
             // Broadcast tx to channels to the JobAPI
             let job_outcome_tx =
                 outcome_txs
@@ -219,7 +209,7 @@ impl<JobOutcomeType: Clone, JobApiType: JobApi<JobOutcomeType>> Runner<JobOutcom
             // Job API run future
             let run_future = self
                 .job_api
-                .run_future(job_conf, *priority)
+                .run_future(job_conf)
                 .await
                 .map_err(|e| RunnerRunError::InternalError(e.to_string()))?;
             // Whole execution job future

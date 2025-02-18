@@ -25,7 +25,6 @@ pub struct Execution {
     pub script: String,
     pub depends_on: Vec<DependsOn>,
     pub runtime_id: RuntimeId,
-    pub priority: i32,
 }
 
 pub struct DependsOn {

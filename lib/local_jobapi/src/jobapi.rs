@@ -104,7 +104,6 @@ impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient + Clone> job
     async fn run_future(
         &self,
         job_conf: job::ExecutionJob<JobOutcome>,
-        _: i32,
     ) -> Result<
         impl Future<Output = Result<job::ExecutionJobFinished<JobOutcome>, job::ExecutionJobError>>,
         job::ExecutionJobPreparationError,
