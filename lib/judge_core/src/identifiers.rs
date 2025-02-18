@@ -13,14 +13,6 @@ impl DepId {
     }
 }
 
-impl std::ops::Deref for DepId {
-    type Target = Uuid;
-
-    fn deref(&self) -> &Self::Target {
-        &self.id
-    }
-}
-
 impl std::fmt::Display for DepId {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.id)
@@ -41,14 +33,6 @@ impl RuntimeId {
     }
 }
 
-impl std::ops::Deref for RuntimeId {
-    type Target = Uuid;
-
-    fn deref(&self) -> &Self::Target {
-        &self.id
-    }
-}
-
 impl std::fmt::Display for RuntimeId {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.id)
@@ -66,14 +50,6 @@ impl ResourceId {
         Self {
             id: Uuid::new_v4(),
         }
-    }
-}
-
-impl std::ops::Deref for ResourceId {
-    type Target = Uuid;
-
-    fn deref(&self) -> &Self::Target {
-        &self.id
     }
 }
 
