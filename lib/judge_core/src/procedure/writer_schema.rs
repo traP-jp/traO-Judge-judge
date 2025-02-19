@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct Procedure {
     pub resources: Vec<ResourceKind>,
     pub executions: Vec<Execution>,
-    pub scripts: Vec<Script>,
+    pub scripts: Vec<Text>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,12 +36,6 @@ pub enum ResourceKind {
 pub struct RuntimeText {
     pub name: String,
     pub label: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Script {
-    pub content: String,
-    pub name: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,18 +1,18 @@
-use super::job_outcome::JobOutcome;
-use futures::Future;
-use judge_core::*;
+use super::tokens::{OutcomeToken, RegistrationToken};
+use judge_core::{job, job::*, problem_registry};
+use std::collections::HashMap;
+use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
+use std::process::Output;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
-pub struct JobApi<ProblemRegistryClient: problem_registry::ProblemRegistryClient + Clone> {
+pub struct JobApi<ProblemRegistryClient: problem_registry::ProblemRegistryClient> {
     temp_dir: PathBuf,
     problem_registry_client: ProblemRegistryClient,
 }
 
-impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient + Clone>
-    JobApi<ProblemRegistryClient>
-{
+impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient> JobApi<ProblemRegistryClient> {
     pub fn new(
         temp_dir: PathBuf,
         problem_registry_client: ProblemRegistryClient,
@@ -23,104 +23,78 @@ impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient + Clone>
             problem_registry_client,
         })
     }
-
-    async fn run_future_internal(
-        job_conf: job::ExecutionJob<JobOutcome>,
-        src_dir: JobOutcome,
-        script_file: JobOutcome,
-    ) -> Result<job::ExecutionJobFinished<JobOutcome>, job::ExecutionJobError> {
-        // set up environment variables
-        let mut envvars = std::collections::HashMap::new();
-        envvars.insert(
-            "SRC".to_string(),
-            src_dir.path().to_string_lossy().to_string(),
-        );
-        envvars.insert(
-            "SCRIPT".to_string(),
-            script_file.path().to_string_lossy().to_string(),
-        );
-        for mut dep in job_conf.depends_on_with_names {
-            let dep_outcome = match dep.job_outcome_rx.recv().await {
-                Ok(job::JobOutcomeAcquisitionResult::Succeeded(outcome)) => outcome,
-                Ok(job::JobOutcomeAcquisitionResult::FailedExpectedly) => {
-                    return Ok(job::ExecutionJobFinished::PrecedingJobFailedExpectedly);
-                }
-                Ok(job::JobOutcomeAcquisitionResult::FailedUnexpectedly(err_message)) => {
-                    return Err(job::ExecutionJobError::InternalError(err_message));
-                }
-                Err(e) => {
-                    return Err(job::ExecutionJobError::InternalError(e.to_string()));
-                }
-            };
-            envvars.insert(
-                dep.envvar_name,
-                dep_outcome.path().to_string_lossy().to_string(),
-            );
-        }
-        let output = std::process::Command::new(&script_file.path())
-            .output()
-            .map_err(|e| job::ExecutionJobError::InternalError(e.to_string()))?;
-        Ok(job::ExecutionJobFinished::Succeeded(src_dir, output))
-    }
 }
 
-impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient + Clone> job::JobApi<JobOutcome>
-    for JobApi<ProblemRegistryClient>
+impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient + Clone>
+    job::JobApi<RegistrationToken, OutcomeToken> for JobApi<ProblemRegistryClient>
 {
-    async fn place_file(
+    async fn reserve_execution(
         &self,
-        file: job::FilePlacementJob,
-    ) -> Result<JobOutcome, job::FilePlacementJobError> {
-        let path = self.temp_dir.join(Uuid::new_v4().to_string());
-        match file {
-            job::FilePlacementJob::PlaceEmptyDirectory => {
-                std::fs::create_dir(&path)
-                    .map_err(|e| job::FilePlacementJobError::InternalError(e.to_string()))?;
+        count: usize,
+    ) -> Result<Vec<RegistrationToken>, ReservationError> {
+        Ok((0..count)
+            .map(|_| RegistrationToken { _marker: () })
+            .collect())
+    }
+
+    async fn execute(
+        &self,
+        _: RegistrationToken,
+        dependencies: Vec<Dependency<OutcomeToken>>,
+    ) -> Result<(OutcomeToken, Output), ExecutionError> {
+        let this = self
+            .place_file(FileConf::EmptyDirectory)
+            .await
+            .map_err(|e| ExecutionError::InternalError(e.to_string()))?;
+        let mut envvars = dependencies
+            .iter()
+            .map(|dep| (dep.envvar.clone(), dep.outcome.path().clone()))
+            .collect::<HashMap<_, _>>();
+        envvars.insert("THIS".to_string(), this.path().clone());
+        std::fs::set_permissions(
+            envvars.get("SCRIPT").ok_or(ExecutionError::InternalError(
+                "No SCRIPT envvar".to_string(),
+            ))?,
+            std::fs::Permissions::from_mode(0o755),
+        )
+        .map_err(|e| ExecutionError::InternalError(e.to_string()))?;
+        let output = std::process::Command::new("sh")
+            .args(&["-c", "$SCRIPT"])
+            .envs(&envvars)
+            .current_dir(this.path())
+            .output()
+            .map_err(|e| ExecutionError::JudgeFailed(e.to_string()))?;
+        Ok((this, output))
+    }
+
+    async fn place_file(&self, file_conf: FileConf) -> Result<OutcomeToken, FilePlacementError> {
+        let id = Uuid::new_v4();
+        let path = self.temp_dir.join(id.to_string());
+        let outcome = OutcomeToken::new(path);
+        match file_conf {
+            FileConf::EmptyDirectory => {
+                std::fs::create_dir(&outcome.path())
+                    .map_err(|e| FilePlacementError::PlaceFailed(e.to_string()))?;
             }
-            job::FilePlacementJob::PlaceRuntimeTextFile(content) => {
-                std::fs::write(&path, content)
-                    .map_err(|e| job::FilePlacementJobError::InternalError(e.to_string()))?;
-            }
-            job::FilePlacementJob::PlaceTextFile(resource_id) => {
+            FileConf::Text(resource_id) => {
                 let content = self
                     .problem_registry_client
                     .fetch(resource_id)
                     .await
                     .map_err(|e| match e {
-                        problem_registry::ResourceFetchError::FetchFailed(err_message) => {
-                            job::FilePlacementJobError::InternalError(err_message)
+                        problem_registry::ResourceFetchError::NotFound(id) => {
+                            FilePlacementError::InvalidResourceId(id)
                         }
-                        problem_registry::ResourceFetchError::NotFound(resource_id) => {
-                            job::FilePlacementJobError::InvalidResourceId(resource_id)
-                        }
+                        _ => FilePlacementError::PlaceFailed(e.to_string()),
                     })?;
-                std::fs::write(&path, content)
-                    .map_err(|e| job::FilePlacementJobError::InternalError(e.to_string()))?;
+                std::fs::write(&outcome.path(), content)
+                    .map_err(|e| FilePlacementError::PlaceFailed(e.to_string()))?;
+            }
+            FileConf::RuntimeText(content) => {
+                std::fs::write(&outcome.path(), content)
+                    .map_err(|e| FilePlacementError::PlaceFailed(e.to_string()))?;
             }
         }
-        Ok(JobOutcome::new(path))
-    }
-
-    async fn run_future(
-        &self,
-        job_conf: job::ExecutionJob<JobOutcome>,
-    ) -> Result<
-        impl Future<Output = Result<job::ExecutionJobFinished<JobOutcome>, job::ExecutionJobError>>,
-        job::ExecutionJobPreparationError,
-    > {
-        // prepare files
-        let src_outcome = self
-            .place_file(job::FilePlacementJob::PlaceEmptyDirectory)
-            .await
-            .map_err(|e| job::ExecutionJobPreparationError::InternalError(e.to_string()))?;
-        let script_outcome = self
-            .place_file(job::FilePlacementJob::PlaceRuntimeTextFile(
-                job_conf.script.clone(),
-            ))
-            .await
-            .map_err(|e| job::ExecutionJobPreparationError::InternalError(e.to_string()))?;
-
-        let future = Self::run_future_internal(job_conf, src_outcome, script_outcome);
-        Ok(future)
+        Ok(outcome)
     }
 }

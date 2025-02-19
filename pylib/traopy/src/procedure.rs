@@ -13,7 +13,7 @@ use std::path::PathBuf;
 pub struct PyProcedure {
     resources: HashMap<String, ResourceKind>,
     executions: HashMap<String, Execution>,
-    scripts: HashMap<String, Script>,
+    scripts: HashMap<String, Text>,
 }
 
 impl From<PyProcedure> for Procedure {
@@ -65,8 +65,8 @@ impl PyProcedure {
     }
 
     #[pyo3(name = "add_script")]
-    fn add_script(&mut self, script: script::PyScript) -> output::PyScriptOutput {
-        let schema_script = writer_schema::Script::from(script);
+    fn add_script(&mut self, script: text::PyText) -> output::PyScriptOutput {
+        let schema_script = writer_schema::Text::from(script);
         let name = schema_script.name.clone();
         let _ = self
             .scripts

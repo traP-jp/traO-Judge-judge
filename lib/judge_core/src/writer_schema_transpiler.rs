@@ -1,5 +1,7 @@
 #![allow(unused_variables)]
 
+use futures::SinkExt;
+
 use crate::{
     problem_registry::*,
     procedure::{writer_schema::*, *},
@@ -43,6 +45,10 @@ pub fn transpile(
             let id = identifiers::ResourceId::new();
             content_to_id.insert(content.content.clone(), id);
         }
+    }
+    for script in problem.scripts.iter() {
+        let id = identifiers::ResourceId::new();
+        content_to_id.insert(script.content.clone(), id);
     }
     let mut runtime_texts = Vec::new();
     let mut texts = Vec::new();
@@ -96,7 +102,12 @@ pub fn transpile(
     }
     let mut executions = Vec::new();
     for execution in problem.executions.iter() {
-        let script = execution.script_name.clone();
+        let script_id = name_to_id
+            .get(&execution.script_name)
+            .ok_or(RegistrationError::InvalidSchema(
+                "Execution script name not found".to_string(),
+            ))?
+            .clone();
         let mut dependencies = Vec::new();
         for dep in execution.depends_on.iter() {
             let dep_id = name_to_id
@@ -111,19 +122,41 @@ pub fn transpile(
             };
             dependencies.push(depends_on);
         }
+        dependencies.push(registered::DependsOn {
+            dep_id: script_id.clone(),
+            envvar_name: "SCRIPT".to_string(),
+        });
         let dep_id = name_to_id
             .get(&execution.name)
             .ok_or(RegistrationError::InvalidSchema(
                 "Execution name not found".to_string(),
             ))?
             .clone();
-        let priority = 0;
         let execution = registered::Execution {
-            script: script,
             depends_on: dependencies,
             dep_id: dep_id,
         };
         executions.push(execution);
+    }
+    for script in problem.scripts.iter() {
+        let name = script.name.clone();
+        let dep_id = name_to_id
+            .get(&name)
+            .ok_or(RegistrationError::InvalidSchema(
+                "Script name not found".to_string(),
+            ))?
+            .clone();
+        let resource_id = content_to_id
+            .get(&script.content)
+            .ok_or(RegistrationError::InvalidSchema(
+                "Script content not found".to_string(),
+            ))?
+            .clone();
+        let text = registered::Text {
+            resource_id,
+            dep_id,
+        };
+        texts.push(text);
     }
     let procedure = registered::Procedure {
         runtime_texts,

@@ -1,5 +1,6 @@
 use crate::identifiers::{DepId, ResourceId};
 
+#[derive(Debug, Clone)]
 pub struct Procedure {
     pub runtime_texts: Vec<RuntimeText>,
     pub texts: Vec<Text>,
@@ -7,26 +8,30 @@ pub struct Procedure {
     pub executions: Vec<Execution>,
 }
 
+#[derive(Debug, Clone)]
 pub struct RuntimeText {
     pub label: String,
     pub dep_id: DepId,
 }
 
+#[derive(Debug, Clone)]
 pub struct Text {
     pub resource_id: ResourceId,
     pub dep_id: DepId,
 }
 
+#[derive(Debug, Clone)]
 pub struct EmptyDirectory {
     pub dep_id: DepId,
 }
 
+#[derive(Debug, Clone)]
 pub struct Execution {
-    pub script: String,
     pub depends_on: Vec<DependsOn>,
     pub dep_id: DepId,
 }
 
+#[derive(Debug, Clone)]
 pub struct DependsOn {
     pub dep_id: DepId,
     pub envvar_name: String,
