@@ -5,3 +5,4 @@ pub mod problem_registry;
 pub mod procedure;
 pub mod runner;
 pub mod writer_schema_transpiler;
+pub mod registered_procedure_converter;

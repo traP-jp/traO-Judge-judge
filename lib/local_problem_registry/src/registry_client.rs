@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+#[derive(Debug, Clone)]
 pub struct RegistryClient {
     pub(crate) registry: Arc<Mutex<HashMap<identifiers::ResourceId, String>>>,
 }

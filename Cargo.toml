@@ -16,7 +16,7 @@ tonic = "0.12.3"
 tonic-types = "0.12.3"
 tonic-web = "0.12.3"
 tonic-build = "0.12.3"
-pyo3 = { version = "0.23.4", features = ["extension-module"] }
+pyo3 = { version = "0.23.4", features = ["extension-module", "experimental-async"] }
 pyo3-stub-gen = "0.7.0"
 
 

@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::define_stub_info_gatherer;
 pub mod models;
 pub mod procedure;
+pub mod local_judge;
 
 #[pymodule]
 fn lowlevel(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -13,8 +14,8 @@ fn lowlevel(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<models::output::PyOutput>()?;
     m.add_class::<models::output::PyScriptOutput>()?;
     m.add_class::<models::resource_kind::PyResourceKind>()?;
-    m.add_class::<models::script::PyScript>()?;
     m.add_class::<models::text::PyText>()?;
+    m.add_class::<local_judge::LocalJudge>()?;
     Ok(())
 }
 

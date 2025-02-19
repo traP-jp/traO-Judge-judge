@@ -11,53 +11,58 @@ pub enum JudgeStatus {
     CE,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ContinueStatus {
     Continue,
     Stop,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DisplayableJudgeResult {
+pub struct DisplayableExecutionResult {
     pub status: JudgeStatus,
     pub time: f64,
     pub memory: f64,
     pub score: i64,
     pub message: Option<String>,
-    pub continue_status: ContinueStatus,
 }
 
 /// This returns from exec container as stdout
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum JudgeReport {
+pub enum ExecutionResult {
     /// Frontend-displayable execution result
-    Displayable(DisplayableJudgeResult),
+    Displayable(DisplayableExecutionResult),
     /// Not displayed to frontend (e.g. for validation)
     Hidden,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExecutionReport {
+    pub result: ExecutionResult,
+    pub continue_status: ContinueStatus,
 }
 
 /// This is the final response from judge
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ExecutionResponse {
-    Report(JudgeReport),
+    Report(ExecutionReport),
     EarlyExit,
-    Error(String),
 }
 
 #[derive(Debug, Clone, thiserror::Error)]
-pub enum JudgeOutputParseError {
+pub enum ExecutionOutputParseError {
     #[error("Invalid JSON: {0}")]
     InvalidJson(String),
     #[error("Non-zero exit code")]
     NonZeroExitCode,
 }
 
-pub fn parse(output: &std::process::Output) -> Result<JudgeReport, JudgeOutputParseError> {
-    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+pub fn parse(output: &std::process::Output) -> Result<ExecutionReport, ExecutionOutputParseError> {
+    let stdout = String::from_utf8(output.stdout.clone())
+        .map_err(|e| ExecutionOutputParseError::InvalidJson(e.to_string()))?;
     if !output.status.success() {
-        return Err(JudgeOutputParseError::NonZeroExitCode);
+        return Err(ExecutionOutputParseError::NonZeroExitCode);
     }
-    let judge_report: JudgeReport = serde_json::from_str(&stdout)
-        .map_err(|e| JudgeOutputParseError::InvalidJson(e.to_string()))?;
-    Ok(judge_report)
+    let execution_report: ExecutionReport = serde_json::from_str(&stdout)
+        .map_err(|e| ExecutionOutputParseError::InvalidJson(e.to_string()))?;
+    Ok(execution_report)
 }

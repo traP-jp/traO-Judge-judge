@@ -17,7 +17,7 @@ pub trait ProblemRegistryServer {
 }
 
 /// ProblemRegistryClient fetches contents of problems from the registry in judge server.
-pub trait ProblemRegistryClient {
+pub trait ProblemRegistryClient: Clone {
     fn fetch(
         &self,
         resource_id: ResourceId,
