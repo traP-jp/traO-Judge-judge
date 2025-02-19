@@ -1,6 +1,6 @@
 use crate::identifiers::ResourceId;
-use std::process::Output;
 use futures::future::Future;
+use std::process::Output;
 
 pub trait JobApi<ReservationToken, OutcomeToken: Clone>: Clone {
     fn reserve_execution(

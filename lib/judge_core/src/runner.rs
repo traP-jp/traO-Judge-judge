@@ -58,7 +58,7 @@ impl<
                 outputs
                     .insert(
                         runtime_id.clone(),
-                        judge_output::ExecutionResponse::EarlyExit
+                        judge_output::ExecutionResponse::EarlyExit,
                     )
                     .context("Failed to insert early exit")?;
             }

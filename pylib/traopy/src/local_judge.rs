@@ -1,14 +1,10 @@
 use crate::procedure::PyProcedure;
+use judge_core::{
+    problem_registry::ProblemRegistryClient as _, problem_registry::ProblemRegistryServer as _, *,
+};
 use local_jobapi::jobapi::JobApi;
 use local_problem_registry::{
-    new_registry,
-    registry_client::RegistryClient,
-    registry_server::RegistryServer,
-};
-use judge_core::{
-    *,
-    problem_registry::ProblemRegistryServer as _,
-    problem_registry::ProblemRegistryClient as _,
+    new_registry, registry_client::RegistryClient, registry_server::RegistryServer,
 };
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
@@ -42,24 +38,14 @@ impl LocalJudge {
         runtime_text_contents: HashMap<String, String>,
     ) -> PyResult<String> {
         let procedure: procedure::writer_schema::Procedure = procedure.into();
-        let registered_procedure = self
-            .registry_server
-            .register(procedure)
+        let registered_procedure = self.registry_server.register(procedure).await.unwrap();
+        let (runtime_procedure, runtime_id_to_dep_id) =
+            registered_procedure_converter::convert(&registered_procedure, &runtime_text_contents)
+                .unwrap();
+        let runner = judge_core::runner::Runner::new(self.jobapi.clone(), runtime_procedure)
             .await
             .unwrap();
-        let (runtime_procedure, runtime_id_to_dep_id) = registered_procedure_converter
-            ::convert(&registered_procedure, &runtime_text_contents)
-            .unwrap();
-        let runner = judge_core::runner::Runner::new(
-            self.jobapi.clone(),
-            runtime_procedure,
-        )
-            .await
-            .unwrap();
-        let result = runner
-            .run()
-            .await
-            .unwrap();
+        let result = runner.run().await.unwrap();
         let mut result_in_dep_id = HashMap::new();
         for (runtime_id, outcome) in result {
             let dep_id = runtime_id_to_dep_id.get(&runtime_id).unwrap();
@@ -67,11 +53,7 @@ impl LocalJudge {
         }
         let mut result_in_name = HashMap::new();
         for (dep_id, outcome) in result_in_dep_id {
-            let name = self
-                .registry_server
-                .restore_name(dep_id)
-                .await
-                .unwrap();
+            let name = self.registry_server.restore_name(dep_id).await.unwrap();
             result_in_name.insert(name, outcome);
         }
         let result_stringified: String = serde_json::to_string(&result_in_name).unwrap();

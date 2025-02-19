@@ -142,11 +142,15 @@ pub fn transpile(
         let name = script.name.clone();
         let dep_id = name_to_id
             .get(&name)
-            .ok_or(RegistrationError::InvalidSchema("Script name not found".to_string()))?
+            .ok_or(RegistrationError::InvalidSchema(
+                "Script name not found".to_string(),
+            ))?
             .clone();
         let resource_id = content_to_id
             .get(&script.content)
-            .ok_or(RegistrationError::InvalidSchema("Script content not found".to_string()))?
+            .ok_or(RegistrationError::InvalidSchema(
+                "Script content not found".to_string(),
+            ))?
             .clone();
         let text = registered::Text {
             resource_id,

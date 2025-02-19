@@ -1,6 +1,6 @@
+use crate::identifiers::{DepId, ResourceId, RuntimeId};
 use crate::procedure::{registered::Execution, *};
 use std::collections::HashMap;
-use crate::identifiers::{DepId, RuntimeId, ResourceId};
 pub fn convert(
     registered_procedure: &registered::Procedure,
     runtime_text_contents: &std::collections::HashMap<String, String>,
@@ -38,7 +38,9 @@ pub fn convert(
     for text in registered_procedure.texts.iter() {
         let runtime_id = dep_id_to_runtime_id
             .get(&text.dep_id)
-            .ok_or(ConversionError::InternalError("Text dep_id not found".to_string()))?
+            .ok_or(ConversionError::InternalError(
+                "Text dep_id not found".to_string(),
+            ))?
             .clone();
         texts.push(runtime::Text {
             resource_id: text.resource_id.clone(),
@@ -48,20 +50,24 @@ pub fn convert(
     for empty_directory in registered_procedure.empty_directories.iter() {
         let runtime_id = dep_id_to_runtime_id
             .get(&empty_directory.dep_id)
-            .ok_or(ConversionError::InternalError("EmptyDirectory dep_id not found".to_string()))?
+            .ok_or(ConversionError::InternalError(
+                "EmptyDirectory dep_id not found".to_string(),
+            ))?
             .clone();
-        empty_directories.push(runtime::EmptyDirectory {
-            runtime_id,
-        });
+        empty_directories.push(runtime::EmptyDirectory { runtime_id });
     }
     for runtime_text in registered_procedure.runtime_texts.iter() {
         let runtime_id = dep_id_to_runtime_id
             .get(&runtime_text.dep_id)
-            .ok_or(ConversionError::InternalError("RuntimeText dep_id not found".to_string()))?
+            .ok_or(ConversionError::InternalError(
+                "RuntimeText dep_id not found".to_string(),
+            ))?
             .clone();
         let content = runtime_text_contents
             .get(&runtime_text.label)
-            .ok_or(ConversionError::RuntimeTextNotFound(runtime_text.label.clone()))?
+            .ok_or(ConversionError::RuntimeTextNotFound(
+                runtime_text.label.clone(),
+            ))?
             .clone();
         runtime_texts.push(runtime::RuntimeText {
             content,
@@ -71,13 +77,17 @@ pub fn convert(
     for execution in registered_procedure.executions.iter() {
         let runtime_id = dep_id_to_runtime_id
             .get(&execution.dep_id)
-            .ok_or(ConversionError::InternalError("Execution runtime_id not found".to_string()))?
+            .ok_or(ConversionError::InternalError(
+                "Execution runtime_id not found".to_string(),
+            ))?
             .clone();
         let mut depends_on = Vec::new();
         for dep in execution.depends_on.iter() {
             let runtime_id = dep_id_to_runtime_id
                 .get(&dep.dep_id)
-                .ok_or(ConversionError::InternalError("DependsOn runtime_id not found".to_string()))?
+                .ok_or(ConversionError::InternalError(
+                    "DependsOn runtime_id not found".to_string(),
+                ))?
                 .clone();
             depends_on.push(runtime::DependsOn {
                 runtime_id,
