@@ -43,7 +43,6 @@ members = [
     "lib/backend_domain",
     "lib/backend_infra",
     "lib/backend_usecase",
-    "lib/backend_di",
     "pylib/traopy", 
     "app/backend_app",
     "app/judge_control_app", "lib/local_problem_registry",

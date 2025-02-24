@@ -1,7 +1,8 @@
-use di::DiContainer;
+use crate::di::DiContainer;
 use infra::provider::Provider;
 use tower_http::trace::TraceLayer;
 
+pub mod di;
 pub mod handler;
 pub mod model;
 

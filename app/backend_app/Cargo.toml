@@ -26,7 +26,6 @@ lettre = { workspace = true }
 fancy-regex = { workspace = true }
 aws-sdk-s3 = { workspace = true }
 aws-config = { workspace = true }
-di = { path = "../../lib/backend_di" }
 usecase = { path = "../../lib/backend_usecase" }
 infra = { path = "../../lib/backend_infra" }
 

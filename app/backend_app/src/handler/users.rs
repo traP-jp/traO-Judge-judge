@@ -1,3 +1,4 @@
+use crate::di::DiContainer;
 use crate::model::users::{UpdateEmail, UpdateMe, UpdatePassword, UserResponse};
 use axum::{
     extract::{Path, State},
@@ -5,7 +6,6 @@ use axum::{
     Json,
 };
 use axum_extra::{headers::Cookie, TypedHeader};
-use di::DiContainer;
 use reqwest::StatusCode;
 use usecase::{
     model::user::{UpdatePasswordData, UpdateUserData},
