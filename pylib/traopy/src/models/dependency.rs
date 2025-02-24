@@ -4,7 +4,7 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 
 /// Dependency object to refer to previous output.
-/// 
+///
 /// Path to the output will be provided as an environment variable named `envvar_name`.
 #[gen_stub_pyclass]
 #[pyclass]

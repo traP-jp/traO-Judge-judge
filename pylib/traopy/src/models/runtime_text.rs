@@ -3,7 +3,7 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 
 /// RuntimeText object to be placed in the execution environment.
-/// 
+///
 /// `label`s have corresponding types of resources determined in judge-run time.
 /// | label | description |
 /// | --- | --- |
