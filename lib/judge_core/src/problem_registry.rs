@@ -14,6 +14,9 @@ pub trait ProblemRegistryServer {
 
     // Convert DepId to names in writer schema
     fn restore_name(&self, dep_id: DepId) -> impl Future<Output = Option<String>>;
+
+    // Remove registered problem from the registry
+    fn remove(&self, procedure_id: ResourceId) -> impl Future<Output = Result<(), RemovalError>>;
 }
 
 /// ProblemRegistryClient fetches contents of problems from the registry in judge server.
@@ -38,4 +41,12 @@ pub enum RegistrationError {
     InternalError(String),
     #[error("Invalid problem procedure schema: {0}")]
     InvalidSchema(String),
+}
+
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum RemovalError {
+    #[error("Internal error while removing a problem: {0}")]
+    InternalError(String),
+    #[error("Resource {0} not found")]
+    NotFound(ResourceId),
 }
