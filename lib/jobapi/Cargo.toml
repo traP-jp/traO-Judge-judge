@@ -10,7 +10,6 @@ serde_json = {workspace = true}
 uuid = {workspace = true}
 anyhow = {workspace = true}
 thiserror = {workspace = true}
-byte-unit = {workspace = true}
 futures = {workspace = true}
 chrono = {workspace = true}
-grpc_schema = { path = "../grpc_schema" }
+judge_core ={ path = "../judge_core" }
