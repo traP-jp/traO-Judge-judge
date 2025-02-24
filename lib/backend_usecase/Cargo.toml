@@ -1,0 +1,28 @@
+[package]
+name = "usecase"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+http-body-util = { workspace = true }
+axum-extra = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid = { workspace = true }
+reqwest = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+bcrypt = { workspace = true }
+async-session = { workspace = true }
+sqlx = { workspace = true }
+jsonwebtoken = { workspace = true }
+lettre = { workspace = true }
+fancy-regex = { workspace = true }
+aws-sdk-s3 = { workspace = true }
+aws-config = { workspace = true }
+domain = { path = "../backend_domain" }
