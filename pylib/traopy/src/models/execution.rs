@@ -3,6 +3,9 @@ use judge_core::procedure::writer_schema::{Dependency, Execution};
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 
+/// Execution object to be executed
+///
+/// Script will be run with paths as environment variables specified in `depends_on`.
 #[gen_stub_pyclass]
 #[pyclass]
 #[pyo3(name = "Execution")]
