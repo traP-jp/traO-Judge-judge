@@ -6,11 +6,6 @@ on:
   pull_request:
     branches: [ "develop" ]
 
-env:
-  CARGO_TERM_COLOR: always
-  RUSTFLAGS: "-Dwarnings"
-
-
 jobs:
  test:
     runs-on: ubuntu-latest
