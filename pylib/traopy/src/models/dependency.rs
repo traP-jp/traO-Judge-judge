@@ -5,6 +5,7 @@ use pyo3_stub_gen::derive::*;
 
 #[gen_stub_pyclass]
 #[pyclass]
+#[pyo3(name = "Dependency")]
 #[derive(Debug, Clone)]
 pub struct PyDependency {
     pub ref_to: PyOutput,

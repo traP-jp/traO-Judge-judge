@@ -3,6 +3,7 @@ use pyo3_stub_gen::derive::*;
 
 #[gen_stub_pyclass]
 #[pyclass]
+#[pyo3(name = "Output")]
 #[derive(Debug, Clone)]
 pub struct PyOutput {
     pub(crate) name: String,
@@ -17,6 +18,7 @@ impl PyOutput {
 #[gen_stub_pyclass]
 #[pyclass]
 #[derive(Debug, Clone)]
+#[pyo3(name = "ScriptOutput")]
 pub struct PyScriptOutput {
     pub(crate) name: String,
 }

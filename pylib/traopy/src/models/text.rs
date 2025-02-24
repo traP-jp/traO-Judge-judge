@@ -5,6 +5,7 @@ use std::path::PathBuf;
 
 #[gen_stub_pyclass]
 #[pyclass]
+#[pyo3(name = "Text")]
 #[derive(Debug, Clone)]
 pub struct PyText {
     pub name: String,
