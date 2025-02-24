@@ -2,11 +2,11 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::define_stub_info_gatherer;
 pub mod local_judge;
 pub mod models;
-pub mod procedure;
+pub mod procedure_builder;
 
 #[pymodule]
 fn lowlevel(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_class::<procedure::PyProcedure>()?;
+    m.add_class::<procedure_builder::PyProcedureBuilder>()?;
     m.add_class::<models::dependency::PyDependency>()?;
     m.add_class::<models::empty_directory::PyEmptyDirectory>()?;
     m.add_class::<models::execution::PyExecution>()?;
