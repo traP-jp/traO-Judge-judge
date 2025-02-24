@@ -1,0 +1,54 @@
+use axum::async_trait;
+use lettre::{
+    message::{header, Mailbox, SinglePart},
+    transport::smtp::authentication::Credentials,
+    Address, Message, SmtpTransport, Transport,
+};
+
+use domain::external::mail::MailClient;
+
+#[derive(Clone)]
+pub struct MailClientImpl {
+    mailer: SmtpTransport,
+}
+
+impl MailClientImpl {
+    pub fn new() -> anyhow::Result<Self> {
+        let app_address = std::env::var("MAIL_ADDRESS").unwrap();
+        let app_password = std::env::var("MAIL_PASSWORD").unwrap();
+        let smtp = std::env::var("MAIL_SMTP").unwrap();
+
+        let credentials = Credentials::new(app_address.clone(), app_password.clone());
+
+        let mailer = SmtpTransport::starttls_relay(&smtp)?
+            .credentials(credentials)
+            .build();
+
+        Ok(Self { mailer })
+    }
+}
+
+#[async_trait]
+impl MailClient for MailClientImpl {
+    async fn send_mail(&self, send_to: Address, subject: &str, body: &str) -> anyhow::Result<()> {
+        let email = Message::builder()
+            .from(Mailbox::new(
+                Some("traOJudge".to_string()),
+                std::env::var("MAIL_ADDRESS")
+                    .unwrap()
+                    .parse::<Address>()
+                    .unwrap(),
+            ))
+            .to(Mailbox::new(None, send_to))
+            .subject(subject)
+            .singlepart(
+                SinglePart::builder()
+                    .header(header::ContentType::TEXT_PLAIN)
+                    .body(body.to_string()),
+            )?;
+
+        self.mailer.send(&email)?;
+
+        Ok(())
+    }
+}

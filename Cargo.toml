@@ -18,7 +18,20 @@ tonic-web = "0.12.3"
 tonic-build = "0.12.3"
 pyo3 = { version = "0.23.4", features = ["extension-module", "experimental-async"] }
 pyo3-stub-gen = "0.7.0"
-
+axum = "0.7"
+http-body-util = "0.1.0"
+axum-extra = { version = "0.9", features = [ "typed-header" ] }
+tower = { version = "0.4", features = ["full"] }
+tower-http = { version = "0.5.0", features = ["add-extension", "trace", "fs"] }
+reqwest = "0.12.5"
+bcrypt = "0.15"
+async-session = "3.0.0"
+sqlx = { version = "0.7", features = [ "mysql", "runtime-tokio", "migrate", "chrono", "uuid" ] }
+jsonwebtoken = "9.3.0"
+lettre = "0.11.7"
+fancy-regex = "0.14.0"
+aws-sdk-s3 = {version="1.68.0", features = ["behavior-version-latest"] }
+aws-config = {version="1.5.13", features = ["behavior-version-latest"] }
 
 [workspace]
 members = [
@@ -27,7 +40,12 @@ members = [
     "lib/local_problem_registry",
     "lib/grpc_schema",
     "lib/judge_core",
+    "lib/backend_domain",
+    "lib/backend_infra",
+    "lib/backend_usecase",
+    "lib/backend_di",
     "pylib/traopy", 
+    "app/backend_app",
     "app/judge_control_app", "lib/local_problem_registry",
 ]
 resolver = "2"

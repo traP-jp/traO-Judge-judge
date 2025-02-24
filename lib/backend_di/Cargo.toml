@@ -1,0 +1,8 @@
+[package]
+name = "di"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+infra = { path = "../backend_infra" }
+usecase = { path = "../backend_usecase" }
