@@ -33,4 +33,10 @@ impl ProblemRegistryServer for RegistryServer {
         let dep_id_to_name = self.dep_id_to_name.lock().await;
         dep_id_to_name.get(&dep_id).cloned()
     }
+
+    async fn remove(&self, procedure_id: identifiers::ResourceId) -> Result<(), RemovalError> {
+        let mut registry = self.registry.lock().await;
+        registry.remove(&procedure_id);
+        Ok(())
+    }
 }
