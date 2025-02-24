@@ -1,4 +1,4 @@
-use crate::procedure::PyProcedure;
+use crate::procedure_builder::PyProcedureBuilder;
 use judge_core::{
     problem_registry::ProblemRegistryClient as _, problem_registry::ProblemRegistryServer as _, *,
 };
@@ -34,10 +34,10 @@ impl LocalJudge {
     #[pyo3(name = "run")]
     async fn run(
         &self,
-        procedure: PyProcedure,
+        builder: PyProcedureBuilder,
         runtime_text_contents: HashMap<String, String>,
     ) -> PyResult<String> {
-        let procedure: procedure::writer_schema::Procedure = procedure.into();
+        let procedure: procedure::writer_schema::Procedure = builder.get_schema_procedure();
         let registered_procedure = self.registry_server.register(procedure).await.unwrap();
         let (runtime_procedure, runtime_id_to_dep_id) =
             registered_procedure_converter::convert(&registered_procedure, &runtime_text_contents)
