@@ -4,6 +4,7 @@ use pyo3_stub_gen::derive::*;
 
 #[gen_stub_pyclass]
 #[pyclass]
+#[pyo3(name = "EmptyDirectory")]
 #[derive(Debug, Clone)]
 pub struct PyEmptyDirectory {
     pub name: String,

@@ -5,6 +5,7 @@ use pyo3_stub_gen::derive::*;
 
 #[gen_stub_pyclass_enum]
 #[pyclass]
+#[pyo3(name = "ResourceKind")]
 #[derive(Debug, Clone)]
 pub enum PyResourceKind {
     EmptyDirectory(PyEmptyDirectory),

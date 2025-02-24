@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 #[gen_stub_pyclass]
 #[pyclass]
+#[pyo3(name = "ProcedureBuilder")]
 #[derive(Debug, Clone)]
 pub struct PyProcedureBuilder {
     builder: procedure_builder::ProcedureBuilder,
