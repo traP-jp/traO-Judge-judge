@@ -59,8 +59,7 @@ impl ProcedureBuilder {
             ResourceKind::RuntimeTextFile(runtime_text) => runtime_text.name.clone(),
             ResourceKind::TextFile(text) => text.name.clone(),
         };
-        self
-            .jobs
+        self.jobs
             .insert(name.clone(), Job::Resource(resource))
             .map_or_else(
                 || Ok(name.clone()),
@@ -72,8 +71,7 @@ impl ProcedureBuilder {
     /// Add a script to the procedure and return the name of the script
     pub fn add_script(&mut self, script: Text) -> Result<String, AddJobError> {
         let name = script.name.clone();
-        self
-            .jobs
+        self.jobs
             .insert(name.clone(), Job::Script(script))
             .map_or_else(
                 || Ok(name.clone()),
@@ -87,15 +85,15 @@ impl ProcedureBuilder {
         let name = execution.name.clone();
         // Check if all dependencies are present
         for dep in execution.depends_on.iter() {
-            self
-                .jobs
+            self.jobs
                 .get(&dep.ref_to)
                 .ok_or(AddJobError::DependencyNotFound(dep.ref_to.clone()))?;
         }
-        self
-            .jobs
+        self.jobs
             .get(&execution.script_name)
-            .ok_or(AddJobError::DependencyNotFound(execution.script_name.clone()))?;
+            .ok_or(AddJobError::DependencyNotFound(
+                execution.script_name.clone(),
+            ))?;
         // Insert the execution
         let _ = self
             .jobs
