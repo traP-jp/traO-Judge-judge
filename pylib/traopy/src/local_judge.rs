@@ -11,6 +11,7 @@ use pyo3_stub_gen::derive::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+/// LocalJudge object to run provided procedures in your local environment.
 #[gen_stub_pyclass]
 #[pyclass]
 pub struct LocalJudge {
@@ -31,6 +32,7 @@ impl LocalJudge {
         }
     }
 
+    /// Run the provided procedure in your local environment.
     #[pyo3(name = "run")]
     async fn run(
         &self,

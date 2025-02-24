@@ -3,6 +3,9 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::path::PathBuf;
 
+/// Text object to be placed in the execution environment.
+/// 
+/// Contents of Text must be static.
 #[gen_stub_pyclass]
 #[pyclass]
 #[pyo3(name = "Text")]

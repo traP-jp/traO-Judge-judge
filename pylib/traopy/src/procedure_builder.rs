@@ -5,6 +5,7 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::path::PathBuf;
 
+/// ProcedureBuilder object to build a procedure.
 #[gen_stub_pyclass]
 #[pyclass]
 #[pyo3(name = "ProcedureBuilder")]
@@ -23,6 +24,7 @@ impl PyProcedureBuilder {
         }
     }
 
+    /// Add a resource to the procedure.
     #[pyo3(name = "add_resource")]
     fn add_resource(&mut self, resource: resource_kind::PyResourceKind) -> output::PyOutput {
         let schema_resource = writer_schema::ResourceKind::from(resource);
@@ -31,6 +33,7 @@ impl PyProcedureBuilder {
         output
     }
 
+    /// Add a script to the procedure.
     #[pyo3(name = "add_script")]
     fn add_script(&mut self, script: text::PyText) -> output::PyScriptOutput {
         let schema_script = writer_schema::Text::from(script);
@@ -39,6 +42,7 @@ impl PyProcedureBuilder {
         output
     }
 
+    /// Add an execution to the procedure.
     #[pyo3(name = "add_execution")]
     fn add_execution(&mut self, execution: execution::PyExecution) -> output::PyOutput {
         let script_name = execution.script.name.clone();
@@ -56,6 +60,7 @@ impl PyProcedureBuilder {
         output
     }
 
+    /// Export the procedure to a json file.
     #[pyo3(name = "write_to")]
     fn write_to(&self, path: PathBuf) -> () {
         // output this instance as a json file
