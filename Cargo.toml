@@ -23,6 +23,7 @@ pyo3-stub-gen = "0.7.0"
 [workspace]
 members = [
     "lib/jobapi",
+    "lib/problem_registry",
     "lib/local_jobapi",
     "lib/local_problem_registry",
     "lib/grpc_schema",
