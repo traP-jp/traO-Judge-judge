@@ -7,12 +7,12 @@ use axum::{
 };
 use backend_app::handler::make_router;
 use di::DiContainer;
+use domain::repository::session::SessionRepository;
+use domain::repository::user::UserRepository;
 use http_body_util::BodyExt;
 use infra::provider::Provider;
 use serde_json::Value;
 use tower::ServiceExt;
-use domain::repository::user::UserRepository;
-use domain::repository::session::SessionRepository;
 
 #[ignore]
 #[sqlx::test(fixtures("common"), migrations = "../../lib/backend_infra/migrations")]

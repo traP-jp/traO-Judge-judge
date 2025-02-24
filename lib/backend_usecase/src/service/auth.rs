@@ -3,9 +3,9 @@ use lettre::Address;
 use crate::model::auth::ResetPasswordData;
 use crate::model::auth::{LoginData, SignUpData};
 use domain::{
-    repository::session::SessionRepository,
     external::mail::MailClient,
     model::jwt::EmailToken,
+    repository::session::SessionRepository,
     repository::{auth::AuthRepository, user::UserRepository},
 };
 

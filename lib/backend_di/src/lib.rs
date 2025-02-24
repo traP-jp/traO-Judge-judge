@@ -1,14 +1,13 @@
 use infra::{
-        external::mail::MailClientImpl,
-        provider::Provider,
-        repository::{
-            auth::AuthRepositoryImpl, problem::ProblemRepositoryImpl,
-            session::SessionRepositoryImpl, submission::SubmissionRepositoryImpl,
-            user::UserRepositoryImpl,
-        },
-    };
+    external::mail::MailClientImpl,
+    provider::Provider,
+    repository::{
+        auth::AuthRepositoryImpl, problem::ProblemRepositoryImpl, session::SessionRepositoryImpl,
+        submission::SubmissionRepositoryImpl, user::UserRepositoryImpl,
+    },
+};
 use usecase::service::{
-        auth::AuthenticationService, submission::SubmissionService, user::UserService,
+    auth::AuthenticationService, submission::SubmissionService, user::UserService,
 };
 
 #[derive(Clone)]

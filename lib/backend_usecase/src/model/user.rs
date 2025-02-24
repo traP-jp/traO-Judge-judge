@@ -1,4 +1,7 @@
-use domain::model::{rules::RuleType, user::{User, UserRole}};
+use domain::model::{
+    rules::RuleType,
+    user::{User, UserRole},
+};
 use sqlx::types::chrono;
 use uuid::Uuid;
 
@@ -90,4 +93,3 @@ impl From<User> for UserDto {
         }
     }
 }
-

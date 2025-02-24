@@ -3,10 +3,7 @@ use lettre::Address;
 use crate::model::user::{UpdatePasswordData, UpdateUserData, UserDto};
 use domain::{
     external::mail::MailClient,
-    model::{
-        jwt::EmailToken,
-        user::UpdateUser,
-    },
+    model::{jwt::EmailToken, user::UpdateUser},
     repository::{auth::AuthRepository, session::SessionRepository, user::UserRepository},
 };
 
