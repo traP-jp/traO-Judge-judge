@@ -14,11 +14,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.12"
-
       - name: Install rye
         run: curl -sSf https://rye.astral.sh/get | RYE_VERSION="0.4.0" RYE_INSTALL_OPTION="--yes" bash
 
