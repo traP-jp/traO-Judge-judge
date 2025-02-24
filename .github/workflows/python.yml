@@ -20,7 +20,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install rye
-        run: curl -sSf https://rye.astral.sh/get | bash
+        run: curl -sSf https://rye.astral.sh/get | RYE_VERSION="0.4.0" RYE_INSTALL_OPTION="--yes" bash
 
       - name: Build check
         run: |
