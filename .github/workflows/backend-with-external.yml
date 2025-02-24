@@ -51,4 +51,4 @@ jobs:
     - name: Build test
       run: cargo build -p backend_app --release --verbose
     - name: Run test
-      run: source .env.dev && cargo test --verbose -- --ignored  backend
+      run: export CODEGEN_SKIP=true && source app/backend_app/.env.dev && cargo test -- --ignored backend
