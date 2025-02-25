@@ -36,6 +36,7 @@ aws-config = {version="1.5.13", features = ["behavior-version-latest"] }
 [workspace]
 members = [
     "lib/jobapi",
+    "lib/problem_registry",
     "lib/local_jobapi",
     "lib/local_problem_registry",
     "lib/grpc_schema",
