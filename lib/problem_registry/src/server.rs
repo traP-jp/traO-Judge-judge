@@ -15,4 +15,11 @@ impl problem_registry::ProblemRegistryServer for ProblemRegistryServer {
     async fn restore_name(&self, dep_id: identifiers::DepId) -> Option<String> {
         todo!()
     }
+
+    async fn remove(
+        &self,
+        procedure: procedure::registered::Procedure,
+    ) -> Result<(), problem_registry::RemovalError> {
+        todo!()
+    }
 }
