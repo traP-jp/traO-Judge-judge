@@ -16,7 +16,7 @@ pub trait ProblemRegistryServer {
     fn restore_name(&self, dep_id: DepId) -> impl Future<Output = Option<String>>;
 
     // Remove registered problem from the registry
-    fn remove(&self, procedure_id: ResourceId) -> impl Future<Output = Result<(), RemovalError>>;
+    fn remove(&self, procedure: registered::Procedure) -> impl Future<Output = Result<(), RemovalError>>;
 }
 
 /// ProblemRegistryClient fetches contents of problems from the registry in judge server.
