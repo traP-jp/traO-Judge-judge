@@ -16,7 +16,10 @@ impl problem_registry::ProblemRegistryServer for ProblemRegistryServer {
         todo!()
     }
 
-    async fn remove(&self, procedure: procedure::registered::Procedure) -> Result<(), problem_registry::RemovalError> {
+    async fn remove(
+        &self,
+        procedure: procedure::registered::Procedure,
+    ) -> Result<(), problem_registry::RemovalError> {
         todo!()
     }
 }
