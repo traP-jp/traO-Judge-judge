@@ -1,4 +1,4 @@
-use crate::model::problem::NormalProblemPow;
+use crate::model::problem::NormalProblemRow;
 use axum::async_trait;
 use domain::{model::problem::NormalProblem, repository::problem::ProblemRepository};
 use sqlx::MySqlPool;
@@ -18,7 +18,7 @@ impl ProblemRepositoryImpl {
 impl ProblemRepository for ProblemRepositoryImpl {
     async fn get_problem(&self, id: i64) -> anyhow::Result<Option<NormalProblem>> {
         let problem =
-            sqlx::query_as::<_, NormalProblemPow>("SELECT * FROM normal_problems WHERE id = ?")
+            sqlx::query_as::<_, NormalProblemRow>("SELECT * FROM normal_problems WHERE id = ?")
                 .bind(id)
                 .fetch_optional(&self.pool)
                 .await?;

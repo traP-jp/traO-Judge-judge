@@ -3,7 +3,7 @@ use sqlx::types::chrono;
 use domain::model::problem::NormalProblem;
 
 #[derive(Debug, Clone, sqlx::FromRow)]
-pub struct NormalProblemPow {
+pub struct NormalProblemRow {
     pub id: i64,
     pub author_id: i64,
     pub title: String,
@@ -17,8 +17,8 @@ pub struct NormalProblemPow {
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-impl From<NormalProblemPow> for NormalProblem {
-    fn from(val: NormalProblemPow) -> Self {
+impl From<NormalProblemRow> for NormalProblem {
+    fn from(val: NormalProblemRow) -> Self {
         NormalProblem {
             id: val.id,
             author_id: val.author_id,
