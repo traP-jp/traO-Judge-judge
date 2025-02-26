@@ -23,3 +23,13 @@ pub struct UpdateNormalProblems {
     pub time_limit: i32,
     pub memory_limit: i32,
 }
+
+pub struct CreateNormalProblems {
+    pub author_id: i64,
+    pub title: String,
+    pub statement: String,
+    pub time_limit: i32,
+    pub memory_limit: i32,
+    pub difficulty: i32,
+    pub judgecode_path: String,
+}
