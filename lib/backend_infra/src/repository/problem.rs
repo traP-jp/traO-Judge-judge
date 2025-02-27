@@ -1,7 +1,7 @@
 use crate::model::problem::NormalProblemRow;
 use axum::async_trait;
 use domain::{
-    model::problem::{CreateNormalProblems, NormalProblem, UpdateNormalProblems},
+    model::problem::{CreateNormalProblem, NormalProblem, UpdateNormalProblem},
     repository::problem::ProblemRepository,
 };
 use sqlx::MySqlPool;
@@ -32,7 +32,7 @@ impl ProblemRepository for ProblemRepositoryImpl {
     async fn update_problem(
         &self,
         id: i64,
-        update_prblem: UpdateNormalProblems,
+        update_prblem: UpdateNormalProblem,
     ) -> anyhow::Result<Option<NormalProblem>> {
         let problem = sqlx::query_as::<_, NormalProblemRow>(
             "UPDATE normal_problems SET title = ?, is_public = ?, difficulty = ?, statement = ?, time_limit = ?, memory_limit = ? WHERE id = ? RETURNING *",
@@ -52,7 +52,7 @@ impl ProblemRepository for ProblemRepositoryImpl {
 
     async fn create_problem(
         &self,
-        create_problem: CreateNormalProblems,
+        create_problem: CreateNormalProblem,
     ) -> anyhow::Result<NormalProblem> {
         let problem = sqlx::query_as::<_, NormalProblemRow>(
             "INSERT INTO normal_problems (author_id, title, statement, time_limit, memory_limit, difficulty, judgecode_path) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *",

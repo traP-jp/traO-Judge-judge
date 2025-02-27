@@ -1,6 +1,6 @@
 use axum::async_trait;
 
-use crate::model::problem::{CreateNormalProblems, NormalProblem, UpdateNormalProblems};
+use crate::model::problem::{CreateNormalProblem, NormalProblem, UpdateNormalProblem};
 
 #[async_trait]
 pub trait ProblemRepository {
@@ -8,10 +8,10 @@ pub trait ProblemRepository {
     async fn update_problem(
         &self,
         id: i64,
-        update_problem: UpdateNormalProblems,
+        update_problem: UpdateNormalProblem,
     ) -> anyhow::Result<Option<NormalProblem>>;
     async fn create_problem(
         &self,
-        create_problem: CreateNormalProblems,
+        create_problem: CreateNormalProblem,
     ) -> anyhow::Result<NormalProblem>;
 }

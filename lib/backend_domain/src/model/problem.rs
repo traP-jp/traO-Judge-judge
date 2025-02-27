@@ -15,7 +15,7 @@ pub struct NormalProblem {
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-pub struct UpdateNormalProblems {
+pub struct UpdateNormalProblem {
     pub title: String,
     pub is_public: bool,
     pub difficulty: i32,
@@ -24,7 +24,7 @@ pub struct UpdateNormalProblems {
     pub memory_limit: i32,
 }
 
-pub struct CreateNormalProblems {
+pub struct CreateNormalProblem {
     pub author_id: i64,
     pub title: String,
     pub statement: String,
