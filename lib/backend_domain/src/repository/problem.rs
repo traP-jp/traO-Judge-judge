@@ -9,9 +9,9 @@ pub trait ProblemRepository {
         &self,
         id: i64,
         update_problem: UpdateNormalProblem,
-    ) -> anyhow::Result<Option<NormalProblem>>;
+    ) -> anyhow::Result<()>;
     async fn create_problem(
         &self,
         create_problem: CreateNormalProblem,
-    ) -> anyhow::Result<NormalProblem>;
+    ) -> anyhow::Result<i64>;
 }

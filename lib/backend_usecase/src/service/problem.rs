@@ -1,4 +1,4 @@
-use crate::model::problem::{CreateNormalProblemData, NormalProblemDto, UpdateNormalProblemData};
+use crate::model::problem::{self, CreateNormalProblemData, NormalProblemDto, UpdateNormalProblemData};
 use domain::{
     model::problem::{CreateNormalProblem, UpdateNormalProblem},
     repository::{problem::ProblemRepository, session::SessionRepository},
@@ -83,7 +83,7 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
             return Err(ProblemError::Forbidden);
         }
 
-        let problem = self
+        self
             .problem_repository
             .update_problem(
                 problem_id,
@@ -96,6 +96,12 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
                     memory_limit: body.memory_limit.unwrap_or(problem.memory_limit),
                 },
             )
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?;
+
+        let problem = self
+            .problem_repository
+            .get_problem(problem_id)
             .await
             .map_err(|_| ProblemError::InternalServerError)?
             .ok_or(ProblemError::NotFound)?;
@@ -115,7 +121,7 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
             .map_err(|_| ProblemError::InternalServerError)?
             .ok_or(ProblemError::Unauthorized)?;
 
-        let problem = self
+        let problem_id = self
             .problem_repository
             .create_problem(CreateNormalProblem {
                 author_id: display_id,
@@ -128,6 +134,13 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
             })
             .await
             .map_err(|_| ProblemError::InternalServerError)?;
+
+        let problem = self
+            .problem_repository
+            .get_problem(problem_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?
+            .ok_or(ProblemError::NotFound)?;
 
         Ok(problem.into())
     }

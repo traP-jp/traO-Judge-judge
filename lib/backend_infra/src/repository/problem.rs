@@ -33,9 +33,9 @@ impl ProblemRepository for ProblemRepositoryImpl {
         &self,
         id: i64,
         update_prblem: UpdateNormalProblem,
-    ) -> anyhow::Result<Option<NormalProblem>> {
-        let problem = sqlx::query_as::<_, NormalProblemRow>(
-            "UPDATE normal_problems SET title = ?, is_public = ?, difficulty = ?, statement = ?, time_limit = ?, memory_limit = ? WHERE id = ? RETURNING *",
+    ) -> anyhow::Result<()> {
+        sqlx::query(
+            "UPDATE normal_problems SET title = ?, is_public = ?, difficulty = ?, statement = ?, time_limit = ?, memory_limit = ? WHERE id = ?",
         )
         .bind(update_prblem.title)
         .bind(update_prblem.is_public)
@@ -44,18 +44,23 @@ impl ProblemRepository for ProblemRepositoryImpl {
         .bind(update_prblem.time_limit)
         .bind(update_prblem.memory_limit)
         .bind(id)
-        .fetch_optional(&self.pool)
-        .await?;
+        .execute(&self.pool)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to update problem: {}", e);
+            e
+        })?;
 
-        Ok(problem.map(|problem| problem.into()))
+
+        Ok(())
     }
 
     async fn create_problem(
         &self,
         create_problem: CreateNormalProblem,
-    ) -> anyhow::Result<NormalProblem> {
-        let problem = sqlx::query_as::<_, NormalProblemRow>(
-            "INSERT INTO normal_problems (author_id, title, statement, time_limit, memory_limit, difficulty, judgecode_path) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *",
+    ) -> anyhow::Result<i64> {
+        let problem_id = sqlx::query(
+            "INSERT INTO normal_problems (author_id, title, statement, time_limit, memory_limit, difficulty, judgecode_path) VALUES (?, ?, ?, ?, ?, ?, ?)",
         )
         .bind(create_problem.author_id)
         .bind(create_problem.title)
@@ -64,9 +69,13 @@ impl ProblemRepository for ProblemRepositoryImpl {
         .bind(create_problem.memory_limit)
         .bind(create_problem.difficulty)
         .bind(create_problem.judgecode_path)
-        .fetch_one(&self.pool)
-        .await?;
+        .execute(&self.pool)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to create problem: {}", e);
+            e
+        })?;
 
-        Ok(problem.into())
+        Ok(problem_id.last_insert_id() as i64)
     }
 }
