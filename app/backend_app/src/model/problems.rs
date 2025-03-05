@@ -13,7 +13,7 @@ pub struct ProblemResponse {
     pub memory_limit: i32,
     pub difficulty: i32,
     pub is_public: bool,
-    pub judgecode_path: String,
+    pub solved_count: i32,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -29,7 +29,7 @@ impl From<NormalProblemDto> for ProblemResponse {
             memory_limit: problem.memory_limit,
             difficulty: problem.difficulty,
             is_public: problem.is_public,
-            judgecode_path: problem.judgecode_path,
+            solved_count: problem.solved_count,
             created_at: problem.created_at,
             updated_at: problem.updated_at,
         }
