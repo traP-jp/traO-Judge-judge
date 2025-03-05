@@ -52,7 +52,7 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
                 .ok_or(ProblemError::NotFound)?;
 
             if display_id != problem.author_id {
-                return Err(ProblemError::Forbidden);
+                return Err(ProblemError::NotFound);
             }
         }
 
@@ -80,7 +80,11 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
             .ok_or(ProblemError::Unauthorized)?;
 
         if display_id != problem.author_id {
-            return Err(ProblemError::Forbidden);
+            if !problem.is_public {
+                return Err(ProblemError::NotFound);
+            } else {
+                return Err(ProblemError::Forbidden);
+            }
         }
 
         self.problem_repository
