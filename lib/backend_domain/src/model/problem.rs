@@ -10,6 +10,7 @@ pub struct NormalProblem {
     pub memory_limit: i32,
     pub difficulty: i32,
     pub is_public: bool,
+    pub solved_count: i32,
     pub judgecode_path: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
