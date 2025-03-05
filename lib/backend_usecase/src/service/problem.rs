@@ -1,4 +1,4 @@
-use crate::model::problem::{self, CreateNormalProblemData, NormalProblemDto, UpdateNormalProblemData};
+use crate::model::problem::{CreateNormalProblemData, NormalProblemDto, UpdateNormalProblemData};
 use domain::{
     model::problem::{CreateNormalProblem, UpdateNormalProblem},
     repository::{problem::ProblemRepository, session::SessionRepository},
@@ -83,8 +83,7 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
             return Err(ProblemError::Forbidden);
         }
 
-        self
-            .problem_repository
+        self.problem_repository
             .update_problem(
                 problem_id,
                 UpdateNormalProblem {

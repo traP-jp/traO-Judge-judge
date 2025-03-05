@@ -51,14 +51,10 @@ impl ProblemRepository for ProblemRepositoryImpl {
             e
         })?;
 
-
         Ok(())
     }
 
-    async fn create_problem(
-        &self,
-        create_problem: CreateNormalProblem,
-    ) -> anyhow::Result<i64> {
+    async fn create_problem(&self, create_problem: CreateNormalProblem) -> anyhow::Result<i64> {
         let problem_id = sqlx::query(
             "INSERT INTO normal_problems (author_id, title, statement, time_limit, memory_limit, difficulty, judgecode_path) VALUES (?, ?, ?, ?, ?, ?, ?)",
         )
