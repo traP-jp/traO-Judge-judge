@@ -1,7 +1,7 @@
 use crate::model::submission::{JudgeResultRow, SubmissionRow};
 use axum::async_trait;
 use domain::{
-    model::submisson::{JudgeResult, Submission},
+    model::submission::{JudgeResult, Submission},
     repository::submission::SubmissionRepository,
 };
 use sqlx::MySqlPool;

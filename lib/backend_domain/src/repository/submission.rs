@@ -1,6 +1,6 @@
 use axum::async_trait;
 
-use crate::model::submisson::{JudgeResult, Submission};
+use crate::model::submission::{JudgeResult, Submission};
 
 #[async_trait]
 pub trait SubmissionRepository {

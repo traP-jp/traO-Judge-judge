@@ -1,6 +1,6 @@
 use sqlx::types::chrono;
 
-use domain::model::submisson::{JudgeResult, Submission};
+use domain::model::submission::{JudgeResult, Submission};
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct SubmissionRow {

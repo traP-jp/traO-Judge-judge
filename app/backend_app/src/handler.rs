@@ -5,6 +5,7 @@ use axum::{
 };
 
 pub mod auth;
+pub mod editorials;
 pub mod submissions;
 pub mod users;
 
@@ -28,6 +29,8 @@ pub fn make_router(di_container: DiContainer) -> Router {
 
     let submission_router = Router::new().route("/:submissionId", get(submissions::get_submission));
 
+    let editorials_router =
+        Router::new().route("/editorials/:editorialId", get(editorials::get_editorial));
     Router::new()
         .nest("/", auth_router)
         .nest("/users", user_router)
