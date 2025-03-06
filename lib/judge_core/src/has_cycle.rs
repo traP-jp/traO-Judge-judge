@@ -7,7 +7,7 @@ pub struct Edge<Node: Clone> {
 pub fn has_cycle<Node: Eq + std::hash::Hash + Clone>(
     edges: Vec<Edge<Node>>,
 ) -> anyhow::Result<bool> {
-    let mut flag: anyhow::Result<bool> = Ok(false);
+    let mut flag: bool = false;
     let mut node_index: HashMap<Node, usize> = HashMap::new();
     let mut new_index: usize = 0;
     for edge in &edges {
@@ -48,11 +48,11 @@ pub fn has_cycle<Node: Eq + std::hash::Hash + Clone>(
             continue;
         }
         if dfs(start, &graph, &mut visiting, &mut visited) {
-            flag = Ok(true);
+            flag = true;
             break;
         }
     }
-    return flag;
+    return Ok(flag);
 }
 
 fn dfs(
