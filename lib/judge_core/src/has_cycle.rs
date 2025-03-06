@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-struct Edge<Node: Clone> {
+pub struct Edge<Node: Clone> {
     pub from: Node,
     pub to: Node,
 }
@@ -8,43 +8,42 @@ pub fn has_cycle<Node: Eq + std::hash::Hash + Clone>(
     edges: Vec<Edge<Node>>,
 ) -> anyhow::Result<bool> {
     let mut flag: anyhow::Result<bool> = Ok(false);
-    let edges_size = edges.len();
-    let mut NodeIndex: HashMap<Node, usize> = HashMap::new();
+    let mut node_index: HashMap<Node, usize> = HashMap::new();
     let mut new_index: usize = 0;
     for edge in &edges {
-        let From: Node = edge.from.clone();
-        let To: Node = edge.to.clone();
-        if NodeIndex.get(&From) == None {
-            NodeIndex.insert(From, new_index);
+        let from: Node = edge.from.clone();
+        let to: Node = edge.to.clone();
+        if node_index.get(&from) == None {
+            node_index.insert(from, new_index);
             new_index += 1;
         }
-        if NodeIndex.get(&To) == None {
-            NodeIndex.insert(To, new_index);
+        if node_index.get(&to) == None {
+            node_index.insert(to, new_index);
             new_index += 1;
         }
     }
     let mut graph: Vec<Vec<usize>> = vec![vec![]; new_index];
     for edge in &edges {
-        let From_clone: Node = edge.from.clone();
-        let Option_from: Option<&usize> = NodeIndex.get(&From_clone);
-        let mut index_from = match Option_from {
+        let from_clone: Node = edge.from.clone();
+        let option_from: Option<&usize> = node_index.get(&from_clone);
+        let index_from = match option_from {
             Some(n) => Ok(n),
             None => Err(anyhow::anyhow!("Node not found")),
         }?;
-        let From: usize = index_from.clone();
-        let To_clone: Node = edge.to.clone();
-        let Option_to: Option<&usize> = NodeIndex.get(&To_clone);
-        let mut index_to = match Option_to {
+        let from: usize = index_from.clone();
+        let to_clone: Node = edge.to.clone();
+        let option_to: Option<&usize> = node_index.get(&to_clone);
+        let index_to = match option_to {
             Some(n) => Ok(n),
             None => Err(anyhow::anyhow!("Node not found")),
         }?;
-        let To: usize = index_to.clone();
-        graph[From].push(To);
+        let to: usize = index_to.clone();
+        graph[from].push(to);
     }
-    let Node_size = new_index;
-    let mut visited: Vec<bool> = vec![false; Node_size];
-    let mut visiting: Vec<bool> = vec![false; Node_size];
-    for start in 0..Node_size {
+    let node_size = new_index;
+    let mut visited: Vec<bool> = vec![false; node_size];
+    let mut visiting: Vec<bool> = vec![false; node_size];
+    for start in 0..node_size {
         if visited[start] {
             continue;
         }
