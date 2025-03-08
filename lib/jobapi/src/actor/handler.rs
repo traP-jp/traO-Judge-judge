@@ -22,7 +22,7 @@ impl Handler<Execution> for InstanceSupervisor {
 }
 
 impl Handler<Dependency> for Instance {
-    type Result = Result<std::process::Output, job::ExecutionError>;
+    type Result = Result<(OutcomeToken, std::process::Output), job::ExecutionError>;
     fn handle(&mut self, msg: Dependency, ctx: &mut Self::Context) -> Self::Result {
         todo!()
     }

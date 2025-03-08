@@ -18,7 +18,7 @@ pub struct Execution {
 }
 
 #[derive(Message)]
-#[rtype("Result<std::process::Output, job::ExecutionError>")]
+#[rtype("Result<(OutcomeToken, std::process::Output), job::ExecutionError>")]
 pub struct Dependency {
     dependencies: Vec<job::Dependency<OutcomeToken>>,
 }
