@@ -2,9 +2,7 @@ use std::net::Ipv4Addr;
 
 use uuid::Uuid;
 
-pub struct AwsClient {
-    /* 適宜必要な情報を持たせてください． */
-}
+pub struct AwsClient {/* 適宜必要な情報を持たせてください． */}
 
 impl AwsClient {
     pub async fn new() -> Result<Self, anyhow::Error> {
