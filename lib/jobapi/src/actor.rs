@@ -5,7 +5,24 @@ use judge_core::*;
 pub mod handler;
 pub mod message;
 
-pub struct InstanceSupervisor;
+#[derive(Default)]
+pub struct InstanceSupervisor {
+    reservation_count: usize,
+    instance_addrs: Vec<Addr<Instance>>,
+}
+
+impl InstanceSupervisor {
+    pub fn calculate_desired_instance_count(&self) -> usize {
+        todo!()
+    }
+    pub fn get_target_instance_addr(&self) -> Addr<Instance> {
+        todo!()
+    }
+    pub fn drop_one_instance_addr(&mut self) {
+        todo!()
+    }
+}
+
 impl Actor for InstanceSupervisor {
     type Context = Context<Self>;
 }

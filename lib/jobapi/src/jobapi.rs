@@ -12,7 +12,7 @@ pub struct JobApi {
 
 impl JobApi {
     fn new() -> Self {
-        let instance_supervisor = InstanceSupervisor.start();
+        let instance_supervisor = InstanceSupervisor::default().start();
         let file_factory = FileFactory.start();
         Self {
             instance_supervisor,

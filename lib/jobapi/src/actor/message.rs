@@ -7,7 +7,7 @@ use crate::jobapi::{OutcomeToken, ReservationToken};
 #[derive(Debug, Message)]
 #[rtype("Result<Vec<ReservationToken>, job::ReservationError>")]
 pub struct Reservation {
-    count: usize,
+    pub count: usize,
 }
 
 impl Reservation {
@@ -19,8 +19,8 @@ impl Reservation {
 #[derive(Debug, Message)]
 #[rtype("Result<(OutcomeToken, std::process::Output), job::ExecutionError>")]
 pub struct Execution {
-    reservation: ReservationToken,
-    dependencies: Vec<job::Dependency<OutcomeToken>>,
+    pub reservation: ReservationToken,
+    pub dependencies: Vec<job::Dependency<OutcomeToken>>,
 }
 
 impl Execution {
@@ -39,6 +39,12 @@ impl Execution {
 #[rtype("Result<(OutcomeToken, std::process::Output), job::ExecutionError>")]
 pub struct Dependency {
     dependencies: Vec<job::Dependency<OutcomeToken>>,
+}
+
+impl Dependency {
+    pub fn new(dependencies: Vec<job::Dependency<OutcomeToken>>) -> Self {
+        Self { dependencies }
+    }
 }
 
 #[derive(Debug, Message)]
