@@ -10,7 +10,7 @@ trait AwsClient {
         &self,
         outcome_id: Uuid,
         file_conf: job::FileConf,
-    ) -> Result<(), anyhow::Error>;
+    ) -> Result<Uuid, anyhow::Error>;
     async fn push_outcome_to_instance_directory(
         &self,
         instance_id: Uuid,
