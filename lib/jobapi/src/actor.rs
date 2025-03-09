@@ -5,6 +5,8 @@ use judge_core::*;
 pub mod handler;
 pub mod message;
 
+const MAILBOX_CAPACITY: usize = usize::MAX;
+
 #[derive(Default)]
 pub struct InstanceSupervisor {
     reservation_count: usize,
@@ -25,6 +27,10 @@ impl InstanceSupervisor {
 
 impl Actor for InstanceSupervisor {
     type Context = Context<Self>;
+
+    fn started(&mut self, ctx: &mut Self::Context) {
+        ctx.set_mailbox_capacity(MAILBOX_CAPACITY);
+    }
 }
 
 pub struct Instance {
@@ -43,11 +49,14 @@ impl Instance {
 
 impl Actor for Instance {
     type Context = Context<Self>;
+
     fn started(&mut self, ctx: &mut Self::Context) {
+        ctx.set_mailbox_capacity(MAILBOX_CAPACITY);
         todo!("AWS インスタンス作成処理");
         todo!("self.instance_url 書き換え");
         todo!("exec の http サーバ起動待ち、定期的にポーリングする");
     }
+
     fn stopped(&mut self, ctx: &mut Self::Context) {
         todo!("AWS インスタンス削除処理")
     }
@@ -63,4 +72,8 @@ impl FileFactory {
 
 impl Actor for FileFactory {
     type Context = Context<Self>;
+
+    fn started(&mut self, ctx: &mut Self::Context) {
+        ctx.set_mailbox_capacity(MAILBOX_CAPACITY);
+    }
 }
