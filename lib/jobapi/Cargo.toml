@@ -14,3 +14,5 @@ futures = {workspace = true}
 chrono = {workspace = true}
 async-trait = {workspace = true}
 judge_core ={ path = "../judge_core" }
+
+actix = "0.13.5"
