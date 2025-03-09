@@ -50,7 +50,7 @@ impl Dependency {
 #[derive(Debug, Message)]
 #[rtype("Result<OutcomeToken, job::FilePlacementError>")]
 pub struct FilePlacement {
-    file_conf: job::FileConf,
+    pub file_conf: job::FileConf,
 }
 
 impl FilePlacement {

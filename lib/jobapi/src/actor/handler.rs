@@ -61,6 +61,17 @@ impl Handler<Dependency> for Instance {
 impl Handler<FilePlacement> for FileFactory {
     type Result = Result<OutcomeToken, job::FilePlacementError>;
     fn handle(&mut self, msg: FilePlacement, ctx: &mut Self::Context) -> Self::Result {
-        todo!()
+        match msg.file_conf {
+            job::FileConf::EmptyDirectory => {
+                todo!()
+            }
+            job::FileConf::Text(_) => {
+                todo!()
+            }
+            job::FileConf::RuntimeText(_) => {
+                todo!()
+            }
+        }
+        todo!("配置したファイル (OutcomeToken) 取得")
     }
 }

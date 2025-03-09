@@ -53,7 +53,14 @@ impl Actor for Instance {
     }
 }
 
-pub struct FileFactory;
+pub struct FileFactory {}
+
+impl FileFactory {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
 impl Actor for FileFactory {
     type Context = Context<Self>;
 }
