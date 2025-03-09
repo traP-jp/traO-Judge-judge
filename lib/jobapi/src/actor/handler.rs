@@ -17,7 +17,8 @@ impl Handler<Reservation> for InstanceSupervisor {
             })
             .collect();
         while self.instance_addrs.len() < self.calculate_desired_instance_count() {
-            let instance = Instance.start();
+            let instance_id = uuid::Uuid::now_v7();
+            let instance = Instance::new(instance_id).start();
             self.instance_addrs.push(instance);
         }
         Ok(result)
@@ -50,7 +51,10 @@ impl Handler<Execution> for InstanceSupervisor {
 impl Handler<Dependency> for Instance {
     type Result = Result<(OutcomeToken, std::process::Output), job::ExecutionError>;
     fn handle(&mut self, msg: Dependency, ctx: &mut Self::Context) -> Self::Result {
-        todo!()
+        todo!("OutcomeToken に対応するファイルを exec から見えるように配置");
+        todo!("exec に http リクエスト送信");
+        todo!("レスポンス (std::process::Output) 受信");
+        todo!("成果物 (OutcomeToken) 取得");
     }
 }
 

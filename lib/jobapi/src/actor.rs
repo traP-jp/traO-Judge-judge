@@ -27,9 +27,30 @@ impl Actor for InstanceSupervisor {
     type Context = Context<Self>;
 }
 
-pub struct Instance;
+pub struct Instance {
+    instance_id: uuid::Uuid,
+    instance_url: Option<std::net::Ipv4Addr>,
+}
+
+impl Instance {
+    pub fn new(instance_id: uuid::Uuid) -> Self {
+        Self {
+            instance_id,
+            instance_url: None,
+        }
+    }
+}
+
 impl Actor for Instance {
     type Context = Context<Self>;
+    fn started(&mut self, ctx: &mut Self::Context) {
+        todo!("AWS インスタンス作成処理");
+        todo!("self.instance_url 書き換え");
+        todo!("exec の http サーバ起動待ち、定期的にポーリングする");
+    }
+    fn stopped(&mut self, ctx: &mut Self::Context) {
+        todo!("AWS インスタンス削除処理")
+    }
 }
 
 pub struct FileFactory;
