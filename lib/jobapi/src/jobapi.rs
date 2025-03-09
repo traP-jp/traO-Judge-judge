@@ -1,12 +1,30 @@
 #![allow(unused)]
+use actix::prelude::*;
 use judge_core::model::*;
 
-#[derive(Clone)]
-pub struct JobApi {}
+use crate::actor::{message::*, FileFactory, InstanceSupervisor};
 
+#[derive(Debug, Clone)]
+pub struct JobApi {
+    instance_supervisor: Addr<InstanceSupervisor>,
+    file_factory: Addr<FileFactory>,
+}
+
+impl JobApi {
+    fn new() -> Self {
+        let instance_supervisor = InstanceSupervisor.start();
+        let file_factory = FileFactory.start();
+        Self {
+            instance_supervisor,
+            file_factory,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct ReservationToken {}
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct OutcomeToken {}
 
 #[axum::async_trait]
@@ -15,9 +33,10 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
         &self,
         count: usize,
     ) -> Result<Vec<ReservationToken>, job::ReservationError> {
-        Err(job::ReservationError::ReserveFailed(
-            "Failed to reserve execution".to_string(),
-        ))
+        self.instance_supervisor
+            .send(Reservation::new(count))
+            .await
+            .map_err(|e| job::ReservationError::ReserveFailed(format!("MailboxError: {e}")))?
     }
 
     async fn execute(
@@ -25,13 +44,19 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
         reservation: ReservationToken,
         dependencies: Vec<job::Dependency<OutcomeToken>>,
     ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError> {
-        todo!()
+        self.instance_supervisor
+            .send(Execution::new(reservation, dependencies))
+            .await
+            .map_err(|e| job::ExecutionError::InternalError(format!("MailboxError: {e}")))?
     }
 
     async fn place_file(
         &self,
         file_conf: job::FileConf,
     ) -> Result<OutcomeToken, job::FilePlacementError> {
-        todo!()
+        self.file_factory
+            .send(FilePlacement::new(file_conf))
+            .await
+            .map_err(|e| job::FilePlacementError::PlaceFailed((format!("MailboxError: {e}"))))?
     }
 }

@@ -4,27 +4,51 @@ use judge_core::model::*;
 
 use crate::jobapi::{OutcomeToken, ReservationToken};
 
-#[derive(Message)]
+#[derive(Debug, Message)]
 #[rtype("Result<Vec<ReservationToken>, job::ReservationError>")]
 pub struct Reservation {
     count: usize,
 }
 
-#[derive(Message)]
+impl Reservation {
+    pub fn new(count: usize) -> Self {
+        Self { count }
+    }
+}
+
+#[derive(Debug, Message)]
 #[rtype("Result<(OutcomeToken, std::process::Output), job::ExecutionError>")]
 pub struct Execution {
     reservation: ReservationToken,
     dependencies: Vec<job::Dependency<OutcomeToken>>,
 }
 
-#[derive(Message)]
+impl Execution {
+    pub fn new(
+        reservation: ReservationToken,
+        dependencies: Vec<job::Dependency<OutcomeToken>>,
+    ) -> Self {
+        Self {
+            reservation,
+            dependencies,
+        }
+    }
+}
+
+#[derive(Debug, Message)]
 #[rtype("Result<(OutcomeToken, std::process::Output), job::ExecutionError>")]
 pub struct Dependency {
     dependencies: Vec<job::Dependency<OutcomeToken>>,
 }
 
-#[derive(Message)]
+#[derive(Debug, Message)]
 #[rtype("Result<OutcomeToken, job::FilePlacementError>")]
 pub struct FilePlacement {
     file_conf: job::FileConf,
+}
+
+impl FilePlacement {
+    pub fn new(file_conf: job::FileConf) -> Self {
+        Self { file_conf }
+    }
 }
