@@ -12,4 +12,5 @@ anyhow = {workspace = true}
 thiserror = {workspace = true}
 futures = {workspace = true}
 chrono = {workspace = true}
+async-trait = {workspace = true}
 judge_core ={ path = "../judge_core" }

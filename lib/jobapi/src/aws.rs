@@ -1,9 +1,11 @@
 use std::net::Ipv4Addr;
 
+use async_trait::async_trait;
 use judge_core::job;
 use uuid::Uuid;
 
-trait AwsClient {
+#[async_trait]
+pub trait AwsClient {
     async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error>;
     async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error>;
     async fn place_file(
