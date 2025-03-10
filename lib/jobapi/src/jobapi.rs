@@ -1,6 +1,7 @@
 #![allow(unused)]
 use actix::prelude::*;
 use judge_core::model::*;
+use uuid::Uuid;
 
 use crate::actor::{message::*, FileFactory, InstanceSupervisor};
 
@@ -25,7 +26,22 @@ impl JobApi {
 pub struct ReservationToken {}
 
 #[derive(Debug, Clone)]
-pub struct OutcomeToken {}
+pub struct OutcomeToken {
+    outcome_id: uuid::Uuid,
+}
+
+impl OutcomeToken {
+    pub fn from_file_conf(file_conf: job::FileConf) -> Result<Self, job::FilePlacementError> {
+        let outcome_id = Uuid::now_v7();
+        todo!("AwsClient の place_file 呼び出し、outcome_id ディレクトリ作ってそこにファイル配置");
+        Ok(Self { outcome_id })
+    }
+    pub fn from_instance_id(instance_id: Uuid) -> Result<Self, job::FilePlacementError> {
+        let outcome_id = Uuid::now_v7();
+        todo!("AwsClient の pull_outcome_from_instance_id_directory 呼び出し、outcome_id ディレクトリ作ってそこに instance_id ディレクトリの中身コピー");
+        Ok(Self { outcome_id })
+    }
+}
 
 #[axum::async_trait]
 impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {

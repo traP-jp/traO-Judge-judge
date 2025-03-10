@@ -51,27 +51,20 @@ impl Handler<Execution> for InstanceSupervisor {
 impl Handler<Dependency> for Instance {
     type Result = Result<(OutcomeToken, std::process::Output), job::ExecutionError>;
     fn handle(&mut self, msg: Dependency, ctx: &mut Self::Context) -> Self::Result {
-        todo!("OutcomeToken に対応するファイルを exec から見えるように配置");
+        for dependency in msg.dependencies {
+            todo!("AwsClient の push_outcome_to_instance_directory 呼び出し、outcome_id ディレクトリの中身を instance_id ディレクトリにコピー");
+        }
         todo!("exec に http リクエスト送信");
-        todo!("レスポンス (std::process::Output) 受信");
-        todo!("成果物 (OutcomeToken) 取得");
+        todo!("受信して output に代入");
+        let outcome_token = OutcomeToken::from_instance_id(self.instance_id)
+            .map_err(|e| job::ExecutionError::InternalError(format!("FilePlacementError: {e}")))?;
+        todo!("Ok((outcome_token, output)) を返す")
     }
 }
 
 impl Handler<FilePlacement> for FileFactory {
     type Result = Result<OutcomeToken, job::FilePlacementError>;
     fn handle(&mut self, msg: FilePlacement, ctx: &mut Self::Context) -> Self::Result {
-        match msg.file_conf {
-            job::FileConf::EmptyDirectory => {
-                todo!()
-            }
-            job::FileConf::Text(_) => {
-                todo!()
-            }
-            job::FileConf::RuntimeText(_) => {
-                todo!()
-            }
-        }
-        todo!("配置したファイル (OutcomeToken) 取得")
+        OutcomeToken::from_file_conf(msg.file_conf)
     }
 }

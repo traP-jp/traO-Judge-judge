@@ -15,13 +15,13 @@ pub struct InstanceSupervisor {
 
 impl InstanceSupervisor {
     pub fn calculate_desired_instance_count(&self) -> usize {
-        todo!()
+        todo!("self.reservation_count から適切なインスタンス数 (0~15) を決定し、返す")
     }
     pub fn get_target_instance_addr(&self) -> Addr<Instance> {
-        todo!()
+        todo!("self.instance_addrs から実行を行うインスタンスを決定し、返す")
     }
     pub fn drop_one_instance_addr(&mut self) {
-        todo!()
+        todo!("self.instance_addrs から削除するインスタンスを決定し、drop する")
     }
 }
 
@@ -52,13 +52,13 @@ impl Actor for Instance {
 
     fn started(&mut self, ctx: &mut Self::Context) {
         ctx.set_mailbox_capacity(MAILBOX_CAPACITY);
-        todo!("AWS インスタンス作成処理");
+        todo!("AwsClient の create_instance 呼び出し");
         todo!("self.instance_url 書き換え");
-        todo!("exec の http サーバ起動待ち、定期的にポーリングする");
+        todo!("exec の http サーバ起動待ち、定期的にポーリングして反応あったら終了");
     }
 
     fn stopped(&mut self, ctx: &mut Self::Context) {
-        todo!("AWS インスタンス削除処理")
+        todo!("AwsClient の terminate_instance 呼び出し");
     }
 }
 
