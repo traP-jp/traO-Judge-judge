@@ -15,3 +15,4 @@ chrono = {workspace = true}
 judge_core ={ path = "../judge_core" }
 
 actix = "0.13.5"
+async-trait = "0.1.87"
