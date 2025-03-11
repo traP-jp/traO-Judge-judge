@@ -8,7 +8,7 @@ name = "traopy"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pyo3 = { workspace = true, features = ["experimental-async"] }
+pyo3 = { workspace = true, features = ["experimental-async", "abi3-py312"] }
 pyo3-stub-gen = { workspace = true }
 uuid = { workspace = true }
 serde = { workspace = true }
@@ -19,5 +19,5 @@ local_jobapi = { path = "../../lib/local_jobapi" }
 local_problem_registry = { path = "../../lib/local_problem_registry" }
 
 [features]
-abi3 = ["pyo3/abi3-py37", "generate-import-lib"]
+abi3 = ["pyo3/abi3-py312", "generate-import-lib"]
 generate-import-lib = ["pyo3/generate-import-lib"]
