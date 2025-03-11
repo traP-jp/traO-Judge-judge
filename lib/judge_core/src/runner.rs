@@ -11,7 +11,7 @@ pub struct Runner<
 > {
     job_api: JobApiType,
     outcomes: Arc<Mutex<HashMap<RuntimeId, OutcomeToken>>>,
-    outputs: Arc<Mutex<HashMap<RuntimeId, judge_output::ExecutionResponse>>>,
+    outputs: Arc<Mutex<HashMap<RuntimeId, judge_output::ExecutionJobResult>>>,
     exec_confs: Arc<Mutex<HashMap<RuntimeId, (ReservationToken, Vec<runtime::DependsOn>)>>>,
     file_confs: HashMap<RuntimeId, job::FileConf>,
 }
@@ -34,7 +34,7 @@ impl<
         })
     }
 
-    pub async fn run(self) -> anyhow::Result<HashMap<RuntimeId, judge_output::ExecutionResponse>> {
+    pub async fn run(self) -> anyhow::Result<HashMap<RuntimeId, judge_output::ExecutionJobResult>> {
         {
             let first_futures = {
                 let mut first_futures = Vec::new();
@@ -58,7 +58,7 @@ impl<
                 outputs
                     .insert(
                         runtime_id.clone(),
-                        judge_output::ExecutionResponse::EarlyExit,
+                        judge_output::ExecutionJobResult::EarlyExit,
                     )
                     .context("Failed to insert early exit")?;
             }
@@ -135,9 +135,17 @@ impl<
             .execute(reservation, dependencies)
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
-        let report = judge_output::parse(&output)
+        let result = judge_output::parse(&output)
             .context(format!("Failed to parse output for {}", runtime_id))?;
-        if report.continue_status == judge_output::ContinueStatus::Continue {
+        if match &result {
+            judge_output::ExecutionResult::Displayable(result_inner) => {
+                result_inner.continue_status.clone()
+            }
+            judge_output::ExecutionResult::Hidden(result_inner) => {
+                result_inner.continue_status.clone()
+            }
+        } == judge_output::ContinueStatus::Continue
+        {
             let outcomes = self.new_outcome(runtime_id, outcome_token).await;
             self.run_next(&outcomes)
                 .await
@@ -145,7 +153,10 @@ impl<
         }
         {
             let mut outputs = self.outputs.lock().await;
-            outputs.insert(runtime_id, judge_output::ExecutionResponse::Report(report));
+            outputs.insert(
+                runtime_id,
+                judge_output::ExecutionJobResult::ExecutionResult(result),
+            );
             std::mem::drop(outputs);
         }
         Ok(())

@@ -24,27 +24,29 @@ pub struct DisplayableExecutionResult {
     pub memory: f64,
     pub score: i64,
     pub message: Option<String>,
+    pub continue_status: ContinueStatus,
 }
 
-/// This returns from exec container as stdout
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HiddenExecutionResult {
+    pub continue_status: ContinueStatus,
+}
+
+/// ExecutionResult will be returned from exec container as stdout
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ExecutionResult {
     /// Frontend-displayable execution result
     Displayable(DisplayableExecutionResult),
     /// Not displayed to frontend (e.g. for validation)
-    Hidden,
+    Hidden(HiddenExecutionResult),
 }
 
+/// ExecutionJobResult is the return value of judge-control
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExecutionReport {
-    pub result: ExecutionResult,
-    pub continue_status: ContinueStatus,
-}
-
-/// This is the final response from judge
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ExecutionResponse {
-    Report(ExecutionReport),
+pub enum ExecutionJobResult {
+    /// Execution result
+    ExecutionResult(ExecutionResult),
+    /// Early exit
     EarlyExit,
 }
 
@@ -56,13 +58,13 @@ pub enum ExecutionOutputParseError {
     NonZeroExitCode,
 }
 
-pub fn parse(output: &std::process::Output) -> Result<ExecutionReport, ExecutionOutputParseError> {
+pub fn parse(output: &std::process::Output) -> Result<ExecutionResult, ExecutionOutputParseError> {
     let stdout = String::from_utf8(output.stdout.clone())
         .map_err(|e| ExecutionOutputParseError::InvalidJson(e.to_string()))?;
     if !output.status.success() {
         return Err(ExecutionOutputParseError::NonZeroExitCode);
     }
-    let execution_report: ExecutionReport = serde_json::from_str(&stdout)
+    let execution_result: ExecutionResult = serde_json::from_str(&stdout)
         .map_err(|e| ExecutionOutputParseError::InvalidJson(e.to_string()))?;
-    Ok(execution_report)
+    Ok(execution_result)
 }
