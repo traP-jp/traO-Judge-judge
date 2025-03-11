@@ -23,11 +23,9 @@ pub trait ProblemRegistryServer {
 }
 
 /// ProblemRegistryClient fetches contents of problems from the registry in judge server.
-pub trait ProblemRegistryClient: Clone {
-    fn fetch(
-        &self,
-        resource_id: ResourceId,
-    ) -> impl Future<Output = Result<String, ResourceFetchError>>;
+#[axum::async_trait]
+pub trait ProblemRegistryClient: Clone + Send + Sync {
+    async fn fetch(&self, resource_id: ResourceId) -> Result<String, ResourceFetchError>;
 }
 
 #[derive(Debug, Clone, thiserror::Error)]

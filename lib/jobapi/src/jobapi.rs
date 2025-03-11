@@ -9,12 +9,15 @@ pub struct ReservationToken {}
 #[derive(Clone)]
 pub struct OutcomeToken {}
 
+#[axum::async_trait]
 impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
     async fn reserve_execution(
         &self,
         count: usize,
     ) -> Result<Vec<ReservationToken>, job::ReservationError> {
-        todo!()
+        Err(job::ReservationError::ReserveFailed(
+            "Failed to reserve execution".to_string(),
+        ))
     }
 
     async fn execute(

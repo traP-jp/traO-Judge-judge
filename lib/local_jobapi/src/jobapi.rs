@@ -25,7 +25,8 @@ impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient> JobApi<Prob
     }
 }
 
-impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient + Clone>
+#[axum::async_trait]
+impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient>
     job::JobApi<RegistrationToken, OutcomeToken> for JobApi<ProblemRegistryClient>
 {
     async fn reserve_execution(
