@@ -1,7 +1,17 @@
-use std::net::Ipv4Addr;
-
+use anyhow::anyhow;
 use async_trait::async_trait;
+use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_ec2::types::{InstanceType, Placement, Tag};
+use aws_sdk_ec2::Client;
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use judge_core::job;
+use std::collections::HashMap;
+use std::env;
+use std::net::Ipv4Addr;
+use std::ops::Add;
+use std::str::FromStr;
+use std::time::Duration;
 use uuid::Uuid;
 
 #[async_trait]
@@ -25,4 +35,219 @@ pub trait AwsClient {
     ) -> Result<(), anyhow::Error>;
     async fn clear_instance_directory(&self, instance_id: Uuid) -> Result<(), anyhow::Error>;
     async fn remove_outcome_directory(&self, outcome_id: Uuid) -> Result<(), anyhow::Error>;
+}
+
+pub struct AwsClientType {
+    client: Client,
+    aws_instance_id: HashMap<Uuid, String>,
+}
+
+impl AwsClientType {
+    pub async fn new() -> Self {
+        let region_provider = RegionProviderChain::default_provider().or_else("us-west-2");
+        let config = aws_config::from_env().region(region_provider).load().await;
+        let client = Client::new(&config);
+        Self {
+            client,
+            aws_instance_id: HashMap::new(),
+        }
+    }
+
+    async fn get_ipv4_address(&self, aws_instance_id: &str) -> Result<Ipv4Addr, anyhow::Error> {
+        let describe_instances = self
+            .client
+            .describe_instances()
+            .instance_ids(aws_instance_id)
+            .send()
+            .await
+            .expect("Failed to describe instance");
+        if describe_instances.reservations().is_empty() {
+            return Err(anyhow!("Failed to describe instance"));
+        }
+
+        let public_ip = describe_instances.reservations()[0].instances()[0]
+            .public_ip_address()
+            .expect("Failed to get public IP address");
+        Ok(Ipv4Addr::from_str(public_ip).expect("Failed to parse IP address"))
+    }
+}
+
+#[async_trait]
+impl AwsClient for AwsClientType {
+    async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error> {
+        let security_group_id =
+            env::var("SECURITY_GROUP_ID").expect("SECURITY_GROUP_ID is not set");
+
+        let read_file_base64 = |file_path: &str| {
+            let file = std::fs::read(file_path).expect("Failed to read file");
+            Ok::<String, anyhow::Error>(BASE64_STANDARD.encode(file).to_string())
+        };
+
+        let created_instance = self
+            .client
+            .run_instances()
+            .image_id(
+                "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
+            )
+            .instance_type(InstanceType::C6iLarge)
+            .set_security_group_ids(Some(vec![security_group_id]))
+            .user_data(read_file_base64("assets/user_data.sh").expect("Failed to read user data"))
+            .min_count(1)
+            .max_count(1)
+            .set_placement(Some(
+                Placement::builder().availability_zone("us-west-2a").build(),
+            ))
+            .send()
+            .await
+            .expect("Failed to create instance");
+        if created_instance.instances().is_empty() {
+            return Err(anyhow!("Failed to create instance"));
+        }
+
+        let aws_instance_id = created_instance.instances()[0]
+            .instance_id()
+            .expect("Failed to get instance ID");
+        self.client
+            .create_tags()
+            .resources(aws_instance_id)
+            .tags(
+                Tag::builder()
+                    .key("Name")
+                    .value("From SDK Examples")
+                    .build(),
+            )
+            .send()
+            .await
+            .or_else(|err| {
+                println!("Error applying tags to {aws_instance_id}: {err:?}");
+                return Err(anyhow!(err));
+            })?;
+
+        println!("Created {aws_instance_id} and applied tags.");
+
+        println!("Instance is created.");
+
+        println!("Waiting for instance to be ready...");
+
+        let ip_address = {
+            let ip_address = self.get_ipv4_address(aws_instance_id).await;
+            if ip_address.is_err() {
+                self.terminate_instance(instance_id).await?;
+                return Err(anyhow!("Failed to get IP"));
+            }
+            ip_address.unwrap()
+        };
+
+        println!("Public IP: {}", ip_address);
+
+        {
+            let mut try_count = 0;
+            let start_time = std::time::Instant::now();
+            loop {
+                // 5分以上経過したらタイムアウト
+                if std::time::Instant::now() > start_time.add(Duration::from_secs(300)) {
+                    self.terminate_instance(instance_id).await?;
+                    return Err(anyhow!("Instance is not ready"));
+                }
+                try_count += 1;
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                println!("try = {}, Checking if instance is ready...", try_count);
+                match reqwest::get(&format!("http://{}/", ip_address)).await {
+                    Ok(response) => {
+                        if response.status().is_success() {
+                            println!("try = {}, Instance is ready.", try_count);
+                            break;
+                        } else {
+                            println!("try = {}, Instance is ready, but request failed", try_count);
+                        }
+                    }
+                    Err(_) => {
+                        println!("try = {}, Instance is not ready.", try_count);
+                    }
+                }
+            }
+        }
+
+        println!("Instance is ready.");
+        println!("Attaching volume...");
+
+        // ボリュームをアタッチ
+
+        let volume_id = {
+            let volume_id = env::var("VOLUME_ID");
+            if volume_id.is_err() {
+                self.terminate_instance(instance_id).await?;
+                return Err(anyhow!("VOLUME_ID is not set"));
+            }
+            volume_id.unwrap()
+        };
+
+        {
+            let response = self
+                .client
+                .attach_volume()
+                .device("/dev/sdb")
+                .instance_id(aws_instance_id)
+                .volume_id(volume_id)
+                .send()
+                .await;
+            if response.is_err() {
+                self.terminate_instance(instance_id).await?;
+                return Err(anyhow!(
+                    "Failed to attach volume: {}",
+                    response.err().unwrap()
+                ));
+            }
+        }
+
+        println!("Volume is attached.");
+
+        Ok(ip_address)
+    }
+    async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error> {
+        let response = self
+            .client
+            .terminate_instances()
+            .instance_ids(
+                self.aws_instance_id
+                    .get(&instance_id)
+                    .expect("Failed to get instance ID from instance ID")
+                    .clone(),
+            )
+            .send()
+            .await
+            .expect("Failed to terminate instance");
+        if response.terminating_instances().is_empty() {
+            return Err(anyhow!("Failed to terminate instance"));
+        }
+        Ok(())
+    }
+    async fn place_file(
+        &self,
+        outcome_id: Uuid,
+        file_conf: job::FileConf,
+    ) -> Result<Uuid, anyhow::Error> {
+        /* S3 からファイル取ってくるパートやってほしい */
+        todo!()
+    }
+    async fn push_outcome_to_instance_directory(
+        &self,
+        instance_id: Uuid,
+        outcome_id: Uuid,
+    ) -> Result<(), anyhow::Error> {
+        todo!()
+    }
+    async fn pull_outcome_from_instance_directory(
+        &self,
+        instance_id: Uuid,
+        outcome_id: Uuid,
+    ) -> Result<(), anyhow::Error> {
+        todo!()
+    }
+    async fn clear_instance_directory(&self, instance_id: Uuid) -> Result<(), anyhow::Error> {
+        todo!()
+    }
+    async fn remove_outcome_directory(&self, outcome_id: Uuid) -> Result<(), anyhow::Error> {
+        todo!()
+    }
 }
