@@ -214,7 +214,6 @@ mod signup_request_tests {
         std::env::set_var("JWT_SECRET_KEY", "secret_test");
     }
 
-
     #[rstest]
     #[case::valid_data("test@example.com", Ok(()))]
     #[case::valid_data("x!&x@example.com", Ok(()))]
@@ -290,7 +289,6 @@ mod signup_tests {
     fn setup_env() -> () {
         std::env::set_var("JWT_SECRET_KEY", "secret_test");
     }
-
 
     fn create_signup_data(user_name: &str, password: &str, email: &str) -> SignUpData {
         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
@@ -648,9 +646,11 @@ mod reset_password_tests {
 
     use super::*;
     use domain::{
-        external::mail::MockMailClient, model::user::{User, UserId, UserRole}, repository::{
+        external::mail::MockMailClient,
+        model::user::{User, UserId, UserRole},
+        repository::{
             auth::MockAuthRepository, session::MockSessionRepository, user::MockUserRepository,
-        }
+        },
     };
     use rstest::*;
     use sqlx::types::chrono;
@@ -664,7 +664,8 @@ mod reset_password_tests {
         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
         ResetPasswordData {
             password: password.to_string(),
-            token: EmailToken::encode_email_reset_password_jwt(email, encode_key.to_string()).unwrap(),
+            token: EmailToken::encode_email_reset_password_jwt(email, encode_key.to_string())
+                .unwrap(),
         }
     }
 
@@ -702,8 +703,12 @@ mod reset_password_tests {
         let session_mock = MockSessionRepository::new();
         let mail_mock = MockMailClient::new();
 
-        user_mock.expect_get_user_by_email().returning(|_| Ok(Some(get_user())));
-        auth_mock.expect_update_user_password().returning(|_, _| Ok(()));
+        user_mock
+            .expect_get_user_by_email()
+            .returning(|_| Ok(Some(get_user())));
+        auth_mock
+            .expect_update_user_password()
+            .returning(|_, _| Ok(()));
 
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.reset_password(reset_data).await;
@@ -715,5 +720,4 @@ mod reset_password_tests {
 
         Ok(())
     }
-
 }
