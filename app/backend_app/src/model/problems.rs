@@ -1,6 +1,6 @@
 use async_session::chrono;
 use serde::{Deserialize, Serialize};
-use usecase::model::problem::NormalProblemDto;
+use usecase::model::problem::{NormalProblemDto, NormalProblemsDto};
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -38,6 +38,22 @@ impl From<NormalProblemDto> for ProblemResponse {
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ProblemResponses {
+    pub total: i64,
+    pub problems: Vec<ProblemResponse>,
+}
+
+impl From<NormalProblemsDto> for ProblemResponses {
+    fn from(problems: NormalProblemsDto) -> Self {
+        ProblemResponses {
+            total: problems.total,
+            problems: problems.problems.into_iter().map(|p| p.into()).collect(),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateNormalProblem {
     pub title: Option<String>,
     pub statement: Option<String>,
@@ -55,4 +71,24 @@ pub struct CreateNormalProblem {
     pub time_limit: i32,
     pub memory_limit: i32,
     pub difficulty: i32,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ProblemOrderBy {
+    CreatedAtAsc,
+    CreatedAtDesc,
+    UpdatedAtAsc,
+    UpdatedAtDesc,
+    DifficultyAsc,
+    DifficultyDesc,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProblemGetQuery {
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+    pub order_by: Option<ProblemOrderBy>,
+    pub user_id: Option<i64>,
 }

@@ -1,10 +1,12 @@
 use crate::model::problem::NormalProblemRow;
 use axum::async_trait;
 use domain::{
-    model::problem::{CreateNormalProblem, NormalProblem, UpdateNormalProblem},
+    model::problem::{
+        CreateNormalProblem, NormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem,
+    },
     repository::problem::ProblemRepository,
 };
-use sqlx::MySqlPool;
+use sqlx::{MySqlPool, QueryBuilder};
 
 #[derive(Clone)]
 pub struct ProblemRepositoryImpl {
@@ -27,6 +29,58 @@ impl ProblemRepository for ProblemRepositoryImpl {
                 .await?;
 
         Ok(problem.map(|problem| problem.into()))
+    }
+
+    async fn get_problems_by_query(
+        &self,
+        query: ProblemGetQuery,
+    ) -> anyhow::Result<Vec<NormalProblem>> {
+        let mut query_builder = QueryBuilder::new("SELECT * FROM normal_problems WHERE");
+
+        query_builder.push(" (is_public = TRUE");
+        if let Some(user_id) = query.user_id {
+            query_builder.push(" OR author_id = ").push_bind(user_id);
+        }
+        query_builder.push(")");
+
+        if let Some(user_query) = query.user_query {
+            query_builder
+                .push(" AND author_id = ")
+                .push_bind(user_query);
+        }
+
+        query_builder.push(" ORDER BY ");
+
+        match query.order_by {
+            ProblemOrderBy::CreatedAtAsc => {
+                query_builder.push("created_at ASC");
+            }
+            ProblemOrderBy::CreatedAtDesc => {
+                query_builder.push("created_at DESC");
+            }
+            ProblemOrderBy::UpdatedAtAsc => {
+                query_builder.push("updated_at ASC");
+            }
+            ProblemOrderBy::UpdatedAtDesc => {
+                query_builder.push("updated_at DESC");
+            }
+            ProblemOrderBy::DifficultyAsc => {
+                query_builder.push("difficulty ASC");
+            }
+            ProblemOrderBy::DifficultyDesc => {
+                query_builder.push("difficulty DESC");
+            }
+        }
+
+        query_builder.push(" LIMIT ").push_bind(query.limit);
+        query_builder.push(" OFFSET ").push_bind(query.offset);
+
+        let problems = query_builder
+            .build_query_as::<NormalProblemRow>()
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(problems.into_iter().map(|problem| problem.into()).collect())
     }
 
     async fn update_problem(

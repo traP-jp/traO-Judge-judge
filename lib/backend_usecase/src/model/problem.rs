@@ -20,6 +20,22 @@ pub struct CreateNormalProblemData {
     // pub judgecode_path: String,
 }
 
+pub enum ProblemOrderByData {
+    CreatedAtAsc,
+    CreatedAtDesc,
+    UpdatedAtAsc,
+    UpdatedAtDesc,
+    DifficultyAsc,
+    DifficultyDesc,
+}
+
+pub struct ProblemGetQueryData {
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+    pub order_by: ProblemOrderByData,
+    pub user_query: Option<i64>,
+}
+
 #[derive(Debug)]
 pub struct NormalProblemDto {
     pub id: i64,
@@ -34,6 +50,11 @@ pub struct NormalProblemDto {
     pub judgecode_path: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+pub struct NormalProblemsDto {
+    pub total: i64,
+    pub problems: Vec<NormalProblemDto>,
 }
 
 impl From<NormalProblem> for NormalProblemDto {

@@ -1,6 +1,9 @@
-use crate::model::problem::{CreateNormalProblemData, NormalProblemDto, UpdateNormalProblemData};
+use crate::model::problem::{
+    CreateNormalProblemData, NormalProblemDto, NormalProblemsDto, ProblemGetQueryData,
+    ProblemOrderByData, UpdateNormalProblemData,
+};
 use domain::{
-    model::problem::{CreateNormalProblem, UpdateNormalProblem},
+    model::problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem},
     repository::{problem::ProblemRepository, session::SessionRepository},
 };
 
@@ -57,6 +60,45 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
         }
 
         Ok(problem.into())
+    }
+
+    pub async fn get_problems_by_query(
+        &self,
+        session_id: Option<String>,
+        query: ProblemGetQueryData,
+    ) -> anyhow::Result<NormalProblemsDto, ProblemError> {
+        let display_id = match session_id {
+            Some(session_id) => self
+                .session_repository
+                .get_display_id_by_session_id(&session_id)
+                .await
+                .map_err(|_| ProblemError::InternalServerError)?,
+            None => None,
+        };
+
+        let problems = self
+            .problem_repository
+            .get_problems_by_query(ProblemGetQuery {
+                user_id: display_id,
+                user_query: query.user_query,
+                limit: query.limit.unwrap_or(1000),
+                offset: query.offset.unwrap_or(0),
+                order_by: match query.order_by {
+                    ProblemOrderByData::CreatedAtAsc => ProblemOrderBy::CreatedAtAsc,
+                    ProblemOrderByData::CreatedAtDesc => ProblemOrderBy::CreatedAtDesc,
+                    ProblemOrderByData::UpdatedAtAsc => ProblemOrderBy::UpdatedAtAsc,
+                    ProblemOrderByData::UpdatedAtDesc => ProblemOrderBy::UpdatedAtDesc,
+                    ProblemOrderByData::DifficultyAsc => ProblemOrderBy::DifficultyAsc,
+                    ProblemOrderByData::DifficultyDesc => ProblemOrderBy::DifficultyDesc,
+                },
+            })
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?;
+
+        Ok(NormalProblemsDto {
+            total: problems.len() as i64,
+            problems: problems.into_iter().map(|p| p.into()).collect(),
+        })
     }
 
     pub async fn update_problem(
