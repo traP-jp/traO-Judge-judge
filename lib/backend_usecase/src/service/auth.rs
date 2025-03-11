@@ -209,6 +209,11 @@ mod signup_request_tests {
         },
     };
     use rstest::*;
+    #[fixture]
+    fn setup_env() -> () {
+        std::env::set_var("JWT_SECRET_KEY", "secret_test");
+    }
+
 
     #[rstest]
     #[case::valid_data("test@example.com", Ok(()))]
@@ -218,6 +223,7 @@ mod signup_request_tests {
     #[case::invalid_email("test.example.com", Err(AuthError::ValidateError))]
 
     async fn signup_request(
+        _setup_env: (),
         #[case] email: String,
         #[case] result: Result<(), AuthError>,
     ) -> anyhow::Result<()> {
@@ -280,6 +286,11 @@ mod signup_tests {
     };
     use rstest::*;
     use uuid::Uuid;
+    #[fixture]
+    fn setup_env() -> () {
+        std::env::set_var("JWT_SECRET_KEY", "secret_test");
+    }
+
 
     fn create_signup_data(user_name: &str, password: &str, email: &str) -> SignUpData {
         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
@@ -299,6 +310,7 @@ mod signup_tests {
     #[case::invalid_username(("_Alice", "Aa123456", "test@example.com"), Err(AuthError::ValidateError))]
     #[case::invalid_username(("test/Test", "Aa123456", "test@example.com"), Err(AuthError::ValidateError))]
     async fn signup(
+        _setup_env: (),
         #[case] data: (&str, &str, &str),
         #[case] result: Result<(), AuthError>,
     ) -> anyhow::Result<()> {
@@ -336,6 +348,7 @@ mod signup_tests {
     #[case::invalid_username(("_Alice", "Aa123456", "test@example.com"), Err(AuthError::ValidateError))]
     #[case::invalid_username(("test/Test", "Aa123456", "test@example.com"), Err(AuthError::ValidateError))]
     async fn signup_exist_user(
+        _setup_env: (),
         #[case] data: (&str, &str, &str),
         #[case] result: Result<(), AuthError>,
     ) -> anyhow::Result<()> {
@@ -569,6 +582,10 @@ mod reset_password_request_tests {
         },
     };
     use rstest::*;
+    #[fixture]
+    fn setup_env() -> () {
+        std::env::set_var("JWT_SECRET_KEY", "secret_test");
+    }
 
     #[rstest]
     #[case::valid_data("test@example.com", Ok(()))]
@@ -576,6 +593,7 @@ mod reset_password_request_tests {
     #[case::invalid_email("test+-.._1@example.com", Err(AuthError::ValidateError))]
     #[case::invalid_email("test.example.com", Err(AuthError::ValidateError))]
     async fn reset_password_request(
+        _setup_env: (),
         #[case] email: &str,
         #[case] result: Result<(), AuthError>,
     ) -> anyhow::Result<()> {
@@ -585,7 +603,7 @@ mod reset_password_request_tests {
         let mut mail_mock = MockMailClient::new();
 
         mail_mock.expect_send_mail().returning(|_, _, _| Ok(()));
-        user_mock.expect_is_exist_email().returning(|_| Ok(false));
+        user_mock.expect_is_exist_email().returning(|_| Ok(true));
 
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.reset_password_request(email.to_string()).await;
@@ -611,7 +629,7 @@ mod reset_password_request_tests {
         let mut mail_mock = MockMailClient::new();
 
         mail_mock.expect_send_mail().returning(|_, _, _| Ok(()));
-        user_mock.expect_is_exist_email().returning(|_| Ok(true));
+        user_mock.expect_is_exist_email().returning(|_| Ok(false));
 
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.reset_password_request(email.to_string()).await;
@@ -637,6 +655,10 @@ mod reset_password_tests {
     use rstest::*;
     use sqlx::types::chrono;
     use uuid::Uuid;
+    #[fixture]
+    fn setup_env() -> () {
+        std::env::set_var("JWT_SECRET_KEY", "secret_test");
+    }
 
     fn create_reset_password_data(email: &str, password: &str) -> ResetPasswordData {
         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
@@ -669,6 +691,7 @@ mod reset_password_tests {
     #[case::invalid_password(("test@sample.com", "Aa12345"), Err(AuthError::ValidateError))]
     #[case::invalid_password(("t@t", "aa123456"), Err(AuthError::ValidateError))]
     async fn reset_password_request(
+        _setup_env: (),
         #[case] data: (&str, &str),
         #[case] result: Result<(), AuthError>,
     ) -> anyhow::Result<()> {
