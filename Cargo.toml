@@ -32,6 +32,9 @@ lettre = "0.11.7"
 fancy-regex = "0.14.0"
 aws-sdk-s3 = {version="1.68.0", features = ["behavior-version-latest"] }
 aws-config = {version="1.5.13", features = ["behavior-version-latest"] }
+mockall = "0.13.1"
+rstest = "0.25.0"
+async-std = { version = "1.13", features = ["attributes"] }
 
 [workspace]
 members = [
