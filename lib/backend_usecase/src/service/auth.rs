@@ -441,6 +441,8 @@ mod login_tests {
         assert_eq!(resp.is_err(), result.is_err());
         if resp.is_err() {
             assert_eq!(resp.err(), result.err());
+        } else {
+            assert_eq!(resp.ok(), result.ok());
         }
 
         Ok(())
