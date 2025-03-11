@@ -8,6 +8,7 @@ pub struct RegistryServer {
     pub(crate) dep_id_to_name: Arc<Mutex<HashMap<identifiers::DepId, String>>>,
 }
 
+#[axum::async_trait]
 impl ProblemRegistryServer for RegistryServer {
     async fn register(
         &self,

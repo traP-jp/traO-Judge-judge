@@ -2,24 +2,21 @@ use crate::{
     identifiers::{DepId, ResourceId},
     procedure::*,
 };
-use futures::Future;
 
 /// ProblemRegistryServer uploads contents of problems to the registry in webservice-backend server.
+#[axum::async_trait]
 pub trait ProblemRegistryServer {
     // Memo: use crate::writer_schema_transpiler::transpile as the core logic
-    fn register(
+    async fn register(
         &self,
         problem: writer_schema::Procedure,
-    ) -> impl Future<Output = Result<registered::Procedure, RegistrationError>>;
+    ) -> Result<registered::Procedure, RegistrationError>;
 
     // Convert DepId to names in writer schema
-    fn restore_name(&self, dep_id: DepId) -> impl Future<Output = Option<String>>;
+    async fn restore_name(&self, dep_id: DepId) -> Option<String>;
 
     // Remove registered problem from the registry
-    fn remove(
-        &self,
-        procedure: registered::Procedure,
-    ) -> impl Future<Output = Result<(), RemovalError>>;
+    async fn remove(&self, procedure: registered::Procedure) -> Result<(), RemovalError>;
 }
 
 /// ProblemRegistryClient fetches contents of problems from the registry in judge server.
