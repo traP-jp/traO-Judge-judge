@@ -237,10 +237,7 @@ mod signup_request_tests {
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.signup_request(email).await;
 
-        assert_eq!(resp.is_err(), result.is_err());
-        if resp.is_err() {
-            assert_eq!(resp.err(), result.err());
-        }
+        assert_eq!(resp, result);
 
         Ok(())
     }
@@ -264,10 +261,7 @@ mod signup_request_tests {
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.signup_request(email).await;
 
-        assert_eq!(resp.is_err(), result.is_err());
-        if resp.is_err() {
-            assert_eq!(resp.err(), result.err());
-        }
+        assert_eq!(resp, result);
 
         Ok(())
     }
@@ -330,10 +324,7 @@ mod signup_tests {
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.signup(signup_data).await;
 
-        assert_eq!(resp.is_err(), result.is_err());
-        if resp.is_err() {
-            assert_eq!(resp.err(), result.err());
-        }
+        assert_eq!(resp, result);
 
         Ok(())
     }
@@ -362,10 +353,7 @@ mod signup_tests {
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.signup(signup_data).await;
 
-        assert_eq!(resp.is_err(), result.is_err());
-        if resp.is_err() {
-            assert_eq!(resp.err(), result.err());
-        }
+        assert_eq!(resp, result);
 
         Ok(())
     }
@@ -438,12 +426,7 @@ mod login_tests {
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.login(login_data).await;
 
-        assert_eq!(resp.is_err(), result.is_err());
-        if resp.is_err() {
-            assert_eq!(resp.err(), result.err());
-        } else {
-            assert_eq!(resp.ok(), result.ok());
-        }
+        assert_eq!(resp, result);
 
         Ok(())
     }
@@ -469,10 +452,7 @@ mod login_tests {
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.login(login_data).await;
 
-        assert_eq!(resp.is_err(), result.is_err());
-        if resp.is_err() {
-            assert_eq!(resp.err(), result.err());
-        }
+        assert_eq!(resp, result);
 
         Ok(())
     }
@@ -501,10 +481,7 @@ mod login_tests {
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.login(login_data).await;
 
-        assert_eq!(resp.is_err(), result.is_err());
-        if resp.is_err() {
-            assert_eq!(resp.err(), result.err());
-        }
+        assert_eq!(resp, result);
 
         Ok(())
     }
@@ -539,10 +516,7 @@ mod logout_tests {
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.logout(session_id).await;
 
-        assert_eq!(resp.is_err(), result.is_err());
-        if resp.is_err() {
-            assert_eq!(resp.err(), result.err());
-        }
+        assert_eq!(resp, result);
 
         Ok(())
     }
@@ -563,10 +537,7 @@ mod logout_tests {
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.logout(session_id).await;
 
-        assert_eq!(resp.is_err(), result.is_err());
-        if resp.is_err() {
-            assert_eq!(resp.err(), result.err());
-        }
+        assert_eq!(resp, result);
 
         Ok(())
     }
@@ -608,10 +579,7 @@ mod reset_password_request_tests {
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.reset_password_request(email.to_string()).await;
 
-        assert_eq!(resp.is_err(), result.is_err());
-        if resp.is_err() {
-            assert_eq!(resp.err(), result.err());
-        }
+        assert_eq!(resp, result);
 
         Ok(())
     }
@@ -634,10 +602,7 @@ mod reset_password_request_tests {
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.reset_password_request(email.to_string()).await;
 
-        assert_eq!(resp.is_err(), result.is_err());
-        if resp.is_err() {
-            assert_eq!(resp.err(), result.err());
-        }
+        assert_eq!(resp, result);
 
         Ok(())
     }
@@ -715,10 +680,7 @@ mod reset_password_tests {
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.reset_password(reset_data).await;
 
-        assert_eq!(resp.is_err(), result.is_err());
-        if resp.is_err() {
-            assert_eq!(resp.err(), result.err());
-        }
+        assert_eq!(resp, result);
 
         Ok(())
     }
