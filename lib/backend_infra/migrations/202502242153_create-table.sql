@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS `users_passwords` (
 
 CREATE TABLE IF NOT EXISTS `normal_problems` (
 	`id` INT AUTO_INCREMENT PRIMARY KEY,
-	`auther_id` INT NOT NULL,
+	`author_id` INT NOT NULL,
 	`title` VARCHAR(255) NOT NULL,
 	`statement` TEXT NOT NULL,
 	`time_limit` INT NOT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS `testcases` (
 CREATE TABLE IF NOT EXISTS `editiorials` (
 	`id` INT AUTO_INCREMENT PRIMARY KEY,
 	`problem_id` INT NOT NULL,
-	`auther_id` INT NOT NULL,
+	`author_id` INT NOT NULL,
 	`statement` TEXT NOT NULL,
 	`created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
 	`updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

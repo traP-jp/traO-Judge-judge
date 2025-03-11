@@ -1,3 +1,4 @@
+pub mod has_cycle;
 pub mod identifiers;
 pub mod job;
 pub mod judge_output;

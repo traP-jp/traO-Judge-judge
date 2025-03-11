@@ -7,7 +7,8 @@ use infra::{
     },
 };
 use usecase::service::{
-    auth::AuthenticationService, submission::SubmissionService, user::UserService,
+    auth::AuthenticationService, problem::ProblemService, submission::SubmissionService,
+    user::UserService,
 };
 
 #[derive(Clone)]
@@ -18,6 +19,7 @@ pub struct DiContainer {
         SessionRepositoryImpl,
         MailClientImpl,
     >,
+    problem_service: ProblemService<ProblemRepositoryImpl, SessionRepositoryImpl>,
     user_service:
         UserService<UserRepositoryImpl, SessionRepositoryImpl, AuthRepositoryImpl, MailClientImpl>,
     submission_service:
@@ -32,6 +34,10 @@ impl DiContainer {
                 provider.provide_user_repository(),
                 provider.provide_session_repository(),
                 provider.provide_mail_client(),
+            ),
+            problem_service: ProblemService::new(
+                provider.provide_problem_repository(),
+                provider.provide_session_repository(),
             ),
             user_service: UserService::new(
                 provider.provide_user_repository(),
@@ -70,5 +76,9 @@ impl DiContainer {
     ) -> &SubmissionService<SessionRepositoryImpl, SubmissionRepositoryImpl, ProblemRepositoryImpl>
     {
         &self.submission_service
+    }
+
+    pub fn problem_service(&self) -> &ProblemService<ProblemRepositoryImpl, SessionRepositoryImpl> {
+        &self.problem_service
     }
 }

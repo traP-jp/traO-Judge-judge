@@ -51,7 +51,7 @@ VALUES
 ALTER TABLE users MODIFY updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
 INSERT INTO normal_problems
-(auther_id, title, statement, time_limit, memory_limit, difficulty, judgecode_path, is_public)
+(author_id, title, statement, time_limit, memory_limit, difficulty, judgecode_path, is_public)
 VALUES
 (
     1,
