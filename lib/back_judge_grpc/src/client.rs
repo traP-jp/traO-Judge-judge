@@ -19,7 +19,7 @@ impl RemoteJudgeApiClient {
 
 #[axum::async_trait]
 impl judge::JudgeApi for RemoteJudgeApiClient {
-    async fn judge(&self, request: judge::JudgeRequest) -> Result<judge::JudgeResponse> {
+    async fn judge(&self, request: judge::JudgeRequest) -> judge::JudgeResponse {
         let grpc_request: generated::JudgeRequest = request.into();
         let mut grpc_client = self.grpc_client.clone();
         let grpc_response = grpc_client
@@ -28,6 +28,6 @@ impl judge::JudgeApi for RemoteJudgeApiClient {
             .map_err(|e| anyhow::anyhow!("Failed to execute remote judge: {}", e))?
             .into_inner();
         let response: judge::JudgeResponse = grpc_response.into();
-        Ok(response)
+        response
     }
 }

@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 #[axum::async_trait]
 pub trait JudgeApi: Clone + Send + Sync + 'static {
-    async fn judge(&self, request: JudgeRequest) -> Result<JudgeResponse>;
+    async fn judge(&self, request: JudgeRequest) -> JudgeResponse;
 }
 
 #[derive(Debug, Clone)]
