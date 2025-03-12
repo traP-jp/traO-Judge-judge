@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+axum = { workspace = true }
 judge_core = { path = "../judge_core" }

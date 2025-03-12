@@ -8,6 +8,7 @@ pub struct RegistryClient {
     pub(crate) registry: Arc<Mutex<HashMap<identifiers::ResourceId, String>>>,
 }
 
+#[axum::async_trait]
 impl problem_registry::ProblemRegistryClient for RegistryClient {
     async fn fetch(
         &self,

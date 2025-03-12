@@ -4,6 +4,7 @@ use judge_core::problem_registry;
 #[derive(Clone)]
 pub struct ProblemRegistryClient {}
 
+#[axum::async_trait]
 impl problem_registry::ProblemRegistryClient for ProblemRegistryClient {
     async fn fetch(
         &self,

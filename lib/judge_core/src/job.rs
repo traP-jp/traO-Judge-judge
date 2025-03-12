@@ -1,23 +1,20 @@
 use crate::identifiers::ResourceId;
-use futures::future::Future;
 use std::process::Output;
 
+#[axum::async_trait]
 pub trait JobApi<ReservationToken, OutcomeToken: Clone>: Clone {
-    fn reserve_execution(
+    async fn reserve_execution(
         &self,
         count: usize,
-    ) -> impl Future<Output = Result<Vec<ReservationToken>, ReservationError>>;
+    ) -> Result<Vec<ReservationToken>, ReservationError>;
 
-    fn place_file(
-        &self,
-        file_conf: FileConf,
-    ) -> impl Future<Output = Result<OutcomeToken, FilePlacementError>>;
+    async fn place_file(&self, file_conf: FileConf) -> Result<OutcomeToken, FilePlacementError>;
 
-    fn execute(
+    async fn execute(
         &self,
         reservation: ReservationToken,
         dependencies: Vec<Dependency<OutcomeToken>>,
-    ) -> impl Future<Output = Result<(OutcomeToken, Output), ExecutionError>>;
+    ) -> Result<(OutcomeToken, Output), ExecutionError>;
 }
 
 #[derive(Debug, Clone, thiserror::Error)]

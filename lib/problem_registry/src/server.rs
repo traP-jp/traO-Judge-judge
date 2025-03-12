@@ -4,6 +4,7 @@ use judge_core::*;
 #[derive(Clone)]
 pub struct ProblemRegistryServer {}
 
+#[axum::async_trait]
 impl problem_registry::ProblemRegistryServer for ProblemRegistryServer {
     async fn register(
         &self,
