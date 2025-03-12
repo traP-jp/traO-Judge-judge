@@ -1,8 +1,7 @@
 use crate::procedure_builder::PyProcedureBuilder;
 use judge_core::{
-    model::{problem_registry::ProblemRegistryServer as _, *
-    },
     logic::*,
+    model::{problem_registry::ProblemRegistryServer as _, *},
 };
 use local_jobapi::jobapi::JobApi;
 use local_problem_registry::{

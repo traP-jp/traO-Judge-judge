@@ -1,6 +1,6 @@
 use judge_core::{
+    logic::writer_schema_transpiler::transpile,
     model::{problem_registry::*, procedure::*, *},
-    logic::writer_schema_transpiler::transpile
 };
 use std::collections::HashMap;
 use std::sync::Arc;
