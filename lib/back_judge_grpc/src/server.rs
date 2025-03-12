@@ -2,8 +2,8 @@ use crate::*;
 use anyhow::Result;
 use axum::async_trait;
 use judge_core::model::judge;
-use tonic::client::GrpcService;
 use std::sync::OnceLock;
+use tonic::client::GrpcService;
 
 #[derive(Debug, Clone)]
 pub struct WrappedJudgeApi<Inner: judge::JudgeApi> {
@@ -12,7 +12,9 @@ pub struct WrappedJudgeApi<Inner: judge::JudgeApi> {
 
 impl<Inner: judge::JudgeApi> WrappedJudgeApi<Inner> {
     pub fn new(inner_api: &'static OnceLock<Inner>) -> Self {
-        Self { inner_api: inner_api }
+        Self {
+            inner_api: inner_api,
+        }
     }
 }
 
