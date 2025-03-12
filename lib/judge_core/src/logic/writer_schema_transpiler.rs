@@ -1,8 +1,6 @@
 #![allow(unused_variables)]
 
-use futures::SinkExt;
-
-use crate::{
+use crate::model::{
     problem_registry::*,
     procedure::{writer_schema::*, *},
     *,

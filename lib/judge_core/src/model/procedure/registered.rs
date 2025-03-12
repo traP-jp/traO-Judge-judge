@@ -1,4 +1,4 @@
-use crate::identifiers::{ResourceId, RuntimeId};
+use super::super::identifiers::{DepId, ResourceId};
 
 #[derive(Debug, Clone)]
 pub struct Procedure {
@@ -10,29 +10,29 @@ pub struct Procedure {
 
 #[derive(Debug, Clone)]
 pub struct RuntimeText {
-    pub content: String,
-    pub runtime_id: RuntimeId,
+    pub label: String,
+    pub dep_id: DepId,
 }
 
 #[derive(Debug, Clone)]
 pub struct Text {
     pub resource_id: ResourceId,
-    pub runtime_id: RuntimeId,
+    pub dep_id: DepId,
 }
 
 #[derive(Debug, Clone)]
 pub struct EmptyDirectory {
-    pub runtime_id: RuntimeId,
+    pub dep_id: DepId,
 }
 
 #[derive(Debug, Clone)]
 pub struct Execution {
     pub depends_on: Vec<DependsOn>,
-    pub runtime_id: RuntimeId,
+    pub dep_id: DepId,
 }
 
 #[derive(Debug, Clone)]
 pub struct DependsOn {
-    pub runtime_id: RuntimeId,
+    pub dep_id: DepId,
     pub envvar_name: String,
 }

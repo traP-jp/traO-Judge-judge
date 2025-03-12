@@ -1,5 +1,5 @@
 use super::output::PyOutput;
-use judge_core::procedure::writer_schema::Dependency;
+use judge_core::model::procedure::writer_schema::Dependency;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 

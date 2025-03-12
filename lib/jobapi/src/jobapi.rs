@@ -1,5 +1,5 @@
 #![allow(unused)]
-use judge_core::*;
+use judge_core::model::*;
 
 #[derive(Clone)]
 pub struct JobApi {}

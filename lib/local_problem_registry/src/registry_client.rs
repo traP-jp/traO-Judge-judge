@@ -1,4 +1,4 @@
-use judge_core::*;
+use judge_core::model::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;

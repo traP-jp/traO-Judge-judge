@@ -1,5 +1,5 @@
-use crate::identifiers::{DepId, ResourceId, RuntimeId};
-use crate::procedure::{registered::Execution, *};
+use crate::model::identifiers::{DepId, RuntimeId};
+use crate::model::procedure::*;
 use std::collections::HashMap;
 pub fn convert(
     registered_procedure: &registered::Procedure,

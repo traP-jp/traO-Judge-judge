@@ -1,6 +1,6 @@
 use crate::models::*;
-use judge_core::procedure::writer_schema;
-use judge_core::procedure_builder;
+use judge_core::model::procedure::writer_schema;
+use judge_core::logic::procedure_builder;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::path::PathBuf;

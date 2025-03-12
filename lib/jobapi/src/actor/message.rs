@@ -1,6 +1,6 @@
 #![allow(unused)]
 use actix::prelude::*;
-use judge_core::*;
+use judge_core::model::*;
 
 use crate::jobapi::{OutcomeToken, ReservationToken};
 

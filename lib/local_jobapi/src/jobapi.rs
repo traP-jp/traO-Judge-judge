@@ -1,5 +1,5 @@
 use super::tokens::{OutcomeToken, RegistrationToken};
-use judge_core::{job, job::*, problem_registry};
+use judge_core::model::{job, job::*, problem_registry};
 use std::collections::HashMap;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;

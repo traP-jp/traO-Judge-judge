@@ -1,6 +1,8 @@
 use crate::procedure_builder::PyProcedureBuilder;
 use judge_core::{
-    problem_registry::ProblemRegistryClient as _, problem_registry::ProblemRegistryServer as _, *,
+    model::{problem_registry::ProblemRegistryServer as _, *
+    },
+    logic::*,
 };
 use local_jobapi::jobapi::JobApi;
 use local_problem_registry::{
@@ -44,7 +46,7 @@ impl LocalJudge {
         let (runtime_procedure, runtime_id_to_dep_id) =
             registered_procedure_converter::convert(&registered_procedure, &runtime_text_contents)
                 .unwrap();
-        let runner = judge_core::runner::Runner::new(self.jobapi.clone(), runtime_procedure)
+        let runner = runner::Runner::new(self.jobapi.clone(), runtime_procedure)
             .await
             .unwrap();
         let result = runner.run().await.unwrap();

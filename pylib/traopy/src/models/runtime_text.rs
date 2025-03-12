@@ -1,4 +1,4 @@
-use judge_core::procedure::writer_schema::RuntimeText;
+use judge_core::model::procedure::writer_schema::RuntimeText;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 

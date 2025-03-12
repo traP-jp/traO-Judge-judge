@@ -1,4 +1,4 @@
-use crate::identifiers::ResourceId;
+use super::identifiers::ResourceId;
 use std::process::Output;
 
 #[axum::async_trait]
