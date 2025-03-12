@@ -5,7 +5,7 @@ use super::{
 
 /// ProblemRegistryServer uploads contents of problems to the registry in webservice-backend server.
 #[axum::async_trait]
-pub trait ProblemRegistryServer {
+pub trait ProblemRegistryServer: Clone + Send + Sync {
     // Memo: use crate::writer_schema_transpiler::transpile as the core logic
     async fn register(
         &self,

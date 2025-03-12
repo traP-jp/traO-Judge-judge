@@ -14,4 +14,4 @@ pub struct JudgeRequest {
 }
 
 pub type JudgeResponse =
-    anyhow::Result<HashMap<identifiers::RuntimeId, judge_output::ExecutionJobResult>>;
+    anyhow::Result<HashMap<identifiers::DepId, judge_output::ExecutionJobResult>>;
