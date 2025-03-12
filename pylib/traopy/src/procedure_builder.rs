@@ -47,7 +47,7 @@ impl PyProcedureBuilder {
     fn add_execution(&mut self, execution: execution::PyExecution) -> output::PyOutput {
         let script_name = execution.script.name.clone();
         let dependencies = execution
-            .dependency
+            .dependencies
             .iter()
             .map(|dep: &dependency::PyDependency| {
                 let schema_dep = writer_schema::Dependency::from(dep.clone());

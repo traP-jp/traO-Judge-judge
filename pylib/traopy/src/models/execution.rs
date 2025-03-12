@@ -13,26 +13,26 @@ use pyo3_stub_gen::derive::*;
 pub struct PyExecution {
     pub name: String,
     pub script: PyScriptOutput,
-    pub dependency: Vec<PyDependency>,
+    pub dependencies: Vec<PyDependency>,
 }
 
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyExecution {
     #[new]
-    pub fn new(name: String, script: PyScriptOutput, dependency: Vec<PyDependency>) -> Self {
+    pub fn new(name: String, script: PyScriptOutput, dependencies: Vec<PyDependency>) -> Self {
         PyExecution {
             name,
             script,
-            dependency,
+            dependencies,
         }
     }
 }
 
-pub fn new_execution(name: String, script_id: String, dependency: Vec<Dependency>) -> Execution {
+pub fn new_execution(name: String, script_id: String, dependencies: Vec<Dependency>) -> Execution {
     Execution {
         name,
         script_name: script_id,
-        dependency,
+        dependencies,
     }
 }

@@ -84,7 +84,7 @@ impl ProcedureBuilder {
     pub fn add_execution(&mut self, execution: Execution) -> Result<String, AddJobError> {
         let name = execution.name.clone();
         // Check if all dependencies are present
-        for dep in execution.dependency.iter() {
+        for dep in execution.dependencies.iter() {
             self.jobs
                 .get(&dep.ref_to)
                 .ok_or(AddJobError::DependencyNotFound(dep.ref_to.clone()))?;

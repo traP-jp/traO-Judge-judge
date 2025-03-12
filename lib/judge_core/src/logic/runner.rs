@@ -97,7 +97,7 @@ impl<
                 .pop()
                 .context("Failed to reserve execution")?;
             let dependencies = execution
-                .dependency
+                .dependencies
                 .iter()
                 .map(|dep| runtime::Dependency {
                     runtime_id: dep.runtime_id.clone(),

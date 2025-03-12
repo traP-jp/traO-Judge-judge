@@ -107,7 +107,7 @@ pub fn transpile(
             ))?
             .clone();
         let mut dependencies = Vec::new();
-        for dep in execution.dependency.iter() {
+        for dep in execution.dependencies.iter() {
             let dep_id = name_to_id
                 .get(&dep.ref_to)
                 .ok_or(RegistrationError::InvalidSchema(
@@ -131,7 +131,7 @@ pub fn transpile(
             ))?
             .clone();
         let execution = registered::Execution {
-            dependency: dependencies,
+            dependencies,
             dep_id: dep_id,
         };
         executions.push(execution);

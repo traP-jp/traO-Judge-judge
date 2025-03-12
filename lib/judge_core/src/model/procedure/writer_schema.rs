@@ -22,7 +22,7 @@ pub struct EmptyDirectory {
 pub struct Execution {
     pub name: String,
     pub script_name: String,
-    pub dependency: Vec<Dependency>,
+    pub dependencies: Vec<Dependency>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

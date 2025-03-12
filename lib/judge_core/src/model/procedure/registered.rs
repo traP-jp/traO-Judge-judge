@@ -27,7 +27,7 @@ pub struct EmptyDirectory {
 
 #[derive(Debug, Clone)]
 pub struct Execution {
-    pub dependency: Vec<Dependency>,
+    pub dependencies: Vec<Dependency>,
     pub dep_id: DepId,
 }
 
