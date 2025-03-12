@@ -27,12 +27,12 @@ pub struct EmptyDirectory {
 
 #[derive(Debug, Clone)]
 pub struct Execution {
-    pub depends_on: Vec<DependsOn>,
+    pub dependencies: Vec<Dependency>,
     pub dep_id: DepId,
 }
 
 #[derive(Debug, Clone)]
-pub struct DependsOn {
+pub struct Dependency {
     pub dep_id: DepId,
     pub envvar_name: String,
 }

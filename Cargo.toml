@@ -39,7 +39,7 @@ members = [
     "lib/problem_registry",
     "lib/local_jobapi",
     "lib/local_problem_registry",
-    "lib/grpc_schema",
+    "lib/back_judge_grpc",
     "lib/judge_core",
     "lib/backend_domain",
     "lib/backend_infra",

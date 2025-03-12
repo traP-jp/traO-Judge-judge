@@ -1,21 +1,24 @@
 use crate::logic::*;
 use crate::model::*;
 use std::collections::HashMap;
+use std::sync::Arc;
+
+#[derive(Debug)]
 pub struct JudgeApiImpl<
     PRClient: problem_registry::ProblemRegistryClient,
-    RToken: Send + Sync,
-    OToken: Clone + Send + Sync,
+    RToken: Send + Sync + 'static,
+    OToken: Clone + Send + Sync + 'static,
     JobApi: job::JobApi<RToken, OToken>,
 > {
     problem_registry_client: PRClient,
     job_api: JobApi,
-    _phantom: std::marker::PhantomData<(RToken, OToken)>,
+    _phantom: std::marker::PhantomData<(Arc<RToken>, OToken)>,
 }
 
 impl<
         PRClient: problem_registry::ProblemRegistryClient,
-        RToken: Send + Sync,
-        OToken: Clone + Send + Sync,
+        RToken: Send + Sync + 'static,
+        OToken: Clone + Send + Sync + 'static,
         JobApi: job::JobApi<RToken, OToken>,
     > JudgeApiImpl<PRClient, RToken, OToken, JobApi>
 {
@@ -28,11 +31,27 @@ impl<
     }
 }
 
+impl<
+        PRClient: problem_registry::ProblemRegistryClient,
+        RToken: Send + Sync + 'static,
+        OToken: Clone + Send + Sync + 'static,
+        JobApi: job::JobApi<RToken, OToken>,
+    > Clone for JudgeApiImpl<PRClient, RToken, OToken, JobApi>
+{
+    fn clone(&self) -> Self {
+        Self {
+            problem_registry_client: self.problem_registry_client.clone(),
+            job_api: self.job_api.clone(),
+            _phantom: std::marker::PhantomData,
+        }
+    }
+}
+
 #[axum::async_trait]
 impl<
         PRClient: problem_registry::ProblemRegistryClient,
-        RToken: Send + Sync,
-        OToken: Clone + Send + Sync,
+        RToken: Send + Sync + 'static,
+        OToken: Clone + Send + Sync + 'static,
         JobApi: job::JobApi<RToken, OToken>,
     > judge::JudgeApi for JudgeApiImpl<PRClient, RToken, OToken, JobApi>
 {

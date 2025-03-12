@@ -107,20 +107,20 @@ pub fn transpile(
             ))?
             .clone();
         let mut dependencies = Vec::new();
-        for dep in execution.depends_on.iter() {
+        for dep in execution.dependencies.iter() {
             let dep_id = name_to_id
                 .get(&dep.ref_to)
                 .ok_or(RegistrationError::InvalidSchema(
                     "Dependency name not found".to_string(),
                 ))?
                 .clone();
-            let depends_on = registered::DependsOn {
+            let dependency = registered::Dependency {
                 dep_id: dep_id.clone(),
                 envvar_name: dep.envvar_name.clone(),
             };
-            dependencies.push(depends_on);
+            dependencies.push(dependency);
         }
-        dependencies.push(registered::DependsOn {
+        dependencies.push(registered::Dependency {
             dep_id: script_id.clone(),
             envvar_name: "SCRIPT".to_string(),
         });
@@ -131,7 +131,7 @@ pub fn transpile(
             ))?
             .clone();
         let execution = registered::Execution {
-            depends_on: dependencies,
+            dependencies,
             dep_id: dep_id,
         };
         executions.push(execution);
