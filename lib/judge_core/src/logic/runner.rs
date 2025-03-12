@@ -12,7 +12,7 @@ pub struct Runner<
     job_api: JobApiType,
     outcomes: Arc<Mutex<HashMap<RuntimeId, OutcomeToken>>>,
     outputs: Arc<Mutex<HashMap<RuntimeId, judge_output::ExecutionJobResult>>>,
-    exec_confs: Arc<Mutex<HashMap<RuntimeId, (ReservationToken, Vec<runtime::DependsOn>)>>>,
+    exec_confs: Arc<Mutex<HashMap<RuntimeId, (ReservationToken, Vec<runtime::Dependency>)>>>,
     file_confs: HashMap<RuntimeId, job::FileConf>,
 }
 
@@ -86,7 +86,7 @@ impl<
     async fn create_exec_confs(
         procedure: &runtime::Procedure,
         job_api: &JobApiType,
-    ) -> anyhow::Result<HashMap<RuntimeId, (ReservationToken, Vec<runtime::DependsOn>)>> {
+    ) -> anyhow::Result<HashMap<RuntimeId, (ReservationToken, Vec<runtime::Dependency>)>> {
         let mut reservations_vec = job_api
             .reserve_execution(procedure.executions.len())
             .await
@@ -97,9 +97,9 @@ impl<
                 .pop()
                 .context("Failed to reserve execution")?;
             let dependencies = execution
-                .depends_on
+                .dependency
                 .iter()
-                .map(|dep| runtime::DependsOn {
+                .map(|dep| runtime::Dependency {
                     runtime_id: dep.runtime_id.clone(),
                     envvar_name: dep.envvar_name.clone(),
                 })

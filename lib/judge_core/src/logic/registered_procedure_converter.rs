@@ -81,21 +81,21 @@ pub fn convert(
                 "Execution runtime_id not found".to_string(),
             ))?
             .clone();
-        let mut depends_on = Vec::new();
-        for dep in execution.depends_on.iter() {
+        let mut dependency = Vec::new();
+        for dep in execution.dependency.iter() {
             let runtime_id = dep_id_to_runtime_id
                 .get(&dep.dep_id)
                 .ok_or(ConversionError::InternalError(
-                    "DependsOn runtime_id not found".to_string(),
+                    "Dependency runtime_id not found".to_string(),
                 ))?
                 .clone();
-            depends_on.push(runtime::DependsOn {
+            dependency.push(runtime::Dependency {
                 runtime_id,
                 envvar_name: dep.envvar_name.clone(),
             });
         }
         executions.push(runtime::Execution {
-            depends_on,
+            dependency,
             runtime_id,
         });
     }

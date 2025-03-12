@@ -27,9 +27,9 @@ class Execution:
     r"""
     Execution object to be executed
     
-    Script will be run with paths as environment variables specified in `depends_on`.
+    Script will be run with paths as environment variables specified in `dependency`.
     """
-    def __new__(cls,name:builtins.str, script:ScriptOutput, depends_on:typing.Sequence[Dependency]): ...
+    def __new__(cls,name:builtins.str, script:ScriptOutput, dependency:typing.Sequence[Dependency]): ...
     ...
 
 class LocalJudge:
@@ -48,7 +48,7 @@ class Output:
     r"""
     Output object of each job.
     
-    Executions can depend on Output by passing Output object to `depends_on` field of Execution.
+    Executions can depend on Output by passing Output object to `dependency` field of Execution.
     """
     ...
 

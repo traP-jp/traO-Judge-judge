@@ -3,7 +3,7 @@ use pyo3_stub_gen::derive::*;
 
 /// Output object of each job.
 ///
-/// Executions can depend on Output by passing Output object to `depends_on` field of Execution.
+/// Executions can depend on Output by passing Output object to `dependency` field of Execution.
 #[gen_stub_pyclass]
 #[pyclass]
 #[pyo3(name = "Output")]

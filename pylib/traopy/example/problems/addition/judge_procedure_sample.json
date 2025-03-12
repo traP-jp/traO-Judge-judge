@@ -8,7 +8,7 @@
     "test": {
       "name": "test",
       "script_name": "script",
-      "depends_on": [
+      "dependency": [
         { "ref_to": "input", "envvar_name": "INPUT" },
         { "ref_to": "output", "envvar_name": "OUTPUT" },
         { "ref_to": "actual", "envvar_name": "ACTUAL" }
