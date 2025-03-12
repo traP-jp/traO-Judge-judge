@@ -1,7 +1,7 @@
 use crate::*;
+use anyhow::Result;
 use axum::async_trait;
 use judge_core::model::judge;
-use anyhow::Result;
 use tonic::client::GrpcService;
 
 #[derive(Debug, Clone)]
@@ -16,9 +16,12 @@ impl<Inner: judge::JudgeApi> WrappedJudgeApi<Inner> {
 }
 
 #[async_trait]
-impl<Inner: judge::JudgeApi> generated::judge_service_server::JudgeService for WrappedJudgeApi<Inner> {
+impl<Inner: judge::JudgeApi> generated::judge_service_server::JudgeService
+    for WrappedJudgeApi<Inner>
+{
     async fn judge(
-        &self, request: tonic::Request<generated::JudgeRequest>
+        &self,
+        request: tonic::Request<generated::JudgeRequest>,
     ) -> Result<tonic::Response<generated::JudgeResponse>, tonic::Status> {
         let request = request.into_inner();
         let request: judge::JudgeRequest = request

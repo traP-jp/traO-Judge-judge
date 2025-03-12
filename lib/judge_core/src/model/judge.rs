@@ -1,7 +1,7 @@
 use crate::model::{procedure::*, *};
 
-use std::collections::HashMap;
 use anyhow::Result;
+use std::collections::HashMap;
 
 #[axum::async_trait]
 pub trait JudgeApi: Clone + Send + Sync + 'static {

@@ -1,6 +1,6 @@
 include!("generated/_.rs");
 
-use anyhow::{Result, Error};
+use anyhow::{Error, Result};
 use judge_core::model::procedure::registered;
 use judge_core::model::*;
 use std::collections::HashMap;
@@ -377,7 +377,9 @@ impl From<judge_output::ExecutionJobResult> for ExecutionJobResult {
                 execution_job_result::Result::EarlyReturn(Unit {})
             }
         };
-        Self { result: Some(result) }
+        Self {
+            result: Some(result),
+        }
     }
 }
 
@@ -389,7 +391,8 @@ impl TryFrom<ExecutionJobResult> for judge_output::ExecutionJobResult {
             .ok_or(anyhow::anyhow!("result is missing"))?;
         match result {
             execution_job_result::Result::DisplayableExecutionResult(displayable) => {
-                let displayable: judge_output::DisplayableExecutionResult = displayable.try_into()?;
+                let displayable: judge_output::DisplayableExecutionResult =
+                    displayable.try_into()?;
                 Ok(judge_output::ExecutionJobResult::ExecutionResult(
                     judge_output::ExecutionResult::Displayable(displayable),
                 ))
@@ -434,7 +437,7 @@ impl From<judge::JudgeResponse> for JudgeResponse {
             }
             Err(err) => Self {
                 result: Some(judge_response::Result::ErrorMessage(err.to_string())),
-            }
+            },
         }
     }
 }
@@ -459,9 +462,7 @@ impl From<JudgeResponse> for judge::JudgeResponse {
                     .collect::<Result<HashMap<identifiers::DepId, judge_output::ExecutionJobResult>>>()?;
                 Ok(results)
             }
-            judge_response::Result::ErrorMessage(err) => {
-                Err(anyhow::anyhow!(err))
-            }
+            judge_response::Result::ErrorMessage(err) => Err(anyhow::anyhow!(err)),
         }
     }
 }

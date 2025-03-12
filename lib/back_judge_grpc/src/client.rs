@@ -1,6 +1,6 @@
 use crate::*;
-use judge_core::model::judge;
 use anyhow::Result;
+use judge_core::model::judge;
 
 #[derive(Debug, Clone)]
 pub struct RemoteJudgeApiClient {
