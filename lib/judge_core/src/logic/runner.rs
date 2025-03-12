@@ -5,8 +5,8 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub struct Runner<
-    ReservationToken,
-    OutcomeToken: Clone,
+    ReservationToken: Send + Sync,
+    OutcomeToken: Clone + Send + Sync,
     JobApiType: job::JobApi<ReservationToken, OutcomeToken>,
 > {
     job_api: JobApiType,
@@ -17,8 +17,8 @@ pub struct Runner<
 }
 
 impl<
-        ReservationToken,
-        OutcomeToken: Clone,
+        ReservationToken: Send + Sync,
+        OutcomeToken: Clone + Send + Sync,
         JobApiType: job::JobApi<ReservationToken, OutcomeToken>,
     > Runner<ReservationToken, OutcomeToken, JobApiType>
 {
