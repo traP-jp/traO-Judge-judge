@@ -1,5 +1,5 @@
-use crate::model::*;
 use crate::logic::*;
+use crate::model::*;
 use std::collections::HashMap;
 pub struct JudgeApiImpl<
     PRClient: problem_registry::ProblemRegistryClient,
@@ -36,19 +36,12 @@ impl<
         JobApi: job::JobApi<RToken, OToken>,
     > judge::JudgeApi for JudgeApiImpl<PRClient, RToken, OToken, JobApi>
 {
-    async fn judge(
-        &self,
-        judge_request: judge::JudgeRequest,
-    ) -> judge::JudgeResponse {
+    async fn judge(&self, judge_request: judge::JudgeRequest) -> judge::JudgeResponse {
         let (runtime_procedure, identifier_map) = registered_procedure_converter::convert(
             &judge_request.procedure,
             &judge_request.runtime_texts,
         )?;
-        let runner = runner::Runner::new(
-            self.job_api.clone(),
-            runtime_procedure,
-        )
-            .await?;
+        let runner = runner::Runner::new(self.job_api.clone(), runtime_procedure).await?;
         let judge_results = runner.run().await?;
         let mut judge_results_depid = HashMap::new();
         for (runtime_id, result) in judge_results {

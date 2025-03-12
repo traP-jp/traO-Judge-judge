@@ -2,7 +2,9 @@ use super::identifiers::ResourceId;
 use std::process::Output;
 
 #[axum::async_trait]
-pub trait JobApi<ReservationToken: Send + Sync, OutcomeToken: Clone + Send + Sync>: Clone + Send + Sync {
+pub trait JobApi<ReservationToken: Send + Sync, OutcomeToken: Clone + Send + Sync>:
+    Clone + Send + Sync
+{
     async fn reserve_execution(
         &self,
         count: usize,
