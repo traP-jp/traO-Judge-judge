@@ -1,13 +1,17 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_ec2::types::{InstanceType, Placement, Tag};
-use aws_sdk_ec2::Client;
+use aws_sdk_ec2::types::{InstanceType, Placement};
+use aws_sdk_ec2::Client as Ec2Client;
+use aws_sdk_s3::Client as S3Client;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use judge_core::job;
+use judge_core::job::FileConf;
 use std::collections::HashMap;
 use std::env;
+use std::fs::File;
+use std::io::Write;
 use std::net::Ipv4Addr;
 use std::ops::Add;
 use std::str::FromStr;
@@ -21,8 +25,9 @@ pub trait AwsClient {
     async fn place_file(
         &self,
         outcome_id: Uuid,
+        file_name: Uuid,
         file_conf: job::FileConf,
-    ) -> Result<Uuid, anyhow::Error>;
+    ) -> Result<(), anyhow::Error>;
     async fn push_outcome_to_instance_directory(
         &self,
         instance_id: Uuid,
@@ -38,22 +43,23 @@ pub trait AwsClient {
 }
 
 pub struct AwsClientType {
-    client: Client,
+    ec2_client: Ec2Client,
     aws_id_map: HashMap<Uuid, String>,
     ip_addr_map: HashMap<Uuid, Ipv4Addr>,
     max_instance_count: usize,
+    s3_client: S3Client,
 }
 
 impl AwsClientType {
     pub async fn new() -> Self {
         let region_provider = RegionProviderChain::default_provider().or_else("us-west-2");
         let config = aws_config::from_env().region(region_provider).load().await;
-        let client = Client::new(&config);
         Self {
-            client,
+            ec2_client: Ec2Client::new(&config),
             aws_id_map: HashMap::new(),
             ip_addr_map: HashMap::new(),
             max_instance_count: 15,
+            s3_client: S3Client::new(&config),
         }
     }
 }
@@ -73,7 +79,7 @@ impl AwsClient for AwsClientType {
         };
 
         let created_instance = self
-            .client
+            .ec2_client
             .run_instances()
             .image_id(
                 "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
@@ -105,7 +111,7 @@ impl AwsClient for AwsClientType {
 
         let ip_address = {
             let describe_instances = self
-                .client
+                .ec2_client
                 .describe_instances()
                 .instance_ids(aws_id)
                 .send()
@@ -168,7 +174,7 @@ impl AwsClient for AwsClientType {
 
         {
             let response = self
-                .client
+                .ec2_client
                 .attach_volume()
                 .device("/dev/sdb")
                 .instance_id(aws_id)
@@ -190,7 +196,7 @@ impl AwsClient for AwsClientType {
     }
     async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error> {
         let response = self
-            .client
+            .ec2_client
             .terminate_instances()
             .instance_ids(
                 self.aws_id_map
@@ -211,10 +217,24 @@ impl AwsClient for AwsClientType {
     async fn place_file(
         &self,
         outcome_id: Uuid,
-        file_conf: job::FileConf,
-    ) -> Result<Uuid, anyhow::Error> {
-        /* S3 からファイル取ってくるパートやってほしい */
-        todo!()
+        file_name: Uuid,
+        file_conf: FileConf,
+    ) -> Result<(), anyhow::Error> {
+        match file_conf {
+            FileConf::Text(resource_id) => {
+                let result = self
+                    .s3_client
+                    .get_object()
+                    .bucket("traO-judge")
+                    .key(outcome_id.to_string() + "/" + file_name.to_string().as_str()) // TODO
+                    .send()
+                    .await?;
+                let mut file = File::open(file_name.to_string())?; // TODO
+                file.write_all(result.body.bytes().unwrap())?;
+                Ok(())
+            }
+            _ => todo!(),
+        }
     }
     async fn push_outcome_to_instance_directory(
         &self,
