@@ -1,10 +1,11 @@
 use crate::model::{procedure::*, *};
 
 use std::collections::HashMap;
+use anyhow::Result;
 
 #[axum::async_trait]
-pub trait JudgeApi {
-    async fn judge(&self, request: JudgeRequest) -> JudgeResponse;
+pub trait JudgeApi: Clone + Send + Sync + 'static {
+    async fn judge(&self, request: JudgeRequest) -> Result<JudgeResponse>;
 }
 
 #[derive(Debug, Clone)]
@@ -14,4 +15,4 @@ pub struct JudgeRequest {
 }
 
 pub type JudgeResponse =
-    anyhow::Result<HashMap<identifiers::RuntimeId, judge_output::ExecutionJobResult>>;
+    anyhow::Result<HashMap<identifiers::DepId, judge_output::ExecutionJobResult>>;
