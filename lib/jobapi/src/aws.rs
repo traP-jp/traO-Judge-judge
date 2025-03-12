@@ -39,7 +39,9 @@ pub trait AwsClient {
 
 pub struct AwsClientType {
     client: Client,
-    aws_instance_id: HashMap<Uuid, String>,
+    aws_id_map: HashMap<Uuid, String>,
+    ip_addr_map: HashMap<Uuid, Ipv4Addr>,
+    max_instance_count: usize,
 }
 
 impl AwsClientType {
@@ -49,32 +51,19 @@ impl AwsClientType {
         let client = Client::new(&config);
         Self {
             client,
-            aws_instance_id: HashMap::new(),
+            aws_id_map: HashMap::new(),
+            ip_addr_map: HashMap::new(),
+            max_instance_count: 15,
         }
-    }
-
-    async fn get_ipv4_address(&self, aws_instance_id: &str) -> Result<Ipv4Addr, anyhow::Error> {
-        let describe_instances = self
-            .client
-            .describe_instances()
-            .instance_ids(aws_instance_id)
-            .send()
-            .await
-            .expect("Failed to describe instance");
-        if describe_instances.reservations().is_empty() {
-            return Err(anyhow!("Failed to describe instance"));
-        }
-
-        let public_ip = describe_instances.reservations()[0].instances()[0]
-            .public_ip_address()
-            .expect("Failed to get public IP address");
-        Ok(Ipv4Addr::from_str(public_ip).expect("Failed to parse IP address"))
     }
 }
 
 #[async_trait]
 impl AwsClient for AwsClientType {
     async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error> {
+        if self.aws_id_map.len() >= self.max_instance_count {
+            return Err(anyhow!("Too many instances"));
+        }
         let security_group_id =
             env::var("SECURITY_GROUP_ID").expect("SECURITY_GROUP_ID is not set");
 
@@ -104,39 +93,34 @@ impl AwsClient for AwsClientType {
             return Err(anyhow!("Failed to create instance"));
         }
 
-        let aws_instance_id = created_instance.instances()[0]
+        let aws_id = created_instance.instances()[0]
             .instance_id()
             .expect("Failed to get instance ID");
-        self.client
-            .create_tags()
-            .resources(aws_instance_id)
-            .tags(
-                Tag::builder()
-                    .key("Name")
-                    .value("From SDK Examples")
-                    .build(),
-            )
-            .send()
-            .await
-            .or_else(|err| {
-                println!("Error applying tags to {aws_instance_id}: {err:?}");
-                return Err(anyhow!(err));
-            })?;
 
-        println!("Created {aws_instance_id} and applied tags.");
+        println!("Created {aws_id}.");
 
-        println!("Instance is created.");
+        self.aws_id_map.insert(instance_id, aws_id.to_string());
 
         println!("Waiting for instance to be ready...");
 
         let ip_address = {
-            let ip_address = self.get_ipv4_address(aws_instance_id).await;
-            if ip_address.is_err() {
-                self.terminate_instance(instance_id).await?;
-                return Err(anyhow!("Failed to get IP"));
+            let describe_instances = self
+                .client
+                .describe_instances()
+                .instance_ids(aws_id)
+                .send()
+                .await
+                .expect("Failed to describe instance");
+            if describe_instances.reservations().is_empty() {
+                return Err(anyhow!("Failed to describe instance"));
             }
-            ip_address.unwrap()
+
+            let public_ip = describe_instances.reservations()[0].instances()[0]
+                .public_ip_address()
+                .expect("Failed to get public IP address");
+            Ipv4Addr::from_str(public_ip).expect("Failed to parse IP address")
         };
+        self.ip_addr_map.insert(instance_id, ip_address);
 
         println!("Public IP: {}", ip_address);
 
@@ -187,7 +171,7 @@ impl AwsClient for AwsClientType {
                 .client
                 .attach_volume()
                 .device("/dev/sdb")
-                .instance_id(aws_instance_id)
+                .instance_id(aws_id)
                 .volume_id(volume_id)
                 .send()
                 .await;
@@ -209,7 +193,7 @@ impl AwsClient for AwsClientType {
             .client
             .terminate_instances()
             .instance_ids(
-                self.aws_instance_id
+                self.aws_id_map
                     .get(&instance_id)
                     .expect("Failed to get instance ID from instance ID")
                     .clone(),
@@ -220,6 +204,8 @@ impl AwsClient for AwsClientType {
         if response.terminating_instances().is_empty() {
             return Err(anyhow!("Failed to terminate instance"));
         }
+        self.aws_id_map.remove(&instance_id);
+        self.ip_addr_map.remove(&instance_id);
         Ok(())
     }
     async fn place_file(
