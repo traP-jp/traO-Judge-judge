@@ -1,4 +1,4 @@
-use crate::{identifiers::RuntimeId, job, judge_output, procedure::runtime};
+use crate::model::{identifiers::RuntimeId, job, judge_output, procedure::runtime};
 use anyhow::Context;
 use std::collections::HashMap;
 use std::sync::Arc;

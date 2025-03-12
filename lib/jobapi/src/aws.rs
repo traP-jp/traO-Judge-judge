@@ -1,7 +1,7 @@
 use std::net::Ipv4Addr;
 
 use async_trait::async_trait;
-use judge_core::job;
+use judge_core::model::job;
 use uuid::Uuid;
 
 #[async_trait]

@@ -1,5 +1,5 @@
 use super::{empty_directory::*, runtime_text::*, text::*};
-use judge_core::procedure::writer_schema::ResourceKind;
+use judge_core::model::procedure::writer_schema::ResourceKind;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 

@@ -1,4 +1,4 @@
-use judge_core::procedure::writer_schema::Text;
+use judge_core::model::procedure::writer_schema::Text;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::path::PathBuf;

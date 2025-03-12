@@ -1,4 +1,7 @@
-use judge_core::{problem_registry::*, procedure::*, writer_schema_transpiler::transpile, *};
+use judge_core::{
+    logic::writer_schema_transpiler::transpile,
+    model::{problem_registry::*, procedure::*, *},
+};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;

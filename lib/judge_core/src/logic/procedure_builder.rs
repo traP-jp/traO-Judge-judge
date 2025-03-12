@@ -1,4 +1,4 @@
-use crate::procedure::writer_schema::*;
+use crate::model::procedure::writer_schema::*;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]

@@ -1,4 +1,4 @@
-use crate::{
+use super::{
     identifiers::{DepId, ResourceId},
     procedure::*,
 };
