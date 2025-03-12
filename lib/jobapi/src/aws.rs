@@ -130,6 +130,7 @@ impl AwsClient for AwsClientType {
 
         println!("Public IP: {}", ip_address);
 
+        let http_client = reqwest::Client::new();
         {
             let mut try_count = 0;
             let start_time = std::time::Instant::now();
@@ -142,7 +143,11 @@ impl AwsClient for AwsClientType {
                 try_count += 1;
                 tokio::time::sleep(Duration::from_millis(100)).await;
                 println!("try = {}, Checking if instance is ready...", try_count);
-                match reqwest::get(&format!("http://{}/", ip_address)).await {
+                match http_client
+                    .get(&format!("http://{}/health", ip_address))
+                    .send()
+                    .await
+                {
                     Ok(response) => {
                         if response.status().is_success() {
                             println!("try = {}, Instance is ready.", try_count);
@@ -169,7 +174,7 @@ impl AwsClient for AwsClientType {
                 self.terminate_instance(instance_id).await?;
                 return Err(anyhow!("VOLUME_ID is not set"));
             }
-            volume_id.unwrap()
+            volume_id?
         };
 
         {
@@ -190,7 +195,11 @@ impl AwsClient for AwsClientType {
             }
         }
 
-        println!("Volume is attached.");
+        http_client
+            .post(&format!("http://{}/mount", ip_address))
+            .body(instance_id.to_string()) // TODO インスタンス用フォルダの名前を伝える
+            .send()
+            .await?;
 
         Ok(ip_address)
     }
@@ -225,11 +234,11 @@ impl AwsClient for AwsClientType {
                 let result = self
                     .s3_client
                     .get_object()
-                    .bucket("traO-judge")
-                    .key(outcome_id.to_string() + "/" + file_name.to_string().as_str()) // TODO
+                    .bucket("traO-judge") // TODO S3バケット名
+                    .key(outcome_id.to_string() + "/" + file_name.to_string().as_str()) // TODO S3上のパス
                     .send()
                     .await?;
-                let mut file = File::open(file_name.to_string())?; // TODO
+                let mut file = File::open(file_name.to_string())?; // TODO place先パス
                 file.write_all(result.body.bytes().unwrap())?;
                 Ok(())
             }
