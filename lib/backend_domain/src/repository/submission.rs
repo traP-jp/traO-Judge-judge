@@ -2,6 +2,7 @@ use axum::async_trait;
 
 use crate::model::submisson::{JudgeResult, Submission};
 
+#[cfg_attr(feature = "mockall", mockall::automock)]
 #[async_trait]
 pub trait SubmissionRepository {
     async fn get_submission(&self, id: i64) -> anyhow::Result<Option<Submission>>;

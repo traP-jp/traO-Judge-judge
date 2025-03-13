@@ -26,3 +26,7 @@ lettre = { workspace = true }
 fancy-regex = { workspace = true }
 aws-sdk-s3 = { workspace = true }
 aws-config = { workspace = true }
+mockall = { workspace = true, optional = true }
+
+[features]
+mockall = ["dep:mockall"]

@@ -2,6 +2,7 @@ use axum::async_trait;
 
 use crate::model::user::{User, UserId};
 
+#[cfg_attr(feature = "mockall", mockall::automock)]
 #[async_trait]
 pub trait SessionRepository {
     async fn create_session(&self, user: User) -> anyhow::Result<String>;

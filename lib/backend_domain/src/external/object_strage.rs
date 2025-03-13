@@ -1,5 +1,6 @@
 use axum::async_trait;
 
+#[cfg_attr(feature = "mockall", mockall::automock)]
 #[async_trait]
 pub trait ObjectStrageClient {
     async fn upload(&self, file_name: &str, data: &str) -> anyhow::Result<()>;

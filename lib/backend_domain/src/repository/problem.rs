@@ -2,6 +2,7 @@ use axum::async_trait;
 
 use crate::model::problem::{CreateNormalProblem, NormalProblem, UpdateNormalProblem};
 
+#[cfg_attr(feature = "mockall", mockall::automock)]
 #[async_trait]
 pub trait ProblemRepository {
     async fn get_problem(&self, id: i64) -> anyhow::Result<Option<NormalProblem>>;
