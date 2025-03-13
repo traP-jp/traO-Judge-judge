@@ -220,7 +220,6 @@ mod signup_request_tests {
     #[case::valid_data("0test++--.__1@example.com", Ok(()))]
     #[case::invalid_email("test+-.._1@example.com", Err(AuthError::ValidateError))]
     #[case::invalid_email("test.example.com", Err(AuthError::ValidateError))]
-
     async fn signup_request(
         _setup_env: (),
         #[case] email: String,
