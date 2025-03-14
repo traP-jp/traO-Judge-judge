@@ -5,6 +5,17 @@ import builtins
 import typing
 from enum import Enum, auto
 
+class ExecutionMetadata:
+    r"""
+    Judge input.
+    """
+    def new(self) -> ExecutionMetadata:
+        r"""
+        Read the input from environment variables.
+        """
+        ...
+
+
 class JudgeStatus(Enum):
     r"""
     Judge status enum.
