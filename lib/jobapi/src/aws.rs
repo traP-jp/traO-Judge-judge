@@ -304,8 +304,8 @@ mod tests {
         client.aws_instance_table.insert(
             instance_id,
             AwsInstanceInfo {
-                aws_id: "i-0b75e6b6cd1e85c7d".to_string(),
-                ip_addr: Some(Ipv4Addr::from_str("35.94.123.210")?),
+                aws_id: "i-*****************".to_string(),
+                ip_addr: Some(Ipv4Addr::from_str("***.***.***.***")?),
                 initialized: false,
             },
         );
@@ -322,8 +322,8 @@ mod tests {
         client.aws_instance_table.insert(
             instance_id,
             AwsInstanceInfo {
-                aws_id: "i-0b75e6b6cd1e85c7d".to_string(),
-                ip_addr: Some(Ipv4Addr::from_str("35.94.123.210")?),
+                aws_id: "i-*****************".to_string(),
+                ip_addr: Some(Ipv4Addr::from_str("***.***.***.***")?),
                 initialized: false,
             },
         );
