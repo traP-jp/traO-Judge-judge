@@ -8,8 +8,8 @@ use tokio::sync::Mutex;
 
 #[derive(Debug, Clone)]
 pub struct RegistryServer {
-    pub(crate) registry: Arc<Mutex<HashMap<identifiers::ResourceId, String>>>,
-    pub(crate) dep_id_to_name: Arc<Mutex<HashMap<identifiers::DepId, String>>>,
+    cache_dir: std::path::PathBuf,
+    dep_id_to_name: Arc<Mutex<HashMap<identifiers::DepId, String>>>,
 }
 
 #[axum::async_trait]
@@ -19,11 +19,18 @@ impl ProblemRegistryServer for RegistryServer {
         procedure: writer_schema::Procedure,
     ) -> Result<registered::Procedure, RegistrationError> {
         let (transpiled_procedure, content_to_register, dep_id_to_name) = transpile(procedure)?;
-        {
-            let mut registry = self.registry.lock().await;
-            for (resource_id, content) in content_to_register {
-                registry.insert(resource_id, content);
+        for (resource_id, content) in content_to_register {
+            let uuid: uuid::Uuid = resource_id.into();
+            let path = self.cache_dir.join(uuid.to_string());
+            if tokio::fs::try_exists(&path).await.is_ok() {
+                return Err(RegistrationError::InternalError(format!(
+                    "Resource {} already exists",
+                    resource_id
+                )));
             }
+            tokio::fs::write(path, content).await.map_err(|e| {
+                RegistrationError::InternalError(format!("Failed to write to cache: {}", e))
+            })?;
         }
         {
             let mut dep_id_to_name_global = self.dep_id_to_name.lock().await;
@@ -40,9 +47,12 @@ impl ProblemRegistryServer for RegistryServer {
     }
 
     async fn remove(&self, procedure: registered::Procedure) -> Result<(), RemovalError> {
-        let mut registry = self.registry.lock().await;
         for text in procedure.texts {
-            registry.remove(&text.resource_id);
+            let uuid: uuid::Uuid = text.resource_id.into();
+            let path = self.cache_dir.join(uuid.to_string());
+            tokio::fs::remove_file(path).await.map_err(|e| {
+                RemovalError::InternalError(format!("Failed to remove from cache: {}", e))
+            })?;
         }
         Ok(())
     }
