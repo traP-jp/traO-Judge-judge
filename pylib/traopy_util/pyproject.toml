@@ -1,0 +1,16 @@
+[project]
+name = "traopy_util"
+version = "0.1.1"
+description = "Library module for exec-container environment of traO-Judge"
+dependencies = []
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["maturin>=1.2,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+python-source = "python"
+module-name = "traopy_util"
+features = ["pyo3/extension-module"]
