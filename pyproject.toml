@@ -11,7 +11,11 @@ managed = true
 dev-dependencies = []
 
 [tool.rye.workspace]
-members = ["pylib/traopy_builder/example", "pylib/traopy_builder"]
+members = [
+    "pylib/traopy_builder/example",
+    "pylib/traopy_builder",
+    "pylib/traopy_util"
+]
 
 [tool.setuptools.packages.find]
 include = ["pylib"]

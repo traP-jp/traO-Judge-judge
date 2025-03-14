@@ -47,7 +47,8 @@ members = [
     "lib/backend_domain",
     "lib/backend_infra",
     "lib/backend_usecase",
-    "pylib/traopy_builder", 
+    "pylib/traopy_builder",
+    "pylib/traopy_util",
     "app/backend_app",
     "app/judge_control_app", "lib/local_problem_registry",
 ]
