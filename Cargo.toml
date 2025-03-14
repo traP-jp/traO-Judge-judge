@@ -40,8 +40,7 @@ async-std = { version = "1.13", features = ["attributes"] }
 members = [
     "lib/jobapi",
     "lib/problem_registry",
-    "lib/local_jobapi",
-    "lib/local_problem_registry",
+    "lib/judge_infra_mock",
     "lib/back_judge_grpc",
     "lib/judge_core",
     "lib/backend_domain",
@@ -50,6 +49,6 @@ members = [
     "pylib/traopy_builder",
     "pylib/traopy_util",
     "app/backend_app",
-    "app/judge_control_app", "lib/local_problem_registry",
+    "app/judge_control_app",
 ]
 resolver = "2"

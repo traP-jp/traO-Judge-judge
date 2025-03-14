@@ -4,3 +4,4 @@ pub mod judge;
 pub mod judge_output;
 pub mod problem_registry;
 pub mod procedure;
+pub mod dep_name_repository;

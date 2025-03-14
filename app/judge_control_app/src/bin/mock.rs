@@ -2,11 +2,8 @@ use back_judge_grpc::{
     generated::judge_service_server::JudgeServiceServer, server::WrappedJudgeApi,
 };
 use judge_core::logic::judge_api_impl::JudgeApiImpl;
-use local_jobapi::{
-    jobapi::JobApi,
-    tokens::{OutcomeToken, RegistrationToken},
-};
-use local_problem_registry::multi_proc::registry_client::RegistryClient;
+use judge_infra_mock::jobapi::jobapi::JobApi;
+use judge_infra_mock::multi_proc_problem_registry::registry_client::RegistryClient;
 
 #[tokio::main]
 async fn main() {

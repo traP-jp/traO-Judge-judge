@@ -1,7 +1,4 @@
-use judge_core::{
-    logic::writer_schema_transpiler::transpile,
-    model::{problem_registry::*, procedure::*, *},
-};
+use judge_core::model::{problem_registry::*, procedure::*, *};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -14,24 +11,18 @@ pub struct RegistryServer {
 
 #[axum::async_trait]
 impl ProblemRegistryServer for RegistryServer {
-    async fn register(
+    async fn register_many(
         &self,
-        procedure: writer_schema::Procedure,
-    ) -> Result<registered::Procedure, RegistrationError> {
-        let (transpiled_procedure, content_to_register, dep_id_to_name) = transpile(procedure)?;
+        resource_id_to_content: HashMap<identifiers::ResourceId, String>,
+    ) -> Result<(), RegistrationError> {
         {
             let mut registry = self.registry.lock().await;
-            for (resource_id, content) in content_to_register {
+            for (resource_id, content) in resource_id_to_content {
                 registry.insert(resource_id, content);
             }
+            std::mem::drop(registry);
         }
-        {
-            let mut dep_id_to_name_global = self.dep_id_to_name.lock().await;
-            for (dep_id, name) in dep_id_to_name {
-                dep_id_to_name_global.insert(dep_id, name);
-            }
-        }
-        Ok(transpiled_procedure)
+        Ok(())
     }
 
     async fn restore_name(&self, dep_id: identifiers::DepId) -> Option<String> {
