@@ -10,8 +10,8 @@
 #   universal: false
 
 -e file:.
--e file:pylib/traopy
--e file:pylib/traopy/example
+-e file:pylib/traopy_builder
+-e file:pylib/traopy_builder/example
 asttokens==3.0.0
     # via stack-data
 comm==0.2.2

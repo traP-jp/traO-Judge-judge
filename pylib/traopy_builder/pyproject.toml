@@ -1,5 +1,5 @@
 [project]
-name = "traopy"
+name = "traopy_builder"
 version = "0.1.0"
 description = "Library module for writers of traO-Judge"
 dependencies = []
@@ -12,5 +12,5 @@ build-backend = "maturin"
 
 [tool.maturin]
 python-source = "python"
-module-name = "traopy.lowlevel"
+module-name = "traopy_builder.lowlevel"
 features = ["pyo3/extension-module"]
