@@ -4,7 +4,7 @@ use judge_core::{
     model::{problem_registry::ProblemRegistryServer as _, *},
 };
 use local_jobapi::jobapi::JobApi;
-use local_problem_registry::{
+use local_problem_registry::one_proc::{
     new_registry, registry_client::RegistryClient, registry_server::RegistryServer,
 };
 use pyo3::prelude::*;
