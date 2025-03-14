@@ -21,3 +21,4 @@ aws-sdk-ec2 = "1.116.0"
 reqwest = "0.12.12"
 base64 = "0.22.1"
 aws-sdk-s3.workspace = true
+dotenv = "0.15.0"

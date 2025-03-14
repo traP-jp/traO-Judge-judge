@@ -21,6 +21,7 @@ use uuid::Uuid;
 #[async_trait]
 pub trait AwsClient {
     async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error>;
+    async fn initialize_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error>;
     async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error>;
     async fn place_file(
         &self,
@@ -42,22 +43,38 @@ pub trait AwsClient {
     async fn remove_outcome_directory(&self, outcome_id: Uuid) -> Result<(), anyhow::Error>;
 }
 
+struct AwsInstanceInfo {
+    aws_id: String,
+    ip_addr: Option<Ipv4Addr>,
+    initialized: bool,
+}
+
 pub struct AwsClientType {
     ec2_client: Ec2Client,
-    aws_id_map: HashMap<Uuid, String>,
-    ip_addr_map: HashMap<Uuid, Ipv4Addr>,
+    aws_instance_table: HashMap<Uuid, AwsInstanceInfo>,
     max_instance_count: usize,
     s3_client: S3Client,
 }
 
 impl AwsClientType {
     pub async fn new() -> Self {
+        // check env
+        for key in [
+            "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY",
+            "SECURITY_GROUP_ID",
+            "VOLUME_ID",
+        ] {
+            if env::var(key).is_err() {
+                panic!("{} is not set", key);
+            }
+        }
+
         let region_provider = RegionProviderChain::default_provider().or_else("us-west-2");
         let config = aws_config::from_env().region(region_provider).load().await;
         Self {
             ec2_client: Ec2Client::new(&config),
-            aws_id_map: HashMap::new(),
-            ip_addr_map: HashMap::new(),
+            aws_instance_table: HashMap::new(),
             max_instance_count: 15,
             s3_client: S3Client::new(&config),
         }
@@ -67,9 +84,13 @@ impl AwsClientType {
 #[async_trait]
 impl AwsClient for AwsClientType {
     async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error> {
-        if self.aws_id_map.len() >= self.max_instance_count {
+        if self.aws_instance_table.len() >= self.max_instance_count {
             return Err(anyhow!("Too many instances"));
         }
+        if self.aws_instance_table.contains_key(&instance_id) {
+            return Err(anyhow!("Instance already exists"));
+        }
+
         let security_group_id =
             env::var("SECURITY_GROUP_ID").expect("SECURITY_GROUP_ID is not set");
 
@@ -105,7 +126,14 @@ impl AwsClient for AwsClientType {
 
         println!("Created {aws_id}.");
 
-        self.aws_id_map.insert(instance_id, aws_id.to_string());
+        self.aws_instance_table.insert(
+            instance_id,
+            AwsInstanceInfo {
+                aws_id: aws_id.to_string(),
+                ip_addr: None,
+                initialized: false,
+            },
+        );
 
         println!("Waiting for instance to be ready...");
 
@@ -126,44 +154,22 @@ impl AwsClient for AwsClientType {
                 .expect("Failed to get public IP address");
             Ipv4Addr::from_str(public_ip).expect("Failed to parse IP address")
         };
-        self.ip_addr_map.insert(instance_id, ip_address);
+        self.aws_instance_table
+            .get_mut(&instance_id)
+            .unwrap()
+            .ip_addr = Some(ip_address);
 
         println!("Public IP: {}", ip_address);
-
-        let http_client = reqwest::Client::new();
-        {
-            let mut try_count = 0;
-            let start_time = std::time::Instant::now();
-            loop {
-                // 5分以上経過したらタイムアウト
-                if std::time::Instant::now() > start_time.add(Duration::from_secs(300)) {
-                    self.terminate_instance(instance_id).await?;
-                    return Err(anyhow!("Instance is not ready"));
-                }
-                try_count += 1;
-                tokio::time::sleep(Duration::from_millis(100)).await;
-                println!("try = {}, Checking if instance is ready...", try_count);
-                match http_client
-                    .get(&format!("http://{}/health", ip_address))
-                    .send()
-                    .await
-                {
-                    Ok(response) => {
-                        if response.status().is_success() {
-                            println!("try = {}, Instance is ready.", try_count);
-                            break;
-                        } else {
-                            println!("try = {}, Instance is ready, but request failed", try_count);
-                        }
-                    }
-                    Err(_) => {
-                        println!("try = {}, Instance is not ready.", try_count);
-                    }
-                }
-            }
+        Ok(ip_address)
+    }
+    async fn initialize_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error> {
+        let info = self.aws_instance_table.get(&instance_id).unwrap();
+        if info.initialized {
+            return Err(anyhow!("Instance is already initialized"));
         }
+        let aws_id = &info.aws_id;
+        let ip_address = &info.ip_addr.expect("No ip address");
 
-        println!("Instance is ready.");
         println!("Attaching volume...");
 
         // ボリュームをアタッチ
@@ -194,23 +200,27 @@ impl AwsClient for AwsClientType {
                 ));
             }
         }
-
+        let http_client = reqwest::Client::new();
         http_client
             .post(&format!("http://{}/mount", ip_address))
             .body(instance_id.to_string()) // TODO インスタンス用フォルダの名前を伝える
             .send()
             .await?;
-
-        Ok(ip_address)
+        self.aws_instance_table
+            .get_mut(&instance_id)
+            .unwrap()
+            .initialized = true;
+        Ok(())
     }
     async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error> {
         let response = self
             .ec2_client
             .terminate_instances()
             .instance_ids(
-                self.aws_id_map
+                self.aws_instance_table
                     .get(&instance_id)
                     .expect("Failed to get instance ID from instance ID")
+                    .aws_id
                     .clone(),
             )
             .send()
@@ -219,8 +229,7 @@ impl AwsClient for AwsClientType {
         if response.terminating_instances().is_empty() {
             return Err(anyhow!("Failed to terminate instance"));
         }
-        self.aws_id_map.remove(&instance_id);
-        self.ip_addr_map.remove(&instance_id);
+        self.aws_instance_table.remove(&instance_id);
         Ok(())
     }
     async fn place_file(
@@ -264,5 +273,56 @@ impl AwsClient for AwsClientType {
     }
     async fn remove_outcome_directory(&self, outcome_id: Uuid) -> Result<(), anyhow::Error> {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dotenv::dotenv;
+
+    #[tokio::test]
+    async fn test_create_instance() -> Result<(), anyhow::Error> {
+        // lib/jobapi/.env を読み込む
+        dotenv().ok();
+        let mut client = AwsClientType::new().await;
+        client.create_instance(Uuid::now_v7()).await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_initialize_instance() -> Result<(), anyhow::Error> {
+        // lib/jobapi/.env を読み込む
+        dotenv().ok();
+        let mut client = AwsClientType::new().await;
+        let instance_id = Uuid::now_v7();
+        client.aws_instance_table.insert(
+            instance_id,
+            AwsInstanceInfo {
+                aws_id: "i-0b75e6b6cd1e85c7d".to_string(),
+                ip_addr: Some(Ipv4Addr::from_str("35.94.123.210")?),
+                initialized: false,
+            },
+        );
+        client.initialize_instance(instance_id).await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_terminate_instance() -> Result<(), anyhow::Error> {
+        // lib/jobapi/.env を読み込む
+        dotenv().ok();
+        let mut client = AwsClientType::new().await;
+        let instance_id = Uuid::now_v7();
+        client.aws_instance_table.insert(
+            instance_id,
+            AwsInstanceInfo {
+                aws_id: "i-0b75e6b6cd1e85c7d".to_string(),
+                ip_addr: Some(Ipv4Addr::from_str("35.94.123.210")?),
+                initialized: false,
+            },
+        );
+        client.terminate_instance(instance_id).await?;
+        Ok(())
     }
 }
