@@ -1,17 +1,14 @@
 use crate::procedure_builder::PyProcedureBuilder;
 use judge_core::{
     logic::*,
-    model::{
-        judge::JudgeApi as _,
-        problem_registry::{ProblemRegistryClient, ProblemRegistryServer as _},
-        *,
-    },
+    model::{judge::JudgeApi as _, problem_registry::ProblemRegistryServer as _, *},
 };
-use local_jobapi::{
+use judge_infra_mock::dep_name_repository::DepNameRepository;
+use judge_infra_mock::jobapi::{
     jobapi::JobApi,
     tokens::{OutcomeToken, RegistrationToken},
 };
-use local_problem_registry::one_proc::{
+use judge_infra_mock::one_proc_problem_registry::{
     new_registry, registry_client::RegistryClient, registry_server::RegistryServer,
 };
 use pyo3::prelude::*;
@@ -26,6 +23,7 @@ pub struct LocalJudge {
     registry_server: RegistryServer,
     judge_api:
         judge_api_impl::JudgeApiImpl<RegistrationToken, OutcomeToken, JobApi<RegistryClient>>,
+    dn_repo: DepNameRepository,
 }
 
 #[gen_stub_pymethods]
@@ -39,6 +37,7 @@ impl LocalJudge {
         LocalJudge {
             judge_api,
             registry_server: server,
+            dn_repo: DepNameRepository::new(),
         }
     }
 
@@ -50,7 +49,13 @@ impl LocalJudge {
         runtime_text_contents: HashMap<String, String>,
     ) -> PyResult<String> {
         let procedure: procedure::writer_schema::Procedure = builder.get_schema_procedure();
-        let registered_procedure = self.registry_server.register(procedure).await.unwrap();
+        let registered_procedure = writer_schema_registerer::register(
+            procedure,
+            self.registry_server.clone(),
+            self.dn_repo.clone(),
+        )
+        .await
+        .unwrap();
         let judge_request = judge::JudgeRequest {
             procedure: registered_procedure,
             runtime_texts: runtime_text_contents,

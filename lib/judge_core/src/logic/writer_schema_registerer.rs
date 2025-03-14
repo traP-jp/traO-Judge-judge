@@ -1,13 +1,31 @@
 #![allow(unused_variables)]
 
 use crate::model::{
+    dep_name_repository::*,
     problem_registry::*,
     procedure::{writer_schema::*, *},
     *,
 };
 use std::collections::HashMap;
 
-pub fn transpile(
+pub async fn register<PRServer: ProblemRegistryServer, DNRepo: DepNameRepository>(
+    problem: writer_schema::Procedure,
+    pr_server: PRServer,
+    dn_repo: DNRepo,
+) -> Result<registered::Procedure, RegistrationError> {
+    let (procedure, content_to_id, name_to_id) = transpile_inner(problem)?;
+    dn_repo
+        .insert_many(name_to_id)
+        .await
+        .map_err(|e| RegistrationError::InternalError(e.to_string()))?;
+    pr_server
+        .register_many(content_to_id)
+        .await
+        .map_err(|e| RegistrationError::InternalError(e.to_string()))?;
+    Ok(procedure)
+}
+
+fn transpile_inner(
     problem: writer_schema::Procedure,
 ) -> Result<
     (

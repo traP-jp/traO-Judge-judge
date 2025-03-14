@@ -2,15 +2,16 @@ use super::{
     identifiers::{DepId, ResourceId},
     procedure::*,
 };
+use std::collections::HashMap;
 
 /// ProblemRegistryServer uploads contents of problems to the registry in webservice-backend server.
 #[axum::async_trait]
 pub trait ProblemRegistryServer: Clone + Send + Sync {
     // Memo: use crate::writer_schema_transpiler::transpile as the core logic
-    async fn register(
+    async fn register_many(
         &self,
-        problem: writer_schema::Procedure,
-    ) -> Result<registered::Procedure, RegistrationError>;
+        resource_id_to_content: HashMap<ResourceId, String>,
+    ) -> Result<(), RegistrationError>;
 
     // Convert DepId to names in writer schema
     async fn restore_name(&self, dep_id: DepId) -> Option<String>;
