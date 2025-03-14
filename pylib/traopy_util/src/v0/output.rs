@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
-use pyo3_stub_gen::derive::*;
-use pyo3::prelude::*;
 use judge_core::model::judge_output;
+use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
+use serde::{Deserialize, Serialize};
 
 /// Judge status enum.
 #[pyclass(eq, eq_int)]
@@ -26,7 +26,7 @@ pub fn displayable_result(
     memory: f64,
     score: i64,
     continue_next: bool,
-    message: Option<String>
+    message: Option<String>,
 ) -> String {
     let result = judge_output::DisplayableExecutionResult {
         status: match status {
