@@ -5,26 +5,22 @@ use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct JudgeApiImpl<
-    PRClient: problem_registry::ProblemRegistryClient,
     RToken: Send + Sync + 'static,
     OToken: Clone + Send + Sync + 'static,
     JobApi: job::JobApi<RToken, OToken>,
 > {
-    problem_registry_client: PRClient,
     job_api: JobApi,
     _phantom: std::marker::PhantomData<(Arc<RToken>, OToken)>,
 }
 
 impl<
-        PRClient: problem_registry::ProblemRegistryClient,
         RToken: Send + Sync + 'static,
         OToken: Clone + Send + Sync + 'static,
         JobApi: job::JobApi<RToken, OToken>,
-    > JudgeApiImpl<PRClient, RToken, OToken, JobApi>
+    > JudgeApiImpl<RToken, OToken, JobApi>
 {
-    pub fn new(problem_registry_client: PRClient, job_api: JobApi) -> Self {
+    pub fn new(job_api: JobApi) -> Self {
         Self {
-            problem_registry_client,
             job_api,
             _phantom: std::marker::PhantomData,
         }
@@ -32,15 +28,13 @@ impl<
 }
 
 impl<
-        PRClient: problem_registry::ProblemRegistryClient,
         RToken: Send + Sync + 'static,
         OToken: Clone + Send + Sync + 'static,
         JobApi: job::JobApi<RToken, OToken>,
-    > Clone for JudgeApiImpl<PRClient, RToken, OToken, JobApi>
+    > Clone for JudgeApiImpl<RToken, OToken, JobApi>
 {
     fn clone(&self) -> Self {
         Self {
-            problem_registry_client: self.problem_registry_client.clone(),
             job_api: self.job_api.clone(),
             _phantom: std::marker::PhantomData,
         }
@@ -49,11 +43,10 @@ impl<
 
 #[axum::async_trait]
 impl<
-        PRClient: problem_registry::ProblemRegistryClient,
         RToken: Send + Sync + 'static,
         OToken: Clone + Send + Sync + 'static,
         JobApi: job::JobApi<RToken, OToken>,
-    > judge::JudgeApi for JudgeApiImpl<PRClient, RToken, OToken, JobApi>
+    > judge::JudgeApi for JudgeApiImpl<RToken, OToken, JobApi>
 {
     async fn judge(&self, judge_request: judge::JudgeRequest) -> judge::JudgeResponse {
         let (runtime_procedure, identifier_map) = registered_procedure_converter::convert(

@@ -5,6 +5,12 @@ pub struct RegistryClient {
     cache_dir: std::path::PathBuf,
 }
 
+impl RegistryClient {
+    pub fn new(cache_dir: std::path::PathBuf) -> Self {
+        Self { cache_dir }
+    }
+}
+
 #[axum::async_trait]
 impl problem_registry::ProblemRegistryClient for RegistryClient {
     async fn fetch(
