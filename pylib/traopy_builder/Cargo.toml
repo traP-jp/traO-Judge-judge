@@ -1,10 +1,10 @@
 [package]
-name = "traopy"
+name = "traopy_builder"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "traopy"
+name = "traopy_builder"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
