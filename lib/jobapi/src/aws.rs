@@ -1,6 +1,7 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
 use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_ec2::operation::describe_instances::DescribeInstancesOutput;
 use aws_sdk_ec2::types::{InstanceType, Placement};
 use aws_sdk_ec2::Client as Ec2Client;
 use aws_sdk_s3::Client as S3Client;
@@ -13,9 +14,7 @@ use std::env;
 use std::fs::File;
 use std::io::Write;
 use std::net::Ipv4Addr;
-use std::ops::Add;
 use std::str::FromStr;
-use std::time::Duration;
 use uuid::Uuid;
 
 #[async_trait]
@@ -136,23 +135,29 @@ impl AwsClient for AwsClientType {
         );
 
         println!("Waiting for instance to be ready...");
-
         let ip_address = {
-            let describe_instances = self
-                .ec2_client
-                .describe_instances()
-                .instance_ids(aws_id)
-                .send()
-                .await
-                .expect("Failed to describe instance");
-            if describe_instances.reservations().is_empty() {
-                return Err(anyhow!("Failed to describe instance"));
-            }
+            let mut describe_instances: DescribeInstancesOutput;
+            let mut public_ip: Option<&str>;
+            loop {
+                describe_instances = self
+                    .ec2_client
+                    .describe_instances()
+                    .instance_ids(aws_id)
+                    .send()
+                    .await
+                    .expect("Failed to describe instance");
+                if describe_instances.reservations().is_empty() {
+                    return Err(anyhow!("Failed to describe instance"));
+                }
 
-            let public_ip = describe_instances.reservations()[0].instances()[0]
-                .public_ip_address()
-                .expect("Failed to get public IP address");
-            Ipv4Addr::from_str(public_ip).expect("Failed to parse IP address")
+                public_ip = describe_instances.reservations()[0].instances()[0].public_ip_address();
+                if public_ip.is_none() {
+                    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                    continue;
+                }
+                break;
+            }
+            Ipv4Addr::from_str(public_ip.unwrap()).expect("Failed to parse IP address")
         };
         self.aws_instance_table
             .get_mut(&instance_id)
