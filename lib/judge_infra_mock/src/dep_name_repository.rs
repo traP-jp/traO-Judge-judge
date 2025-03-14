@@ -1,8 +1,8 @@
+use anyhow::Result;
 use judge_core::model::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub struct DepNameRepository {
@@ -30,7 +30,10 @@ impl dep_name_repository::DepNameRepository for DepNameRepository {
         Ok(())
     }
 
-    async fn get_many(&self, dep_ids: Vec<identifiers::DepId>) -> HashMap<identifiers::DepId, Option<String>> {
+    async fn get_many(
+        &self,
+        dep_ids: Vec<identifiers::DepId>,
+    ) -> HashMap<identifiers::DepId, Option<String>> {
         let dep_id_to_name = {
             let mut dep_id_to_name = HashMap::new();
             let dep_names = self.dep_names.lock().await;

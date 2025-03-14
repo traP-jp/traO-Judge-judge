@@ -1,12 +1,9 @@
 use crate::procedure_builder::PyProcedureBuilder;
 use judge_core::{
     logic::*,
-    model::{
-        judge::JudgeApi as _,
-        problem_registry::ProblemRegistryServer as _,
-        *,
-    },
+    model::{judge::JudgeApi as _, problem_registry::ProblemRegistryServer as _, *},
 };
+use judge_infra_mock::dep_name_repository::DepNameRepository;
 use judge_infra_mock::jobapi::{
     jobapi::JobApi,
     tokens::{OutcomeToken, RegistrationToken},
@@ -14,7 +11,6 @@ use judge_infra_mock::jobapi::{
 use judge_infra_mock::one_proc_problem_registry::{
     new_registry, registry_client::RegistryClient, registry_server::RegistryServer,
 };
-use judge_infra_mock::dep_name_repository::DepNameRepository;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::collections::HashMap;
@@ -58,8 +54,8 @@ impl LocalJudge {
             self.registry_server.clone(),
             self.dn_repo.clone(),
         )
-            .await
-            .unwrap();
+        .await
+        .unwrap();
         let judge_request = judge::JudgeRequest {
             procedure: registered_procedure,
             runtime_texts: runtime_text_contents,
