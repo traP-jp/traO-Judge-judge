@@ -2,8 +2,8 @@ use crate::procedure_builder::PyProcedureBuilder;
 use judge_core::{
     logic::*,
     model::{
-        problem_registry::{ProblemRegistryClient, ProblemRegistryServer as _},
         judge::JudgeApi as _,
+        problem_registry::{ProblemRegistryClient, ProblemRegistryServer as _},
         *,
     },
 };
@@ -24,11 +24,8 @@ use std::path::PathBuf;
 #[pyclass]
 pub struct LocalJudge {
     registry_server: RegistryServer,
-    judge_api: judge_api_impl::JudgeApiImpl<
-        RegistrationToken,
-        OutcomeToken,
-        JobApi<RegistryClient>,
-    >,
+    judge_api:
+        judge_api_impl::JudgeApiImpl<RegistrationToken, OutcomeToken, JobApi<RegistryClient>>,
 }
 
 #[gen_stub_pymethods]
