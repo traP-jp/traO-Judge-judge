@@ -12,6 +12,15 @@ pub struct RegistryServer {
     dep_id_to_name: Arc<Mutex<HashMap<identifiers::DepId, String>>>,
 }
 
+impl RegistryServer {
+    pub fn new(cache_dir: std::path::PathBuf) -> Self {
+        Self {
+            cache_dir,
+            dep_id_to_name: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+}
+
 #[axum::async_trait]
 impl ProblemRegistryServer for RegistryServer {
     async fn register(
