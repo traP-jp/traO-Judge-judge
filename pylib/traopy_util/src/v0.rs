@@ -1,3 +1,4 @@
+pub mod input;
 pub mod output;
 use pyo3::prelude::*;
 
@@ -7,5 +8,6 @@ pub fn traopy_util_v1(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> 
     m.add_class::<output::JudgeStatus>()?;
     m.add_function(wrap_pyfunction!(output::displayable_result, m)?)?;
     m.add_function(wrap_pyfunction!(output::hidden_result, m)?)?;
+    m.add_class::<input::ExecutionMetadata>()?;
     Ok(())
 }
