@@ -1,16 +1,12 @@
-use local_problem_registry::multi_proc::registry_client::RegistryClient;
-use local_jobapi::{
-    jobapi::JobApi,
-    tokens::{
-        OutcomeToken,
-        RegistrationToken,
-    }
+use back_judge_grpc::{
+    generated::judge_service_server::JudgeServiceServer, server::WrappedJudgeApi,
 };
 use judge_core::logic::judge_api_impl::JudgeApiImpl;
-use back_judge_grpc::{
-    generated::judge_service_server::JudgeServiceServer,
-    server::WrappedJudgeApi,
+use local_jobapi::{
+    jobapi::JobApi,
+    tokens::{OutcomeToken, RegistrationToken},
 };
+use local_problem_registry::multi_proc::registry_client::RegistryClient;
 
 #[tokio::main]
 async fn main() {
@@ -34,10 +30,7 @@ async fn main() {
     tracing::info!("grpc_service_addr: {}", grpc_service_addr);
     let problem_registry_client = RegistryClient::new(problem_registry_dir.into());
     tracing::info!("ProblemRegistryClient created");
-    let jobapi = JobApi::new(
-        jobapi_cache_dir.into(),
-        problem_registry_client
-    )
+    let jobapi = JobApi::new(jobapi_cache_dir.into(), problem_registry_client)
         .expect("Failed to create JobApi");
     tracing::info!("JobApi created");
     let inner_judge_api = JudgeApiImpl::new(jobapi);
