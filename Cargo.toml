@@ -1,3 +1,8 @@
+[workspace.package]
+name = "traojudge"
+version = "0.1.0"
+edition = "2021"
+
 [workspace.dependencies]
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = [ "derive" ] }
@@ -32,20 +37,23 @@ lettre = "0.11.7"
 fancy-regex = "0.14.0"
 aws-sdk-s3 = {version="1.68.0", features = ["behavior-version-latest"] }
 aws-config = {version="1.5.13", features = ["behavior-version-latest"] }
+mockall = "0.13.1"
+rstest = "0.25.0"
+async-std = { version = "1.13", features = ["attributes"] }
 
 [workspace]
 members = [
     "lib/jobapi",
     "lib/problem_registry",
-    "lib/local_jobapi",
-    "lib/local_problem_registry",
-    "lib/grpc_schema",
+    "lib/judge_infra_mock",
+    "lib/back_judge_grpc",
     "lib/judge_core",
     "lib/backend_domain",
     "lib/backend_infra",
     "lib/backend_usecase",
-    "pylib/traopy", 
+    "pylib/traopy_builder",
+    "pylib/traopy_util",
     "app/backend_app",
-    "app/judge_control_app", "lib/local_problem_registry",
+    "app/judge_control_app",
 ]
 resolver = "2"

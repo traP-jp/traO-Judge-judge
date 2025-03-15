@@ -2,6 +2,7 @@ use axum::async_trait;
 
 use crate::model::user::{UpdateUser, User, UserId};
 
+#[cfg_attr(feature = "mockall", mockall::automock)]
 #[async_trait]
 pub trait UserRepository {
     async fn get_user_by_display_id(&self, display_id: i64) -> anyhow::Result<Option<User>>;

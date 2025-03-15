@@ -1,6 +1,14 @@
 [package]
 name = "judge_control_app"
-version = "0.1.0"
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tonic = { workspace = true }
+judge_core = { path = "../../lib/judge_core" }
+judge_infra_mock = { path = "../../lib/judge_infra_mock" }
+back_judge_grpc = { path = "../../lib/back_judge_grpc" }
