@@ -1,6 +1,6 @@
+use judge_core::constant::env_var_exec;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
-use judge_core::constant::env_var_exec;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -42,7 +42,8 @@ fn get_language_info(language_tag: Option<String>) -> Language {
             language
         }
     };
-    let language = schema.languages
+    let language = schema
+        .languages
         .into_iter()
         .find(|l| l.name == language_tag)
         .expect(format!("Language {} not found", language_tag).as_str());
@@ -59,23 +60,30 @@ pub struct Output {
     pub exit_code: i32,
 }
 
-
 /// Build the source code.
 #[pyfunction(signature = (build_source_path, build_output_path, language_tag=None))]
 #[gen_stub_pyfunction]
-pub fn build(build_source_path: PathBuf, build_output_path: PathBuf, language_tag: Option<String>) -> PyResult<Output> {
+pub fn build(
+    build_source_path: PathBuf,
+    build_output_path: PathBuf,
+    language_tag: Option<String>,
+) -> PyResult<Output> {
     let language = get_language_info(language_tag);
     let compile_command = language.compile;
     let envs = vec![
-        (env_var_exec::BUILD_SOURCE, build_source_path.to_str().unwrap()),
-        (env_var_exec::BUILD_OUTPUT, build_output_path.to_str().unwrap()),
+        (
+            env_var_exec::BUILD_SOURCE,
+            build_source_path.to_str().unwrap(),
+        ),
+        (
+            env_var_exec::BUILD_OUTPUT,
+            build_output_path.to_str().unwrap(),
+        ),
     ];
     let mut command = std::process::Command::new("sh");
     command.arg("-c").arg(compile_command);
     command.envs(envs);
-    let output = command
-        .output()
-        .expect("Failed to execute process");
+    let output = command.output().expect("Failed to execute process");
     let stdout = String::from_utf8(output.stdout)?;
     let stderr = String::from_utf8(output.stderr)?;
     let exit_code = output.status.code().unwrap();
@@ -92,15 +100,14 @@ pub fn build(build_source_path: PathBuf, build_output_path: PathBuf, language_ta
 pub fn run(build_output_path: PathBuf, language_tag: Option<String>) -> PyResult<Output> {
     let language = get_language_info(language_tag);
     let run_command = language.run;
-    let envs = vec![
-        (env_var_exec::BUILD_OUTPUT, build_output_path.to_str().unwrap()),
-    ];
+    let envs = vec![(
+        env_var_exec::BUILD_OUTPUT,
+        build_output_path.to_str().unwrap(),
+    )];
     let mut command = std::process::Command::new("sh");
     command.arg("-c").arg(run_command);
     command.envs(envs);
-    let output = command
-        .output()
-        .expect("Failed to execute process");
+    let output = command.output().expect("Failed to execute process");
     let stdout = String::from_utf8(output.stdout).unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
     let exit_code = output.status.code().unwrap();

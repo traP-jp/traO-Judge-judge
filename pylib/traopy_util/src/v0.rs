@@ -1,6 +1,6 @@
+pub mod command;
 pub mod input;
 pub mod output;
-pub mod command;
 use pyo3::prelude::*;
 
 #[pymodule(name = "v1")]
