@@ -1,4 +1,4 @@
-use anyhow::{anyhow, ensure, Context};
+use anyhow::{ensure, Context};
 use async_trait::async_trait;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_ec2::types::{InstanceType, Placement};
@@ -19,7 +19,6 @@ use uuid::Uuid;
 #[async_trait]
 pub trait AwsClient {
     async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error>;
-    async fn initialize_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error>;
     async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error>;
     async fn place_file(
         &self,
@@ -61,7 +60,6 @@ impl AwsClientType {
             "AWS_ACCESS_KEY_ID",
             "AWS_SECRET_ACCESS_KEY",
             "SECURITY_GROUP_ID",
-            "VOLUME_ID",
         ] {
             if env::var(key).is_err() {
                 panic!("{} is not set", key);
@@ -144,50 +142,7 @@ impl AwsClient for AwsClientType {
         println!("Private IP: {}", ip_addr);
         Ok(ip_addr)
     }
-    async fn initialize_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error> {
-        let info = self.aws_instance_table.get(&instance_id).unwrap();
-        if info.initialized {
-            return Err(anyhow!("Instance is already initialized"));
-        }
-        let aws_id = &info.aws_id;
-        let ip_address = &info.ip_addr;
 
-        // TODO: use logger
-        println!("Attaching volume...");
-
-        // ボリュームをアタッチ
-
-        let volume_id = env::var("VOLUME_ID")?;
-
-        {
-            let response = self
-                .ec2_client
-                .attach_volume()
-                .device("/dev/sdb")
-                .instance_id(aws_id)
-                .volume_id(volume_id)
-                .send()
-                .await;
-            if response.is_err() {
-                self.terminate_instance(instance_id).await?;
-                return Err(anyhow!(
-                    "Failed to attach volume: {}",
-                    response.err().unwrap()
-                ));
-            }
-        }
-        let http_client = reqwest::Client::new();
-        http_client
-            .post(&format!("http://{}/mount", ip_address))
-            .body(instance_id.to_string()) // TODO インスタンス用フォルダの名前を伝える
-            .send()
-            .await?;
-        self.aws_instance_table
-            .get_mut(&instance_id)
-            .unwrap()
-            .initialized = true;
-        Ok(())
-    }
     async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error> {
         let response = self
             .ec2_client
@@ -265,25 +220,6 @@ mod tests {
         dotenv().ok();
         let mut client = AwsClientType::new().await;
         client.create_instance(Uuid::now_v7()).await?;
-        Ok(())
-    }
-
-    #[ignore]
-    #[tokio::test]
-    async fn test_initialize_instance() -> Result<(), anyhow::Error> {
-        // lib/jobapi/.env を読み込む
-        dotenv().ok();
-        let mut client = AwsClientType::new().await;
-        let instance_id = Uuid::now_v7();
-        client.aws_instance_table.insert(
-            instance_id,
-            AwsInstanceInfo {
-                aws_id: "i-*****************".to_string(),
-                ip_addr: Ipv4Addr::from_str("***.***.***.***")?,
-                initialized: false,
-            },
-        );
-        client.initialize_instance(instance_id).await?;
         Ok(())
     }
 
