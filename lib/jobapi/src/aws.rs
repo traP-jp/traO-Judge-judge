@@ -6,7 +6,6 @@ use aws_sdk_ec2::Client as Ec2Client;
 use aws_sdk_s3::Client as S3Client;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
-use judge_core::model::job;
 use judge_core::model::job::FileConf;
 use std::collections::HashMap;
 use std::env;
@@ -24,7 +23,7 @@ pub trait AwsClient {
         &self,
         outcome_id: Uuid,
         file_name: Uuid,
-        file_conf: job::FileConf,
+        file_conf: FileConf,
     ) -> Result<(), anyhow::Error>;
     async fn push_outcome_to_instance_directory(
         &self,
@@ -43,13 +42,11 @@ pub trait AwsClient {
 struct AwsInstanceInfo {
     aws_id: String,
     ip_addr: Ipv4Addr,
-    initialized: bool,
 }
 
 pub struct AwsClientType {
     ec2_client: Ec2Client,
     aws_instance_table: HashMap<Uuid, AwsInstanceInfo>,
-    max_instance_count: usize,
     s3_client: S3Client,
 }
 
@@ -71,7 +68,6 @@ impl AwsClientType {
         Self {
             ec2_client: Ec2Client::new(&config),
             aws_instance_table: HashMap::new(),
-            max_instance_count: 15,
             s3_client: S3Client::new(&config),
         }
     }
@@ -80,10 +76,6 @@ impl AwsClientType {
 #[async_trait]
 impl AwsClient for AwsClientType {
     async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error> {
-        ensure!(
-            self.aws_instance_table.len() < self.max_instance_count,
-            "Too many instances"
-        );
         ensure!(
             !self.aws_instance_table.contains_key(&instance_id),
             "Instance already exists"
@@ -134,7 +126,6 @@ impl AwsClient for AwsClientType {
             AwsInstanceInfo {
                 aws_id: aws_id.to_string(),
                 ip_addr,
-                initialized: false,
             },
         );
 
@@ -235,7 +226,6 @@ mod tests {
             AwsInstanceInfo {
                 aws_id: "i-*****************".to_string(),
                 ip_addr: Ipv4Addr::from_str("***.***.***.***")?,
-                initialized: false,
             },
         );
         client.terminate_instance(instance_id).await?;
