@@ -1,7 +1,6 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, ensure, Context};
 use async_trait::async_trait;
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_ec2::operation::describe_instances::DescribeInstancesOutput;
 use aws_sdk_ec2::types::{InstanceType, Placement};
 use aws_sdk_ec2::Client as Ec2Client;
 use aws_sdk_s3::Client as S3Client;
@@ -44,7 +43,7 @@ pub trait AwsClient {
 
 struct AwsInstanceInfo {
     aws_id: String,
-    ip_addr: Option<Ipv4Addr>,
+    ip_addr: Ipv4Addr,
     initialized: bool,
 }
 
@@ -83,18 +82,19 @@ impl AwsClientType {
 #[async_trait]
 impl AwsClient for AwsClientType {
     async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error> {
-        if self.aws_instance_table.len() >= self.max_instance_count {
-            return Err(anyhow!("Too many instances"));
-        }
-        if self.aws_instance_table.contains_key(&instance_id) {
-            return Err(anyhow!("Instance already exists"));
-        }
+        ensure!(
+            self.aws_instance_table.len() < self.max_instance_count,
+            "Too many instances"
+        );
+        ensure!(
+            !self.aws_instance_table.contains_key(&instance_id),
+            "Instance already exists"
+        );
 
-        let security_group_id =
-            env::var("SECURITY_GROUP_ID").expect("SECURITY_GROUP_ID is not set");
+        let security_group_id = env::var("SECURITY_GROUP_ID")?;
 
         let read_file_base64 = |file_path: &str| {
-            let file = std::fs::read(file_path).expect("Failed to read file");
+            let file = std::fs::read(file_path).context("Failed to read file")?;
             Ok::<String, anyhow::Error>(BASE64_STANDARD.encode(file).to_string())
         };
 
@@ -106,7 +106,7 @@ impl AwsClient for AwsClientType {
             )
             .instance_type(InstanceType::C6iLarge)
             .set_security_group_ids(Some(vec![security_group_id]))
-            .user_data(read_file_base64("assets/user_data.sh").expect("Failed to read user data"))
+            .user_data(read_file_base64("assets/user_data.sh").context("Failed to read user data")?)
             .min_count(1)
             .max_count(1)
             .set_placement(Some(
@@ -114,58 +114,35 @@ impl AwsClient for AwsClientType {
             ))
             .send()
             .await
-            .expect("Failed to create instance");
-        if created_instance.instances().is_empty() {
-            return Err(anyhow!("Failed to create instance"));
-        }
+            .context("Failed to create instance")?;
+        ensure!(
+            !created_instance.instances().is_empty(),
+            "Failed to create instance"
+        );
 
         let aws_id = created_instance.instances()[0]
             .instance_id()
-            .expect("Failed to get instance ID");
+            .context("Failed to get instance ID")?;
+        let ip_addr_str = created_instance.instances()[0]
+            .private_ip_address()
+            .context("Failed to get private ip address")?;
+        let ip_addr = Ipv4Addr::from_str(ip_addr_str).context("Failed to parse IP address")?;
 
+        // TODO: use logger
         println!("Created {aws_id}.");
 
         self.aws_instance_table.insert(
             instance_id,
             AwsInstanceInfo {
                 aws_id: aws_id.to_string(),
-                ip_addr: None,
+                ip_addr,
                 initialized: false,
             },
         );
 
-        println!("Waiting for instance to be ready...");
-        let ip_address = {
-            let mut describe_instances: DescribeInstancesOutput;
-            let mut public_ip: Option<&str>;
-            loop {
-                describe_instances = self
-                    .ec2_client
-                    .describe_instances()
-                    .instance_ids(aws_id)
-                    .send()
-                    .await
-                    .expect("Failed to describe instance");
-                if describe_instances.reservations().is_empty() {
-                    return Err(anyhow!("Failed to describe instance"));
-                }
-
-                public_ip = describe_instances.reservations()[0].instances()[0].public_ip_address();
-                if public_ip.is_none() {
-                    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-                    continue;
-                }
-                break;
-            }
-            Ipv4Addr::from_str(public_ip.unwrap()).expect("Failed to parse IP address")
-        };
-        self.aws_instance_table
-            .get_mut(&instance_id)
-            .unwrap()
-            .ip_addr = Some(ip_address);
-
-        println!("Public IP: {}", ip_address);
-        Ok(ip_address)
+        // TODO: use logger
+        println!("Public IP: {}", ip_addr);
+        Ok(ip_addr)
     }
     async fn initialize_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error> {
         let info = self.aws_instance_table.get(&instance_id).unwrap();
@@ -173,20 +150,14 @@ impl AwsClient for AwsClientType {
             return Err(anyhow!("Instance is already initialized"));
         }
         let aws_id = &info.aws_id;
-        let ip_address = &info.ip_addr.expect("No ip address");
+        let ip_address = &info.ip_addr;
 
+        // TODO: use logger
         println!("Attaching volume...");
 
         // ボリュームをアタッチ
 
-        let volume_id = {
-            let volume_id = env::var("VOLUME_ID");
-            if volume_id.is_err() {
-                self.terminate_instance(instance_id).await?;
-                return Err(anyhow!("VOLUME_ID is not set"));
-            }
-            volume_id?
-        };
+        let volume_id = env::var("VOLUME_ID")?;
 
         {
             let response = self
@@ -224,16 +195,17 @@ impl AwsClient for AwsClientType {
             .instance_ids(
                 self.aws_instance_table
                     .get(&instance_id)
-                    .expect("Failed to get instance ID from instance ID")
+                    .context("Failed to get instance ID from instance ID")?
                     .aws_id
                     .clone(),
             )
             .send()
             .await
-            .expect("Failed to terminate instance");
-        if response.terminating_instances().is_empty() {
-            return Err(anyhow!("Failed to terminate instance"));
-        }
+            .context("Failed to terminate instance")?;
+        ensure!(
+            !response.terminating_instances().is_empty(),
+            "Failed to terminate instance"
+        );
         self.aws_instance_table.remove(&instance_id);
         Ok(())
     }
@@ -286,6 +258,7 @@ mod tests {
     use super::*;
     use dotenv::dotenv;
 
+    #[ignore]
     #[tokio::test]
     async fn test_create_instance() -> Result<(), anyhow::Error> {
         // lib/jobapi/.env を読み込む
@@ -295,6 +268,7 @@ mod tests {
         Ok(())
     }
 
+    #[ignore]
     #[tokio::test]
     async fn test_initialize_instance() -> Result<(), anyhow::Error> {
         // lib/jobapi/.env を読み込む
@@ -305,7 +279,7 @@ mod tests {
             instance_id,
             AwsInstanceInfo {
                 aws_id: "i-*****************".to_string(),
-                ip_addr: Some(Ipv4Addr::from_str("***.***.***.***")?),
+                ip_addr: Ipv4Addr::from_str("***.***.***.***")?,
                 initialized: false,
             },
         );
@@ -313,6 +287,7 @@ mod tests {
         Ok(())
     }
 
+    #[ignore]
     #[tokio::test]
     async fn test_terminate_instance() -> Result<(), anyhow::Error> {
         // lib/jobapi/.env を読み込む
@@ -323,7 +298,7 @@ mod tests {
             instance_id,
             AwsInstanceInfo {
                 aws_id: "i-*****************".to_string(),
-                ip_addr: Some(Ipv4Addr::from_str("***.***.***.***")?),
+                ip_addr: Ipv4Addr::from_str("***.***.***.***")?,
                 initialized: false,
             },
         );
