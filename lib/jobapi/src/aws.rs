@@ -141,7 +141,7 @@ impl AwsClient for AwsClientType {
         );
 
         // TODO: use logger
-        println!("Public IP: {}", ip_addr);
+        println!("Private IP: {}", ip_addr);
         Ok(ip_addr)
     }
     async fn initialize_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error> {
