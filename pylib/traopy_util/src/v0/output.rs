@@ -1,21 +1,7 @@
+use super::judge_status::JudgeStatus;
 use judge_core::model::judge_output;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
-use serde::{Deserialize, Serialize};
-
-/// Judge status enum.
-#[pyclass(eq, eq_int)]
-#[gen_stub_pyclass_enum]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum JudgeStatus {
-    AC,
-    WA,
-    TLE,
-    MLE,
-    OLE,
-    RE,
-    CE,
-}
 
 /// Create a displayable result.
 #[pyfunction(signature = (status, time, memory, score, continue_next, message=None))]
