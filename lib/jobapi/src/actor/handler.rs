@@ -52,12 +52,10 @@ impl Handler<Dependency> for Instance {
     type Result = Result<(OutcomeToken, std::process::Output), job::ExecutionError>;
     fn handle(&mut self, msg: Dependency, ctx: &mut Self::Context) -> Self::Result {
         for dependency in msg.dependencies {
-            todo!("AwsClient の push_outcome_to_instance_directory 呼び出し、outcome_id ディレクトリの中身を instance_id ディレクトリにコピー");
+            todo!(".tar.gz にして judge で保管していたファイル、gRPC で exec に送り付ける");
         }
-        todo!("exec に http リクエスト送信");
-        todo!("受信して output に代入");
-        let outcome_token = OutcomeToken::from_instance_id(self.instance_id)
-            .map_err(|e| job::ExecutionError::InternalError(format!("FilePlacementError: {e}")))?;
+        todo!("gRPC で exec に実行してもらい、output と outcome (.tar.gz) を返してもらう");
+        todo!("outcome を outcome_token と結びつける");
         todo!("Ok((outcome_token, output)) を返す")
     }
 }

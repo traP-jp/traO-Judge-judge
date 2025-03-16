@@ -33,12 +33,7 @@ pub struct OutcomeToken {
 impl OutcomeToken {
     pub fn from_file_conf(file_conf: job::FileConf) -> Result<Self, job::FilePlacementError> {
         let outcome_id = Uuid::now_v7();
-        todo!("AwsClient の place_file 呼び出し、outcome_id ディレクトリ作ってそこにファイル配置");
-        Ok(Self { outcome_id })
-    }
-    pub fn from_instance_id(instance_id: Uuid) -> Result<Self, job::FilePlacementError> {
-        let outcome_id = Uuid::now_v7();
-        todo!("AwsClient の pull_outcome_from_instance_id_directory 呼び出し、outcome_id ディレクトリ作ってそこに instance_id ディレクトリの中身コピー");
+        todo!("AwsClient の place_file 呼び出し、.tar.gz にして judge で保管");
         Ok(Self { outcome_id })
     }
 }

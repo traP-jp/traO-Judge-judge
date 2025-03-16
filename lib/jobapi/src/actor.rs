@@ -15,7 +15,7 @@ pub struct InstanceSupervisor {
 
 impl InstanceSupervisor {
     pub fn calculate_desired_instance_count(&self) -> usize {
-        todo!("self.reservation_count から適切なインスタンス数 (0~15) を決定し、返す")
+        todo!("self.reservation_count から適切なインスタンス数を決定し、返す")
     }
     pub fn get_target_instance_addr(&self) -> Addr<Instance> {
         todo!("self.instance_addrs から実行を行うインスタンスを決定し、返す")
@@ -54,7 +54,7 @@ impl Actor for Instance {
         ctx.set_mailbox_capacity(MAILBOX_CAPACITY);
         todo!("AwsClient の create_instance 呼び出し");
         todo!("self.instance_url 書き換え");
-        todo!("exec の http サーバ起動待ち、定期的にポーリングして反応あったら終了");
+        todo!("gRPC で exec との接続を確立");
     }
 
     fn stopped(&mut self, ctx: &mut Self::Context) {
