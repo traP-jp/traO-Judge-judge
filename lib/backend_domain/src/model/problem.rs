@@ -35,6 +35,7 @@ pub struct CreateNormalProblem {
     pub judgecode_path: String,
 }
 
+#[derive(Clone)]
 pub enum ProblemOrderBy {
     CreatedAtAsc,
     CreatedAtDesc,
@@ -44,6 +45,7 @@ pub enum ProblemOrderBy {
     DifficultyDesc,
 }
 
+#[derive(Clone)]
 pub struct ProblemGetQuery {
     pub user_id: Option<i64>,
     pub limit: i64,

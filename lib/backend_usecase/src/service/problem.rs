@@ -76,27 +76,35 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
             None => None,
         };
 
+        let query = ProblemGetQuery {
+            user_id: display_id,
+            user_query: query.user_query,
+            limit: query.limit.unwrap_or(50),
+            offset: query.offset.unwrap_or(0),
+            order_by: match query.order_by {
+                ProblemOrderByData::CreatedAtAsc => ProblemOrderBy::CreatedAtAsc,
+                ProblemOrderByData::CreatedAtDesc => ProblemOrderBy::CreatedAtDesc,
+                ProblemOrderByData::UpdatedAtAsc => ProblemOrderBy::UpdatedAtAsc,
+                ProblemOrderByData::UpdatedAtDesc => ProblemOrderBy::UpdatedAtDesc,
+                ProblemOrderByData::DifficultyAsc => ProblemOrderBy::DifficultyAsc,
+                ProblemOrderByData::DifficultyDesc => ProblemOrderBy::DifficultyDesc,
+            },
+        };
+
+        let total = self
+            .problem_repository
+            .get_problems_by_query_count(query.clone())
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?;
+
         let problems = self
             .problem_repository
-            .get_problems_by_query(ProblemGetQuery {
-                user_id: display_id,
-                user_query: query.user_query,
-                limit: query.limit.unwrap_or(1000),
-                offset: query.offset.unwrap_or(0),
-                order_by: match query.order_by {
-                    ProblemOrderByData::CreatedAtAsc => ProblemOrderBy::CreatedAtAsc,
-                    ProblemOrderByData::CreatedAtDesc => ProblemOrderBy::CreatedAtDesc,
-                    ProblemOrderByData::UpdatedAtAsc => ProblemOrderBy::UpdatedAtAsc,
-                    ProblemOrderByData::UpdatedAtDesc => ProblemOrderBy::UpdatedAtDesc,
-                    ProblemOrderByData::DifficultyAsc => ProblemOrderBy::DifficultyAsc,
-                    ProblemOrderByData::DifficultyDesc => ProblemOrderBy::DifficultyDesc,
-                },
-            })
+            .get_problems_by_query(query)
             .await
             .map_err(|_| ProblemError::InternalServerError)?;
 
         Ok(NormalProblemsDto {
-            total: problems.len() as i64,
+            total: total,
             problems: problems.into_iter().map(|p| p.into()).collect(),
         })
     }

@@ -11,6 +11,7 @@ pub trait ProblemRepository {
         &self,
         query: ProblemGetQuery,
     ) -> anyhow::Result<Vec<NormalProblem>>;
+    async fn get_problems_by_query_count(&self, query: ProblemGetQuery) -> anyhow::Result<i64>;
     async fn update_problem(
         &self,
         id: i64,

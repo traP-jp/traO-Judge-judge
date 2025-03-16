@@ -6,7 +6,7 @@ use domain::{
     },
     repository::problem::ProblemRepository,
 };
-use sqlx::{MySqlPool, QueryBuilder};
+use sqlx::{MySqlPool, QueryBuilder, Row};
 
 #[derive(Clone)]
 pub struct ProblemRepositoryImpl {
@@ -81,6 +81,30 @@ impl ProblemRepository for ProblemRepositoryImpl {
             .await?;
 
         Ok(problems.into_iter().map(|problem| problem.into()).collect())
+    }
+
+    async fn get_problems_by_query_count(&self, query: ProblemGetQuery) -> anyhow::Result<i64> {
+        let mut query_builder = QueryBuilder::new("SELECT COUNT(1) FROM normal_problems WHERE");
+
+        query_builder.push(" (is_public = TRUE");
+        if let Some(user_id) = query.user_id {
+            query_builder.push(" OR author_id = ").push_bind(user_id);
+        }
+        query_builder.push(")");
+
+        if let Some(user_query) = query.user_query {
+            query_builder
+                .push(" AND author_id = ")
+                .push_bind(user_query);
+        }
+
+        let count = query_builder
+            .build()
+            .fetch_one(&self.pool)
+            .await?
+            .try_get::<i64, _>(0)?;
+
+        Ok(count)
     }
 
     async fn update_problem(
