@@ -25,18 +25,6 @@ pub trait AwsClient {
         file_name: Uuid,
         file_conf: FileConf,
     ) -> Result<(), anyhow::Error>;
-    async fn push_outcome_to_instance_directory(
-        &self,
-        instance_id: Uuid,
-        outcome_id: Uuid,
-    ) -> Result<(), anyhow::Error>;
-    async fn pull_outcome_from_instance_directory(
-        &self,
-        instance_id: Uuid,
-        outcome_id: Uuid,
-    ) -> Result<(), anyhow::Error>;
-    async fn clear_instance_directory(&self, instance_id: Uuid) -> Result<(), anyhow::Error>;
-    async fn remove_outcome_directory(&self, outcome_id: Uuid) -> Result<(), anyhow::Error>;
 }
 
 struct AwsInstanceInfo {
@@ -176,26 +164,6 @@ impl AwsClient for AwsClientType {
             }
             _ => todo!(),
         }
-    }
-    async fn push_outcome_to_instance_directory(
-        &self,
-        instance_id: Uuid,
-        outcome_id: Uuid,
-    ) -> Result<(), anyhow::Error> {
-        todo!()
-    }
-    async fn pull_outcome_from_instance_directory(
-        &self,
-        instance_id: Uuid,
-        outcome_id: Uuid,
-    ) -> Result<(), anyhow::Error> {
-        todo!()
-    }
-    async fn clear_instance_directory(&self, instance_id: Uuid) -> Result<(), anyhow::Error> {
-        todo!()
-    }
-    async fn remove_outcome_directory(&self, outcome_id: Uuid) -> Result<(), anyhow::Error> {
-        todo!()
     }
 }
 
