@@ -1,7 +1,18 @@
-use std::net::Ipv4Addr;
-
+use anyhow::{ensure, Context};
 use async_trait::async_trait;
-use judge_core::model::job;
+use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_ec2::types::{InstanceType, Placement};
+use aws_sdk_ec2::Client as Ec2Client;
+use aws_sdk_s3::Client as S3Client;
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
+use judge_core::model::job::FileConf;
+use std::collections::HashMap;
+use std::env;
+use std::fs::File;
+use std::io::Write;
+use std::net::Ipv4Addr;
+use std::str::FromStr;
 use uuid::Uuid;
 
 #[async_trait]
@@ -11,8 +22,9 @@ pub trait AwsClient {
     async fn place_file(
         &self,
         outcome_id: Uuid,
-        file_conf: job::FileConf,
-    ) -> Result<Uuid, anyhow::Error>;
+        file_name: Uuid,
+        file_conf: FileConf,
+    ) -> Result<(), anyhow::Error>;
     async fn push_outcome_to_instance_directory(
         &self,
         instance_id: Uuid,
@@ -25,4 +37,198 @@ pub trait AwsClient {
     ) -> Result<(), anyhow::Error>;
     async fn clear_instance_directory(&self, instance_id: Uuid) -> Result<(), anyhow::Error>;
     async fn remove_outcome_directory(&self, outcome_id: Uuid) -> Result<(), anyhow::Error>;
+}
+
+struct AwsInstanceInfo {
+    aws_id: String,
+    ip_addr: Ipv4Addr,
+}
+
+pub struct AwsClientType {
+    ec2_client: Ec2Client,
+    aws_instance_table: HashMap<Uuid, AwsInstanceInfo>,
+    s3_client: S3Client,
+}
+
+impl AwsClientType {
+    pub async fn new() -> Self {
+        // check env
+        for key in [
+            "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY",
+            "SECURITY_GROUP_ID",
+        ] {
+            if env::var(key).is_err() {
+                panic!("{} is not set", key);
+            }
+        }
+
+        let region_provider = RegionProviderChain::default_provider().or_else("us-west-2");
+        let config = aws_config::from_env().region(region_provider).load().await;
+        Self {
+            ec2_client: Ec2Client::new(&config),
+            aws_instance_table: HashMap::new(),
+            s3_client: S3Client::new(&config),
+        }
+    }
+}
+
+#[async_trait]
+impl AwsClient for AwsClientType {
+    async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error> {
+        ensure!(
+            !self.aws_instance_table.contains_key(&instance_id),
+            "Instance already exists"
+        );
+
+        let security_group_id = env::var("SECURITY_GROUP_ID")?;
+
+        let read_file_base64 = |file_path: &str| {
+            let file = std::fs::read(file_path).context("Failed to read file")?;
+            Ok::<String, anyhow::Error>(BASE64_STANDARD.encode(file).to_string())
+        };
+
+        let created_instance = self
+            .ec2_client
+            .run_instances()
+            .image_id(
+                "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
+            )
+            .instance_type(InstanceType::C6iLarge)
+            .set_security_group_ids(Some(vec![security_group_id]))
+            .user_data(read_file_base64("assets/user_data.sh").context("Failed to read user data")?)
+            .min_count(1)
+            .max_count(1)
+            .set_placement(Some(
+                Placement::builder().availability_zone("us-west-2a").build(),
+            ))
+            .send()
+            .await
+            .context("Failed to create instance")?;
+        ensure!(
+            !created_instance.instances().is_empty(),
+            "Failed to create instance"
+        );
+
+        let aws_id = created_instance.instances()[0]
+            .instance_id()
+            .context("Failed to get instance ID")?;
+        let ip_addr_str = created_instance.instances()[0]
+            .private_ip_address()
+            .context("Failed to get private ip address")?;
+        let ip_addr = Ipv4Addr::from_str(ip_addr_str).context("Failed to parse IP address")?;
+
+        // TODO: use logger
+        println!("Created {aws_id}.");
+
+        self.aws_instance_table.insert(
+            instance_id,
+            AwsInstanceInfo {
+                aws_id: aws_id.to_string(),
+                ip_addr,
+            },
+        );
+
+        // TODO: use logger
+        println!("Private IP: {}", ip_addr);
+        Ok(ip_addr)
+    }
+
+    async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error> {
+        let response = self
+            .ec2_client
+            .terminate_instances()
+            .instance_ids(
+                self.aws_instance_table
+                    .get(&instance_id)
+                    .context("Failed to get instance ID from instance ID")?
+                    .aws_id
+                    .clone(),
+            )
+            .send()
+            .await
+            .context("Failed to terminate instance")?;
+        ensure!(
+            !response.terminating_instances().is_empty(),
+            "Failed to terminate instance"
+        );
+        self.aws_instance_table.remove(&instance_id);
+        Ok(())
+    }
+    async fn place_file(
+        &self,
+        outcome_id: Uuid,
+        file_name: Uuid,
+        file_conf: FileConf,
+    ) -> Result<(), anyhow::Error> {
+        match file_conf {
+            FileConf::Text(resource_id) => {
+                let result = self
+                    .s3_client
+                    .get_object()
+                    .bucket("traO-judge") // TODO S3バケット名
+                    .key(outcome_id.to_string() + "/" + file_name.to_string().as_str()) // TODO S3上のパス
+                    .send()
+                    .await?;
+                let mut file = File::open(file_name.to_string())?; // TODO place先パス
+                file.write_all(result.body.bytes().unwrap())?;
+                Ok(())
+            }
+            _ => todo!(),
+        }
+    }
+    async fn push_outcome_to_instance_directory(
+        &self,
+        instance_id: Uuid,
+        outcome_id: Uuid,
+    ) -> Result<(), anyhow::Error> {
+        todo!()
+    }
+    async fn pull_outcome_from_instance_directory(
+        &self,
+        instance_id: Uuid,
+        outcome_id: Uuid,
+    ) -> Result<(), anyhow::Error> {
+        todo!()
+    }
+    async fn clear_instance_directory(&self, instance_id: Uuid) -> Result<(), anyhow::Error> {
+        todo!()
+    }
+    async fn remove_outcome_directory(&self, outcome_id: Uuid) -> Result<(), anyhow::Error> {
+        todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dotenv::dotenv;
+
+    #[ignore]
+    #[tokio::test]
+    async fn test_create_instance() -> Result<(), anyhow::Error> {
+        // lib/jobapi/.env を読み込む
+        dotenv().ok();
+        let mut client = AwsClientType::new().await;
+        client.create_instance(Uuid::now_v7()).await?;
+        Ok(())
+    }
+
+    #[ignore]
+    #[tokio::test]
+    async fn test_terminate_instance() -> Result<(), anyhow::Error> {
+        // lib/jobapi/.env を読み込む
+        dotenv().ok();
+        let mut client = AwsClientType::new().await;
+        let instance_id = Uuid::now_v7();
+        client.aws_instance_table.insert(
+            instance_id,
+            AwsInstanceInfo {
+                aws_id: "i-*****************".to_string(),
+                ip_addr: Ipv4Addr::from_str("***.***.***.***")?,
+            },
+        );
+        client.terminate_instance(instance_id).await?;
+        Ok(())
+    }
 }
