@@ -1,18 +1,14 @@
 use anyhow::{ensure, Context};
 use async_trait::async_trait;
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_ec2::types::{InstanceType, Placement};
-use aws_sdk_ec2::Client as Ec2Client;
+use aws_sdk_ec2::{
+    types::{InstanceType, Placement},
+    Client as Ec2Client,
+};
 use aws_sdk_s3::Client as S3Client;
-use base64::prelude::BASE64_STANDARD;
-use base64::Engine;
+use base64::{prelude::BASE64_STANDARD, Engine};
 use judge_core::model::job::FileConf;
-use std::collections::HashMap;
-use std::env;
-use std::fs::File;
-use std::io::Write;
-use std::net::Ipv4Addr;
-use std::str::FromStr;
+use std::{collections::HashMap, env, fs::File, io::Write, net::Ipv4Addr, str::FromStr};
 use uuid::Uuid;
 
 #[async_trait]
