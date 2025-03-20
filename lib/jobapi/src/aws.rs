@@ -2,7 +2,7 @@ use anyhow::{ensure, Context};
 use async_trait::async_trait;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_ec2::{
-    types::{InstanceType, Placement},
+    types::{IamInstanceProfileSpecification, InstanceType, Placement},
     Client as Ec2Client,
 };
 use aws_sdk_s3::Client as S3Client;
@@ -85,6 +85,11 @@ impl AwsClient for AwsClientType {
             .max_count(1)
             .set_placement(Some(
                 Placement::builder().availability_zone("us-west-2a").build(),
+            ))
+            .set_iam_instance_profile(Some(
+                IamInstanceProfileSpecification::builder()
+                    .arn("arn:aws:iam::222634386193:instance-profile/traO-infra-exec")
+                    .build(),
             ))
             .send()
             .await
