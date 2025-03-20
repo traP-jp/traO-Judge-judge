@@ -8,14 +8,19 @@ use crate::model::{
 };
 use std::collections::HashMap;
 
-pub async fn register<PRServer: ProblemRegistryServer, DNRepo: DepNameRepository>(
+pub async fn register<
+    PRServer: ProblemRegistryServer,
+    DNRepo: DepNameRepository<IdType>,
+    IdType,
+>(
     problem: writer_schema::Procedure,
     pr_server: PRServer,
     dn_repo: DNRepo,
+    problem_id: IdType,
 ) -> Result<registered::Procedure, RegistrationError> {
     let (procedure, content_to_id, name_to_id) = transpile_inner(problem)?;
     dn_repo
-        .insert_many(name_to_id)
+        .insert_many(problem_id, name_to_id)
         .await
         .map_err(|e| RegistrationError::InternalError(e.to_string()))?;
     pr_server

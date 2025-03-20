@@ -53,6 +53,7 @@ impl LocalJudge {
             procedure,
             self.registry_server.clone(),
             self.dn_repo.clone(),
+            1,
         )
         .await
         .unwrap();
