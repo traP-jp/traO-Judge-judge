@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+service ExecuteService {
+  rpc Execute(stream ExecuteRequest) returns (ExecuteResponse);
+}
+
+message ExecuteRequest {
+  string envvar = 1;
+  bytes outcome = 2;
+}
+
+message Output {
+  int32 exit_code = 1;
+  string stdout = 2;
+  string stderr = 3;
+}
+
+message ExecuteResponse {
+  Output output = 1;
+  bytes outcome = 2;
+}
