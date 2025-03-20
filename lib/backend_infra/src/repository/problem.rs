@@ -6,7 +6,7 @@ use domain::{
     },
     repository::problem::ProblemRepository,
 };
-use sqlx::{MySqlPool, QueryBuilder, Row};
+use sqlx::{MySqlPool, QueryBuilder};
 
 #[derive(Clone)]
 pub struct ProblemRepositoryImpl {
@@ -99,10 +99,9 @@ impl ProblemRepository for ProblemRepositoryImpl {
         }
 
         let count = query_builder
-            .build()
+            .build_query_scalar::<i64>()
             .fetch_one(&self.pool)
-            .await?
-            .try_get::<i64, _>(0)?;
+            .await?;
 
         Ok(count)
     }
