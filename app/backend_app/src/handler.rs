@@ -30,7 +30,10 @@ pub fn make_router(di_container: DiContainer) -> Router {
     let submission_router = Router::new().route("/:submissionId", get(submissions::get_submission));
 
     let problem_router = Router::new()
-        .route("/", post(problems::post_problem))
+        .route(
+            "/",
+            post(problems::post_problem).get(problems::get_problems),
+        )
         .route(
             "/:problemId",
             get(problems::get_problem).put(problems::put_problem),
