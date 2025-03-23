@@ -2,7 +2,7 @@
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ExecuteRequest {
     #[prost(int32, tag = "1")]
-    pub exec_time: i32,
+    pub exec_time_ms: i32,
     #[prost(message, repeated, tag = "2")]
     pub dependency: ::prost::alloc::vec::Vec<Dependency>,
 }
