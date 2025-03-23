@@ -14,6 +14,20 @@ pub struct ExecStats {
     memory_kib: i64,
 }
 
+#[pymethods]
+#[gen_stub_pymethods]
+impl ExecStats {
+    #[getter]
+    fn time_ms(&self) -> i64 {
+        self.time_ms
+    }
+
+    #[getter]
+    fn memory_kib(&self) -> i64 {
+        self.memory_kib
+    }
+}
+
 #[derive(Clone, Debug)]
 #[pyclass]
 #[gen_stub_pyclass_enum]
