@@ -1,23 +1,16 @@
-use super::{
-    identifiers::{DepId, ResourceId},
-    procedure::*,
-};
-use std::collections::HashMap;
+use super::identifiers::ResourceId;
 
 /// ProblemRegistryServer uploads contents of problems to the registry in webservice-backend server.
 #[axum::async_trait]
 pub trait ProblemRegistryServer: Clone + Send + Sync {
     // Memo: use crate::writer_schema_transpiler::transpile as the core logic
-    async fn register_many(
+    async fn register(
         &self,
-        resource_id_to_content: HashMap<ResourceId, String>,
+        resource_id: ResourceId,
+        content: String,
     ) -> Result<(), RegistrationError>;
 
-    // Convert DepId to names in writer schema
-    async fn restore_name(&self, dep_id: DepId) -> Option<String>;
-
-    // Remove registered problem from the registry
-    async fn remove(&self, procedure: registered::Procedure) -> Result<(), RemovalError>;
+    async fn remove(&self, resource_id: ResourceId) -> Result<(), RemovalError>;
 }
 
 /// ProblemRegistryClient fetches contents of problems from the registry in judge server.
