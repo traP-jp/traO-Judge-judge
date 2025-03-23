@@ -12,4 +12,5 @@ target/
 .venv
 
 python/traopy_util/*
+!python/traopy_util/__init__.py
 !python/traopy_util/lowlevel.pyi
