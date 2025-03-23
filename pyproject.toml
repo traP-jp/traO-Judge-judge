@@ -12,9 +12,9 @@ dev-dependencies = []
 
 [tool.rye.workspace]
 members = [
-    "pylib/traopy_builder/example",
     "pylib/traopy_builder",
-    "pylib/traopy_util"
+    "pylib/traopy_util",
+    "pylib/example",
 ]
 
 [tool.setuptools.packages.find]

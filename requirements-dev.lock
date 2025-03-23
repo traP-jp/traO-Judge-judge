@@ -10,9 +10,11 @@
 #   universal: false
 
 -e file:.
+-e file:pylib/example
 -e file:pylib/traopy_builder
--e file:pylib/traopy_builder/example
+    # via traopy-example
 -e file:pylib/traopy_util
+    # via traopy-example
 asttokens==3.0.0
     # via stack-data
 comm==0.2.2
@@ -65,6 +67,7 @@ python-dateutil==2.9.0.post0
 pyzmq==26.3.0
     # via ipykernel
     # via jupyter-client
+ruff==0.11.0
 six==1.17.0
     # via python-dateutil
 stack-data==0.6.3
