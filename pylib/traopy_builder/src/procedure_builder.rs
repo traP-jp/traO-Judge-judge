@@ -54,7 +54,12 @@ impl PyProcedureBuilder {
                 schema_dep
             })
             .collect::<Vec<_>>();
-        let schema_execution = execution::new_execution(execution.name, script_name, dependencies);
+        let schema_execution = execution::new_execution(
+            execution.name,
+            script_name,
+            dependencies,
+            execution.time_reserved_ms,
+        );
         let name = self.builder.add_execution(schema_execution).unwrap();
         let output = output::PyOutput::new(name);
         output

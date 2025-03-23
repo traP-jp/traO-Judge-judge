@@ -171,6 +171,8 @@ pub struct Execution {
     pub dep_id: ::core::option::Option<Uuid>,
     #[prost(message, repeated, tag = "2")]
     pub dependencies: ::prost::alloc::vec::Vec<Dependency>,
+    #[prost(uint64, tag = "3")]
+    pub time_reserved_ms: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Procedure {

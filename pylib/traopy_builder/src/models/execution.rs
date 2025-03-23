@@ -14,25 +14,38 @@ pub struct PyExecution {
     pub name: String,
     pub script: PyScriptOutput,
     pub dependencies: Vec<PyDependency>,
+    pub time_reserved_ms: u64,
 }
 
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyExecution {
     #[new]
-    pub fn new(name: String, script: PyScriptOutput, dependencies: Vec<PyDependency>) -> Self {
+    pub fn new(
+        name: String,
+        script: PyScriptOutput,
+        dependencies: Vec<PyDependency>,
+        time_reserved_ms: u64,
+    ) -> Self {
         PyExecution {
             name,
             script,
             dependencies,
+            time_reserved_ms,
         }
     }
 }
 
-pub fn new_execution(name: String, script_id: String, dependencies: Vec<Dependency>) -> Execution {
+pub fn new_execution(
+    name: String,
+    script_id: String,
+    dependencies: Vec<Dependency>,
+    time_reserved_ms: u64,
+) -> Execution {
     Execution {
         name,
         script_name: script_id,
         dependencies,
+        time_reserved_ms,
     }
 }
