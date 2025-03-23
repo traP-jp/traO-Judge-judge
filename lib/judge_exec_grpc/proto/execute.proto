@@ -5,7 +5,7 @@ service ExecuteService {
 }
 
 message ExecuteRequest {
-  int32 exec_time = 1;
+  int32 exec_time_ms = 1;
   repeated Dependency dependency = 2;
 }
 
