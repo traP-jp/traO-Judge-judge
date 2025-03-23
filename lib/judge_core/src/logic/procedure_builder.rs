@@ -14,37 +14,6 @@ pub struct ProcedureBuilder {
     jobs: HashMap<String, Job>,
 }
 
-impl From<ProcedureBuilder> for Procedure {
-    fn from(builder: ProcedureBuilder) -> Self {
-        Self {
-            resources: builder
-                .jobs
-                .iter()
-                .filter_map(|(_, job)| match job {
-                    Job::Resource(resource) => Some(resource.clone()),
-                    _ => None,
-                })
-                .collect(),
-            executions: builder
-                .jobs
-                .iter()
-                .filter_map(|(_, job)| match job {
-                    Job::Execution(execution) => Some(execution.clone()),
-                    _ => None,
-                })
-                .collect(),
-            scripts: builder
-                .jobs
-                .iter()
-                .filter_map(|(_, job)| match job {
-                    Job::Script(script) => Some(script.clone()),
-                    _ => None,
-                })
-                .collect(),
-        }
-    }
-}
-
 impl ProcedureBuilder {
     pub fn new() -> Self {
         ProcedureBuilder {
