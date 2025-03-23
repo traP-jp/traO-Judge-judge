@@ -2,9 +2,9 @@
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ExecuteRequest {
     #[prost(string, tag = "1")]
-    pub envvar_name: ::prost::alloc::string::String,
+    pub envvar: ::prost::alloc::string::String,
     #[prost(bytes = "vec", tag = "2")]
-    pub content: ::prost::alloc::vec::Vec<u8>,
+    pub outcome: ::prost::alloc::vec::Vec<u8>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Output {
@@ -20,7 +20,7 @@ pub struct ExecuteResponse {
     #[prost(message, optional, tag = "1")]
     pub output: ::core::option::Option<Output>,
     #[prost(bytes = "vec", tag = "2")]
-    pub content: ::prost::alloc::vec::Vec<u8>,
+    pub outcome: ::prost::alloc::vec::Vec<u8>,
 }
 /// Generated client implementations.
 pub mod execute_service_client {
