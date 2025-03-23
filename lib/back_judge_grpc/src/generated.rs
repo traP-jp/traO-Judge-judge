@@ -133,6 +133,7 @@ impl From<registered::Execution> for Execution {
         Self {
             dependencies,
             dep_id: Some(dep_id),
+            time_reserved_ms: execution.time_reserved_ms,
         }
     }
 }
@@ -153,6 +154,7 @@ impl TryFrom<Execution> for registered::Execution {
         Ok(registered::Execution {
             dependencies,
             dep_id,
+            time_reserved_ms: execution.time_reserved_ms,
         })
     }
 }
