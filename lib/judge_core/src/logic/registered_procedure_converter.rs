@@ -97,6 +97,7 @@ pub fn convert(
         executions.push(runtime::Execution {
             dependencies,
             runtime_id,
+            time_reserved_ms: execution.time_reserved_ms,
         });
     }
     let procedure = runtime::Procedure {

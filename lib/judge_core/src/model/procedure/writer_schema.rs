@@ -23,6 +23,7 @@ pub struct Execution {
     pub name: String,
     pub script_name: String,
     pub dependencies: Vec<Dependency>,
+    pub time_reserved_ms: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -156,6 +156,7 @@ fn transpile_inner(
         let execution = registered::Execution {
             dependencies,
             dep_id: dep_id,
+            time_reserved_ms: execution.time_reserved_ms,
         };
         executions.push(execution);
     }

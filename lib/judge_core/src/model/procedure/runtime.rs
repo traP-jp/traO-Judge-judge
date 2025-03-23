@@ -29,6 +29,7 @@ pub struct EmptyDirectory {
 pub struct Execution {
     pub dependencies: Vec<Dependency>,
     pub runtime_id: RuntimeId,
+    pub time_reserved_ms: u64,
 }
 
 #[derive(Debug, Clone)]
