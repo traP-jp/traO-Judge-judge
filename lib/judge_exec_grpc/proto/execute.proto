@@ -1,10 +1,15 @@
 syntax = "proto3";
 
 service ExecuteService {
-  rpc Execute(stream ExecuteRequest) returns (ExecuteResponse);
+  rpc Execute(ExecuteRequest) returns (ExecuteResponse);
 }
 
 message ExecuteRequest {
+  int32 exec_time = 1;
+  repeated Dependency dependency = 2;
+}
+
+message Dependency {
   string envvar = 1;
   bytes outcome = 2;
 }
