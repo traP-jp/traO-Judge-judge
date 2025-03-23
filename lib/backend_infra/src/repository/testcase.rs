@@ -51,7 +51,7 @@ impl TestcaseRepository for TestcaseRepositoryImpl {
     async fn create_testcases(&self, problem_id: i64, names: Vec<String>) -> anyhow::Result<()> {
         let mut query_builder =
             sqlx::QueryBuilder::new("INSERT INTO `testcases` (`problem_id`, `name`) VALUES ");
-    
+
         let mut separated = query_builder.separated(", ");
         for name in names {
             separated.push("(");
