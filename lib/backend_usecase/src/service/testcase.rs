@@ -1,7 +1,10 @@
-use domain::{model::testcase, repository::{
-    precedure::ProcedureRepository, problem::ProblemRepository, session::SessionRepository,
-    testcase::TestcaseRepository,
-}};
+use domain::{
+    model::testcase,
+    repository::{
+        precedure::ProcedureRepository, problem::ProblemRepository, session::SessionRepository,
+        testcase::TestcaseRepository,
+    },
+};
 use judge_core::model::{
     dep_name_repository::DepNameRepository,
     problem_registry::{ProblemRegistryClient, ProblemRegistryServer},
@@ -152,22 +155,19 @@ impl<
             }
         }
 
-        // todo (testcase中身の取得) 
+        // todo (testcase中身の取得)
         // let input = self.problem_registry_client.fetch(...)...;
         // let output = self.problem_registry_client.fetch(...)...;
 
         let testcase = TestcaseDto {
             id: testcase.id,
             name: testcase.name,
-            input: "todo".to_string(), // input,
+            input: "todo".to_string(),  // input,
             output: "todo".to_string(), // output,
             created_at: testcase.created_at,
             updated_at: testcase.updated_at,
         };
 
-
         Ok(testcase)
     }
-
-    
 }

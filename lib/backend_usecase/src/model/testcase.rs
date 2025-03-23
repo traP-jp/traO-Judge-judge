@@ -27,5 +27,3 @@ pub struct TestcaseDto {
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
-
-
