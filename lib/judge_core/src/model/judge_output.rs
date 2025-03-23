@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
 pub enum JudgeStatus {
     AC,
     WA,
