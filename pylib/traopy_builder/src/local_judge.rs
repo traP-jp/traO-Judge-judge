@@ -1,7 +1,7 @@
 use crate::procedure_builder::PyProcedureBuilder;
 use judge_core::{
     logic::*,
-    model::{judge::JudgeApi as _, problem_registry::ProblemRegistryServer as _, *},
+    model::{dep_name_repository::DepNameRepository as _, judge::JudgeApi as _, *},
 };
 use judge_infra_mock::dep_name_repository::DepNameRepository;
 use judge_infra_mock::jobapi::{
@@ -64,7 +64,9 @@ impl LocalJudge {
         let result = self.judge_api.judge(judge_request).await.unwrap();
         let mut result_in_name = HashMap::new();
         for (dep_id, outcome) in result {
-            let name = self.registry_server.restore_name(dep_id).await.unwrap();
+            let name = self.dn_repo.get_many(vec![dep_id]).await[&dep_id]
+                .clone()
+                .unwrap();
             result_in_name.insert(name, outcome);
         }
         let result_stringified: String = serde_json::to_string(&result_in_name).unwrap();

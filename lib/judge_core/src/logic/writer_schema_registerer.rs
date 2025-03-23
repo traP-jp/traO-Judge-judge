@@ -6,6 +6,7 @@ use crate::model::{
     procedure::{writer_schema::*, *},
     *,
 };
+use futures::future::join_all;
 use std::collections::HashMap;
 
 pub async fn register<
@@ -23,10 +24,15 @@ pub async fn register<
         .insert_many(problem_id, name_to_id)
         .await
         .map_err(|e| RegistrationError::InternalError(e.to_string()))?;
-    pr_server
-        .register_many(content_to_id)
+    let mut futures = Vec::new();
+    for (content_id, content) in content_to_id.iter() {
+        futures.push(pr_server.register(content_id.clone(), content.clone()));
+    }
+    join_all(futures)
         .await
-        .map_err(|e| RegistrationError::InternalError(e.to_string()))?;
+        .into_iter()
+        .find(|r| r.is_err())
+        .map_or(Ok(()), |r| r)?;
     Ok(procedure)
 }
 
