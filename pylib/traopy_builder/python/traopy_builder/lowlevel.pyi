@@ -5,117 +5,38 @@ import builtins
 import os
 import pathlib
 import typing
-from enum import Enum, auto
+
+class Builder:
+    def new(self) -> Builder:
+        ...
+
+    def add_static_text(self, name:builtins.str, content:builtins.str) -> Outcome:
+        ...
+
+    def add_runtime_text(self, name:builtins.str, label:builtins.str) -> Outcome:
+        ...
+
+    def add_empty_directory(self, name:builtins.str) -> Outcome:
+        ...
+
+    def add_script(self, name:builtins.str, content:builtins.str) -> Outcome:
+        ...
+
+    def add_execution(self, name:builtins.str, script_name:builtins.str, dependencies:typing.Sequence[Dependency], time_reserved_ms:builtins.int) -> Outcome:
+        ...
+
+    def jsonify(self) -> builtins.str:
+        ...
+
+    def run(self, label_to_content:typing.Mapping[builtins.str, builtins.str], temporary_dir:typing.Optional[builtins.str | os.PathLike | pathlib.Path]) -> builtins.str:
+        ...
+
 
 class Dependency:
-    r"""
-    Dependency object to refer to previous output.
-    
-    Path to the output will be provided as an environment variable named `envvar_name`.
-    """
-    def __new__(cls,ref_to:Output, envvar_name:builtins.str): ...
-    ...
-
-class EmptyDirectory:
-    r"""
-    Empty directory object to be placed in the execution environment.
-    """
-    def __new__(cls,name:builtins.str): ...
-    ...
-
-class Execution:
-    r"""
-    Execution object to be executed
-    
-    Script will be run with paths as environment variables specified in `dependency`.
-    """
-    def __new__(cls,name:builtins.str, script:ScriptOutput, dependencies:typing.Sequence[Dependency]): ...
-    ...
-
-class LocalJudge:
-    r"""
-    LocalJudge object to run provided procedures in your local environment.
-    """
-    def __new__(cls,temp_dir:builtins.str | os.PathLike | pathlib.Path): ...
-    def run(self, builder:ProcedureBuilder, runtime_text_contents:typing.Mapping[builtins.str, builtins.str]) -> builtins.str:
-        r"""
-        Run the provided procedure in your local environment.
-        """
+    def new(self, outcome:Outcome, envvar_name:builtins.str) -> Dependency:
         ...
 
 
-class Output:
-    r"""
-    Output object of each job.
-    
-    Executions can depend on Output by passing Output object to `dependency` field of Execution.
-    """
+class Outcome:
     ...
-
-class ProcedureBuilder:
-    r"""
-    ProcedureBuilder object to build a procedure.
-    """
-    def __new__(cls,): ...
-    def add_resource(self, resource:ResourceKind) -> Output:
-        r"""
-        Add a resource to the procedure.
-        """
-        ...
-
-    def add_script(self, script:Text) -> ScriptOutput:
-        r"""
-        Add a script to the procedure.
-        """
-        ...
-
-    def add_execution(self, execution:Execution) -> Output:
-        r"""
-        Add an execution to the procedure.
-        """
-        ...
-
-    def write_to(self, path:builtins.str | os.PathLike | pathlib.Path) -> None:
-        r"""
-        Export the procedure to a json file.
-        """
-        ...
-
-
-class RuntimeText:
-    r"""
-    RuntimeText object to be placed in the execution environment.
-    
-    `label`s have corresponding types of resources determined in judge-run time.
-    | label | description |
-    | --- | --- |
-    | `source` | Submission source code |
-    | `time_limit` | Time limit(optional) |
-    | `memory_limit` | Memory limit(optional) |
-    | `language` | Language of the submission(optional) |
-    """
-    def __new__(cls,name:builtins.str, label:builtins.str): ...
-    ...
-
-class ScriptOutput:
-    ...
-
-class Text:
-    r"""
-    Text object to be placed in the execution environment.
-    
-    Contents of Text must be static.
-    """
-    def __new__(cls,name:builtins.str, path:builtins.str | os.PathLike | pathlib.Path): ...
-    ...
-
-class ResourceKind(Enum):
-    r"""
-    Resource object to be placed in the execution environment.
-    
-    EmptyDirectory is an directory and TextFile and RuntimeTextFile are files.
-    """
-    EmptyDirectory = auto()
-    RuntimeTextFile = auto()
-    TextFile = auto()
 

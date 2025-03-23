@@ -14,4 +14,3 @@ target/
 python/traopy_builder/*
 !python/traopy_builder/__init__.py
 !python/traopy_builder/lowlevel.pyi
-!python/traopy_builder/py.typed
