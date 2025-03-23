@@ -5,6 +5,8 @@ build/
 dist/
 wheels/
 *.egg-info
+# Rust
+target/
 
 # venv
 .venv
