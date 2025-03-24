@@ -3,16 +3,16 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use serde::{Deserialize, Serialize};
 
-#[pyclass]
 #[gen_stub_pyclass]
+#[pyclass(module = "traopy_util.util.v0")]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Library {
     pub name: String,
     pub version: String,
 }
 
-#[pyclass]
 #[gen_stub_pyclass]
+#[pyclass(module = "traopy_util.util.v0")]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Language {
     pub name: String,
@@ -29,6 +29,7 @@ struct Schema {
 }
 
 #[pyfunction]
+#[gen_stub_pyfunction(module = "traopy_util.util.v0")]
 pub fn get_language_info(language_tag: String) -> Language {
     let languages_json_path = std::env::var(env_var_exec::LANGUAGES_JSON)
         .expect(format!("${} not set", env_var_exec::LANGUAGES_JSON).as_str());

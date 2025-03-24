@@ -12,5 +12,5 @@ build-backend = "maturin"
 
 [tool.maturin]
 python-source = "python"
-module-name = "traopy_util.lowlevel"
+module-name = "traopy_util.util"
 features = ["pyo3/extension-module"]

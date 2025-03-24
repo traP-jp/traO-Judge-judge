@@ -2,8 +2,8 @@ use judge_core::model::judge_output;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 
-#[pyclass(eq, eq_int)]
 #[gen_stub_pyclass_enum]
+#[pyclass(eq, eq_int, module = "traopy_util.util.v0")]
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum JudgeStatus {
     AC,
@@ -16,8 +16,8 @@ pub enum JudgeStatus {
 }
 
 #[pyfunction]
+#[gen_stub_pyfunction(module = "traopy_util.util.v0")]
 #[pyo3(signature = (status, time_ms, memory_kib, score, continue_next, message=None))]
-#[gen_stub_pyfunction]
 pub fn jsonify_displayable_output(
     status: JudgeStatus,
     time_ms: f64,
@@ -55,7 +55,7 @@ pub fn jsonify_displayable_output(
 }
 
 #[pyfunction]
-#[gen_stub_pyfunction]
+#[gen_stub_pyfunction(module = "traopy_util.util.v0")]
 pub fn jsonify_hidden_output(continue_next: bool) -> PyResult<String> {
     let continue_status = if continue_next {
         judge_output::ContinueStatus::Continue

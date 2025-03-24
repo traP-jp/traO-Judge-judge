@@ -7,15 +7,15 @@ use std::mem::MaybeUninit;
 use std::process::Command;
 
 #[derive(Clone, Debug)]
-#[pyclass]
 #[gen_stub_pyclass]
+#[pyclass(module = "traopy_util.util.v0")]
 pub struct ExecStats {
     time_ms: i64,
     memory_kib: i64,
 }
 
-#[pymethods]
 #[gen_stub_pymethods]
+#[pymethods]
 impl ExecStats {
     #[getter]
     fn time_ms(&self) -> i64 {
@@ -29,15 +29,15 @@ impl ExecStats {
 }
 
 #[derive(Clone, Debug)]
-#[pyclass]
 #[gen_stub_pyclass_enum]
+#[pyclass(module = "traopy_util.util.v0")]
 pub enum ExecResult {
     Success(ExecStats),
     Timeout(i32),
 }
 
 #[pyfunction]
-#[gen_stub_pyfunction]
+#[gen_stub_pyfunction(module = "traopy_util.util.v0")]
 /// Execute a command with environment variables and a time limit
 pub async fn exec_with_stats(
     cmd: String,

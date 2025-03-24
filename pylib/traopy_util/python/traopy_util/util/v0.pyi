@@ -6,7 +6,8 @@ import typing
 from enum import Enum, auto
 
 class ExecStats:
-    ...
+    time_ms: builtins.int
+    memory_kib: builtins.int
 
 class Language:
     ...
@@ -31,6 +32,9 @@ def exec_with_stats(cmd:builtins.str, envs:typing.Mapping[builtins.str, builtins
     r"""
     Execute a command with environment variables and a time limit
     """
+    ...
+
+def get_language_info(language_tag:builtins.str) -> Language:
     ...
 
 def jsonify_displayable_output(status:JudgeStatus, time_ms:builtins.float, memory_kib:builtins.float, score:builtins.int, continue_next:builtins.bool, message:typing.Optional[builtins.str]) -> builtins.str:
