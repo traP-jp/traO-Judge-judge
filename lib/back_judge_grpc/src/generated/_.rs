@@ -82,6 +82,7 @@ pub enum JudgeStatus {
     Ole = 4,
     Re = 5,
     Ce = 6,
+    We = 7,
 }
 impl JudgeStatus {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -97,6 +98,7 @@ impl JudgeStatus {
             Self::Ole => "OLE",
             Self::Re => "RE",
             Self::Ce => "CE",
+            Self::We => "WE",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -109,6 +111,7 @@ impl JudgeStatus {
             "OLE" => Some(Self::Ole),
             "RE" => Some(Self::Re),
             "CE" => Some(Self::Ce),
+            "WE" => Some(Self::We),
             _ => None,
         }
     }

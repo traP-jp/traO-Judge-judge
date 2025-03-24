@@ -9,6 +9,7 @@ pub enum JudgeStatus {
     OLE,
     RE,
     CE,
+    WE, // writer error
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
