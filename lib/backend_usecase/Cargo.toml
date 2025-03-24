@@ -26,6 +26,7 @@ fancy-regex = { workspace = true }
 aws-sdk-s3 = { workspace = true }
 aws-config = { workspace = true }
 domain = { path = "../backend_domain" }
+judge_core = { path = "../judge_core" }
 mockall = { workspace = true }
 rstest = { workspace = true }
 async-std = { workspace = true }
