@@ -22,5 +22,6 @@ pub fn v0_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
     // constant utilities
     sub_mod.add_function(pyo3::wrap_pyfunction!(constant::build_source_envvar, &sub_mod)?)?;
     sub_mod.add_function(pyo3::wrap_pyfunction!(constant::build_output_envvar, &sub_mod)?)?;
+    sub_mod.add_function(pyo3::wrap_pyfunction!(constant::exec_job_outcome_path_envvar, &sub_mod)?)?;
     Ok(())
 }
