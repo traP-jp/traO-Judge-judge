@@ -6,6 +6,7 @@ pub mod single_judge;
 #[pymodule(name = "builder")]
 fn root_module(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<builder::Builder>()?;
+    m.add_class::<builder::Dependency>()?;
     single_judge::single_judge_module(m)?;
     Ok(())
 }

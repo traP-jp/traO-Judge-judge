@@ -5,5 +5,8 @@ from . import job_name
 from . import label
 
 def _marker_fn() -> None:
+    r"""
+    Marker to ensure pyo3_stub_gen imports nested submodules
+    """
     ...
 

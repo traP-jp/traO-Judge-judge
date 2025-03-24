@@ -23,7 +23,7 @@ class Builder:
     def add_script(self, name:builtins.str, content:builtins.str) -> Outcome:
         ...
 
-    def add_execution(self, name:builtins.str, script_name:builtins.str, dependencies:typing.Sequence[Dependency], time_reserved_ms:builtins.int) -> Outcome:
+    def add_execution(self, name:builtins.str, script:Outcome, dependencies:typing.Sequence[Dependency], time_reserved_ms:builtins.int) -> Outcome:
         ...
 
     def jsonify(self) -> builtins.str:

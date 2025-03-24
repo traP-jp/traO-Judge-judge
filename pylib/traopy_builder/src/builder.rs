@@ -126,7 +126,7 @@ impl Builder {
     fn add_execution(
         &mut self,
         name: String,
-        script_name: String,
+        script: Outcome,
         dependencies: Vec<Dependency>,
         time_reserved_ms: u64,
     ) -> PyResult<Outcome> {
@@ -144,6 +144,14 @@ impl Builder {
             };
             inner_dependencies.push(dependency);
         }
+        let script_name = self
+            .id_to_name
+            .get(&script.id)
+            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Script {} not found",
+                script.id
+            )))?
+            .clone();
         let execution = Execution {
             name: name.clone(),
             script_name: script_name.clone(),

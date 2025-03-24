@@ -10,6 +10,13 @@ class ExecStats:
     memory_kib: builtins.int
     exit_code: builtins.int
 
+class ExecutionResult:
+    status: JudgeStatus
+    time: builtins.float
+    memory: builtins.float
+    score: builtins.int
+    def __new__(cls,status:JudgeStatus, time:builtins.float, memory:builtins.float, score:builtins.int): ...
+
 class Language:
     compile: builtins.str
     run: builtins.str
@@ -25,11 +32,15 @@ class JudgeStatus(Enum):
     OLE = auto()
     RE = auto()
     CE = auto()
+    WE = auto()
 
 def build_output_envvar() -> builtins.str:
     ...
 
 def build_source_envvar() -> builtins.str:
+    ...
+
+def dejsonify_output(json:builtins.str) -> typing.Optional[ExecutionResult]:
     ...
 
 def exec_job_outcome_path_envvar() -> builtins.str:
@@ -48,5 +59,8 @@ def jsonify_displayable_output(status:JudgeStatus, time_ms:builtins.float, memor
     ...
 
 def jsonify_hidden_output(continue_next:builtins.bool) -> builtins.str:
+    ...
+
+def merge_judge_status(statuses:typing.Sequence[JudgeStatus]) -> JudgeStatus:
     ...
 
