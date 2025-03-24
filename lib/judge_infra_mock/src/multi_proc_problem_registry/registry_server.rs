@@ -20,39 +20,33 @@ impl RegistryServer {
 
 #[axum::async_trait]
 impl ProblemRegistryServer for RegistryServer {
-    async fn register_many(
+    async fn register(
         &self,
-        resource_id_to_content: HashMap<identifiers::ResourceId, String>,
+        resource_id: identifiers::ResourceId,
+        content: String,
     ) -> Result<(), RegistrationError> {
-        for (resource_id, content) in resource_id_to_content {
-            let uuid: uuid::Uuid = resource_id.into();
-            let path = self.cache_dir.join(uuid.to_string());
-            if tokio::fs::try_exists(&path).await.is_ok() {
-                return Err(RegistrationError::InternalError(format!(
-                    "Resource {} already exists",
-                    resource_id
-                )));
-            }
-            tokio::fs::write(path, content).await.map_err(|e| {
-                RegistrationError::InternalError(format!("Failed to write to cache: {}", e))
-            })?;
+        let uuid: uuid::Uuid = resource_id.into();
+        let path = self.cache_dir.join(uuid.to_string());
+        if tokio::fs::try_exists(&path).await.is_ok() {
+            return Err(RegistrationError::InternalError(format!(
+                "Resource {} already exists",
+                resource_id
+            )));
         }
+        tokio::fs::write(path, content).await.map_err(|e| {
+            RegistrationError::InternalError(format!("Failed to write to cache: {}", e))
+        })?;
+
         Ok(())
     }
 
-    async fn restore_name(&self, dep_id: identifiers::DepId) -> Option<String> {
-        let dep_id_to_name = self.dep_id_to_name.lock().await;
-        dep_id_to_name.get(&dep_id).cloned()
-    }
+    async fn remove(&self, resource_id: identifiers::ResourceId) -> Result<(), RemovalError> {
+        let uuid: uuid::Uuid = resource_id.into();
+        let path = self.cache_dir.join(uuid.to_string());
+        tokio::fs::remove_file(path).await.map_err(|e| {
+            RemovalError::InternalError(format!("Failed to remove from cache: {}", e))
+        })?;
 
-    async fn remove(&self, procedure: registered::Procedure) -> Result<(), RemovalError> {
-        for text in procedure.texts {
-            let uuid: uuid::Uuid = text.resource_id.into();
-            let path = self.cache_dir.join(uuid.to_string());
-            tokio::fs::remove_file(path).await.map_err(|e| {
-                RemovalError::InternalError(format!("Failed to remove from cache: {}", e))
-            })?;
-        }
         Ok(())
     }
 }

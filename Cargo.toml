@@ -48,6 +48,7 @@ members = [
     "lib/problem_registry",
     "lib/judge_infra_mock",
     "lib/back_judge_grpc",
+    "lib/judge_exec_grpc",
     "lib/judge_core",
     "lib/backend_domain",
     "lib/backend_infra",
