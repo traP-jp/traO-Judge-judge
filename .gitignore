@@ -22,3 +22,4 @@ Cargo.lock
 # pylib
 *.so
 *__pycache__/
+*.egg-info/
