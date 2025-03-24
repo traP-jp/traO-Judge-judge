@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::collections::HashMap;
 
-use nix::libc::{c_int, rusage, wait4, WIFEXITED, WEXITSTATUS};
+use nix::libc::{c_int, rusage, wait4, WEXITSTATUS, WIFEXITED};
 use std::mem::MaybeUninit;
 use std::process::Command;
 

@@ -1,6 +1,6 @@
+use judge_core::constant::job_name;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
-use judge_core::constant::job_name;
 
 pub fn job_name_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
     let py = parent.py();
@@ -35,11 +35,15 @@ pub fn summary_phase() -> PyResult<String> {
 #[pyfunction]
 #[gen_stub_pyfunction(module = "traopy_builder.builder.single_judge.job_name")]
 pub fn test_input_file(core_name: String) -> PyResult<String> {
-    Ok(job_name::v0_features::testcase_input_name(core_name.as_str()))
+    Ok(job_name::v0_features::testcase_input_name(
+        core_name.as_str(),
+    ))
 }
 
 #[pyfunction]
 #[gen_stub_pyfunction(module = "traopy_builder.builder.single_judge.job_name")]
 pub fn test_expected_file(core_name: String) -> PyResult<String> {
-    Ok(job_name::v0_features::testcase_expected_name(core_name.as_str()))
+    Ok(job_name::v0_features::testcase_expected_name(
+        core_name.as_str(),
+    ))
 }

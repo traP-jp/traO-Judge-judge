@@ -1,4 +1,3 @@
-
 pub const COMPILE_PHASE: &str = "compilePhase";
 const TEST_PHASE_PREFIX: &str = "testPhase_";
 pub fn test_phase_execution_job_name(core_name: &str) -> String {

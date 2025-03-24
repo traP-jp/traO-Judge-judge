@@ -3,10 +3,7 @@ use pyo3_stub_gen::derive::*;
 
 #[pyfunction]
 #[gen_stub_pyfunction(module = "traopy_util.util.common")]
-pub fn normal_judge_checker(
-    expected: String,
-    actual: String,
-) -> bool {
+pub fn normal_judge_checker(expected: String, actual: String) -> bool {
     let expected = parse_whitespace_and_newline(&expected);
     let actual = parse_whitespace_and_newline(&actual);
     expected == actual

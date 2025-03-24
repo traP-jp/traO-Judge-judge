@@ -147,10 +147,12 @@ impl Builder {
         let script_name = self
             .id_to_name
             .get(&script.id)
-            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-                "Script {} not found",
-                script.id
-            )))?
+            .ok_or_else(|| {
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Script {} not found",
+                    script.id
+                ))
+            })?
             .clone();
         let execution = Execution {
             name: name.clone(),

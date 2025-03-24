@@ -1,6 +1,6 @@
+use judge_core::constant::label;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
-use judge_core::constant::label;
 
 pub fn label_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
     let py = parent.py();

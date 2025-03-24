@@ -30,12 +30,7 @@ pub struct ExecutionResult {
 #[pymethods]
 impl ExecutionResult {
     #[new]
-    fn new(
-        status: JudgeStatus,
-        time: f64,
-        memory: f64,
-        score: i64,
-    ) -> Self {
+    fn new(status: JudgeStatus, time: f64, memory: f64, score: i64) -> Self {
         ExecutionResult {
             status,
             time,
@@ -118,9 +113,7 @@ pub fn jsonify_hidden_output(continue_next: bool) -> PyResult<String> {
 
 #[pyfunction]
 #[gen_stub_pyfunction(module = "traopy_util.util.v0")]
-pub fn dejsonify_output(
-    json: String,
-) -> PyResult<Option<ExecutionResult>> {
+pub fn dejsonify_output(json: String) -> PyResult<Option<ExecutionResult>> {
     let inner_output = serde_json::from_str::<judge_output::ExecutionResult>(&json)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("{:?}", e)))?;
     let result = match inner_output {
