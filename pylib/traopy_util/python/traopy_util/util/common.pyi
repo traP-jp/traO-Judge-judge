@@ -3,6 +3,12 @@
 
 import builtins
 
+def normal_judge_checker(expected:builtins.str, actual:builtins.str) -> builtins.bool:
+    ...
+
+def parse_whitespace_and_newline(s:builtins.str) -> builtins.str:
+    ...
+
 def read_file_with_envvar(envvar:builtins.str) -> builtins.str:
     ...
 
