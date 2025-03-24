@@ -18,3 +18,7 @@ Cargo.lock
 
 # .venv
 .venv
+
+# pylib
+*.so
+*__pycache__/
