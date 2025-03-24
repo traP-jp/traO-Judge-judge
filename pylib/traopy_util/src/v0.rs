@@ -1,20 +1,53 @@
 pub mod command;
-pub mod input;
-pub mod judge_status;
+pub mod constant;
+pub mod exec_with_stats;
 pub mod output;
 use pyo3::prelude::*;
 
-#[pymodule(name = "v1")]
 /// This module provides utilities for traOJudge v0 spec.
-pub fn traopy_util_v1(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_class::<judge_status::JudgeStatus>()?;
-    m.add_class::<judge_status::JudgeStatusPriority>()?;
-    m.add_function(wrap_pyfunction!(judge_status::merge_judge_status, m)?)?;
-    m.add_function(wrap_pyfunction!(output::displayable_result, m)?)?;
-    m.add_function(wrap_pyfunction!(output::hidden_result, m)?)?;
-    m.add_class::<input::ExecutionMetadata>()?;
-    m.add_class::<command::Output>()?;
-    m.add_function(wrap_pyfunction!(command::build, m)?)?;
-    m.add_function(wrap_pyfunction!(command::run, m)?)?;
+pub fn v0_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
+    let py = parent.py();
+    let sub_mod = PyModule::new(py, "v0")?;
+    // command utilities
+    sub_mod.add_class::<command::Library>()?;
+    sub_mod.add_class::<command::Language>()?;
+    sub_mod.add_function(pyo3::wrap_pyfunction!(
+        command::get_language_info,
+        &sub_mod
+    )?)?;
+    // execution utilities
+    sub_mod.add_class::<exec_with_stats::ExecStats>()?;
+    sub_mod.add_function(pyo3::wrap_pyfunction!(
+        exec_with_stats::exec_with_stats,
+        &sub_mod
+    )?)?;
+    // output support utilities
+    sub_mod.add_class::<output::JudgeStatus>()?;
+    sub_mod.add_function(pyo3::wrap_pyfunction!(
+        output::jsonify_displayable_output,
+        &sub_mod
+    )?)?;
+    sub_mod.add_function(pyo3::wrap_pyfunction!(
+        output::jsonify_hidden_output,
+        &sub_mod
+    )?)?;
+    sub_mod.add_function(pyo3::wrap_pyfunction!(output::dejsonify_output, &sub_mod)?)?;
+    sub_mod.add_function(pyo3::wrap_pyfunction!(
+        output::merge_judge_status,
+        &sub_mod
+    )?)?;
+    // constant utilities
+    sub_mod.add_function(pyo3::wrap_pyfunction!(
+        constant::build_source_envvar,
+        &sub_mod
+    )?)?;
+    sub_mod.add_function(pyo3::wrap_pyfunction!(
+        constant::build_output_envvar,
+        &sub_mod
+    )?)?;
+    sub_mod.add_function(pyo3::wrap_pyfunction!(
+        constant::exec_job_outcome_path_envvar,
+        &sub_mod
+    )?)?;
     Ok(())
 }
