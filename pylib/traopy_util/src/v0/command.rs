@@ -23,6 +23,19 @@ pub struct Language {
     pub libraries: Option<Vec<Library>>,
 }
 
+#[gen_stub_pymethods]
+#[pymethods]
+impl Language {
+    #[getter]
+    fn compile(&self) -> String {
+        self.compile.clone()
+    }
+    #[getter]
+    fn run(&self) -> String {
+        self.run.clone()
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct Schema {
     pub languages: Vec<Language>,

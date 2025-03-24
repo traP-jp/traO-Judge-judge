@@ -10,7 +10,8 @@ class ExecStats:
     memory_kib: builtins.int
 
 class Language:
-    ...
+    compile: builtins.str
+    run: builtins.str
 
 class Library:
     ...
