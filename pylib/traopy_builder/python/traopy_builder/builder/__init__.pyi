@@ -5,6 +5,7 @@ import builtins
 import os
 import pathlib
 import typing
+from . import single_judge
 
 class Builder:
     def new(self) -> Builder:

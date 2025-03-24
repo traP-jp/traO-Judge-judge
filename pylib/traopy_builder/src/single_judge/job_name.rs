@@ -1,0 +1,31 @@
+use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
+use judge_core::constant::job_name;
+
+pub fn job_name_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
+    let py = parent.py();
+    let sub = PyModule::new(py, "job_name")?;
+    sub.add_function(wrap_pyfunction!(compile_phase, &sub)?)?;
+    sub.add_function(wrap_pyfunction!(test_phase, &sub)?)?;
+    sub.add_function(wrap_pyfunction!(summary_phase, &sub)?)?;
+    parent.add_submodule(&sub)?;
+    Ok(())
+}
+
+#[pyfunction]
+#[gen_stub_pyfunction(module = "traopy_builder.builder.single_judge.job_name")]
+pub fn compile_phase() -> PyResult<String> {
+    Ok(job_name::COMPILE_PHASE.to_string())
+}
+
+#[pyfunction]
+#[gen_stub_pyfunction(module = "traopy_builder.builder.single_judge.job_name")]
+pub fn test_phase(core_name: String) -> PyResult<String> {
+    Ok(job_name::test_phase_execution_job_name(&core_name))
+}
+
+#[pyfunction]
+#[gen_stub_pyfunction(module = "traopy_builder.builder.single_judge.job_name")]
+pub fn summary_phase() -> PyResult<String> {
+    Ok(job_name::SUMMARY_PHASE.to_string())
+}

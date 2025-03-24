@@ -14,14 +14,14 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use uuid::Uuid;
 
-#[pyclass]
+#[pyclass(module = "traopy_builder.builder")]
 #[gen_stub_pyclass]
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Outcome {
     pub(crate) id: Uuid,
 }
 
-#[pyclass]
+#[pyclass(module = "traopy_builder.builder")]
 #[gen_stub_pyclass]
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Dependency {
@@ -41,7 +41,7 @@ impl Dependency {
     }
 }
 
-#[pyclass]
+#[pyclass(module = "traopy_builder.builder")]
 #[gen_stub_pyclass]
 pub struct Builder {
     inner: ProcedureBuilder,
