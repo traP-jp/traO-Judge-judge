@@ -14,7 +14,6 @@ pub fn v0_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
     sub_mod.add_function(pyo3::wrap_pyfunction!(command::get_language_info, &sub_mod)?)?;
     // execution utilities
     sub_mod.add_class::<exec_with_stats::ExecStats>()?;
-    sub_mod.add_class::<exec_with_stats::ExecResult>()?;
     sub_mod.add_function(pyo3::wrap_pyfunction!(exec_with_stats::exec_with_stats, &sub_mod)?)?;
     // output support utilities
     sub_mod.add_class::<output::JudgeStatus>()?;

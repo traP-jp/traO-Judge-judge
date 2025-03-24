@@ -8,6 +8,7 @@ from enum import Enum, auto
 class ExecStats:
     time_ms: builtins.int
     memory_kib: builtins.int
+    exit_code: builtins.int
 
 class Language:
     compile: builtins.str
@@ -15,10 +16,6 @@ class Language:
 
 class Library:
     ...
-
-class ExecResult(Enum):
-    Success = auto()
-    Timeout = auto()
 
 class JudgeStatus(Enum):
     AC = auto()
@@ -35,7 +32,7 @@ def build_output_envvar() -> builtins.str:
 def build_source_envvar() -> builtins.str:
     ...
 
-def exec_with_stats(cmd:builtins.str, envs:typing.Mapping[builtins.str, builtins.str], time_limit_ms:builtins.int) -> ExecResult:
+def exec_with_stats(cmd:builtins.str, envs:typing.Mapping[builtins.str, builtins.str], time_limit_ms:builtins.int) -> typing.Optional[ExecStats]:
     r"""
     Execute a command with environment variables and a time limit
     """

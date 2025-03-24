@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::collections::HashMap;
 
-use nix::libc::{c_int, rusage, wait4};
+use nix::libc::{c_int, rusage, wait4, WIFEXITED, WEXITSTATUS};
 use std::mem::MaybeUninit;
 use std::process::Command;
 
@@ -12,6 +12,7 @@ use std::process::Command;
 pub struct ExecStats {
     time_ms: i64,
     memory_kib: i64,
+    exit_code: i32,
 }
 
 #[gen_stub_pymethods]
@@ -26,14 +27,11 @@ impl ExecStats {
     fn memory_kib(&self) -> i64 {
         self.memory_kib
     }
-}
 
-#[derive(Clone, Debug)]
-#[gen_stub_pyclass_enum]
-#[pyclass(module = "traopy_util.util.v0")]
-pub enum ExecResult {
-    Success(ExecStats),
-    Timeout(i32),
+    #[getter]
+    fn exit_code(&self) -> i32 {
+        self.exit_code
+    }
 }
 
 #[pyfunction]
@@ -43,7 +41,7 @@ pub async fn exec_with_stats(
     cmd: String,
     envs: HashMap<String, String>,
     time_limit_ms: i64,
-) -> PyResult<ExecResult> {
+) -> PyResult<Option<ExecStats>> {
     let child_proc = std::process::Command::new(cmd)
         .envs(envs)
         .spawn()
@@ -55,13 +53,14 @@ pub async fn exec_with_stats(
     )
     .await;
     match wait {
-        futures::future::Either::Left((usage, _)) => {
+        futures::future::Either::Left(((usage, exit_code), _)) => {
             // Child process finished before timeout
             let time_ms = usage.ru_utime.tv_sec * 1000 + usage.ru_utime.tv_usec / 1000;
             let memory_kib = usage.ru_maxrss;
-            return Ok(ExecResult::Success(ExecStats {
+            return Ok(Some(ExecStats {
                 time_ms: time_ms as i64,
                 memory_kib: memory_kib as i64,
+                exit_code: exit_code as i32,
             }));
         }
         futures::future::Either::Right((_, _)) => {
@@ -71,17 +70,23 @@ pub async fn exec_with_stats(
                 .arg("-9")
                 .arg(pid.to_string())
                 .spawn();
-            return Ok(ExecResult::Timeout(pid as i32));
+            return Ok(None);
         }
     }
 }
 
-async fn wait4_child(pid: i32) -> rusage {
+async fn wait4_child(pid: i32) -> (rusage, c_int) {
     let mut usage = MaybeUninit::<rusage>::uninit();
     let mut status = MaybeUninit::<c_int>::uninit();
     unsafe { wait4(pid, status.as_mut_ptr(), 0, usage.as_mut_ptr()) };
+    let status = unsafe { status.assume_init() };
+    let exit_code = if WIFEXITED(status) {
+        WEXITSTATUS(status)
+    } else {
+        -1
+    };
     let usage = unsafe { usage.assume_init() };
-    usage
+    return (usage, exit_code);
 }
 
 async fn timeout(time_limit_ms: i64) -> anyhow::Result<()> {
