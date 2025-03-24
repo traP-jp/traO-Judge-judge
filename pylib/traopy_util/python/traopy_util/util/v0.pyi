@@ -29,6 +29,12 @@ class JudgeStatus(Enum):
     RE = auto()
     CE = auto()
 
+def build_output_envvar() -> builtins.str:
+    ...
+
+def build_source_envvar() -> builtins.str:
+    ...
+
 def exec_with_stats(cmd:builtins.str, envs:typing.Mapping[builtins.str, builtins.str], time_limit_ms:builtins.int) -> ExecResult:
     r"""
     Execute a command with environment variables and a time limit

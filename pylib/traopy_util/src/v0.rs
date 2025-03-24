@@ -1,6 +1,7 @@
 pub mod command;
 pub mod exec_with_stats;
 pub mod output;
+pub mod constant;
 use pyo3::prelude::*;
 
 /// This module provides utilities for traOJudge v0 spec.
@@ -19,5 +20,8 @@ pub fn v0_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
     sub_mod.add_class::<output::JudgeStatus>()?;
     sub_mod.add_function(pyo3::wrap_pyfunction!(output::jsonify_displayable_output, &sub_mod)?)?;
     sub_mod.add_function(pyo3::wrap_pyfunction!(output::jsonify_hidden_output, &sub_mod)?)?;
+    // constant utilities
+    sub_mod.add_function(pyo3::wrap_pyfunction!(constant::build_source_envvar, &sub_mod)?)?;
+    sub_mod.add_function(pyo3::wrap_pyfunction!(constant::build_output_envvar, &sub_mod)?)?;
     Ok(())
 }
