@@ -8,7 +8,7 @@ use pyo3_stub_gen::derive::gen_stub_pyfunction;
 fn util_module(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     v0::v0_module(m)?;
     common::common_module(m)?;
-    m.add_function(wrap_pyfunction!(v0::command::get_language_info, m)?)?;
+    m.add_function(wrap_pyfunction!(_marker_fn, m)?)?;
     Ok(())
 }
 

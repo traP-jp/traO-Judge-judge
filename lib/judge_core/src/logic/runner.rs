@@ -59,8 +59,7 @@ impl<
                     .insert(
                         runtime_id.clone(),
                         judge_output::ExecutionJobResult::EarlyExit,
-                    )
-                    .context("Failed to insert early exit")?;
+                    );
             }
             Ok(outputs.clone())
         }
@@ -136,7 +135,8 @@ impl<
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
         let result = judge_output::parse(&output)
-            .context(format!("Failed to parse output for {}", runtime_id))?;
+            .map_err(|e| anyhow::anyhow!(e.to_string()))
+            .context("Failed to parse output")?;
         if match &result {
             judge_output::ExecutionResult::Displayable(result_inner) => {
                 result_inner.continue_status.clone()

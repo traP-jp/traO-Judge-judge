@@ -211,7 +211,13 @@ impl Builder {
         let judge_resp = judge_api
             .judge(judge_req)
             .await
-            .map_err(|_| PyErr::new::<pyo3::exceptions::PyValueError, _>("Failed to judge"))?;
+            .map_err(
+                |e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                        format!("Failed to judge: {:?}", e),
+                    )
+                }
+            )?;
         let judge_resp_with_name = {
             let dep_to_name = dn_repo
                 .get_many(judge_resp.keys().cloned().collect())

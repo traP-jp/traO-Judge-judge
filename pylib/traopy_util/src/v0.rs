@@ -23,6 +23,7 @@ pub fn v0_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
     )?)?;
     // output support utilities
     sub_mod.add_class::<output::JudgeStatus>()?;
+    sub_mod.add_class::<output::ExecutionResult>()?;
     sub_mod.add_function(pyo3::wrap_pyfunction!(
         output::jsonify_displayable_output,
         &sub_mod
@@ -49,5 +50,10 @@ pub fn v0_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
         constant::exec_job_outcome_path_envvar,
         &sub_mod
     )?)?;
+    sub_mod.add_function(pyo3::wrap_pyfunction!(
+        constant::build_tempdir_envvar,
+        &sub_mod
+    )?)?;
+    parent.add_submodule(&sub_mod)?;
     Ok(())
 }

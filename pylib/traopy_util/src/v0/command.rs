@@ -43,17 +43,25 @@ struct Schema {
 
 #[pyfunction]
 #[gen_stub_pyfunction(module = "traopy_util.util.v0")]
-pub fn get_language_info(language_tag: String) -> Language {
+pub fn get_language_info(language_tag: String) -> PyResult<Language> {
     let languages_json_path = std::env::var(env_var_exec::LANGUAGES_JSON)
-        .expect(format!("${} not set", env_var_exec::LANGUAGES_JSON).as_str());
+        .map_err(|_| PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            format!("Environment variable not found: {}", env_var_exec::LANGUAGES_JSON),
+        ))?;
     let languages_json = std::fs::read_to_string(languages_json_path.clone())
-        .expect(format!("Failed to read {}", languages_json_path).as_str());
+        .map_err(|_| PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            format!("Failed to read file: {}", languages_json_path),
+        ))?;
     let schema = serde_json::from_str::<Schema>(languages_json.as_str())
-        .expect("Failed to parse languages.json");
+        .map_err(|_| PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            "Failed to parse languages.json".to_string(),
+        ))?;
     let language = schema
         .languages
         .into_iter()
         .find(|l| l.name == language_tag)
-        .expect(format!("Language {} not found", language_tag).as_str());
-    language
+        .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            format!("Language not found: {}", language_tag),
+        ))?;
+    Ok(language)
 }
