@@ -40,6 +40,9 @@ def build_output_envvar() -> builtins.str:
 def build_source_envvar() -> builtins.str:
     ...
 
+def build_tempdir_envvar() -> builtins.str:
+    ...
+
 def dejsonify_output(json:builtins.str) -> typing.Optional[ExecutionResult]:
     ...
 
