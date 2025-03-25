@@ -19,5 +19,6 @@ pub fn common_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
         checker::parse_whitespace_and_newline,
         &sub_mod
     )?)?;
+    parent.add_submodule(&sub_mod)?;
     Ok(())
 }

@@ -1,4 +1,5 @@
 use super::tokens::{OutcomeToken, RegistrationToken};
+use judge_core::constant::env_var_exec;
 use judge_core::model::{job, job::*, problem_registry};
 use std::collections::HashMap;
 use std::os::unix::fs::PermissionsExt;
@@ -51,20 +52,25 @@ impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient>
             .iter()
             .map(|dep| (dep.envvar.clone(), dep.outcome.path().clone()))
             .collect::<HashMap<_, _>>();
-        envvars.insert("THIS".to_string(), this.path().clone());
-        std::fs::set_permissions(
-            envvars.get("SCRIPT").ok_or(ExecutionError::InternalError(
-                "No SCRIPT envvar".to_string(),
-            ))?,
-            std::fs::Permissions::from_mode(0o755),
-        )
-        .map_err(|e| ExecutionError::InternalError(e.to_string()))?;
-        let output = std::process::Command::new("sh")
-            .args(&["-c", "$SCRIPT"])
+        envvars.insert(env_var_exec::OUTPUT_PATH.to_string(), this.path().clone());
+        let script_path =
+            envvars
+                .get(env_var_exec::SCRIPT_PATH)
+                .ok_or(ExecutionError::InternalError(
+                    "No SCRIPT envvar".to_string(),
+                ))?;
+        std::fs::set_permissions(script_path, std::fs::Permissions::from_mode(0o755))
+            .map_err(|e| ExecutionError::InternalError(e.to_string()))?;
+        let output = std::process::Command::new(script_path)
             .envs(&envvars)
-            .current_dir(this.path())
             .output()
-            .map_err(|e| ExecutionError::JudgeFailed(e.to_string()))?;
+            .map_err(|e| {
+                ExecutionError::JudgeFailed(format!(
+                    "{}: {}",
+                    e.to_string(),
+                    script_path.to_string_lossy()
+                ))
+            })?;
         Ok((this, output))
     }
 

@@ -1,36 +1,40 @@
-#!python-traopy-v0
+#!/usr/bin/env python3
 from traopy_util.util import v0 as trau # type: ignore[reportMissingModuleSource]
 from traopy_util.util import common as trau_common # type: ignore[reportMissingModuleSource]
+import os
 
 testcase_count = int(trau_common.read_file_with_envvar("TESTCASE_COUNT"))
 ac_point = int(trau_common.read_file_with_envvar("AC_POINT"))
 
-judge_statuses: list[trau.ExecutionResult] = []
-
+results: list[trau.ExecutionResult] = []
+judge_statuses: list[trau.JudgeStatus] = []
 for i in range(testcase_count):
-    json = trau_common.read_file_with_envvar(f"OUTPUT_JSON_{i}")
-    judge_status = trau.dejsonify_output(json)
-    if judge_status is None:
-        judge_status = trau.ExecutionResult(
+    json_path = f"{os.environ.get(f"OUTPUT_JSON_{i}")}/out.json"
+    with open(json_path, "r") as f:
+        json = f.read()
+    result = trau.dejsonify_output(json)
+    if result is None:
+        result = trau.ExecutionResult(
             status=trau.JudgeStatus.WE,
             time=0.0,
             memory=0.0,
             score=0,
         )
-    judge_statuses.append(judge_status)
+    results.append(result)
+    judge_statuses.append(result.status)
 
 status = trau.merge_judge_status(judge_statuses)
 time = max(
-    judge_status.time for judge_status in judge_statuses
+    result.time for result in results
 )
 memory = max(
-    judge_status.memory for judge_status in judge_statuses
+    result.memory for result in results
 )
 score = min(
-    judge_status.score for judge_status in judge_statuses
+    result.score for result in results
 )
 json = trau.jsonify_displayable_output(
-    status=status.status,
+    status=status,
     time_ms=time,
     memory_kib=memory,
     score=score,

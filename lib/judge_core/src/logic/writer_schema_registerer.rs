@@ -1,10 +1,13 @@
 #![allow(unused_variables)]
 
-use crate::model::{
-    dep_name_repository::*,
-    problem_registry::*,
-    procedure::{writer_schema::*, *},
-    *,
+use crate::{
+    constant::env_var_exec,
+    model::{
+        dep_name_repository::*,
+        problem_registry::*,
+        procedure::{writer_schema::*, *},
+        *,
+    },
 };
 use futures::future::join_all;
 use std::collections::HashMap;
@@ -151,7 +154,7 @@ fn transpile_inner(
         }
         dependencies.push(registered::Dependency {
             dep_id: script_id.clone(),
-            envvar_name: "SCRIPT".to_string(),
+            envvar_name: env_var_exec::SCRIPT_PATH.to_string(),
         });
         let dep_id = name_to_id
             .get(&execution.name)

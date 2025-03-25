@@ -23,6 +23,8 @@ debugpy==1.8.13
     # via ipykernel
 decorator==5.2.1
     # via ipython
+dotenv==0.9.9
+    # via traopy-example
 executing==2.2.0
     # via stack-data
 ipykernel==6.29.5
@@ -64,6 +66,8 @@ pygments==2.19.1
     # via ipython-pygments-lexers
 python-dateutil==2.9.0.post0
     # via jupyter-client
+python-dotenv==1.0.1
+    # via dotenv
 pyzmq==26.3.0
     # via ipykernel
     # via jupyter-client
