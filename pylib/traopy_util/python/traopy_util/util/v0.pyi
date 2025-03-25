@@ -49,7 +49,7 @@ def dejsonify_output(json:builtins.str) -> typing.Optional[ExecutionResult]:
 def exec_job_outcome_path_envvar() -> builtins.str:
     ...
 
-def exec_with_stats(cmd:builtins.str, envs:typing.Mapping[builtins.str, builtins.str], time_limit_ms:builtins.int) -> typing.Optional[ExecStats]:
+async def exec_with_stats(cmd:builtins.str, envs:typing.Mapping[builtins.str, builtins.str], time_limit_ms:builtins.int) -> typing.Optional[ExecStats]:
     r"""
     Execute a command with environment variables and a time limit
     """
