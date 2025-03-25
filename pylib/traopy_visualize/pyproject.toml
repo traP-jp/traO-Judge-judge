@@ -1,0 +1,10 @@
+[project]
+name = "traopy-visualize"
+version = "0.1.0"
+description = "Add your description here"
+dependencies = [
+    "networkx==3.4.1",
+    "matplotlib==3.10.1",
+    "graphviz==0.20.3",
+    "pygraphviz==1.14",
+]
