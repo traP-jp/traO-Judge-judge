@@ -9,4 +9,5 @@ dependencies = [
     "dotenv==0.9.9",
     "traopy_util",
     "traopy_builder",
+    "traopy_visualize",
 ]
