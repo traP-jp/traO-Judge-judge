@@ -55,11 +55,10 @@ impl<
             let mut outputs = self.outputs.lock().await;
             let exec_confs = self.exec_confs.lock().await;
             for (runtime_id, _) in exec_confs.iter() {
-                outputs
-                    .insert(
-                        runtime_id.clone(),
-                        judge_output::ExecutionJobResult::EarlyExit,
-                    );
+                outputs.insert(
+                    runtime_id.clone(),
+                    judge_output::ExecutionJobResult::EarlyExit,
+                );
             }
             Ok(outputs.clone())
         }

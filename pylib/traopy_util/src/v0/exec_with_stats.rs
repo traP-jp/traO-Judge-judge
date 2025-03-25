@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::collections::HashMap;
 
-use nix::libc::{c_int, rusage, wait4, WEXITSTATUS, WIFEXITED, kill, SIGKILL};
+use nix::libc::{c_int, kill, rusage, wait4, SIGKILL, WEXITSTATUS, WIFEXITED};
 use std::mem::MaybeUninit;
 
 #[derive(Clone, Debug)]

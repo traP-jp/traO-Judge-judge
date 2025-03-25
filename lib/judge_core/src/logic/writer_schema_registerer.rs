@@ -1,11 +1,14 @@
 #![allow(unused_variables)]
 
-use crate::{constant::env_var_exec, model::{
-    dep_name_repository::*,
-    problem_registry::*,
-    procedure::{writer_schema::*, *},
-    *,
-}};
+use crate::{
+    constant::env_var_exec,
+    model::{
+        dep_name_repository::*,
+        problem_registry::*,
+        procedure::{writer_schema::*, *},
+        *,
+    },
+};
 use futures::future::join_all;
 use std::collections::HashMap;
 
