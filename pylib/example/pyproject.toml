@@ -1,6 +1,6 @@
 [project]
 name = "traopy_example"
-version = "0.1.1"
+version = "0.1.0"
 description = "Example of problem for traOJudge"
 readme = "README.md"
 requires-python = ">= 3.8"
