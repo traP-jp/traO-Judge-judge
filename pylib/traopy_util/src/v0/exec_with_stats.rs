@@ -10,7 +10,6 @@ const RUSAGE_MAXRSS_IS_KIB: bool = true;
 #[cfg(target_os = "macos")]
 const RUSAGE_MAXRSS_IS_KIB: bool = false;
 
-
 #[derive(Clone, Debug)]
 #[gen_stub_pyclass]
 #[pyclass(module = "traopy_util.util.v0")]
