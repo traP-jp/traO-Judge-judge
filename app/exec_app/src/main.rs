@@ -6,7 +6,7 @@ use bollard::Docker;
 use flate2::read::GzDecoder;
 use judge_core::constant::env_var_exec::SCRIPT_PATH;
 use judge_exec_grpc::generated::execute_service_server::{ExecuteService, ExecuteServiceServer};
-use judge_exec_grpc::generated::{ExecuteRequest, ExecuteResponse, Output};
+use judge_exec_grpc::generated::{Dependency, ExecuteRequest, ExecuteResponse, Output};
 use std::env;
 use tar::Archive;
 use tokio::time::timeout;
@@ -23,11 +23,11 @@ impl ExecApp {
 
     async fn execute_container(
         &self,
-        request: ExecuteRequest,
+        dependency: Vec<Dependency>,
     ) -> Result<ExecuteResponse, anyhow::Error> {
         // write outcomes to /outcome
         // todo: note: we can use Docker::upload_to_container instead of writing to disk
-        request.dependency.iter().try_for_each(|dep| {
+        dependency.iter().try_for_each(|dep| {
             let tar = GzDecoder::new(&dep.outcome[..]);
             let mut archive = Archive::new(tar);
             archive.unpack(format!("/outcome/{}", dep.envvar))
@@ -37,8 +37,7 @@ impl ExecApp {
         let docker_api = Docker::connect_with_socket_defaults()?;
 
         // create container
-        let env_vars: Vec<String> = request
-            .dependency
+        let env_vars: Vec<String> = dependency
             .iter()
             .map(|dep| format!("{}=\"/outcome/{}\"", dep.envvar, dep.envvar))
             .collect();
@@ -134,7 +133,7 @@ impl ExecuteService for ExecApp {
         let request = request.into_inner();
         let exec_result = timeout(
             std::time::Duration::from_millis(request.exec_time_ms as u64),
-            self.execute_container(request),
+            self.execute_container(request.dependency),
         );
         Ok(Response::new(match exec_result.await {
             Ok(Ok(response)) => response,
