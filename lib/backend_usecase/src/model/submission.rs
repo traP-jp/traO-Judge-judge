@@ -28,7 +28,7 @@ pub struct JudgeResultDto {
 }
 
 #[derive(Debug, Clone)]
-pub struct SubmissionSammaryDto {
+pub struct SubmissionSummaryDto {
     pub id: i64,
     pub problem_id: i64,
     pub user_id: i64,
@@ -42,9 +42,9 @@ pub struct SubmissionSammaryDto {
     pub judge_status: String,
 }
 
-impl From<Submission> for SubmissionSammaryDto {
+impl From<Submission> for SubmissionSummaryDto {
     fn from(submission: Submission) -> Self {
-        SubmissionSammaryDto {
+        SubmissionSummaryDto {
             id: submission.id,
             problem_id: submission.problem_id,
             user_id: submission.user_id,
@@ -62,7 +62,7 @@ impl From<Submission> for SubmissionSammaryDto {
 
 pub struct SubmissionsDto {
     pub total: i64,
-    pub submissions: Vec<SubmissionSammaryDto>,
+    pub submissions: Vec<SubmissionSummaryDto>,
 }
 
 pub enum SubmissionOrderByData {

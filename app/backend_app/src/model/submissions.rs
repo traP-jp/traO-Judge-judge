@@ -1,7 +1,7 @@
 use async_session::chrono;
 use serde::{Deserialize, Serialize};
 use usecase::model::submission::{
-    JudgeResultDto, SubmissionDto, SubmissionSammaryDto, SubmissionsDto,
+    JudgeResultDto, SubmissionDto, SubmissionSummaryDto, SubmissionsDto,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -91,7 +91,7 @@ pub struct SubmissionGetQuery {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct SubmissionSammaryResponse {
+pub struct SubmissionSummaryResponse {
     pub id: i64,
     pub user_id: i64,
     pub user_name: String,
@@ -105,9 +105,9 @@ pub struct SubmissionSammaryResponse {
     pub judge_status: String,
 }
 
-impl From<SubmissionSammaryDto> for SubmissionSammaryResponse {
-    fn from(submission: SubmissionSammaryDto) -> Self {
-        SubmissionSammaryResponse {
+impl From<SubmissionSummaryDto> for SubmissionSummaryResponse {
+    fn from(submission: SubmissionSummaryDto) -> Self {
+        SubmissionSummaryResponse {
             id: submission.id,
             user_id: submission.user_id,
             user_name: submission.user_name,
@@ -124,14 +124,14 @@ impl From<SubmissionSammaryDto> for SubmissionSammaryResponse {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct SubmissionSammarysResponse {
+pub struct SubmissionSummarysResponse {
     pub total: i64,
-    pub submissions: Vec<SubmissionSammaryResponse>,
+    pub submissions: Vec<SubmissionSummaryResponse>,
 }
 
-impl From<SubmissionsDto> for SubmissionSammarysResponse {
+impl From<SubmissionsDto> for SubmissionSummarysResponse {
     fn from(submissions: SubmissionsDto) -> Self {
-        SubmissionSammarysResponse {
+        SubmissionSummarysResponse {
             total: submissions.total,
             submissions: submissions
                 .submissions

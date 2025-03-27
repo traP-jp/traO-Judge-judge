@@ -1,6 +1,6 @@
 use crate::model::submission::{
     JudgeResultDto, SubmissionDto, SubmissionGetQueryData, SubmissionOrderByData,
-    SubmissionSammaryDto, SubmissionsDto,
+    SubmissionSummaryDto, SubmissionsDto,
 };
 use domain::{
     model::submisson::{SubmissionGetQuery, SubmissionOrderBy},

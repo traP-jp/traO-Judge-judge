@@ -1,5 +1,5 @@
 use crate::model::submissions::{
-    SubmissionOrderBy, SubmissionResponse, SubmissionSammarysResponse,
+    SubmissionOrderBy, SubmissionResponse, SubmissionSummarysResponse,
 };
 use crate::{di::DiContainer, model::submissions::SubmissionGetQuery};
 use axum::extract::Query;
@@ -82,7 +82,7 @@ pub async fn get_submissions(
         .await
     {
         Ok(submissions) => {
-            let resp = SubmissionSammarysResponse::from(submissions);
+            let resp = SubmissionSummarysResponse::from(submissions);
             Ok((StatusCode::OK, Json(resp)))
         }
         Err(e) => match e {
