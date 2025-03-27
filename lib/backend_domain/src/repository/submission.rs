@@ -1,6 +1,6 @@
 use axum::async_trait;
 
-use crate::model::submisson::{JudgeResult, Submission, SubmissionGetQuery};
+use crate::model::submission::{JudgeResult, Submission, SubmissionGetQuery};
 
 #[cfg_attr(feature = "mockall", mockall::automock)]
 #[async_trait]

@@ -3,7 +3,7 @@ use crate::model::submission::{
     SubmissionSummaryDto, SubmissionsDto,
 };
 use domain::{
-    model::submisson::{SubmissionGetQuery, SubmissionOrderBy},
+    model::submission::{SubmissionGetQuery, SubmissionOrderBy},
     repository::{
         problem::ProblemRepository, session::SessionRepository, submission::SubmissionRepository,
     },

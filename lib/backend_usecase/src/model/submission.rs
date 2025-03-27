@@ -1,4 +1,4 @@
-use domain::model::submisson::Submission;
+use domain::model::submission::Submission;
 use sqlx::types::chrono;
 
 #[derive(Debug, Clone)]

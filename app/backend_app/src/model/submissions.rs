@@ -124,14 +124,14 @@ impl From<SubmissionSummaryDto> for SubmissionSummaryResponse {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct SubmissionSummarysResponse {
+pub struct SubmissionSummariesResponse {
     pub total: i64,
     pub submissions: Vec<SubmissionSummaryResponse>,
 }
 
-impl From<SubmissionsDto> for SubmissionSummarysResponse {
+impl From<SubmissionsDto> for SubmissionSummariesResponse {
     fn from(submissions: SubmissionsDto) -> Self {
-        SubmissionSummarysResponse {
+        SubmissionSummariesResponse {
             total: submissions.total,
             submissions: submissions
                 .submissions
