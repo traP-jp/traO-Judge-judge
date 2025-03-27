@@ -9,3 +9,5 @@ judge_exec_grpc = { path = "../../lib/judge_exec_grpc" }
 tar = "0.4.44"
 tokio.workspace = true
 tonic.workspace = true
+judge_core = { path = "../../lib/judge_core" }
+bollard = "0.18.1"
