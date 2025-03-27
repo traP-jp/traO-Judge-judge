@@ -1,4 +1,5 @@
 use bollard::container::{Config, CreateContainerOptions};
+use bollard::models::HostConfig;
 use bollard::Docker;
 use flate2::read::GzDecoder;
 use judge_core::constant::env_var_exec::SCRIPT_PATH;
@@ -44,12 +45,17 @@ impl ExecuteService for ExecApp {
             .create_container(
                 Some(CreateContainerOptions {
                     name: ExecApp::DOCKER_CONTAINER_NAME,
-                    platform: None,
+                    ..CreateContainerOptions::default()
                 }),
                 Config {
                     image: Some(ExecApp::DOCKER_IMAGE_NAME),
                     env: Some(env_vars.iter().map(|s| s.as_str()).collect()),
                     cmd: Some(vec![exec_container_entry_point.as_str()]),
+                    host_config: Some(HostConfig {
+                        cpuset_cpus: Some("0".to_string()),
+                        memory: Some(2 * 1024 * 1024 * 1024), // 2GiB
+                        ..HostConfig::default()
+                    }),
                     ..Default::default()
                 },
             )
