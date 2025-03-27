@@ -1,3 +1,4 @@
+use anyhow::Context as _;
 use bollard::container::{Config, CreateContainerOptions, LogOutput};
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::models::HostConfig;
@@ -8,6 +9,7 @@ use judge_exec_grpc::generated::execute_service_server::{ExecuteService, Execute
 use judge_exec_grpc::generated::{ExecuteRequest, ExecuteResponse, Output};
 use std::env;
 use tar::Archive;
+use tokio::time::timeout;
 use tonic::async_trait;
 use tonic::codegen::tokio_stream::StreamExt;
 use tonic::{transport::Server, Request, Response, Status};
@@ -18,31 +20,23 @@ pub struct ExecApp {}
 impl ExecApp {
     const DOCKER_IMAGE_NAME: &'static str = "exec-container-image";
     const DOCKER_CONTAINER_NAME: &'static str = "exec-container";
-}
 
-#[async_trait]
-impl ExecuteService for ExecApp {
-    async fn execute(
+    async fn execute_container(
         &self,
-        request: Request<ExecuteRequest>,
-    ) -> Result<Response<ExecuteResponse>, Status> {
-        let request = request.into_inner();
-
+        request: ExecuteRequest,
+    ) -> Result<ExecuteResponse, anyhow::Error> {
         // write outcomes to /outcome
         // todo: note: we can use Docker::upload_to_container instead of writing to disk
-        request.dependency.iter().for_each(|dep| {
+        request.dependency.iter().try_for_each(|dep| {
             let tar = GzDecoder::new(&dep.outcome[..]);
             let mut archive = Archive::new(tar);
-            // todo: error handling
-            archive.unpack(format!("/outcome/{}", dep.envvar)).unwrap();
-        });
+            archive.unpack(format!("/outcome/{}", dep.envvar))
+        })?;
 
         // connect to docker
-        // todo: error handling
-        let docker_api = Docker::connect_with_socket_defaults().unwrap();
+        let docker_api = Docker::connect_with_socket_defaults()?;
 
         // create container
-        // todo: error handling
         let env_vars: Vec<String> = request
             .dependency
             .iter()
@@ -57,7 +51,6 @@ impl ExecuteService for ExecApp {
                 Config {
                     image: Some(ExecApp::DOCKER_IMAGE_NAME),
                     env: Some(env_vars.iter().map(|s| s.as_str()).collect()),
-                    // cmd: Some(vec![exec_container_entry_point.as_str()]),
                     host_config: Some(HostConfig {
                         cpuset_cpus: Some("0".to_string()),
                         memory: Some(2 * 1024 * 1024 * 1024), // 2GiB
@@ -67,8 +60,7 @@ impl ExecuteService for ExecApp {
                     ..Default::default()
                 },
             )
-            .await
-            .unwrap(); // todo: error handling
+            .await?;
         create_container_response
             .warnings
             .iter()
@@ -77,7 +69,7 @@ impl ExecuteService for ExecApp {
             });
 
         // exec script
-        let exec_container_entry_point = env::var(SCRIPT_PATH).unwrap();
+        let exec_container_entry_point = env::var(SCRIPT_PATH)?;
         let message = docker_api
             .create_exec(
                 ExecApp::DOCKER_CONTAINER_NAME,
@@ -88,14 +80,12 @@ impl ExecuteService for ExecApp {
                     ..CreateExecOptions::default()
                 },
             )
-            .await
-            .unwrap();
+            .await?;
 
         // get exec result
         let result = docker_api
             .start_exec(&message.id, None::<StartExecOptions>)
-            .await
-            .unwrap(); // todo: error handling
+            .await?;
         let mut stdout = String::new();
         let mut stderr = String::new();
         match result {
@@ -122,31 +112,50 @@ impl ExecuteService for ExecApp {
         }
 
         // get exec info
-        // todo: error handling
-        let info = docker_api.inspect_exec(&message.id).await.unwrap();
+        let info = docker_api.inspect_exec(&message.id).await?;
 
-        // let mut stream = docker_api.wait_container(
-        //     ExecApp::DOCKER_CONTAINER_NAME,
-        //     Some(WaitContainerOptions {
-        //         condition: "not-running",
-        //     }),
-        // );
-        // let exec_result = timeout(
-        //     std::time::Duration::from_millis(request.exec_time_ms as u64),
-        //     stream.next(),
-        // )
-        // .await
-        // .unwrap()
-        // .unwrap()
-        // .unwrap(); // todo: error handling
-
-        Ok(Response::new(ExecuteResponse {
+        Ok(ExecuteResponse {
             output: Some(Output {
-                exit_code: info.exit_code.unwrap() as i32, // todo: error handling
+                exit_code: info.exit_code.context("failed to parse exit code")? as i32,
                 stdout,
                 stderr,
             }),
             outcome: vec![], // TODO
+        })
+    }
+}
+
+#[async_trait]
+impl ExecuteService for ExecApp {
+    async fn execute(
+        &self,
+        request: Request<ExecuteRequest>,
+    ) -> Result<Response<ExecuteResponse>, Status> {
+        let request = request.into_inner();
+        let exec_result = timeout(
+            std::time::Duration::from_millis(request.exec_time_ms as u64),
+            self.execute_container(request),
+        );
+        Ok(Response::new(match exec_result.await {
+            Ok(Ok(response)) => response,
+            Ok(Err(e)) => ExecuteResponse {
+                // todo
+                output: Some(Output {
+                    exit_code: -1,
+                    stdout: "error".to_string(),
+                    stderr: e.to_string(),
+                }),
+                outcome: vec![],
+            },
+            Err(elapsed) => ExecuteResponse {
+                // todo
+                output: Some(Output {
+                    exit_code: -1,
+                    stdout: "timeout".to_string(),
+                    stderr: elapsed.to_string(),
+                }),
+                outcome: vec![],
+            },
         }))
     }
 }

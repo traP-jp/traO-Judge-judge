@@ -11,3 +11,4 @@ tokio.workspace = true
 tonic.workspace = true
 judge_core = { path = "../../lib/judge_core" }
 bollard = "0.18.1"
+anyhow = "1.0.97"
