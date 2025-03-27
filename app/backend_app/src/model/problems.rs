@@ -1,4 +1,4 @@
-use crate::model::testcase::TestcaseSammary;
+use crate::model::testcase::TestcaseSummary;
 use async_session::chrono;
 use serde::{Deserialize, Serialize};
 use usecase::model::problem::{NormalProblemDto, NormalProblemSummaryDto, NormalProblemsDto};
@@ -15,7 +15,7 @@ pub struct ProblemResponse {
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
-    pub testcases: Vec<TestcaseSammary>,
+    pub testcases: Vec<TestcaseSummary>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }

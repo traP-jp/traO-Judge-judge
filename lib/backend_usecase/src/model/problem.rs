@@ -1,4 +1,4 @@
-use crate::model::testcase::TestcaseSammaryDto;
+use crate::model::testcase::TestcaseSummaryDto;
 use domain::model::problem::NormalProblem;
 use sqlx::types::chrono;
 
@@ -47,7 +47,7 @@ pub struct NormalProblemDto {
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
-    pub testcases: Vec<TestcaseSammaryDto>,
+    pub testcases: Vec<TestcaseSummaryDto>,
     pub judgecode_path: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,

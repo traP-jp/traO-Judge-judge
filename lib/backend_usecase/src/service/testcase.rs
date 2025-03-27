@@ -7,7 +7,7 @@ use judge_core::model::{
     problem_registry::{ProblemRegistryClient, ProblemRegistryServer},
 };
 
-use crate::model::testcase::{TestcaseDto, TestcaseSammaryDto};
+use crate::model::testcase::{TestcaseDto, TestcaseSummaryDto};
 
 #[derive(Clone)]
 pub struct TestcaseService<
@@ -82,7 +82,7 @@ impl<
         &self,
         session_id: Option<String>,
         problem_id: i64,
-    ) -> Result<Vec<TestcaseSammaryDto>, TestcaseError> {
+    ) -> Result<Vec<TestcaseSummaryDto>, TestcaseError> {
         let problem = self
             .problem_repository
             .get_problem(problem_id)
