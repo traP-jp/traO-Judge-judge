@@ -5,6 +5,11 @@ use std::collections::HashMap;
 use nix::libc::{c_int, kill, rusage, wait4, SIGKILL, WEXITSTATUS, WIFEXITED};
 use std::mem::MaybeUninit;
 
+#[cfg(not(target_os = "macos"))]
+const RUSAGE_MAXRSS_IS_KIB: bool = true;
+#[cfg(target_os = "macos")]
+const RUSAGE_MAXRSS_IS_KIB: bool = false;
+
 #[derive(Clone, Debug)]
 #[gen_stub_pyclass]
 #[pyclass(module = "traopy_util.util.v0")]
@@ -60,10 +65,14 @@ pub async fn exec_with_stats(
     } else {
         -1
     };
+    let mut memory_used = unsafe { usage.assume_init().ru_maxrss };
+    if !RUSAGE_MAXRSS_IS_KIB {
+        memory_used /= 1024;
+    }
     Ok({
         Some(ExecStats {
             time_ms: start_time.elapsed().as_millis() as i64,
-            memory_kib: unsafe { usage.assume_init().ru_maxrss } as i64,
+            memory_kib: memory_used,
             exit_code,
         })
     })
