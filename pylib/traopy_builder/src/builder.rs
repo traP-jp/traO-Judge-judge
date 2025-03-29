@@ -187,9 +187,10 @@ impl Builder {
         container_image_name: String,
     ) -> PyResult<String> {
         let rt = tokio::runtime::Runtime::new().map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("Failed to create runtime: {:?}", e)
-            )
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Failed to create runtime: {:?}",
+                e
+            ))
         })?;
         rt.block_on(async {
             self.run_internal(
@@ -198,13 +199,14 @@ impl Builder {
                 container_temp_dir,
                 container_image_name,
             )
-                .await
+            .await
         })
-            .map_err(|e| {
-                PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    format!("Failed to run procedure: {:?}", e)
-                )
-            })
+        .map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Failed to run procedure: {:?}",
+                e
+            ))
+        })
     }
 }
 

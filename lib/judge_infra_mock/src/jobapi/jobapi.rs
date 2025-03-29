@@ -145,7 +145,7 @@ impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient>
         let stderr = stderr_string.into_bytes();
         let output = Output {
             status: std::process::ExitStatus::from_raw(exit_code as i32),
-//            status: std::process::ExitStatus::from_raw(0),
+            //            status: std::process::ExitStatus::from_raw(0),
             stdout,
             stderr,
         };
