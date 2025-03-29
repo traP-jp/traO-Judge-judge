@@ -6,9 +6,10 @@ edition = { workspace = true }
 [dependencies]
 flate2 = "1.1.0"
 judge_exec_grpc = { path = "../../lib/judge_exec_grpc" }
-tar = "0.4.44"
 tokio.workspace = true
 tonic.workspace = true
 judge_core = { path = "../../lib/judge_core" }
 bollard = "0.18.1"
 anyhow = "1.0.97"
+bytes = "1.10.1"
+sha2 = "0.10.8"

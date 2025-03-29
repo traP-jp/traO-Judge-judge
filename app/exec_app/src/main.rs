@@ -1,14 +1,17 @@
+use std::collections::HashMap;
 use anyhow::Context as _;
-use bollard::container::{Config, CreateContainerOptions, LogOutput};
+use bollard::container::{Config, CreateContainerOptions, LogOutput, UploadToContainerOptions};
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::models::HostConfig;
 use bollard::Docker;
+use bytes::Bytes;
 use flate2::read::GzDecoder;
 use judge_core::constant::env_var_exec::SCRIPT_PATH;
 use judge_exec_grpc::generated::execute_service_server::{ExecuteService, ExecuteServiceServer};
 use judge_exec_grpc::generated::{Dependency, ExecuteRequest, ExecuteResponse, Output};
+use sha2::{Digest, Sha256};
 use std::env;
-use tar::Archive;
+use std::io::Read;
 use tokio::time::timeout;
 use tonic::async_trait;
 use tonic::codegen::tokio_stream::StreamExt;
@@ -25,21 +28,19 @@ impl ExecApp {
         &self,
         dependency: Vec<Dependency>,
     ) -> Result<ExecuteResponse, anyhow::Error> {
-        // write outcomes to /outcome
-        // todo: note: we can use Docker::upload_to_container instead of writing to disk
-        dependency.iter().try_for_each(|dep| {
-            let tar = GzDecoder::new(&dep.outcome[..]);
-            let mut archive = Archive::new(tar);
-            archive.unpack(format!("/outcome/{}", dep.envvar))
-        })?;
-
         // connect to docker
         let docker_api = Docker::connect_with_socket_defaults()?;
+
+        let hashes: HashMap<_, _> = dependency
+            .iter()
+            .map(|dep| (dep.envvar.clone(), format!("{:x}", Sha256::digest(&dep.outcome))))
+            .map(|(envvar, hash)| (envvar.clone(), format!("{:x}", Sha256::digest(hash + ":" + &envvar))))
+            .collect();
 
         // create container
         let env_vars: Vec<String> = dependency
             .iter()
-            .map(|dep| format!("{}=\"/outcome/{}\"", dep.envvar, dep.envvar))
+            .map(|dep| format!("{}=\"/outcome/{}\"", &dep.envvar, hashes[&dep.envvar]))
             .collect();
         let create_container_response = docker_api
             .create_container(
@@ -66,6 +67,23 @@ impl ExecApp {
             .for_each(|warning| {
                 println!("warning: {}", warning);
             });
+
+        // write outcomes to /outcome
+        for dep in &dependency {
+            let mut tar = GzDecoder::new(&dep.outcome[..]);
+            let mut file: Vec<u8> = Vec::new();
+            tar.read_to_end(file.as_mut())?;
+            docker_api
+                .upload_to_container(
+                    ExecApp::DOCKER_CONTAINER_NAME,
+                    Some(UploadToContainerOptions {
+                        path: format!("/outcome/{}", hashes[&dep.envvar]),
+                        no_overwrite_dir_non_dir: "True".parse()?,
+                    }),
+                    Bytes::from(file),
+                )
+                .await?;
+        }
 
         // exec script
         let exec_container_entry_point = env::var(SCRIPT_PATH)?;
