@@ -102,8 +102,8 @@ traitlets==5.14.3
     # via jupyter-client
     # via jupyter-core
     # via matplotlib-inline
-./pylib/traopy_builder
-./pylib/traopy_util
-./pylib/traopy_visualize
+../traopy_builder
+../traopy_util
+../traopy_visualize
 wcwidth==0.2.13
     # via prompt-toolkit

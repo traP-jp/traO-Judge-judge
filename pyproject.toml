@@ -2,21 +2,16 @@
 name = "traojudge-judge-workspace"
 version = "0.1.0"
 description = "Rye workspace for traO-Judge-judge repository"
-dependencies = []
 readme = "README.md"
 requires-python = ">= 3.8"
+dependencies = [
+    "ipykernel==6.29.5",
+    "dotenv==0.9.9",
+    "./pylib/traopy_util",
+    "./pylib/traopy_builder",
+    "./pylib/traopy_visualize",
+]
 
 [tool.rye]
 managed = true
-dev-dependencies = []
-
-[tool.rye.workspace]
-members = [
-    "pylib/traopy_builder",
-    "pylib/traopy_util",
-    "pylib/traopy_visualize",
-    "pylib/example",
-]
-
-[tool.setuptools.packages.find]
-include = ["pylib"]
+virtual = true
