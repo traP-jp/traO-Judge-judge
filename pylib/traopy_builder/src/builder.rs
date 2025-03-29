@@ -179,20 +179,53 @@ impl Builder {
         Ok(json)
     }
 
-    #[pyo3(signature = (label_to_content, temporary_dir=None))]
-    async fn run(
+    fn run(
         &self,
         label_to_content: HashMap<String, String>,
-        temporary_dir: Option<PathBuf>,
+        host_temp_dir: PathBuf,
+        container_temp_dir: PathBuf,
+        container_image_name: String,
     ) -> PyResult<String> {
-        let temporary_dir =
-            temporary_dir.unwrap_or_else(|| std::env::temp_dir().join("traopy_builder/cache"));
+        let rt = tokio::runtime::Runtime::new().map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                format!("Failed to create runtime: {:?}", e)
+            )
+        })?;
+        rt.block_on(async {
+            self.run_internal(
+                label_to_content,
+                host_temp_dir,
+                container_temp_dir,
+                container_image_name,
+            )
+                .await
+        })
+            .map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    format!("Failed to run procedure: {:?}", e)
+                )
+            })
+    }
+}
+
+impl Builder {
+    async fn run_internal(
+        &self,
+        label_to_content: HashMap<String, String>,
+        host_temp_dir: PathBuf,
+        container_temp_dir: PathBuf,
+        container_image_name: String,
+    ) -> PyResult<String> {
         let writer_procedure = self.inner.get_procedure();
         let (regi_server, regi_client) = new_registry();
         let dn_repo = DepNameRepository::new();
-        let job_api = JobApi::new(temporary_dir, regi_client).map_err(|_| {
-            PyErr::new::<pyo3::exceptions::PyValueError, _>("Failed to create JobApi")
-        })?;
+        let job_api = JobApi::new(
+            host_temp_dir,
+            container_temp_dir,
+            regi_client,
+            container_image_name.clone(),
+        )
+        .map_err(|_| PyErr::new::<pyo3::exceptions::PyValueError, _>("Failed to create JobApi"))?;
         let regi_procedure = logic::writer_schema_registerer::register(
             writer_procedure,
             regi_server,
