@@ -1,0 +1,43 @@
+name: Release traopy-builder
+
+on:
+  push:
+    branches:
+      - release-traopy-builder
+
+jobs:
+  build-and-publish:
+    name: Build and Publish
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rye
+        run: curl -sSf https://rye.astral.sh/get | bash
+
+      - name: Activate Rye
+        run: |
+          source "$HOME/.rye/env"
+          echo "$HOME/.rye/shims" >> $GITHUB_PATH
+
+      - name: Sync dependencies
+        run: |
+          rye sync
+        working-directory: pylib/traopy_builder
+
+      - name: Build package
+        run: |
+          rye build
+        working-directory: pylib/traopy_builder
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: pylib/traopy_builder/dist/*
