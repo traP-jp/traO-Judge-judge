@@ -15,6 +15,7 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::env;
 use std::io::Read;
+use std::ops::Not;
 use tokio::time::timeout;
 use tonic::async_trait;
 use tonic::codegen::tokio_stream::StreamExt;
@@ -52,6 +53,9 @@ impl ExecApp {
     }
 
     async fn terminate_container(&self) {
+        if self.executing().await.not() {
+            return;
+        }
         self.docker_api
             .remove_container(
                 ExecApp::DOCKER_CONTAINER_NAME,
