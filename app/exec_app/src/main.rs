@@ -1,14 +1,14 @@
 use anyhow::Context as _;
 use bollard::container::{
-    Config, CreateContainerOptions, ListContainersOptions, LogOutput, RemoveContainerOptions,
-    StartContainerOptions, UploadToContainerOptions,
+    Config, CreateContainerOptions, DownloadFromContainerOptions, ListContainersOptions, LogOutput,
+    RemoveContainerOptions, StartContainerOptions, UploadToContainerOptions,
 };
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::models::HostConfig;
 use bollard::Docker;
 use bytes::Bytes;
 use flate2::read::GzDecoder;
-use judge_core::constant::env_var_exec::SCRIPT_PATH;
+use judge_core::constant::env_var_exec::{OUTPUT_PATH, SCRIPT_PATH};
 use judge_exec_grpc::generated::execute_service_server::{ExecuteService, ExecuteServiceServer};
 use judge_exec_grpc::generated::{Dependency, ExecuteRequest, ExecuteResponse, Output};
 use sha2::{Digest, Sha256};
@@ -188,13 +188,24 @@ impl ExecApp {
         // get exec info
         let info = self.docker_api.inspect_exec(&message.id).await?;
 
+        let mut ouput = self.docker_api.download_from_container(
+            ExecApp::DOCKER_CONTAINER_NAME,
+            Some(DownloadFromContainerOptions::<String> {
+                path: env::var(OUTPUT_PATH)?,
+            }),
+        );
+        let mut output_bytes: Vec<u8> = vec![];
+        while let Some(Ok(chunk)) = ouput.next().await {
+            output_bytes.extend_from_slice(&chunk);
+        }
+
         Ok(ExecuteResponse {
             output: Some(Output {
                 exit_code: info.exit_code.context("failed to parse exit code")? as i32,
                 stdout,
                 stderr,
             }),
-            outcome: vec![], // TODO
+            outcome: output_bytes,
         })
     }
 }
