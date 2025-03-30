@@ -3,6 +3,7 @@ from traopy_util.util import v0 as trau # type: ignore[reportMissingModuleSource
 from traopy_util.util import common as trau_common # type: ignore[reportMissingModuleSource]
 import asyncio
 import os
+import subprocess
 
 async def main():
     language_tag = trau_common.read_file_with_envvar("LANGUAGE_TAG")
@@ -15,8 +16,13 @@ async def main():
     build_output_path = os.environ.get("BUILD_OUTPUT_PATH")
 
     language_info = trau.get_language_info(language_tag)
-    command = f"{language_info.run} < {input_file_path} > {output_file_path}"
+    command = f"sudo -u participant {language_info.run} < {input_file_path} > {output_file_path}"
 
+    subprocess.run(["useradd", "participant"], check=True)
+    subprocess.run(["chmod", "777", f"{build_output_path}/main.out"], check=True)
+    subprocess.run(["chmod", "777", source_path], check=True)
+    subprocess.run(["chmod", "777", input_file_path], check=True)
+    subprocess.run(["chmod", "777", os.environ.get('TEMP_DIR')], check=True)
     exec_stats = await trau.exec_with_stats(
         cmd=command,
         envs={

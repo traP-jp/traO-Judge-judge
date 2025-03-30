@@ -4,18 +4,11 @@
 # last locked with the following flags:
 #   pre: false
 #   features: []
-#   all-features: true
+#   all-features: false
 #   with-sources: false
 #   generate-hashes: false
 #   universal: false
 
--e file:.
--e file:pylib/example
--e file:pylib/traopy_builder
-    # via traopy-example
--e file:pylib/traopy_util
-    # via traopy-example
--e file:pylib/traopy_visualize
 asttokens==3.0.0
     # via stack-data
 comm==0.2.2
@@ -29,7 +22,6 @@ debugpy==1.8.13
 decorator==5.2.1
     # via ipython
 dotenv==0.9.9
-    # via traopy-example
 executing==2.2.0
     # via stack-data
 fonttools==4.56.0
@@ -37,7 +29,6 @@ fonttools==4.56.0
 graphviz==0.20.3
     # via traopy-visualize
 ipykernel==6.29.5
-    # via traopy-example
 ipython==9.0.2
     # via ipykernel
 ipython-pygments-lexers==1.1.1
@@ -72,7 +63,7 @@ pexpect==4.9.0
     # via ipython
 pillow==11.1.0
     # via matplotlib
-platformdirs==4.3.6
+platformdirs==4.3.7
     # via jupyter-core
 prompt-toolkit==3.0.50
     # via ipython
@@ -92,7 +83,7 @@ pyparsing==3.2.3
 python-dateutil==2.9.0.post0
     # via jupyter-client
     # via matplotlib
-python-dotenv==1.0.1
+python-dotenv==1.1.0
     # via dotenv
 pyzmq==26.3.0
     # via ipykernel
@@ -111,5 +102,8 @@ traitlets==5.14.3
     # via jupyter-client
     # via jupyter-core
     # via matplotlib-inline
+./pylib/traopy_builder
+./pylib/traopy_util
+./pylib/traopy_visualize
 wcwidth==0.2.13
     # via prompt-toolkit
