@@ -41,6 +41,7 @@ rstest = "0.25.0"
 async-std = { version = "1.13", features = ["attributes"] }
 # Note: `nix` is not for Nix Package Manager, but for syscalls of Unix-like OS.
 nix = "0.29.0"
+bollard = "0.18.1"
 
 [workspace]
 members = [

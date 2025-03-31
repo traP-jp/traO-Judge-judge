@@ -29,7 +29,7 @@ class Builder:
     def jsonify(self) -> builtins.str:
         ...
 
-    async def run(self, label_to_content:typing.Mapping[builtins.str, builtins.str], temporary_dir:typing.Optional[builtins.str | os.PathLike | pathlib.Path]) -> builtins.str:
+    def run(self, label_to_content:typing.Mapping[builtins.str, builtins.str], host_temp_dir:builtins.str | os.PathLike | pathlib.Path, container_temp_dir:builtins.str | os.PathLike | pathlib.Path, container_image_name:builtins.str) -> builtins.str:
         ...
 
 

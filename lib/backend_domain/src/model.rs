@@ -2,7 +2,7 @@ pub mod jwt;
 pub mod precedure;
 pub mod problem;
 pub mod rules;
-pub mod submisson;
+pub mod submission;
 pub mod testcase;
 pub mod user;
 

@@ -1,10 +1,13 @@
 [project]
 name = "traopy_builder"
-version = "0.1.0"
+version = "0.1.1"
 description = "Library module for writers of traO-Judge"
 dependencies = []
 readme = "README.md"
 requires-python = ">= 3.8"
+
+[tool.rye]
+managed = true
 
 [build-system]
 requires = ["maturin>=1.2,<2.0"]

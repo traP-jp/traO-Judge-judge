@@ -7,7 +7,11 @@ requires-python = ">= 3.8"
 dependencies = [
     "ipykernel==6.29.5",
     "dotenv==0.9.9",
-    "traopy_util",
-    "traopy_builder",
-    "traopy_visualize",
+    "../traopy_util",
+    "../traopy_builder",
+    "../traopy_visualize",
 ]
+
+[tool.rye]
+managed = true
+virtual = true
