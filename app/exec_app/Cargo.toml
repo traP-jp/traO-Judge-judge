@@ -4,12 +4,12 @@ version = { workspace = true }
 edition = { workspace = true }
 
 [dependencies]
-flate2 = "1.1.0"
+flate2 = { workspace = true }
 judge_exec_grpc = { path = "../../lib/judge_exec_grpc" }
-tokio.workspace = true
-tonic.workspace = true
+tokio = { workspace = true }
+tonic = { workspace = true }
 judge_core = { path = "../../lib/judge_core" }
-bollard = "0.18.1"
-anyhow = "1.0.97"
-bytes = "1.10.1"
-sha2 = "0.10.8"
+bollard = { workspace = true }
+anyhow = { workspace = true }
+bytes = { workspace = true }
+sha2 = { workspace = true }
