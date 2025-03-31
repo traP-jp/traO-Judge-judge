@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
 pub enum JudgeStatus {
     AC,
     WA,
@@ -9,6 +9,7 @@ pub enum JudgeStatus {
     OLE,
     RE,
     CE,
+    WE, // writer error
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -54,15 +55,20 @@ pub enum ExecutionJobResult {
 pub enum ExecutionOutputParseError {
     #[error("Invalid JSON: {0}")]
     InvalidJson(String),
-    #[error("Non-zero exit code")]
-    NonZeroExitCode,
+    #[error("Non-zero exit code: {0}")]
+    NonZeroExitCode(String),
 }
 
 pub fn parse(output: &std::process::Output) -> Result<ExecutionResult, ExecutionOutputParseError> {
     let stdout = String::from_utf8(output.stdout.clone())
         .map_err(|e| ExecutionOutputParseError::InvalidJson(e.to_string()))?;
     if !output.status.success() {
-        return Err(ExecutionOutputParseError::NonZeroExitCode);
+        return Err(ExecutionOutputParseError::NonZeroExitCode(format!(
+            "stdout: {}, stderr: {}, exit code: {}",
+            stdout,
+            String::from_utf8(output.stderr.clone()).unwrap_or_default(),
+            output.status.code().unwrap_or(-1)
+        )));
     }
     let execution_result: ExecutionResult = serde_json::from_str(&stdout)
         .map_err(|e| ExecutionOutputParseError::InvalidJson(e.to_string()))?;

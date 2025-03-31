@@ -133,6 +133,7 @@ impl From<registered::Execution> for Execution {
         Self {
             dependencies,
             dep_id: Some(dep_id),
+            time_reserved_ms: execution.time_reserved_ms,
         }
     }
 }
@@ -153,6 +154,7 @@ impl TryFrom<Execution> for registered::Execution {
         Ok(registered::Execution {
             dependencies,
             dep_id,
+            time_reserved_ms: execution.time_reserved_ms,
         })
     }
 }
@@ -269,6 +271,7 @@ impl From<judge_output::JudgeStatus> for JudgeStatus {
             judge_output::JudgeStatus::CE => Self::Ce,
             judge_output::JudgeStatus::MLE => Self::Mle,
             judge_output::JudgeStatus::OLE => Self::Ole,
+            judge_output::JudgeStatus::WE => Self::We,
         }
     }
 }
@@ -283,6 +286,7 @@ impl From<JudgeStatus> for judge_output::JudgeStatus {
             JudgeStatus::Ce => Self::CE,
             JudgeStatus::Mle => Self::MLE,
             JudgeStatus::Ole => Self::OLE,
+            JudgeStatus::We => Self::WE,
         }
     }
 }

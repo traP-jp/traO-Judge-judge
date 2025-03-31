@@ -1,3 +1,4 @@
+/*
 use back_judge_grpc::{
     generated::judge_service_server::JudgeServiceServer, server::WrappedJudgeApi,
 };
@@ -41,4 +42,9 @@ async fn main() {
         .serve(grpc_service_addr)
         .await
         .expect("Failed to serve grpc service");
+}
+*/
+
+fn main() {
+    unimplemented!();
 }

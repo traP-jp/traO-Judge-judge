@@ -17,6 +17,10 @@ jobs:
       - name: Install rye
         run: curl -sSf https://rye.astral.sh/get | RYE_VERSION="0.43.0" RYE_INSTALL_OPTION="--yes" bash
 
+      - name: Install libgraphviz-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgraphviz-dev
       - name: Build check
         run: |
           source $HOME/.rye/env

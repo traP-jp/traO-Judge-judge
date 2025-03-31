@@ -1,27 +1,41 @@
 #![allow(unused_variables)]
 
-use crate::model::{
-    dep_name_repository::*,
-    problem_registry::*,
-    procedure::{writer_schema::*, *},
-    *,
+use crate::{
+    constant::env_var_exec,
+    model::{
+        dep_name_repository::*,
+        problem_registry::*,
+        procedure::{writer_schema::*, *},
+        *,
+    },
 };
+use futures::future::join_all;
 use std::collections::HashMap;
 
-pub async fn register<PRServer: ProblemRegistryServer, DNRepo: DepNameRepository>(
+pub async fn register<
+    PRServer: ProblemRegistryServer,
+    DNRepo: DepNameRepository<IdType>,
+    IdType,
+>(
     problem: writer_schema::Procedure,
     pr_server: PRServer,
     dn_repo: DNRepo,
+    problem_id: IdType,
 ) -> Result<registered::Procedure, RegistrationError> {
     let (procedure, content_to_id, name_to_id) = transpile_inner(problem)?;
     dn_repo
-        .insert_many(name_to_id)
+        .insert_many(problem_id, name_to_id)
         .await
         .map_err(|e| RegistrationError::InternalError(e.to_string()))?;
-    pr_server
-        .register_many(content_to_id)
+    let mut futures = Vec::new();
+    for (content_id, content) in content_to_id.iter() {
+        futures.push(pr_server.register(content_id.clone(), content.clone()));
+    }
+    join_all(futures)
         .await
-        .map_err(|e| RegistrationError::InternalError(e.to_string()))?;
+        .into_iter()
+        .find(|r| r.is_err())
+        .map_or(Ok(()), |r| r)?;
     Ok(procedure)
 }
 
@@ -140,7 +154,7 @@ fn transpile_inner(
         }
         dependencies.push(registered::Dependency {
             dep_id: script_id.clone(),
-            envvar_name: "SCRIPT".to_string(),
+            envvar_name: env_var_exec::SCRIPT_PATH.to_string(),
         });
         let dep_id = name_to_id
             .get(&execution.name)
@@ -151,6 +165,7 @@ fn transpile_inner(
         let execution = registered::Execution {
             dependencies,
             dep_id: dep_id,
+            time_reserved_ms: execution.time_reserved_ms,
         };
         executions.push(execution);
     }

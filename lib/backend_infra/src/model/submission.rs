@@ -1,6 +1,6 @@
 use sqlx::types::chrono;
 
-use domain::model::submisson::{JudgeResult, Submission};
+use domain::model::submission::{JudgeResult, Submission};
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct SubmissionRow {
@@ -20,7 +20,7 @@ pub struct SubmissionRow {
 impl From<SubmissionRow> for Submission {
     fn from(val: SubmissionRow) -> Self {
         Submission {
-            id: val.id.to_string(),
+            id: val.id,
             problem_id: val.problem_id,
             user_id: val.user_id,
             user_name: val.user_name,

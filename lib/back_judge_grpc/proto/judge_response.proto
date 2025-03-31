@@ -10,6 +10,7 @@ enum JudgeStatus {
     OLE = 4;
     RE = 5;
     CE = 6;
+    WE = 7;
 }
 
 enum ContinueStatus {

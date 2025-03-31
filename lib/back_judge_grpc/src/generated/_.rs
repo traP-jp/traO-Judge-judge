@@ -82,6 +82,7 @@ pub enum JudgeStatus {
     Ole = 4,
     Re = 5,
     Ce = 6,
+    We = 7,
 }
 impl JudgeStatus {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -97,6 +98,7 @@ impl JudgeStatus {
             Self::Ole => "OLE",
             Self::Re => "RE",
             Self::Ce => "CE",
+            Self::We => "WE",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -109,6 +111,7 @@ impl JudgeStatus {
             "OLE" => Some(Self::Ole),
             "RE" => Some(Self::Re),
             "CE" => Some(Self::Ce),
+            "WE" => Some(Self::We),
             _ => None,
         }
     }
@@ -171,6 +174,8 @@ pub struct Execution {
     pub dep_id: ::core::option::Option<Uuid>,
     #[prost(message, repeated, tag = "2")]
     pub dependencies: ::prost::alloc::vec::Vec<Dependency>,
+    #[prost(uint64, tag = "3")]
+    pub time_reserved_ms: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Procedure {
