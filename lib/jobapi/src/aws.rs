@@ -161,7 +161,7 @@ impl AwsClient for AwsClientType {
             FileConf::EmptyDirectory => {
                 std::fs::create_dir_all(file_name.to_string())?; // TODO place先パス
                 Ok(())
-            },
+            }
             FileConf::RuntimeText(_) => {
                 let result = self
                     .s3_client
@@ -173,7 +173,7 @@ impl AwsClient for AwsClientType {
                 let mut file = File::open(file_name.to_string())?; // TODO place先パス
                 file.write_all(result.body.bytes().unwrap())?;
                 Ok(())
-            },
+            }
         }
     }
 }
