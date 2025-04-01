@@ -158,7 +158,22 @@ impl AwsClient for AwsClientType {
                 file.write_all(result.body.bytes().unwrap())?;
                 Ok(())
             }
-            _ => todo!(),
+            FileConf::EmptyDirectory => {
+                std::fs::create_dir_all(file_name.to_string())?; // TODO place先パス
+                Ok(())
+            }
+            FileConf::RuntimeText(_) => {
+                let result = self
+                    .s3_client
+                    .get_object()
+                    .bucket("traO-judge") // TODO S3バケット名
+                    .key(outcome_id.to_string() + "/" + file_name.to_string().as_str()) // TODO S3上のパス
+                    .send()
+                    .await?;
+                let mut file = File::open(file_name.to_string())?; // TODO place先パス
+                file.write_all(result.body.bytes().unwrap())?;
+                Ok(())
+            }
         }
     }
 }
