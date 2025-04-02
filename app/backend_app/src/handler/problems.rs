@@ -1,7 +1,7 @@
 use crate::di::DiContainer;
 use crate::model::problems::{
-    CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, ProblemResponse, ProblemResponses,
-    UpdateNormalProblem,
+    CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, ProblemResponse,
+    ProblemSummariesResponses, UpdateNormalProblem,
 };
 use axum::{
     extract::{Path, Query, State},
@@ -72,7 +72,7 @@ pub async fn get_problems(
         .await
     {
         Ok(problems) => {
-            let resp = ProblemResponses::from(problems);
+            let resp = ProblemSummariesResponses::from(problems);
             Ok((StatusCode::OK, Json(resp)))
         }
         Err(e) => match e {

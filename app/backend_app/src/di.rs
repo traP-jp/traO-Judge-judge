@@ -22,8 +22,14 @@ pub struct DiContainer {
     >,
     problem_service:
         ProblemService<ProblemRepositoryImpl, SessionRepositoryImpl, TestcaseRepositoryImpl>,
-    user_service:
-        UserService<UserRepositoryImpl, SessionRepositoryImpl, AuthRepositoryImpl, MailClientImpl>,
+    user_service: UserService<
+        UserRepositoryImpl,
+        SessionRepositoryImpl,
+        AuthRepositoryImpl,
+        ProblemRepositoryImpl,
+        SubmissionRepositoryImpl,
+        MailClientImpl,
+    >,
     submission_service:
         SubmissionService<SessionRepositoryImpl, SubmissionRepositoryImpl, ProblemRepositoryImpl>,
 }
@@ -46,6 +52,8 @@ impl DiContainer {
                 provider.provide_user_repository(),
                 provider.provide_session_repository(),
                 provider.provide_auth_repository(),
+                provider.provide_problem_repository(),
+                provider.provide_submission_repository(),
                 provider.provide_mail_client(),
             ),
             submission_service: SubmissionService::new(
@@ -58,8 +66,14 @@ impl DiContainer {
 
     pub fn user_service(
         &self,
-    ) -> &UserService<UserRepositoryImpl, SessionRepositoryImpl, AuthRepositoryImpl, MailClientImpl>
-    {
+    ) -> &UserService<
+        UserRepositoryImpl,
+        SessionRepositoryImpl,
+        AuthRepositoryImpl,
+        ProblemRepositoryImpl,
+        SubmissionRepositoryImpl,
+        MailClientImpl,
+    > {
         &self.user_service
     }
 
