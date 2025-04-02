@@ -1,3 +1,4 @@
+use crate::model::testcase::TestcaseSummary;
 use async_session::chrono;
 use serde::{Deserialize, Serialize};
 use usecase::model::problem::{NormalProblemDto, NormalProblemSummaryDto, NormalProblemsDto};
@@ -14,7 +15,7 @@ pub struct ProblemResponse {
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
-    // testcases
+    pub testcases: Vec<TestcaseSummary>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -31,6 +32,7 @@ impl From<NormalProblemDto> for ProblemResponse {
             difficulty: problem.difficulty,
             is_public: problem.is_public,
             solved_count: problem.solved_count,
+            testcases: problem.testcases.into_iter().map(|x| x.into()).collect(),
             created_at: problem.created_at,
             updated_at: problem.updated_at,
         }

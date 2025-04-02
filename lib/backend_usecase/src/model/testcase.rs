@@ -1,15 +1,15 @@
-use domain::model::testcase::TestcaseSammary;
+use domain::model::testcase::TestcaseSummary;
 use sqlx::types::chrono;
 
-pub struct TestcaseSammaryDto {
+pub struct TestcaseSummaryDto {
     pub id: i64,
     pub name: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-impl From<TestcaseSammary> for TestcaseSammaryDto {
-    fn from(testcase: TestcaseSammary) -> Self {
+impl From<TestcaseSummary> for TestcaseSummaryDto {
+    fn from(testcase: TestcaseSummary) -> Self {
         Self {
             id: testcase.id,
             name: testcase.name,

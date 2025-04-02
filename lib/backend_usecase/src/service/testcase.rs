@@ -1,19 +1,16 @@
-use domain::{
-    model::testcase,
-    repository::{
-        precedure::ProcedureRepository, problem::ProblemRepository, session::SessionRepository,
-        testcase::TestcaseRepository,
-    },
+use domain::repository::{
+    precedure::ProcedureRepository, problem::ProblemRepository, session::SessionRepository,
+    testcase::TestcaseRepository,
 };
 use judge_core::model::{
     dep_name_repository::DepNameRepository,
     problem_registry::{ProblemRegistryClient, ProblemRegistryServer},
 };
 
-use crate::model::testcase::{TestcaseDto, TestcaseSammaryDto};
+use crate::model::testcase::{TestcaseDto, TestcaseSummaryDto};
 
 #[derive(Clone)]
-pub struct ProblemService<
+pub struct TestcaseService<
     PR: ProblemRepository,
     SR: SessionRepository,
     TR: TestcaseRepository,
@@ -39,7 +36,7 @@ impl<
         RPC: ProblemRegistryClient,
         PRS: ProblemRegistryServer,
         DNR: DepNameRepository<i64>,
-    > ProblemService<PR, SR, TR, PcR, RPC, PRS, DNR>
+    > TestcaseService<PR, SR, TR, PcR, RPC, PRS, DNR>
 {
     pub fn new(
         problem_repository: PR,
@@ -79,13 +76,13 @@ impl<
         RPC: ProblemRegistryClient,
         PRS: ProblemRegistryServer,
         DNR: DepNameRepository<i64>,
-    > ProblemService<PR, SR, TR, PcR, RPC, PRS, DNR>
+    > TestcaseService<PR, SR, TR, PcR, RPC, PRS, DNR>
 {
     pub async fn get_testcases(
         &self,
         session_id: Option<String>,
         problem_id: i64,
-    ) -> Result<Vec<TestcaseSammaryDto>, TestcaseError> {
+    ) -> Result<Vec<TestcaseSummaryDto>, TestcaseError> {
         let problem = self
             .problem_repository
             .get_problem(problem_id)

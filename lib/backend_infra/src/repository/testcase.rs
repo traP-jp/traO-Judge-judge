@@ -1,8 +1,8 @@
 use axum::async_trait;
-use domain::{model::testcase::TestcaseSammary, repository::testcase::TestcaseRepository};
+use domain::{model::testcase::TestcaseSummary, repository::testcase::TestcaseRepository};
 use sqlx::MySqlPool;
 
-use crate::model::testcase::TestcaseSammaryRow;
+use crate::model::testcase::TestcaseSummaryRow;
 
 #[derive(Clone)]
 pub struct TestcaseRepositoryImpl {
@@ -17,8 +17,8 @@ impl TestcaseRepositoryImpl {
 
 #[async_trait]
 impl TestcaseRepository for TestcaseRepositoryImpl {
-    async fn get_testcases(&self, problem_id: i64) -> anyhow::Result<Vec<TestcaseSammary>> {
-        let testcases = sqlx::query_as::<_, TestcaseSammaryRow>(
+    async fn get_testcases(&self, problem_id: i64) -> anyhow::Result<Vec<TestcaseSummary>> {
+        let testcases = sqlx::query_as::<_, TestcaseSummaryRow>(
             "SELECT * FROM `testcases` WHERE `problem_id` = ?",
         )
         .bind(problem_id)
@@ -28,9 +28,9 @@ impl TestcaseRepository for TestcaseRepositoryImpl {
         Ok(testcases.into_iter().map(|row| row.into()).collect())
     }
 
-    async fn get_testcase(&self, id: i64) -> anyhow::Result<Option<TestcaseSammary>> {
+    async fn get_testcase(&self, id: i64) -> anyhow::Result<Option<TestcaseSummary>> {
         let testcase =
-            sqlx::query_as::<_, TestcaseSammaryRow>("SELECT * FROM `testcases` WHERE `id` = ?")
+            sqlx::query_as::<_, TestcaseSummaryRow>("SELECT * FROM `testcases` WHERE `id` = ?")
                 .bind(id)
                 .fetch_optional(&self.pool)
                 .await?;
