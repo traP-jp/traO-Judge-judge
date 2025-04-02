@@ -105,7 +105,7 @@ impl<
 
         let problem_query = ProblemGetQuery {
             user_id: user_id,
-            limit: 0,
+            limit: 50,
             offset: 0,
             order_by: domain::model::problem::ProblemOrderBy::CreatedAtDesc,
             user_query: Some(display_id),
@@ -175,7 +175,7 @@ impl<
 
         let problem_query = ProblemGetQuery {
             user_id: Some(user_id),
-            limit: 0,
+            limit: 50,
             offset: 0,
             order_by: domain::model::problem::ProblemOrderBy::CreatedAtDesc,
             user_query: Some(user_id),
@@ -276,7 +276,7 @@ impl<
 
         let problem_query = ProblemGetQuery {
             user_id: Some(user_id),
-            limit: 0,
+            limit: 50,
             offset: 0,
             order_by: domain::model::problem::ProblemOrderBy::CreatedAtDesc,
             user_query: Some(user_id),
