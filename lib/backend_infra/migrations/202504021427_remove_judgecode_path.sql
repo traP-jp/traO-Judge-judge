@@ -1,0 +1,1 @@
+ALTER TABLE `normal_problems` DROP COLUMN `judgecode_path`;
