@@ -15,7 +15,7 @@ futures = { workspace = true }
 chrono = { workspace = true }
 judge_core = { path = "../judge_core" }
 
-actix = "0.13.5"
+async-channel = "2.3.1"
 async-trait = "0.1.87"
 aws-config.workspace = true
 aws-sdk-ec2 = "1.116.0"
