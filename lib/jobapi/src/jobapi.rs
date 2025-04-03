@@ -1,8 +1,24 @@
 #![allow(unused)]
 use judge_core::model::*;
 
-#[derive(Clone)]
-pub struct JobApi {}
+use crate::actor::{file_factory::FileFactory, instance_pool::InstancePool};
+
+pub struct JobApi {
+    instance_pool: InstancePool,
+    file_factory: FileFactory,
+}
+
+impl JobApi {
+    pub fn new() -> Self {
+        todo!();
+    }
+}
+
+impl Clone for JobApi {
+    fn clone(&self) -> Self {
+        JobApi::new()
+    }
+}
 
 pub struct ReservationToken {}
 
