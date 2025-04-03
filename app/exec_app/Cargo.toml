@@ -1,0 +1,15 @@
+[package]
+name = "exec_app"
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+flate2 = { workspace = true }
+judge_exec_grpc = { path = "../../lib/judge_exec_grpc" }
+tokio = { workspace = true }
+tonic = { workspace = true }
+judge_core = { path = "../../lib/judge_core" }
+bollard = { workspace = true }
+anyhow = { workspace = true }
+bytes = { workspace = true }
+sha2 = { workspace = true }

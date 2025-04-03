@@ -1,34 +1,61 @@
 use lettre::Address;
 
-use crate::model::user::{UpdatePasswordData, UpdateUserData, UserDto};
+use crate::model::{
+    problem::NormalProblemsDto,
+    submission::SubmissionsDto,
+    user::{UpdatePasswordData, UpdateUserData, UserDto},
+};
 use domain::{
     external::mail::MailClient,
-    model::{jwt::EmailToken, user::UpdateUser},
-    repository::{auth::AuthRepository, session::SessionRepository, user::UserRepository},
+    model::{
+        jwt::EmailToken, problem::ProblemGetQuery, submission::SubmissionGetQuery, user::UpdateUser,
+    },
+    repository::{
+        auth::AuthRepository, problem::ProblemRepository, session::SessionRepository,
+        submission::SubmissionRepository, user::UserRepository,
+    },
 };
 
 #[derive(Clone)]
-pub struct UserService<UR: UserRepository, SR: SessionRepository, AR: AuthRepository, C: MailClient>
-{
+pub struct UserService<
+    UR: UserRepository,
+    SR: SessionRepository,
+    AR: AuthRepository,
+    PR: ProblemRepository,
+    SubR: SubmissionRepository,
+    C: MailClient,
+> {
     user_repository: UR,
     session_repository: SR,
     auth_repository: AR,
+    problem_repository: PR,
+    submission_repository: SubR,
     mail_client: C,
 }
 
-impl<UR: UserRepository, SR: SessionRepository, AR: AuthRepository, C: MailClient>
-    UserService<UR, SR, AR, C>
+impl<
+        UR: UserRepository,
+        SR: SessionRepository,
+        AR: AuthRepository,
+        PR: ProblemRepository,
+        SubR: SubmissionRepository,
+        C: MailClient,
+    > UserService<UR, SR, AR, PR, SubR, C>
 {
     pub fn new(
         user_repository: UR,
         session_repository: SR,
         auth_repository: AR,
+        problem_repository: PR,
+        submission_repository: SubR,
         mail_client: C,
     ) -> Self {
         Self {
             user_repository,
             session_repository,
             auth_repository,
+            problem_repository,
+            submission_repository,
             mail_client,
         }
     }
@@ -42,10 +69,29 @@ pub enum UserError {
     InternalServerError,
 }
 
-impl<UR: UserRepository, SR: SessionRepository, AR: AuthRepository, C: MailClient>
-    UserService<UR, SR, AR, C>
+impl<
+        UR: UserRepository,
+        SR: SessionRepository,
+        AR: AuthRepository,
+        PR: ProblemRepository,
+        SubR: SubmissionRepository,
+        C: MailClient,
+    > UserService<UR, SR, AR, PR, SubR, C>
 {
-    pub async fn get_user(&self, display_id: String) -> anyhow::Result<UserDto, UserError> {
+    pub async fn get_user(
+        &self,
+        display_id: String,
+        session_id: Option<String>,
+    ) -> anyhow::Result<UserDto, UserError> {
+        let user_id = match session_id {
+            Some(session_id) => self
+                .session_repository
+                .get_display_id_by_session_id(&session_id)
+                .await
+                .map_err(|_| UserError::InternalServerError)?,
+            None => None,
+        };
+
         let display_id = display_id
             .parse::<i64>()
             .map_err(|_| UserError::ValidateError)?;
@@ -56,9 +102,60 @@ impl<UR: UserRepository, SR: SessionRepository, AR: AuthRepository, C: MailClien
             .await
             .map_err(|_| UserError::InternalServerError)?
             .ok_or(UserError::NotFound)?;
-        // todo (problems)
 
-        Ok(user.into())
+        let problem_query = ProblemGetQuery {
+            user_id: user_id,
+            limit: 50,
+            offset: 0,
+            order_by: domain::model::problem::ProblemOrderBy::CreatedAtDesc,
+            user_query: Some(display_id),
+        };
+
+        let problem_count = self
+            .problem_repository
+            .get_problems_by_query_count(problem_query.clone())
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+        let problems = self
+            .problem_repository
+            .get_problems_by_query(problem_query)
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+
+        let submission_query = SubmissionGetQuery {
+            user_id: user_id,
+            limit: 50,
+            offset: 0,
+            judge_status: None,
+            language_id: None,
+            user_name: None,
+            user_query: Some(display_id),
+            order_by: domain::model::submission::SubmissionOrderBy::SubmittedAtDesc,
+            problem_id: None,
+        };
+
+        let submission_count = self
+            .submission_repository
+            .get_submissions_count_by_query(submission_query.clone())
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+        let submissions = self
+            .submission_repository
+            .get_submissions_by_query(submission_query)
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+
+        Ok(UserDto::new(
+            user,
+            NormalProblemsDto {
+                total: problem_count,
+                problems: problems.into_iter().map(|p| p.into()).collect(),
+            },
+            SubmissionsDto {
+                total: submission_count,
+                submissions: submissions.into_iter().map(|s| s.into()).collect(),
+            },
+        ))
     }
 
     pub async fn get_me(&self, session_id: &str) -> anyhow::Result<UserDto, UserError> {
@@ -75,9 +172,61 @@ impl<UR: UserRepository, SR: SessionRepository, AR: AuthRepository, C: MailClien
             .await
             .map_err(|_| UserError::InternalServerError)?
             .ok_or(UserError::NotFound)?;
-        // todo (problems)
 
-        Ok(user.into())
+        let problem_query = ProblemGetQuery {
+            user_id: Some(user_id),
+            limit: 50,
+            offset: 0,
+            order_by: domain::model::problem::ProblemOrderBy::CreatedAtDesc,
+            user_query: Some(user_id),
+        };
+
+        let problem_count = self
+            .problem_repository
+            .get_problems_by_query_count(problem_query.clone())
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+        let problems = self
+            .problem_repository
+            .get_problems_by_query(problem_query)
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+
+        let submission_query = SubmissionGetQuery {
+            user_id: Some(user_id),
+            limit: 50,
+            offset: 0,
+            judge_status: None,
+            language_id: None,
+            user_name: None,
+            user_query: Some(user_id),
+            order_by: domain::model::submission::SubmissionOrderBy::SubmittedAtDesc,
+            problem_id: None,
+        };
+
+        let submission_count = self
+            .submission_repository
+            .get_submissions_count_by_query(submission_query.clone())
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+
+        let submissions = self
+            .submission_repository
+            .get_submissions_by_query(submission_query)
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+
+        Ok(UserDto::new(
+            user,
+            NormalProblemsDto {
+                total: problem_count,
+                problems: problems.into_iter().map(|p| p.into()).collect(),
+            },
+            SubmissionsDto {
+                total: submission_count,
+                submissions: submissions.into_iter().map(|s| s.into()).collect(),
+            },
+        ))
     }
 
     pub async fn update_me(
@@ -124,9 +273,58 @@ impl<UR: UserRepository, SR: SessionRepository, AR: AuthRepository, C: MailClien
             .await
             .map_err(|_| UserError::InternalServerError)?
             .ok_or(UserError::InternalServerError)?;
-        // todo (problems)
 
-        Ok(new_user.into())
+        let problem_query = ProblemGetQuery {
+            user_id: Some(user_id),
+            limit: 50,
+            offset: 0,
+            order_by: domain::model::problem::ProblemOrderBy::CreatedAtDesc,
+            user_query: Some(user_id),
+        };
+        let problem_count = self
+            .problem_repository
+            .get_problems_by_query_count(problem_query.clone())
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+        let problems = self
+            .problem_repository
+            .get_problems_by_query(problem_query)
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+
+        let submission_query = SubmissionGetQuery {
+            user_id: Some(user_id),
+            limit: 50,
+            offset: 0,
+            judge_status: None,
+            language_id: None,
+            user_name: None,
+            user_query: Some(user_id),
+            order_by: domain::model::submission::SubmissionOrderBy::SubmittedAtDesc,
+            problem_id: None,
+        };
+        let submission_count = self
+            .submission_repository
+            .get_submissions_count_by_query(submission_query.clone())
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+        let submissions = self
+            .submission_repository
+            .get_submissions_by_query(submission_query)
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+
+        Ok(UserDto::new(
+            new_user,
+            NormalProblemsDto {
+                total: problem_count,
+                problems: problems.into_iter().map(|p| p.into()).collect(),
+            },
+            SubmissionsDto {
+                total: submission_count,
+                submissions: submissions.into_iter().map(|s| s.into()).collect(),
+            },
+        ))
     }
 
     pub async fn update_email(

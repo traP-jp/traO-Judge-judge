@@ -4,20 +4,26 @@ use crate::model::problem::{
 };
 use domain::{
     model::problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem},
-    repository::{problem::ProblemRepository, session::SessionRepository},
+    repository::{
+        problem::ProblemRepository, session::SessionRepository, testcase::TestcaseRepository,
+    },
 };
 
 #[derive(Clone)]
-pub struct ProblemService<PR: ProblemRepository, SR: SessionRepository> {
+pub struct ProblemService<PR: ProblemRepository, SR: SessionRepository, TR: TestcaseRepository> {
     problem_repository: PR,
     session_repository: SR,
+    testcase_repository: TR,
 }
 
-impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
-    pub fn new(problem_repository: PR, session_repository: SR) -> Self {
+impl<PR: ProblemRepository, SR: SessionRepository, TR: TestcaseRepository>
+    ProblemService<PR, SR, TR>
+{
+    pub fn new(problem_repository: PR, session_repository: SR, testcase_repository: TR) -> Self {
         Self {
             problem_repository,
             session_repository,
+            testcase_repository,
         }
     }
 }
@@ -31,7 +37,9 @@ pub enum ProblemError {
     InternalServerError,
 }
 
-impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
+impl<PR: ProblemRepository, SR: SessionRepository, TR: TestcaseRepository>
+    ProblemService<PR, SR, TR>
+{
     pub async fn get_problem(
         &self,
         session_id: Option<String>,
@@ -59,7 +67,26 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
             }
         }
 
-        Ok(problem.into())
+        let testcases = self
+            .testcase_repository
+            .get_testcases(problem_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?;
+
+        Ok(NormalProblemDto {
+            id: problem.id,
+            author_id: problem.author_id,
+            title: problem.title,
+            statement: problem.statement,
+            time_limit: problem.time_limit,
+            memory_limit: problem.memory_limit,
+            difficulty: problem.difficulty,
+            is_public: problem.is_public,
+            solved_count: problem.solved_count,
+            testcases: testcases.into_iter().map(|x| x.into()).collect(),
+            created_at: problem.created_at,
+            updated_at: problem.updated_at,
+        })
     }
 
     pub async fn get_problems_by_query(
@@ -183,7 +210,6 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
                 time_limit: body.time_limit,
                 memory_limit: body.memory_limit,
                 difficulty: body.difficulty,
-                judgecode_path: "todo".to_string(),
             })
             .await
             .map_err(|_| ProblemError::InternalServerError)?;

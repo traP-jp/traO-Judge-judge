@@ -1,6 +1,6 @@
 use sqlx::types::chrono;
 
-pub struct TestcaseSammary {
+pub struct TestcaseSummary {
     pub id: i64,
     pub name: String,
     pub problem_id: i64,

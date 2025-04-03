@@ -1,8 +1,8 @@
-use domain::model::testcase::TestcaseSammary;
+use domain::model::testcase::TestcaseSummary;
 use sqlx::types::chrono;
 
 #[derive(Debug, Clone, sqlx::FromRow)]
-pub struct TestcaseSammaryRow {
+pub struct TestcaseSummaryRow {
     pub id: i64,
     pub name: String,
     pub problem_id: i64,
@@ -10,9 +10,9 @@ pub struct TestcaseSammaryRow {
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-impl From<TestcaseSammaryRow> for TestcaseSammary {
-    fn from(val: TestcaseSammaryRow) -> Self {
-        TestcaseSammary {
+impl From<TestcaseSummaryRow> for TestcaseSummary {
+    fn from(val: TestcaseSummaryRow) -> Self {
+        TestcaseSummary {
             id: val.id,
             name: val.name,
             problem_id: val.problem_id,

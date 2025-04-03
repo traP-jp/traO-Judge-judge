@@ -11,7 +11,6 @@ pub struct NormalProblem {
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
-    pub judgecode_path: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -32,7 +31,6 @@ pub struct CreateNormalProblem {
     pub time_limit: i32,
     pub memory_limit: i32,
     pub difficulty: i32,
-    pub judgecode_path: String,
 }
 
 #[derive(Clone)]

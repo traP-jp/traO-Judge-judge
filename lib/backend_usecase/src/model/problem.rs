@@ -1,3 +1,4 @@
+use crate::model::testcase::TestcaseSummaryDto;
 use domain::model::problem::NormalProblem;
 use sqlx::types::chrono;
 
@@ -17,7 +18,6 @@ pub struct CreateNormalProblemData {
     pub time_limit: i32,
     pub memory_limit: i32,
     pub difficulty: i32,
-    // pub judgecode_path: String,
 }
 
 pub enum ProblemOrderByData {
@@ -36,7 +36,6 @@ pub struct ProblemGetQueryData {
     pub user_query: Option<i64>,
 }
 
-#[derive(Debug)]
 pub struct NormalProblemDto {
     pub id: i64,
     pub author_id: i64,
@@ -47,7 +46,7 @@ pub struct NormalProblemDto {
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
-    pub judgecode_path: String,
+    pub testcases: Vec<TestcaseSummaryDto>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -64,7 +63,7 @@ impl From<NormalProblem> for NormalProblemDto {
             difficulty: problem.difficulty,
             is_public: problem.is_public,
             solved_count: problem.solved_count,
-            judgecode_path: problem.judgecode_path,
+            testcases: vec![],
             created_at: problem.created_at,
             updated_at: problem.updated_at,
         }
@@ -80,7 +79,6 @@ pub struct NormalProblemSummaryDto {
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
-    pub judgecode_path: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -101,7 +99,6 @@ impl From<NormalProblem> for NormalProblemSummaryDto {
             difficulty: problem.difficulty,
             is_public: problem.is_public,
             solved_count: problem.solved_count,
-            judgecode_path: problem.judgecode_path,
             created_at: problem.created_at,
             updated_at: problem.updated_at,
         }
