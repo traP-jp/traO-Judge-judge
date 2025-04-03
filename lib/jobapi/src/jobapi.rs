@@ -39,9 +39,10 @@ impl Clone for JobApi {
     }
 }
 
+#[derive(Debug)]
 pub struct ReservationToken {}
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct OutcomeToken {}
 
 #[axum::async_trait]
