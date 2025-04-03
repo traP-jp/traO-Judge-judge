@@ -4,16 +4,16 @@ version = { workspace = true }
 edition = { workspace = true }
 
 [dependencies]
-axum = {workspace = true}
-tokio = {workspace = true}
-serde = {workspace = true}
-serde_json = {workspace = true}
-uuid = {workspace = true}
-anyhow = {workspace = true}
-thiserror = {workspace = true}
-futures = {workspace = true}
-chrono = {workspace = true}
-judge_core ={ path = "../judge_core" }
+axum = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+futures = { workspace = true }
+chrono = { workspace = true }
+judge_core = { path = "../judge_core" }
 
 actix = "0.13.5"
 async-trait = "0.1.87"
