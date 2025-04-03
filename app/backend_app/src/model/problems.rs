@@ -73,14 +73,14 @@ impl From<NormalProblemSummaryDto> for ProblemSummaryResponse {
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ProblemResponses {
+pub struct ProblemSummariesResponses {
     pub total: i64,
     pub problems: Vec<ProblemSummaryResponse>,
 }
 
-impl From<NormalProblemsDto> for ProblemResponses {
+impl From<NormalProblemsDto> for ProblemSummariesResponses {
     fn from(problems: NormalProblemsDto) -> Self {
-        ProblemResponses {
+        ProblemSummariesResponses {
             total: problems.total,
             problems: problems.problems.into_iter().map(|p| p.into()).collect(),
         }

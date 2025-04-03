@@ -18,7 +18,6 @@ pub struct CreateNormalProblemData {
     pub time_limit: i32,
     pub memory_limit: i32,
     pub difficulty: i32,
-    // pub judgecode_path: String,
 }
 
 pub enum ProblemOrderByData {
@@ -48,7 +47,6 @@ pub struct NormalProblemDto {
     pub is_public: bool,
     pub solved_count: i32,
     pub testcases: Vec<TestcaseSummaryDto>,
-    pub judgecode_path: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -66,7 +64,6 @@ impl From<NormalProblem> for NormalProblemDto {
             is_public: problem.is_public,
             solved_count: problem.solved_count,
             testcases: vec![],
-            judgecode_path: problem.judgecode_path,
             created_at: problem.created_at,
             updated_at: problem.updated_at,
         }
@@ -82,7 +79,6 @@ pub struct NormalProblemSummaryDto {
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
-    pub judgecode_path: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -103,7 +99,6 @@ impl From<NormalProblem> for NormalProblemSummaryDto {
             difficulty: problem.difficulty,
             is_public: problem.is_public,
             solved_count: problem.solved_count,
-            judgecode_path: problem.judgecode_path,
             created_at: problem.created_at,
             updated_at: problem.updated_at,
         }

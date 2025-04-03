@@ -84,7 +84,6 @@ impl<PR: ProblemRepository, SR: SessionRepository, TR: TestcaseRepository>
             is_public: problem.is_public,
             solved_count: problem.solved_count,
             testcases: testcases.into_iter().map(|x| x.into()).collect(),
-            judgecode_path: problem.judgecode_path,
             created_at: problem.created_at,
             updated_at: problem.updated_at,
         })
@@ -211,7 +210,6 @@ impl<PR: ProblemRepository, SR: SessionRepository, TR: TestcaseRepository>
                 time_limit: body.time_limit,
                 memory_limit: body.memory_limit,
                 difficulty: body.difficulty,
-                judgecode_path: "todo".to_string(),
             })
             .await
             .map_err(|_| ProblemError::InternalServerError)?;

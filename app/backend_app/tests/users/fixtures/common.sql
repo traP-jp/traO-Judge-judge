@@ -50,8 +50,9 @@ VALUES
 
 ALTER TABLE users MODIFY updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
+ALTER TABLE normal_problems MODIFY updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;
 INSERT INTO normal_problems
-(author_id, title, statement, time_limit, memory_limit, difficulty, judgecode_path, is_public)
+(author_id, title, statement, time_limit, memory_limit, difficulty, is_public, created_at, updated_at)
 VALUES
 (
     1,
@@ -60,6 +61,9 @@ VALUES
     10,
     10,
     1,
-    'w',
-    TRUE
+    TRUE,
+    '2023-01-01 09:15:32',
+    '2023-01-01 10:20:47'
 );
+
+ALTER TABLE normal_problems MODIFY updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;

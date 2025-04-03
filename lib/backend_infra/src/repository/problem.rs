@@ -133,7 +133,7 @@ impl ProblemRepository for ProblemRepositoryImpl {
 
     async fn create_problem(&self, create_problem: CreateNormalProblem) -> anyhow::Result<i64> {
         let problem_id = sqlx::query(
-            "INSERT INTO normal_problems (author_id, title, statement, time_limit, memory_limit, difficulty, judgecode_path) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO normal_problems (author_id, title, statement, time_limit, memory_limit, difficulty) VALUES (?, ?, ?, ?, ?, ?)",
         )
         .bind(create_problem.author_id)
         .bind(create_problem.title)
@@ -141,7 +141,6 @@ impl ProblemRepository for ProblemRepositoryImpl {
         .bind(create_problem.time_limit)
         .bind(create_problem.memory_limit)
         .bind(create_problem.difficulty)
-        .bind(create_problem.judgecode_path)
         .execute(&self.pool)
         .await
         .map_err(|e| {
