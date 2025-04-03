@@ -2,9 +2,9 @@
 name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
 
 on:
-  push:
-    branches:
-        - "*"
+    pull_request:
+      branches:
+        - main
 #    branches:
 #      - release-traopy_util
 #    tags:
