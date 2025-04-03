@@ -22,9 +22,6 @@ jobs:
       with:
         persist-credentials: false
 
-    - name: Install cargo
-      run: curl https://sh.rustup.rs -sSf | sh -s -- -y
-
     - name: Install rye
       run: curl -sSf https://rye.astral.sh/get | RYE_VERSION="0.43.0" RYE_INSTALL_OPTION="--yes" bash
 
