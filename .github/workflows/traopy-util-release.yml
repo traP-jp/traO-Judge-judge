@@ -19,14 +19,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install rye
-        run: curl -sSf https://rye.astral.sh/get | RYE_VERSION="0.43.0" RYE_INSTALL_OPTION="--yes" bash
-
       - name: Build wheel
         run: |
-          cd pylib/traopy_util
-          source $HOME/.rye/env
-          rye build -o ../../dist
+            mkdir -p dist
+            docker run --rm \
+            -v $(pwd):/io \
+            -w /io/pylib/traopy_util \
+            ghcr.io/pyo3/maturin build \
+            --release \
+            --manylinux 2014 \
+            --out /io/dist
 
       - name: Store the distribution packages
         uses: actions/upload-artifact@v4
