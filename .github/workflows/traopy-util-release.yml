@@ -26,9 +26,9 @@ jobs:
       with:
         python-version: "3.12"
     - name: Install cargo
-      run: curl https://sh.rustup.rs -sSf | sh -s -- -y && source $HOME/.cargo/env
+      run: curl https://sh.rustup.rs -sSf | sh -s -- -y && echo "$HOME/.cargo/env" >> $GITHUB_ENV
     - name: Install rye
-      run: curl -sSf https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" bash && source $HOME/.cargo/env
+      run: curl -sSf https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" bash && echo "$HOME/.rye/env" >> $GITHUB_ENV
     - name: Build wheel
       run: cd pylib/traopy_util && rye build -o ../../dist
     - name: Store the distribution packages
