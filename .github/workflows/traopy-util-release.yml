@@ -21,21 +21,26 @@ jobs:
     - uses: actions/checkout@v4
       with:
         persist-credentials: false
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.12"
+
     - name: Install cargo
       run: curl https://sh.rustup.rs -sSf | sh -s -- -y
+
     - name: Install rye
-      run: curl -sSf https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" bash
+      run: curl -sSf https://rye.astral.sh/get | RYE_VERSION="0.43.0" RYE_INSTALL_OPTION="--yes" bash
+
     - name: Build wheel
-      run: cd pylib/traopy_util && rye build -o ../../dist
+      run: |
+        cd pylib/traopy_util
+        source $HOME/.rye/env
+        source $HOME/.cargo/env
+        rye build -o ../../dist
+
     - name: Store the distribution packages
       uses: actions/upload-artifact@v4
       with:
         name: python-package-distributions
         path: dist/
+
   publish-to-pypi:
     name: >-
       Publish Python 🐍 distribution 📦 to PyPI
