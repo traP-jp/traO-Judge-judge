@@ -51,22 +51,8 @@ impl InstancePool {
     async fn handle(&mut self, msg: InstancePoolMessage) -> Running {
         match msg {
             InstancePoolMessage::Reservation { count, respond_to } => {
-                // spawn instance
-                let result = (0..count)
-                    .map(|_| {
-                        self.reservation_count += 1;
-                        ReservationToken {}
-                    })
-                    .collect();
-                while self.actual_instance_count < self.desired_instance_count() {
-                    self.actual_instance_count += 1;
-                    let mut instance = Instance::new(self.instance_rx.clone());
-                    tokio::spawn(async move {
-                        instance.run().await;
-                    });
-                }
-
-                respond_to.send(Ok(result)).unwrap();
+                let result = self.handle_reservation(count).await;
+                respond_to.send(result).unwrap();
                 Running::Continue
             }
             InstancePoolMessage::Execution {
@@ -74,36 +60,62 @@ impl InstancePool {
                 dependencies,
                 respond_to,
             } => {
-                let (tx, rx) = oneshot::channel();
-                self.instance_tx
-                    .send(InstanceMessage::Execution {
-                        dependencies,
-                        respond_to: tx,
-                    })
-                    .await
-                    .unwrap();
-                let result = rx.await.unwrap();
-
-                // join instance
-                drop(reservation);
-                self.reservation_count -= 1;
-                while self.actual_instance_count > self.desired_instance_count() {
-                    self.actual_instance_count -= 1;
-                    let (tx, rx) = oneshot::channel();
-                    self.instance_tx
-                        .send(InstanceMessage::Terminate { respond_to: tx })
-                        .await
-                        .unwrap();
-                    let result = rx.await.unwrap();
-                    if let Err(e) = result {
-                        panic!("failed to terminate instance: {e}");
-                    }
-                }
-
+                let result = self.handle_execution(reservation, dependencies).await;
                 respond_to.send(result).unwrap();
                 Running::Continue
             }
         }
+    }
+    async fn handle_reservation(
+        &mut self,
+        count: usize,
+    ) -> Result<Vec<ReservationToken>, job::ReservationError> {
+        let result = (0..count)
+            .map(|_| {
+                self.reservation_count += 1;
+                ReservationToken {}
+            })
+            .collect();
+        while self.actual_instance_count < self.desired_instance_count() {
+            self.actual_instance_count += 1;
+            let mut instance = Instance::new(self.instance_rx.clone());
+            tokio::spawn(async move {
+                instance.run().await;
+            });
+        }
+        Ok(result)
+    }
+    async fn handle_execution(
+        &mut self,
+        reservation: ReservationToken,
+        dependencies: Vec<job::Dependency<OutcomeToken>>,
+    ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError> {
+        let (tx, rx) = oneshot::channel();
+        self.instance_tx
+            .send(InstanceMessage::Execution {
+                dependencies,
+                respond_to: tx,
+            })
+            .await
+            .map_err(|e| job::ExecutionError::InternalError(format!("SendError: {e}")))?;
+        let result = rx
+            .await
+            .map_err(|e| job::ExecutionError::InternalError(format!("RecvError: {e}")))?;
+
+        drop(reservation);
+        self.reservation_count -= 1;
+        while self.actual_instance_count > self.desired_instance_count() {
+            self.actual_instance_count -= 1;
+            let (tx, rx) = oneshot::channel();
+            self.instance_tx
+                .send(InstanceMessage::Terminate { respond_to: tx })
+                .await
+                .map_err(|e| job::ExecutionError::InternalError(format!("SendError: {e}")))?;
+            rx.await
+                .map_err(|e| job::ExecutionError::InternalError(format!("RecvError: {e}")))?
+                .map_err(|e| job::ExecutionError::InternalError(format!("Fatal: {e}")))?;
+        }
+        result
     }
     fn desired_instance_count(&self) -> usize {
         todo!();
