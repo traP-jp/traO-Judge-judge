@@ -4,10 +4,12 @@ name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
 on:
   push:
     branches:
-      - release-traopy_util
-    tags:
-      - v*  # only publish on tag pushes
-      - workflow-test*
+        - "*"
+#    branches:
+#      - release-traopy_util
+#    tags:
+#      - v*  # only publish on tag pushes
+#      - workflow-test*
 
 jobs:
   build:
