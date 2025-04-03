@@ -32,7 +32,6 @@ jobs:
       run: |
         cd pylib/traopy_util
         source $HOME/.rye/env
-        source $HOME/.cargo/env
         rye build -o ../../dist
 
     - name: Store the distribution packages
