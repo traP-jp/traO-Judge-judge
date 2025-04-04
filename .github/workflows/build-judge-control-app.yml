@@ -23,4 +23,4 @@ jobs:
       - name: Rename binary
         run: cp target/release/main target/release/judge-control-app
       - name: Upload to S3
-        run: aws s3 cp target/release/judge-control-app s3://trao-infra-resources/exec-app/
+        run: aws s3 cp target/release/judge-control-app s3://trao-infra-resources/judge-control-app/
