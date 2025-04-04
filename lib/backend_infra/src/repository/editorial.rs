@@ -52,7 +52,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
 
     async fn create_editorial(&self, query: CreateEditorial) -> anyhow::Result<i64> {
         let result = sqlx::query(
-            "INSERT INTO editorials (problem_id, author_id, statement, is_public) VALUES (?, ?, ?, ?,)",
+            "INSERT INTO editorials (problem_id, author_id, statement, is_public) VALUES (?, ?, ?, ?)",
         )
         .bind(query.problem_id)
         .bind(query.author_id)
