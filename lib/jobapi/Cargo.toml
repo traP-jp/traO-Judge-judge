@@ -14,6 +14,8 @@ thiserror = { workspace = true }
 futures = { workspace = true }
 chrono = { workspace = true }
 judge_core = { path = "../judge_core" }
+judge_exec_grpc = { path = "../judge_exec_grpc" }
+problem_registry = { path = "../problem_registry" }
 
 async-channel = "2.3.1"
 async-trait = "0.1.87"
@@ -23,3 +25,6 @@ reqwest = "0.12.12"
 base64 = "0.22.1"
 aws-sdk-s3.workspace = true
 dotenv = "0.15.0"
+tonic.workspace = true
+tar = "0.4.44"
+flate2.workspace = true

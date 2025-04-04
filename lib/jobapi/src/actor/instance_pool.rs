@@ -29,7 +29,7 @@ pub struct InstancePool {
 }
 
 impl InstancePool {
-    pub fn new(receiver: mpsc::UnboundedReceiver<InstancePoolMessage>) -> Self {
+    pub async fn new(receiver: mpsc::UnboundedReceiver<InstancePoolMessage>) -> Self {
         let (instance_tx, instance_rx) = async_channel::unbounded();
         Self {
             receiver,
@@ -78,9 +78,9 @@ impl InstancePool {
             .collect();
         while self.actual_instance_count < self.desired_instance_count() {
             self.actual_instance_count += 1;
-            let mut instance = Instance::new(self.instance_rx.clone());
+            let instance_rx = self.instance_rx.clone();
             tokio::spawn(async move {
-                instance.run().await;
+                Instance::new(instance_rx).await.run().await;
             });
         }
         Ok(result)
@@ -113,11 +113,12 @@ impl InstancePool {
                 .map_err(|e| job::ExecutionError::InternalError(format!("SendError: {e}")))?;
             rx.await
                 .map_err(|e| job::ExecutionError::InternalError(format!("RecvError: {e}")))?
-                .map_err(|e| job::ExecutionError::InternalError(format!("Fatal: {e}")))?;
+                .map_err(|e| job::ExecutionError::InternalError(format!(": {e}")))?;
         }
         result
     }
     fn desired_instance_count(&self) -> usize {
-        todo!();
+        // TODO: consider this function
+        self.reservation_count
     }
 }

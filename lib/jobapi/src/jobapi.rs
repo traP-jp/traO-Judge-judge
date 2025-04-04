@@ -1,10 +1,16 @@
-#![allow(unused)]
-use judge_core::model::*;
-use tokio::sync::{mpsc, oneshot};
+use std::path::PathBuf;
+
+use flate2::{write::GzEncoder, Compression};
+use judge_core::model::job;
+use tokio::{
+    io::AsyncWriteExt,
+    sync::{mpsc, oneshot},
+};
+use uuid::Uuid;
 
 use crate::actor::{
     file_factory::{FileFactory, FileFactoryMessage},
-    instance_pool::{self, InstancePool, InstancePoolMessage},
+    instance_pool::{InstancePool, InstancePoolMessage},
 };
 
 pub struct JobApi {
@@ -15,16 +21,14 @@ pub struct JobApi {
 impl JobApi {
     pub fn new() -> Self {
         let (instance_pool_tx, instance_pool_rx) = mpsc::unbounded_channel();
-        let mut instance_pool = InstancePool::new(instance_pool_rx);
         // TODO: join
         tokio::spawn(async move {
-            instance_pool.run().await;
+            InstancePool::new(instance_pool_rx).await.run().await;
         });
         let (file_factory_tx, file_factory_rx) = mpsc::unbounded_channel();
-        let mut file_factory = FileFactory::new(file_factory_rx);
         // TODO: join
         tokio::spawn(async move {
-            file_factory.run().await;
+            FileFactory::new(file_factory_rx).await.run().await;
         });
         Self {
             instance_pool_tx,
@@ -43,7 +47,60 @@ impl Clone for JobApi {
 pub struct ReservationToken {}
 
 #[derive(Debug, Clone)]
-pub struct OutcomeToken {}
+pub struct OutcomeToken {
+    outcome_id: Uuid,
+    path_to_tar_gz: PathBuf,
+}
+
+impl OutcomeToken {
+    // TODO: avoid unwrap
+    pub async fn from_directory(outcome_id: Uuid) -> Self {
+        let mut tar_buf = vec![];
+        let enc = GzEncoder::new(&mut tar_buf, Compression::default());
+        let mut tar = tar::Builder::new(enc);
+        let mut header = tar::Header::new_gnu();
+        header.set_entry_type(tar::EntryType::Directory);
+        header.set_size(0);
+        header.set_cksum();
+        let dir_name = format!("{}/", outcome_id);
+        tar.append_data(&mut header, dir_name, std::io::empty())
+            .unwrap();
+        tar.finish().unwrap();
+        let enc = tar.into_inner().unwrap();
+        enc.finish().unwrap();
+        OutcomeToken::from_binary(outcome_id, &tar_buf).await
+    }
+    pub async fn from_text(outcome_id: Uuid, text: String) -> Self {
+        let mut tar_buf = vec![];
+        let enc = GzEncoder::new(&mut tar_buf, Compression::default());
+        let mut tar = tar::Builder::new(enc);
+        let mut header = tar::Header::new_gnu();
+        header.set_size(text.len() as u64);
+        header.set_mode(0o644);
+        header.set_cksum();
+        let file_name = format!("{}", outcome_id);
+        tar.append_data(&mut header, file_name, text.as_bytes())
+            .unwrap();
+        tar.finish().unwrap();
+        let enc = tar.into_inner().unwrap();
+        enc.finish().unwrap();
+        OutcomeToken::from_binary(outcome_id, &tar_buf).await
+    }
+    pub async fn from_binary(outcome_id: Uuid, binary: &[u8]) -> Self {
+        let path_to_tar_gz = PathBuf::from(format!("outcomes/{outcome_id}.tar.gz"));
+        let mut file = tokio::fs::File::create(path_to_tar_gz.clone())
+            .await
+            .unwrap();
+        file.write_all(binary).await.unwrap();
+        Self {
+            outcome_id,
+            path_to_tar_gz,
+        }
+    }
+    pub async fn to_binary(&self) -> Vec<u8> {
+        tokio::fs::read(self.path_to_tar_gz.clone()).await.unwrap()
+    }
+}
 
 #[axum::async_trait]
 impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
@@ -56,7 +113,8 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
             .send(InstancePoolMessage::Reservation {
                 count,
                 respond_to: tx,
-            });
+            })
+            .map_err(|e| job::ReservationError::ReserveFailed(format!("SendError: {e}")))?;
         rx.await
             .map_err(|e| job::ReservationError::ReserveFailed(format!("RecvError: {e}")))?
     }
@@ -67,11 +125,13 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
         dependencies: Vec<job::Dependency<OutcomeToken>>,
     ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError> {
         let (tx, rx) = oneshot::channel();
-        self.instance_pool_tx.send(InstancePoolMessage::Execution {
-            reservation,
-            dependencies,
-            respond_to: tx,
-        });
+        self.instance_pool_tx
+            .send(InstancePoolMessage::Execution {
+                reservation,
+                dependencies,
+                respond_to: tx,
+            })
+            .map_err(|e| job::ExecutionError::InternalError(format!("SendError: {e}")))?;
         rx.await
             .map_err(|e| job::ExecutionError::InternalError(format!("RecvError: {e}")))?
     }
@@ -85,7 +145,8 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
             .send(FileFactoryMessage::FilePlacement {
                 file_conf,
                 respond_to: tx,
-            });
+            })
+            .map_err(|e| job::FilePlacementError::PlaceFailed(format!("SendError: {e}")))?;
         rx.await
             .map_err(|e| job::FilePlacementError::PlaceFailed(format!("RecvError: {e}")))?
     }
