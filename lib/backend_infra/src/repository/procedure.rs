@@ -1,5 +1,5 @@
 use axum::async_trait;
-use domain::{model::precedure::Procedure, repository::precedure::ProcedureRepository};
+use domain::{model::procedure::Procedure, repository::procedure::ProcedureRepository};
 use sqlx::MySqlPool;
 
 use crate::model::procedure::{ProcedureJson, ProcedureRow};

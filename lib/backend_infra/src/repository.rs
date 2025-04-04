@@ -1,5 +1,5 @@
 pub mod auth;
-pub mod editorials;
+pub mod editorial;
 pub mod problem;
 pub mod procedure;
 pub mod session;

@@ -7,7 +7,7 @@ use sqlx::{
     MySql, MySqlPool, Pool,
 };
 
-use crate::repository::procedure::ProcedureRepositoryImpl;
+use crate::repository::{editorial::EditorialRepositoryImpl, procedure::ProcedureRepositoryImpl};
 
 use super::{
     external::{mail::MailClientImpl, object_strage::ObjectStorageClientImpl},
@@ -95,6 +95,10 @@ impl Provider {
 
     pub fn provide_problem_repository(&self) -> ProblemRepositoryImpl {
         ProblemRepositoryImpl::new(self.pool.clone())
+    }
+
+    pub fn provide_editorial_repository(&self) -> EditorialRepositoryImpl {
+        EditorialRepositoryImpl::new(self.pool.clone())
     }
 
     pub fn provide_testcase_repository(&self) -> TestcaseRepositoryImpl {

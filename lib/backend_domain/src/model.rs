@@ -1,6 +1,6 @@
-pub mod editorials;
+pub mod editorial;
 pub mod jwt;
-pub mod precedure;
+pub mod procedure;
 pub mod problem;
 pub mod rules;
 pub mod submission;

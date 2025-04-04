@@ -1,4 +1,4 @@
-pub mod editorials;
+pub mod editorial;
 pub mod problem;
 pub mod procedure;
 pub mod submission;
