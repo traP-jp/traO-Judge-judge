@@ -28,10 +28,7 @@ impl JobApi {
         let (file_factory_tx, file_factory_rx) = mpsc::unbounded_channel();
         // TODO: join
         tokio::spawn(async move {
-            FileFactory::new(file_factory_rx, Uuid::now_v7())
-                .await
-                .run()
-                .await;
+            FileFactory::new(file_factory_rx).await.run().await;
         });
         Self {
             instance_pool_tx,
@@ -57,7 +54,7 @@ pub struct OutcomeToken {
 
 impl OutcomeToken {
     // TODO: avoid unwrap
-    pub async fn from_directory(factory_id: Uuid, outcome_id: Uuid) -> Self {
+    pub async fn from_directory(outcome_id: Uuid) -> Self {
         let mut tar_buf = vec![];
         let enc = GzEncoder::new(&mut tar_buf, Compression::default());
         let mut tar = tar::Builder::new(enc);
@@ -71,9 +68,9 @@ impl OutcomeToken {
         tar.finish().unwrap();
         let enc = tar.into_inner().unwrap();
         enc.finish().unwrap();
-        OutcomeToken::from_binary(factory_id, outcome_id, &tar_buf).await
+        OutcomeToken::from_binary(outcome_id, &tar_buf).await
     }
-    pub async fn from_text(factory_id: Uuid, outcome_id: Uuid, text: String) -> Self {
+    pub async fn from_text(outcome_id: Uuid, text: String) -> Self {
         let mut tar_buf = vec![];
         let enc = GzEncoder::new(&mut tar_buf, Compression::default());
         let mut tar = tar::Builder::new(enc);
@@ -87,10 +84,10 @@ impl OutcomeToken {
         tar.finish().unwrap();
         let enc = tar.into_inner().unwrap();
         enc.finish().unwrap();
-        OutcomeToken::from_binary(factory_id, outcome_id, &tar_buf).await
+        OutcomeToken::from_binary(outcome_id, &tar_buf).await
     }
-    pub async fn from_binary(factory_id: Uuid, outcome_id: Uuid, binary: &[u8]) -> Self {
-        let path_to_tar_gz = PathBuf::from(format!("outcomes-{factory_id}/{outcome_id}.tar.gz"));
+    pub async fn from_binary(outcome_id: Uuid, binary: &[u8]) -> Self {
+        let path_to_tar_gz = PathBuf::from(format!("outcomes/{outcome_id}.tar.gz"));
         let mut file = tokio::fs::File::create(path_to_tar_gz.clone())
             .await
             .unwrap();
