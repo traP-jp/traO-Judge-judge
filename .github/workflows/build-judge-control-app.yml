@@ -2,9 +2,7 @@ name: Build judge-control-app
 
 on:
   push:
-    branches:
-      - develop
-      - feat/#278-judge_control_app-gha
+    branches: develop
 
 jobs:
   build-judge-control-app:
