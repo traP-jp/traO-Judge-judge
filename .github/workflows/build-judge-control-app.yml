@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - develop
-      - fix/#287-cache-build
 
 jobs:
   build-judge-control-app:
