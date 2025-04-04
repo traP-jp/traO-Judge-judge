@@ -2,7 +2,8 @@ name: Build judge-control-app
 
 on:
   push:
-    branches: develop
+    branches:
+      - develop
 
 jobs:
   build-judge-control-app:
@@ -11,11 +12,19 @@ jobs:
       id-token: write
       contents: read
     steps:
+      - uses: actions/checkout@v4
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: 'us-west-2'
           role-to-assume: 'arn:aws:iam::222634386193:role/GitHub_OIDC_traO-infra'
-      - uses: actions/checkout@v4
       - name: Build
         run: cargo build -p judge_control_app --bin main --release
       - name: Rename binary
