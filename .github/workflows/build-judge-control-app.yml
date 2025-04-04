@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-judge-control-app:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     permissions:
       id-token: write
       contents: read
@@ -27,7 +27,7 @@ jobs:
           aws-region: 'us-west-2'
           role-to-assume: 'arn:aws:iam::222634386193:role/GitHub_OIDC_traO-infra'
       - name: Build
-        run: RUSTFLAGS="-C target-feature=+crt-static" cargo build -p judge_control_app --bin main --release
+        run: cargo build -p judge_control_app --bin main --release
       - name: Rename binary
         run: cp target/release/main target/release/judge-control-app
       - name: Upload to S3
