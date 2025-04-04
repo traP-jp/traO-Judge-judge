@@ -20,7 +20,7 @@ pub struct SubmissionRow {
 impl From<SubmissionRow> for Submission {
     fn from(val: SubmissionRow) -> Self {
         Submission {
-            id: val.id.to_string(),
+            id: val.id,
             problem_id: val.problem_id,
             user_id: val.user_id,
             user_name: val.user_name,

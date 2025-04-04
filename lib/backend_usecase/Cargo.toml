@@ -1,7 +1,7 @@
 [package]
 name = "usecase"
-version = "0.1.0"
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
 http-body-util = { workspace = true }
@@ -26,3 +26,10 @@ fancy-regex = { workspace = true }
 aws-sdk-s3 = { workspace = true }
 aws-config = { workspace = true }
 domain = { path = "../backend_domain" }
+judge_core = { path = "../judge_core" }
+mockall = { workspace = true }
+rstest = { workspace = true }
+async-std = { workspace = true }
+
+[dev-dependencies]
+domain = { path = "../backend_domain", features = ["mockall"] }

@@ -119,8 +119,15 @@ pub async fn put_me(
 pub async fn get_user(
     State(di_container): State<DiContainer>,
     Path(display_id): Path<String>,
+    TypedHeader(cookie): TypedHeader<Cookie>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    match di_container.user_service().get_user(display_id).await {
+    let session_id = cookie.get("session_id").map(|v| v.to_string());
+
+    match di_container
+        .user_service()
+        .get_user(display_id, session_id)
+        .await
+    {
         Ok(user) => {
             let resp = UserResponse::from(user);
             Ok((StatusCode::OK, Json(resp)))

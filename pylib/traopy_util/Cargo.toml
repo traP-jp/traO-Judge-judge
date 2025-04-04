@@ -1,0 +1,22 @@
+[package]
+name = "traopy_util"
+version = "0.1.0"
+edition = { workspace = true }
+
+[lib]
+name = "traopy_util"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { workspace = true, features = ["experimental-async", "serde"] }
+pyo3-stub-gen = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+nix = { workspace = true, features = ["process"] }
+futures = { workspace = true }
+judge_core = { path = "../../lib/judge_core" }
+
+[features]
+abi3 = ["pyo3/abi3-py37", "generate-import-lib"]
+generate-import-lib = ["pyo3/generate-import-lib"]

@@ -5,6 +5,8 @@ use domain::model::{
 use sqlx::types::chrono;
 use uuid::Uuid;
 
+use super::{problem::NormalProblemsDto, submission::SubmissionsDto};
+
 pub struct UpdateUserData {
     pub user_name: Option<String>,
     pub icon_url: Option<String>,
@@ -67,6 +69,8 @@ pub struct UserDto {
     pub traq_id: Option<String>,
     pub github_id: Option<String>,
     pub icon_url: Option<String>,
+    pub post_problems: NormalProblemsDto,
+    pub submit_problems: SubmissionsDto,
     pub x_link: Option<String>,
     pub github_link: Option<String>,
     pub self_introduction: String,
@@ -75,8 +79,8 @@ pub struct UserDto {
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-impl From<User> for UserDto {
-    fn from(user: User) -> Self {
+impl UserDto {
+    pub fn new(user: User, problems: NormalProblemsDto, submissions: SubmissionsDto) -> Self {
         UserDto {
             id: user.id.0,
             display_id: user.display_id,
@@ -84,6 +88,8 @@ impl From<User> for UserDto {
             traq_id: user.traq_id,
             github_id: user.github_id,
             icon_url: user.icon_url,
+            post_problems: problems,
+            submit_problems: submissions,
             x_link: user.x_link,
             github_link: user.github_link,
             self_introduction: user.self_introduction,
