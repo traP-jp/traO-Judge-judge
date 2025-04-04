@@ -97,10 +97,14 @@ impl InstancePool {
                 respond_to: tx,
             })
             .await
-            .map_err(|e| job::ExecutionError::InternalError(format!("SendError: {e}")))?;
-        let result = rx
-            .await
-            .map_err(|e| job::ExecutionError::InternalError(format!("RecvError: {e}")))?;
+            .map_err(|e| {
+                tracing::error!("Failed to send InstanceMessage::Execution: {e}");
+                job::ExecutionError::InternalError(format!("SendError: {e}"))
+            })?;
+        let result = rx.await.map_err(|e| {
+            tracing::error!("Failed to recv response of InstanceMessage::Execution: {e}");
+            job::ExecutionError::InternalError(format!("RecvError: {e}"))
+        })?;
 
         drop(reservation);
         self.reservation_count -= 1;
@@ -110,10 +114,19 @@ impl InstancePool {
             self.instance_tx
                 .send(InstanceMessage::Terminate { respond_to: tx })
                 .await
-                .map_err(|e| job::ExecutionError::InternalError(format!("SendError: {e}")))?;
+                .map_err(|e| {
+                    tracing::error!("Failed to send InstanceMessage::Terminate: {e}");
+                    job::ExecutionError::InternalError(format!("SendError: {e}"))
+                })?;
             rx.await
-                .map_err(|e| job::ExecutionError::InternalError(format!("RecvError: {e}")))?
-                .map_err(|e| job::ExecutionError::InternalError(format!(": {e}")))?;
+                .map_err(|e| {
+                    tracing::error!("Failed to recv response of InstanceMessage::Terminate: {e}");
+                    job::ExecutionError::InternalError(format!("RecvError: {e}"))
+                })?
+                .map_err(|e| {
+                    tracing::error!("Something went wrong on AWS client: {e}");
+                    job::ExecutionError::InternalError(format!("AWSError: {e}"))
+                })?;
         }
         result
     }

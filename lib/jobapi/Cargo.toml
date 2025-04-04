@@ -13,6 +13,8 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 futures = { workspace = true }
 chrono = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 judge_core = { path = "../judge_core" }
 judge_exec_grpc = { path = "../judge_exec_grpc" }
 problem_registry = { path = "../problem_registry" }

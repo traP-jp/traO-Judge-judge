@@ -65,6 +65,7 @@ impl FileFactory {
                     .fetch(resource_id)
                     .await
                     .map_err(|e| {
+                        tracing::error!("Failed to fetch resource: {e}");
                         job::FilePlacementError::PlaceFailed(format!("ResourceFetchError: {e}"))
                     })?;
                 Ok(OutcomeToken::from_text(outcome_id, content).await)
