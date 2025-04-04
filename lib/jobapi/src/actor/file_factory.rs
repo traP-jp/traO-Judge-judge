@@ -22,7 +22,12 @@ pub struct FileFactory {
 impl FileFactory {
     pub async fn new(receiver: mpsc::UnboundedReceiver<FileFactoryMessage>) -> Self {
         // create outcomes folder
-        tokio::fs::create_dir("outcomes").await.unwrap();
+        if let Err(e) = tokio::fs::create_dir("outcomes").await {
+            match e.kind() {
+                std::io::ErrorKind::AlreadyExists => (),
+                _ => panic!("Something went wrong on create_dir")
+            }
+        }
         // warm-up ProblemRegistry client
         let problem_registry_client = ProblemRegistryClient::new().await;
         Self {
