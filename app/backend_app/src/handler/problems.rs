@@ -154,3 +154,26 @@ pub async fn post_problem(
         },
     }
 }
+
+pub async fn delete_problem(
+    State(di_container): State<DiContainer>,
+    TypedHeader(cookie): TypedHeader<Cookie>,
+    Path(problem_id): Path<i64>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let session_id = cookie.get("session_id");
+
+    match di_container
+        .problem_service()
+        .delete_problem(session_id, problem_id)
+        .await
+    {
+        Ok(_) => Ok(StatusCode::NO_CONTENT),
+        Err(e) => match e {
+            ProblemError::ValidateError => Err(StatusCode::BAD_REQUEST),
+            ProblemError::Unauthorized => Err(StatusCode::UNAUTHORIZED),
+            ProblemError::Forbidden => Err(StatusCode::FORBIDDEN),
+            ProblemError::NotFound => Err(StatusCode::NOT_FOUND),
+            ProblemError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        },
+    }
+}
