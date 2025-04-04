@@ -82,6 +82,10 @@ fn dfs(
 
 #[cfg(test)]
 mod tests {
+    use super::{
+        Edge, has_cycle
+    };
+    use rstest::rstest;
     #[rstest]
     
     fn test() {
@@ -91,7 +95,7 @@ mod tests {
             Edge { from: "C", to: "D" },
             Edge { from: "D", to: "B" },
         ];
-        assert_eq!(has_cycle(edge1), true);
+        assert_eq!(has_cycle(edges1).unwrap(), true);
         let edges2 = vec![ // has cycle
             Edge { from: -1000, to: 3526 },
             Edge { from: 6750, to: -4567 },
@@ -102,7 +106,7 @@ mod tests {
             Edge { from: 6750, to: 0 },
             Edge { from: 0, to: 987654321 },
         ];
-        assert_eq!(has_cycle(edge2), true);
+        assert_eq!(has_cycle(edges2).unwrap(), true);
         let edges3 = vec![ // has cycle 非連結グラフ
             Edge { from: 1, to: 2 },
             Edge { from: 2, to: 3 },
@@ -111,7 +115,7 @@ mod tests {
             Edge { from: 6, to: 4 },
             Edge { from: 5, to: 7 },
         ];
-        assert_eq!(has_cycle(edge3), true);
+        assert_eq!(has_cycle(edges3).unwrap(), true);
         let edges4 = vec![ // No cycle
             Edge { from: 1, to: 2 },
             Edge { from: 2, to: 4 },
@@ -122,7 +126,7 @@ mod tests {
             Edge { from: 1, to: 8 },
             Edge { from: 8, to: 9 },
         ];
-        assert_eq!(has_cycle(edge4), false);
+        assert_eq!(has_cycle(edges4).unwrap(), false);
         let edges5 = vec![ // No cycle 非連結グラフ
             Edge { from: 'a', to: 'b' },
             Edge { from: 'c', to: 'b' },
@@ -132,6 +136,14 @@ mod tests {
             Edge { from: 'g', to: 'h' },
             Edge { from: 'h', to: 'i' },
         ];
-        assert_eq!(has_cycle(edge5), false);
+        assert_eq!(has_cycle(edges5).unwrap(), false);
+        let edges6 = vec![
+            Edge { from: "Start", to: "Goal" }
+        ];
+        assert_eq!(has_cycle(edges6).unwrap(), false);
+        let edges7 = vec![
+            Edge { from: "Self", to: "Self" }
+        ];
+        assert_eq!(has_cycle(edges7).unwrap(), true);
     }
 }
