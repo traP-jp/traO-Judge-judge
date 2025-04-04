@@ -27,7 +27,7 @@ impl problem_registry::ProblemRegistryClient for ProblemRegistryClient {
         let s3_response = self
             .s3_client
             .get_object()
-            .bucket("traO-judge")
+            .bucket("trao-judge.s3.us-west-2.amazonaws.com")
             .key(resource_id.to_string())
             .send()
             .await;
