@@ -12,3 +12,5 @@ tonic = { workspace = true }
 judge_core = { path = "../../lib/judge_core" }
 judge_infra_mock = { path = "../../lib/judge_infra_mock" }
 back_judge_grpc = { path = "../../lib/back_judge_grpc" }
+jobapi = { path = "../../lib/jobapi" }
+problem_registry = { path = "../../lib/problem_registry" }
