@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - feat/#296-static-build
 
 jobs:
   build-judge-control-app:
