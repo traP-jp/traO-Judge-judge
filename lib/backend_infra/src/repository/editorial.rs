@@ -67,7 +67,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
 
     async fn update_editorial(&self, query: UpdateEditorial) -> anyhow::Result<()> {
         sqlx::query(
-            "UPDATE editorials SET statement = ? is_public = ? WHERE id = ?",
+            "UPDATE editorials SET statement = ?, is_public = ? WHERE id = ?",
         )
         .bind(query.statement)
         .bind(query.is_public)
