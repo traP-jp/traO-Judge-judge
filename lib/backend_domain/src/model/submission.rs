@@ -23,7 +23,6 @@ pub struct JudgeResult {
     pub memory: i32,
 }
 
-
 #[derive(Clone)]
 pub enum SubmissionOrderBy {
     SubmittedAtAsc,
