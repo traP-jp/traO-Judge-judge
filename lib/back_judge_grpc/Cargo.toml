@@ -13,6 +13,7 @@ tonic-web = { workspace = true }
 tonic-build = { workspace = true, optional = true }
 anyhow = { workspace = true }
 uuid = { workspace = true }
+tracing = { workspace = true }
 judge_core = { path = "../judge_core" }
 
 [features]
