@@ -18,7 +18,9 @@ jobs:
           aws-region: 'us-west-2'
           role-to-assume: 'arn:aws:iam::222634386193:role/GitHub_OIDC_traO-infra'
       - uses: actions/checkout@v4
+      - name: Build
+        run: cargo build -p judge_control_app --bin main --release
       - name: Rename binary
         run: cp target/release/main target/release/judge-control-app
-      - name: Build
-        run: cargo build -p judge_control_app --bin main --release && aws s3 cp target/release/judge-control-app s3://trao-infra-resources/exec-app/
+      - name: Upload to S3
+        run: aws s3 cp target/release/judge-control-app s3://trao-infra-resources/exec-app/
