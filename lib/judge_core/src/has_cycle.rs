@@ -79,3 +79,59 @@ fn dfs(
     visited[pos] = true;
     return re;
 }
+
+#[cfg(test)]
+mod tests {
+    #[rstest]
+    
+    fn test() {
+        let edges1 = vec![ // has cycle
+            Edge { from: "A", to: "B" },
+            Edge { from: "B", to: "C" },
+            Edge { from: "C", to: "D" },
+            Edge { from: "D", to: "B" },
+        ];
+        assert_eq!(has_cycle(edge1), true);
+        let edges2 = vec![ // has cycle
+            Edge { from: -1000, to: 3526 },
+            Edge { from: 6750, to: -4567 },
+            Edge { from: -4567, to: 3526 },
+            Edge { from: -1000, to: -9999 },
+            Edge { from: 987654321, to: -1234567890 },
+            Edge { from: 987654321, to: 6750 },
+            Edge { from: 6750, to: 0 },
+            Edge { from: 0, to: 987654321 },
+        ];
+        assert_eq!(has_cycle(edge2), true);
+        let edges3 = vec![ // has cycle 非連結グラフ
+            Edge { from: 1, to: 2 },
+            Edge { from: 2, to: 3 },
+            Edge { from: 4, to: 5 },
+            Edge { from: 5, to: 6 },
+            Edge { from: 6, to: 4 },
+            Edge { from: 5, to: 7 },
+        ];
+        assert_eq!(has_cycle(edge3), true);
+        let edges4 = vec![ // No cycle
+            Edge { from: 1, to: 2 },
+            Edge { from: 2, to: 4 },
+            Edge { from: 3, to: 4 },
+            Edge { from: 4, to: 7 },
+            Edge { from: 5, to: 6 },
+            Edge { from: 6, to: 7 },
+            Edge { from: 1, to: 8 },
+            Edge { from: 8, to: 9 },
+        ];
+        assert_eq!(has_cycle(edge4), false);
+        let edges5 = vec![ // No cycle 非連結グラフ
+            Edge { from: 'a', to: 'b' },
+            Edge { from: 'c', to: 'b' },
+            Edge { from: 'd', to: 'b' },
+            Edge { from: 'c', to: 'e' },
+            Edge { from: 'f', to: 'g' },
+            Edge { from: 'g', to: 'h' },
+            Edge { from: 'h', to: 'i' },
+        ];
+        assert_eq!(has_cycle(edge5), false);
+    }
+}
