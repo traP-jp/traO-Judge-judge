@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use sqlx::types::chrono;
-use usecase::model::editorial::{CreateEditorialData, EditorialDto, EditorialSummaryDto, UpdateEditorialData};
+use usecase::model::editorial::{
+    CreateEditorialData, EditorialDto, EditorialSummaryDto, UpdateEditorialData,
+};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]

@@ -46,9 +46,13 @@ pub fn make_router(di_container: DiContainer) -> Router {
             get(editorial::get_editorials).post(editorial::post_editorial),
         );
 
-    let editorials_router =
-        Router::new().route("/:editorialId", get(editorial::get_editorial).put(editorial::put_editorial).delete(editorial::delete_editorial));
-    
+    let editorials_router = Router::new().route(
+        "/:editorialId",
+        get(editorial::get_editorial)
+            .put(editorial::put_editorial)
+            .delete(editorial::delete_editorial),
+    );
+
     Router::new()
         .nest("/", auth_router)
         .nest("/users", user_router)

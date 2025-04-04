@@ -1,5 +1,5 @@
-use crate::{di::DiContainer, model::editorials::EditorialSummaryResponse};
 use crate::model::editorials::{CreateEditorial, EditorialResponse, UpdateEditorial};
+use crate::{di::DiContainer, model::editorials::EditorialSummaryResponse};
 use axum::{
     extract::{Path, State},
     response::IntoResponse,
@@ -16,7 +16,11 @@ pub async fn get_editorial(
 ) -> Result<impl IntoResponse, StatusCode> {
     let session_id = cookie.get("session_id");
 
-    match di_container.editorial_service().get_editorial(session_id, editorial_id).await {
+    match di_container
+        .editorial_service()
+        .get_editorial(session_id, editorial_id)
+        .await
+    {
         Ok(editorial) => {
             let resp = EditorialResponse::from(editorial);
             Ok((StatusCode::OK, Json(resp)))
@@ -43,7 +47,8 @@ pub async fn get_editorials(
         .await
     {
         Ok(editorials) => {
-            let resp: Vec<EditorialSummaryResponse> = editorials.into_iter().map(|e| e.into()).collect();
+            let resp: Vec<EditorialSummaryResponse> =
+                editorials.into_iter().map(|e| e.into()).collect();
             Ok((StatusCode::OK, Json(resp)))
         }
         Err(e) => match e {

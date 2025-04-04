@@ -2,11 +2,15 @@ use infra::{
     external::mail::MailClientImpl,
     provider::Provider,
     repository::{
-        auth::AuthRepositoryImpl, editorial::EditorialRepositoryImpl, problem::ProblemRepositoryImpl, session::SessionRepositoryImpl, submission::SubmissionRepositoryImpl, testcase::TestcaseRepositoryImpl, user::UserRepositoryImpl
+        auth::AuthRepositoryImpl, editorial::EditorialRepositoryImpl,
+        problem::ProblemRepositoryImpl, session::SessionRepositoryImpl,
+        submission::SubmissionRepositoryImpl, testcase::TestcaseRepositoryImpl,
+        user::UserRepositoryImpl,
     },
 };
 use usecase::service::{
-    auth::AuthenticationService, editorial::EditorialService, problem::ProblemService, submission::SubmissionService, user::UserService
+    auth::AuthenticationService, editorial::EditorialService, problem::ProblemService,
+    submission::SubmissionService, user::UserService,
 };
 
 #[derive(Clone)]
@@ -29,11 +33,8 @@ pub struct DiContainer {
     >,
     submission_service:
         SubmissionService<SessionRepositoryImpl, SubmissionRepositoryImpl, ProblemRepositoryImpl>,
-    editorial_service: EditorialService<
-        SessionRepositoryImpl,
-        EditorialRepositoryImpl,
-        ProblemRepositoryImpl,
-    >,
+    editorial_service:
+        EditorialService<SessionRepositoryImpl, EditorialRepositoryImpl, ProblemRepositoryImpl>,
 }
 
 impl DiContainer {
@@ -110,7 +111,8 @@ impl DiContainer {
 
     pub fn editorial_service(
         &self,
-    ) -> &EditorialService<SessionRepositoryImpl, EditorialRepositoryImpl, ProblemRepositoryImpl> {
+    ) -> &EditorialService<SessionRepositoryImpl, EditorialRepositoryImpl, ProblemRepositoryImpl>
+    {
         &self.editorial_service
     }
 }
