@@ -2,6 +2,7 @@ use crate::*;
 use anyhow::Result;
 use axum::async_trait;
 use judge_core::model::judge;
+use tracing;
 
 #[derive(Debug, Clone)]
 pub struct WrappedJudgeApi<Inner: judge::JudgeApi> {
