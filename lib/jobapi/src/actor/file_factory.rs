@@ -15,17 +15,24 @@ pub enum FileFactoryMessage {
 }
 
 pub struct FileFactory {
+    factory_id: Uuid,
     receiver: mpsc::UnboundedReceiver<FileFactoryMessage>,
     problem_registry_client: ProblemRegistryClient,
 }
 
 impl FileFactory {
-    pub async fn new(receiver: mpsc::UnboundedReceiver<FileFactoryMessage>) -> Self {
+    pub async fn new(
+        receiver: mpsc::UnboundedReceiver<FileFactoryMessage>,
+        factory_id: Uuid,
+    ) -> Self {
         // create outcomes folder
-        tokio::fs::create_dir("outcomes").await.unwrap();
+        tokio::fs::create_dir(format!("outcomes-{factory_id}"))
+            .await
+            .unwrap();
         // warm-up ProblemRegistry client
         let problem_registry_client = ProblemRegistryClient::new().await;
         Self {
+            factory_id,
             receiver,
             problem_registry_client,
         }
@@ -57,9 +64,11 @@ impl FileFactory {
     ) -> Result<OutcomeToken, job::FilePlacementError> {
         let outcome_id = Uuid::now_v7();
         match file_conf {
-            job::FileConf::EmptyDirectory => Ok(OutcomeToken::from_directory(outcome_id).await),
+            job::FileConf::EmptyDirectory => {
+                Ok(OutcomeToken::from_directory(self.factory_id, outcome_id).await)
+            }
             job::FileConf::RuntimeText(content) => {
-                Ok(OutcomeToken::from_text(outcome_id, content).await)
+                Ok(OutcomeToken::from_text(self.factory_id, outcome_id, content).await)
             }
             job::FileConf::Text(resource_id) => {
                 let content = self
@@ -70,7 +79,7 @@ impl FileFactory {
                         tracing::error!("Failed to fetch resource: {e}");
                         job::FilePlacementError::PlaceFailed(format!("ResourceFetchError: {e}"))
                     })?;
-                Ok(OutcomeToken::from_text(outcome_id, content).await)
+                Ok(OutcomeToken::from_text(self.factory_id, outcome_id, content).await)
             }
         }
     }
