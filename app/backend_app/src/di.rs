@@ -20,8 +20,12 @@ pub struct DiContainer {
         SessionRepositoryImpl,
         MailClientImpl,
     >,
-    problem_service:
-        ProblemService<ProblemRepositoryImpl, UserRepositoryImpl, SessionRepositoryImpl, TestcaseRepositoryImpl>,
+    problem_service: ProblemService<
+        ProblemRepositoryImpl,
+        UserRepositoryImpl,
+        SessionRepositoryImpl,
+        TestcaseRepositoryImpl,
+    >,
     user_service: UserService<
         UserRepositoryImpl,
         SessionRepositoryImpl,
@@ -98,7 +102,12 @@ impl DiContainer {
 
     pub fn problem_service(
         &self,
-    ) -> &ProblemService<ProblemRepositoryImpl, UserRepositoryImpl, SessionRepositoryImpl, TestcaseRepositoryImpl> {
+    ) -> &ProblemService<
+        ProblemRepositoryImpl,
+        UserRepositoryImpl,
+        SessionRepositoryImpl,
+        TestcaseRepositoryImpl,
+    > {
         &self.problem_service
     }
 }
