@@ -1,0 +1,1 @@
+ALTER TABLE editiorials RENAME TO editorials;

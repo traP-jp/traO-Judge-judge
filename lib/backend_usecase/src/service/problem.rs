@@ -171,7 +171,7 @@ impl<PR: ProblemRepository, SR: SessionRepository, TR: TestcaseRepository>
                     title: body.title.unwrap_or(problem.title),
                     is_public: body.is_public.unwrap_or(problem.is_public),
                     difficulty: body.difficulty.unwrap_or(problem.difficulty),
-                    statement: body.statement,
+                    statement: body.statement.unwrap_or(problem.statement),
                     time_limit: body.time_limit.unwrap_or(problem.time_limit),
                     memory_limit: body.memory_limit.unwrap_or(problem.memory_limit),
                 },

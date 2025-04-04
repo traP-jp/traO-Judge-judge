@@ -29,7 +29,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
         &self,
         query: EditorialGetQuery,
     ) -> anyhow::Result<Vec<EditorialSummary>> {
-        let mut query_builder = QueryBuilder::new("SELECT * FROM normal_problems WHERE");
+        let mut query_builder = QueryBuilder::new("SELECT * FROM editorials WHERE");
         query_builder.push(" (is_public = TRUE");
         if let Some(user_id) = query.user_id {
             query_builder.push(" OR author_id = ").push_bind(user_id);

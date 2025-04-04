@@ -19,7 +19,7 @@ pub struct UpdateNormalProblem {
     pub title: String,
     pub is_public: bool,
     pub difficulty: i32,
-    pub statement: Option<String>,
+    pub statement: String,
     pub time_limit: i32,
     pub memory_limit: i32,
 }
