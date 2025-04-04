@@ -1,0 +1,51 @@
+use async_session::chrono;
+
+pub struct Submission {
+    pub id: i64,
+    pub user_id: i64,
+    pub user_name: String,
+    pub problem_id: i64,
+    pub submitted_at: chrono::DateTime<chrono::Utc>,
+    pub language_id: i32,
+    pub total_score: i64,
+    pub max_time: i32,
+    pub max_memory: i32,
+    pub source: String,
+    pub overall_judge_status: String,
+}
+
+pub struct JudgeResult {
+    pub testcase_id: i64,
+    pub testcase_name: String,
+    pub judge_status: String,
+    pub score: i64,
+    pub time: i32,
+    pub memory: i32,
+}
+
+#[derive(Clone)]
+pub enum SubmissionOrderBy {
+    SubmittedAtAsc,
+    SubmittedAtDesc,
+    TimeConsumptionAsc,
+    TimeConsumptionDesc,
+    ScoreAsc,
+    ScoreDesc,
+    MemoryConsumptionAsc,
+    MemoryConsumptionDesc,
+    CodeLengthAsc,
+    CodeLengthDesc,
+}
+
+#[derive(Clone)]
+pub struct SubmissionGetQuery {
+    pub user_id: Option<i64>,
+    pub limit: i64,
+    pub offset: i64,
+    pub judge_status: Option<String>,
+    pub language_id: Option<i64>,
+    pub user_name: Option<String>,
+    pub user_query: Option<i64>,
+    pub order_by: SubmissionOrderBy,
+    pub problem_id: Option<i64>,
+}

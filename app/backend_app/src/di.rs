@@ -3,11 +3,13 @@ use infra::{
     provider::Provider,
     repository::{
         auth::AuthRepositoryImpl, problem::ProblemRepositoryImpl, session::SessionRepositoryImpl,
-        submission::SubmissionRepositoryImpl, user::UserRepositoryImpl,
+        submission::SubmissionRepositoryImpl, testcase::TestcaseRepositoryImpl,
+        user::UserRepositoryImpl,
     },
 };
 use usecase::service::{
-    auth::AuthenticationService, submission::SubmissionService, user::UserService,
+    auth::AuthenticationService, problem::ProblemService, submission::SubmissionService,
+    user::UserService,
 };
 
 #[derive(Clone)]
@@ -18,8 +20,16 @@ pub struct DiContainer {
         SessionRepositoryImpl,
         MailClientImpl,
     >,
-    user_service:
-        UserService<UserRepositoryImpl, SessionRepositoryImpl, AuthRepositoryImpl, MailClientImpl>,
+    problem_service:
+        ProblemService<ProblemRepositoryImpl, SessionRepositoryImpl, TestcaseRepositoryImpl>,
+    user_service: UserService<
+        UserRepositoryImpl,
+        SessionRepositoryImpl,
+        AuthRepositoryImpl,
+        ProblemRepositoryImpl,
+        SubmissionRepositoryImpl,
+        MailClientImpl,
+    >,
     submission_service:
         SubmissionService<SessionRepositoryImpl, SubmissionRepositoryImpl, ProblemRepositoryImpl>,
 }
@@ -33,10 +43,17 @@ impl DiContainer {
                 provider.provide_session_repository(),
                 provider.provide_mail_client(),
             ),
+            problem_service: ProblemService::new(
+                provider.provide_problem_repository(),
+                provider.provide_session_repository(),
+                provider.provide_testcase_repository(),
+            ),
             user_service: UserService::new(
                 provider.provide_user_repository(),
                 provider.provide_session_repository(),
                 provider.provide_auth_repository(),
+                provider.provide_problem_repository(),
+                provider.provide_submission_repository(),
                 provider.provide_mail_client(),
             ),
             submission_service: SubmissionService::new(
@@ -49,8 +66,14 @@ impl DiContainer {
 
     pub fn user_service(
         &self,
-    ) -> &UserService<UserRepositoryImpl, SessionRepositoryImpl, AuthRepositoryImpl, MailClientImpl>
-    {
+    ) -> &UserService<
+        UserRepositoryImpl,
+        SessionRepositoryImpl,
+        AuthRepositoryImpl,
+        ProblemRepositoryImpl,
+        SubmissionRepositoryImpl,
+        MailClientImpl,
+    > {
         &self.user_service
     }
 
@@ -70,5 +93,11 @@ impl DiContainer {
     ) -> &SubmissionService<SessionRepositoryImpl, SubmissionRepositoryImpl, ProblemRepositoryImpl>
     {
         &self.submission_service
+    }
+
+    pub fn problem_service(
+        &self,
+    ) -> &ProblemService<ProblemRepositoryImpl, SessionRepositoryImpl, TestcaseRepositoryImpl> {
+        &self.problem_service
     }
 }

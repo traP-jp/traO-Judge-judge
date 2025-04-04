@@ -1,13 +1,17 @@
+[workspace.package]
+name = "traojudge"
+version = "0.1.0"
+edition = "2021"
+
 [workspace.dependencies]
 tokio = { version = "1.0", features = ["full"] }
-serde = { version = "1.0", features = [ "derive" ] }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1.0", features = ["serde", "v4", "v7"] }
 anyhow = "1.0"
 thiserror = "1.0.63"
-byte-unit = "5.1.6"
 futures = "0.3.31"
 chrono = "0.4.39"
 prost = "0.13.4"
@@ -20,32 +24,43 @@ pyo3 = { version = "0.23.4", features = ["extension-module", "experimental-async
 pyo3-stub-gen = "0.7.0"
 axum = "0.7"
 http-body-util = "0.1.0"
-axum-extra = { version = "0.9", features = [ "typed-header" ] }
+axum-extra = { version = "0.9", features = ["typed-header"] }
 tower = { version = "0.4", features = ["full"] }
 tower-http = { version = "0.5.0", features = ["add-extension", "trace", "fs"] }
 reqwest = "0.12.5"
 bcrypt = "0.15"
 async-session = "3.0.0"
-sqlx = { version = "0.7", features = [ "mysql", "runtime-tokio", "migrate", "chrono", "uuid" ] }
+sqlx = { version = "0.7", features = ["mysql", "runtime-tokio", "migrate", "chrono", "uuid", "json"] }
 jsonwebtoken = "9.3.0"
 lettre = "0.11.7"
 fancy-regex = "0.14.0"
-aws-sdk-s3 = {version="1.68.0", features = ["behavior-version-latest"] }
-aws-config = {version="1.5.13", features = ["behavior-version-latest"] }
+aws-sdk-s3 = { version = "1.68.0", features = ["behavior-version-latest"] }
+aws-config = { version = "1.5.13", features = ["behavior-version-latest"] }
+mockall = "0.13.1"
+rstest = "0.25.0"
+async-std = { version = "1.13", features = ["attributes"] }
+# Note: `nix` is not for Nix Package Manager, but for syscalls of Unix-like OS.
+nix = "0.29.0"
+bollard = "0.18.1"
+bytes = "1.10.1"
+flate2 = "1.1.0"
+sha2 = "0.10.8"
 
 [workspace]
 members = [
     "lib/jobapi",
     "lib/problem_registry",
-    "lib/local_jobapi",
-    "lib/local_problem_registry",
-    "lib/grpc_schema",
+    "lib/judge_infra_mock",
+    "lib/back_judge_grpc",
+    "lib/judge_exec_grpc",
     "lib/judge_core",
     "lib/backend_domain",
     "lib/backend_infra",
     "lib/backend_usecase",
-    "pylib/traopy", 
+    "pylib/traopy_builder",
+    "pylib/traopy_util",
     "app/backend_app",
-    "app/judge_control_app", "lib/local_problem_registry",
+    "app/judge_control_app",
+    "app/exec_app",
 ]
 resolver = "2"

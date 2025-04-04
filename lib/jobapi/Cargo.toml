@@ -1,15 +1,32 @@
 [package]
 name = "jobapi"
-version = "0.1.0"
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-tokio = {workspace = true}
-serde = {workspace = true}
-serde_json = {workspace = true}
-uuid = {workspace = true}
-anyhow = {workspace = true}
-thiserror = {workspace = true}
-futures = {workspace = true}
-chrono = {workspace = true}
-judge_core ={ path = "../judge_core" }
+axum = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+futures = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+judge_core = { path = "../judge_core" }
+judge_exec_grpc = { path = "../judge_exec_grpc" }
+problem_registry = { path = "../problem_registry" }
+
+async-channel = "2.3.1"
+async-trait = "0.1.87"
+aws-config.workspace = true
+aws-sdk-ec2 = "1.116.0"
+reqwest = "0.12.12"
+base64 = "0.22.1"
+aws-sdk-s3.workspace = true
+dotenv = "0.15.0"
+tonic.workspace = true
+tar = "0.4.44"
+flate2.workspace = true

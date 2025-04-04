@@ -10,16 +10,44 @@ pub struct NormalProblem {
     pub memory_limit: i32,
     pub difficulty: i32,
     pub is_public: bool,
-    pub judgecode_path: String,
+    pub solved_count: i32,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-pub struct UpdateNormalProblems {
+pub struct UpdateNormalProblem {
     pub title: String,
     pub is_public: bool,
     pub difficulty: i32,
     pub statement: Option<String>,
     pub time_limit: i32,
     pub memory_limit: i32,
+}
+
+pub struct CreateNormalProblem {
+    pub author_id: i64,
+    pub title: String,
+    pub statement: String,
+    pub time_limit: i32,
+    pub memory_limit: i32,
+    pub difficulty: i32,
+}
+
+#[derive(Clone)]
+pub enum ProblemOrderBy {
+    CreatedAtAsc,
+    CreatedAtDesc,
+    UpdatedAtAsc,
+    UpdatedAtDesc,
+    DifficultyAsc,
+    DifficultyDesc,
+}
+
+#[derive(Clone)]
+pub struct ProblemGetQuery {
+    pub user_id: Option<i64>,
+    pub limit: i64,
+    pub offset: i64,
+    pub order_by: ProblemOrderBy,
+    pub user_query: Option<i64>,
 }

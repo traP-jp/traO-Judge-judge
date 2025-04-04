@@ -1,0 +1,23 @@
+[package]
+name = "traopy_builder"
+version = "0.1.0"
+edition = { workspace = true }
+
+[lib]
+name = "traopy_builder"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { workspace = true }
+pyo3-stub-gen = { workspace = true }
+uuid = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+tokio = { workspace = true }
+judge_core = { path = "../../lib/judge_core" }
+judge_infra_mock = { path = "../../lib/judge_infra_mock" }
+
+[features]
+abi3 = ["pyo3/abi3-py37", "generate-import-lib"]
+generate-import-lib = ["pyo3/generate-import-lib"]

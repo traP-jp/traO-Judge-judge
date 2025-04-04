@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+import "common.proto";
+
+enum JudgeStatus {
+    AC = 0;
+    WA = 1;
+    TLE = 2;
+    MLE = 3;
+    OLE = 4;
+    RE = 5;
+    CE = 6;
+    WE = 7;
+}
+
+enum ContinueStatus {
+    CONTINUE = 0;
+    STOP = 1;
+}
+
+message DisplayableExecutionResult {
+    JudgeStatus status = 1;
+    optional string message = 2;
+    int64 score = 3;
+    double execution_time = 4;
+    double used_memory = 5;
+    ContinueStatus continue_status = 6;
+}
+
+message HiddenExecutionResult {
+    ContinueStatus continue_status = 1;
+}
+
+message ExecutionJobResult {
+    oneof result {
+        DisplayableExecutionResult displayable_execution_result = 1;
+        HiddenExecutionResult hidden_execution_result = 2;
+        Unit early_return = 3;
+    }
+}
+
+message ExecutionJobResultWithDepId {
+    ExecutionJobResult execution_job_result = 1;
+    Uuid dep_id = 2;
+}
+
+message ExecutionJobResults {
+    repeated ExecutionJobResultWithDepId execution_job_results = 1;
+}
+
+message JudgeResponse {
+    oneof result {
+        ExecutionJobResults execution_job_results = 1;
+        string error_message = 2;
+    };
+}
