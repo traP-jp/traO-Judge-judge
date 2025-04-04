@@ -3,6 +3,7 @@ use sqlx::types::chrono;
 use usecase::model::editorial::{CreateEditorialData, EditorialDto, EditorialSummaryDto, UpdateEditorialData};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EditorialResponse {
     pub id: i64,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -28,6 +29,7 @@ impl From<EditorialDto> for EditorialResponse {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EditorialSummaryResponse {
     pub id: i64,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -51,6 +53,7 @@ impl From<EditorialSummaryDto> for EditorialSummaryResponse {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateEditorial {
     pub statement: String,
     pub is_public: bool,
@@ -66,6 +69,7 @@ impl From<UpdateEditorial> for UpdateEditorialData {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateEditorial {
     pub statement: String,
     pub is_public: bool,
