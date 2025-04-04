@@ -25,7 +25,7 @@ impl FileFactory {
         if let Err(e) = tokio::fs::create_dir("outcomes").await {
             match e.kind() {
                 std::io::ErrorKind::AlreadyExists => (),
-                _ => panic!("Something went wrong on create_dir")
+                _ => panic!("Something went wrong on create_dir"),
             }
         }
         // warm-up ProblemRegistry client
