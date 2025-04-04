@@ -125,7 +125,7 @@ impl AwsClient for AwsClientType {
         let response = self
             .ec2_client
             .terminate_instances()
-            .instance_ids(aws_id)
+            .instance_ids(&aws_id)
             .send()
             .await
             .context("Failed to terminate instance")?;
