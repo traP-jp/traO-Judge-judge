@@ -3,14 +3,23 @@ use crate::model::problem::{
     ProblemOrderByData, UpdateNormalProblemData,
 };
 use domain::{
-    model::{problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem}, user},
+    model::{
+        problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem},
+        user,
+    },
     repository::{
-        problem::ProblemRepository, session::SessionRepository, testcase::TestcaseRepository, user::UserRepository,
+        problem::ProblemRepository, session::SessionRepository, testcase::TestcaseRepository,
+        user::UserRepository,
     },
 };
 
 #[derive(Clone)]
-pub struct ProblemService<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: TestcaseRepository> {
+pub struct ProblemService<
+    PR: ProblemRepository,
+    UR: UserRepository,
+    SR: SessionRepository,
+    TR: TestcaseRepository,
+> {
     problem_repository: PR,
     user_repository: UR,
     session_repository: SR,
@@ -20,7 +29,12 @@ pub struct ProblemService<PR: ProblemRepository, UR: UserRepository, SR: Session
 impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: TestcaseRepository>
     ProblemService<PR, UR, SR, TR>
 {
-    pub fn new(problem_repository: PR, user_repository: UR, session_repository: SR, testcase_repository: TR) -> Self {
+    pub fn new(
+        problem_repository: PR,
+        user_repository: UR,
+        session_repository: SR,
+        testcase_repository: TR,
+    ) -> Self {
         Self {
             problem_repository,
             user_repository,
@@ -215,7 +229,7 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
             _ => {
                 return Err(ProblemError::Forbidden);
             }
-        } 
+        }
 
         let problem_id = self
             .problem_repository
