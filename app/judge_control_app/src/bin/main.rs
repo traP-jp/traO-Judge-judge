@@ -14,7 +14,7 @@ async fn main() {
         .expect("TRAOJUDGE_GRPC_SERVICE_PORT must be set")
         .parse::<u16>()
         .expect("Failed to parse TRAOJUDGE_GRPC_SERVICE_PORT");
-    let grpc_service_addr = format!("127.0.0.1:{}", grpc_service_port)
+    let grpc_service_addr = format!("0.0.0.0:{}", grpc_service_port)
         .parse::<std::net::SocketAddr>()
         .expect("Failed to parse grpc service address");
     tracing::info!("ProblemRegistryClient created");
