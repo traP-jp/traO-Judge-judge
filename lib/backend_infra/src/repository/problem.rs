@@ -150,4 +150,13 @@ impl ProblemRepository for ProblemRepositoryImpl {
 
         Ok(problem_id.last_insert_id() as i64)
     }
+
+    async fn delete_problem(&self, id: i64) -> anyhow::Result<()> {
+        sqlx::query("DELETE FROM normal_problems WHERE id = ?")
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
 }
