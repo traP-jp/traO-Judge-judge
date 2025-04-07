@@ -82,32 +82,54 @@ fn dfs(
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        Edge, has_cycle
-    };
+    use super::{has_cycle, Edge};
     use rstest::rstest;
     #[rstest]
-    
+
     fn test() {
-        let edges1 = vec![ // has cycle
+        let edges1 = vec![
+            // has cycle
             Edge { from: "A", to: "B" },
             Edge { from: "B", to: "C" },
             Edge { from: "C", to: "D" },
             Edge { from: "D", to: "B" },
         ];
         assert_eq!(has_cycle(edges1).unwrap(), true);
-        let edges2 = vec![ // has cycle
-            Edge { from: -1000, to: 3526 },
-            Edge { from: 6750, to: -4567 },
-            Edge { from: -4567, to: 3526 },
-            Edge { from: -1000, to: -9999 },
-            Edge { from: 987654321, to: -1234567890 },
-            Edge { from: 987654321, to: 6750 },
+        let edges2 = vec![
+            // has cycle
+            Edge {
+                from: -1000,
+                to: 3526,
+            },
+            Edge {
+                from: 6750,
+                to: -4567,
+            },
+            Edge {
+                from: -4567,
+                to: 3526,
+            },
+            Edge {
+                from: -1000,
+                to: -9999,
+            },
+            Edge {
+                from: 987654321,
+                to: -1234567890,
+            },
+            Edge {
+                from: 987654321,
+                to: 6750,
+            },
             Edge { from: 6750, to: 0 },
-            Edge { from: 0, to: 987654321 },
+            Edge {
+                from: 0,
+                to: 987654321,
+            },
         ];
         assert_eq!(has_cycle(edges2).unwrap(), true);
-        let edges3 = vec![ // has cycle 非連結グラフ
+        let edges3 = vec![
+            // has cycle 非連結グラフ
             Edge { from: 1, to: 2 },
             Edge { from: 2, to: 3 },
             Edge { from: 4, to: 5 },
@@ -116,7 +138,8 @@ mod tests {
             Edge { from: 5, to: 7 },
         ];
         assert_eq!(has_cycle(edges3).unwrap(), true);
-        let edges4 = vec![ // No cycle
+        let edges4 = vec![
+            // No cycle
             Edge { from: 1, to: 2 },
             Edge { from: 2, to: 4 },
             Edge { from: 3, to: 4 },
@@ -127,7 +150,8 @@ mod tests {
             Edge { from: 8, to: 9 },
         ];
         assert_eq!(has_cycle(edges4).unwrap(), false);
-        let edges5 = vec![ // No cycle 非連結グラフ
+        let edges5 = vec![
+            // No cycle 非連結グラフ
             Edge { from: 'a', to: 'b' },
             Edge { from: 'c', to: 'b' },
             Edge { from: 'd', to: 'b' },
@@ -137,13 +161,15 @@ mod tests {
             Edge { from: 'h', to: 'i' },
         ];
         assert_eq!(has_cycle(edges5).unwrap(), false);
-        let edges6 = vec![
-            Edge { from: "Start", to: "Goal" }
-        ];
+        let edges6 = vec![Edge {
+            from: "Start",
+            to: "Goal",
+        }];
         assert_eq!(has_cycle(edges6).unwrap(), false);
-        let edges7 = vec![
-            Edge { from: "Self", to: "Self" }
-        ];
+        let edges7 = vec![Edge {
+            from: "Self",
+            to: "Self",
+        }];
         assert_eq!(has_cycle(edges7).unwrap(), true);
     }
 }
