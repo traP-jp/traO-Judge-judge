@@ -39,7 +39,9 @@ pub fn make_router(di_container: DiContainer) -> Router {
         )
         .route(
             "/:problemId",
-            get(problems::get_problem).put(problems::put_problem),
+            get(problems::get_problem)
+                .put(problems::put_problem)
+                .delete(problems::delete_problem),
         )
         .route(
             "/:problemId/editorials",

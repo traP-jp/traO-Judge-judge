@@ -102,9 +102,6 @@ impl AwsClient for AwsClientType {
             .context("Failed to get private ip address")?;
         let ip_addr = Ipv4Addr::from_str(ip_addr_str).context("Failed to parse IP address")?;
 
-        // TODO: use logger
-        println!("Created {aws_id}.");
-
         self.aws_instance_table.insert(
             instance_id,
             AwsInstanceInfo {
@@ -113,30 +110,35 @@ impl AwsClient for AwsClientType {
             },
         );
 
-        // TODO: use logger
-        println!("Private IP: {}", ip_addr);
+        tracing::info!("Instance created: {aws_id}, {ip_addr}");
+
         Ok(ip_addr)
     }
 
     async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error> {
+        let aws_id = self
+            .aws_instance_table
+            .get(&instance_id)
+            .context("Failed to get instance ID from instance ID")?
+            .aws_id
+            .clone();
         let response = self
             .ec2_client
             .terminate_instances()
-            .instance_ids(
-                self.aws_instance_table
-                    .get(&instance_id)
-                    .context("Failed to get instance ID from instance ID")?
-                    .aws_id
-                    .clone(),
-            )
+            .instance_ids(&aws_id)
             .send()
             .await
             .context("Failed to terminate instance")?;
+
         ensure!(
             !response.terminating_instances().is_empty(),
             "Failed to terminate instance"
         );
+
         self.aws_instance_table.remove(&instance_id);
+
+        tracing::info!("Instance terminated: {aws_id}");
+
         Ok(())
     }
     async fn place_file(

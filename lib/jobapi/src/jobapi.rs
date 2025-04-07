@@ -114,9 +114,14 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
                 count,
                 respond_to: tx,
             })
-            .map_err(|e| job::ReservationError::ReserveFailed(format!("SendError: {e}")))?;
-        rx.await
-            .map_err(|e| job::ReservationError::ReserveFailed(format!("RecvError: {e}")))?
+            .map_err(|e| {
+                tracing::error!("Failed to send InstancePoolMessage::Reservation: {e}");
+                job::ReservationError::ReserveFailed(format!("SendError: {e}"))
+            })?;
+        rx.await.map_err(|e| {
+            tracing::error!("Failed to recv response of InstancePoolMessage::Reservation: {e}");
+            job::ReservationError::ReserveFailed(format!("RecvError: {e}"))
+        })?
     }
 
     async fn execute(
@@ -131,9 +136,14 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
                 dependencies,
                 respond_to: tx,
             })
-            .map_err(|e| job::ExecutionError::InternalError(format!("SendError: {e}")))?;
-        rx.await
-            .map_err(|e| job::ExecutionError::InternalError(format!("RecvError: {e}")))?
+            .map_err(|e| {
+                tracing::error!("Failed to send InstancePoolMessage::Execution: {e}");
+                job::ExecutionError::InternalError(format!("SendError: {e}"))
+            })?;
+        rx.await.map_err(|e| {
+            tracing::error!("Failed to recv response of InstancePoolMessage::Execution: {e}");
+            job::ExecutionError::InternalError(format!("RecvError: {e}"))
+        })?
     }
 
     async fn place_file(
@@ -146,8 +156,13 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
                 file_conf,
                 respond_to: tx,
             })
-            .map_err(|e| job::FilePlacementError::PlaceFailed(format!("SendError: {e}")))?;
-        rx.await
-            .map_err(|e| job::FilePlacementError::PlaceFailed(format!("RecvError: {e}")))?
+            .map_err(|e| {
+                tracing::error!("Failed to send FileFactoryMessage::FilePlacement: {e}");
+                job::FilePlacementError::PlaceFailed(format!("SendError: {e}"))
+            })?;
+        rx.await.map_err(|e| {
+            tracing::error!("Failed to recv response of FileFactoryMessage::FilePlacement: {e}");
+            job::FilePlacementError::PlaceFailed(format!("RecvError: {e}"))
+        })?
     }
 }

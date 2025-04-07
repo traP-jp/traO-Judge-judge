@@ -3,25 +3,41 @@ use crate::model::problem::{
     ProblemOrderByData, UpdateNormalProblemData,
 };
 use domain::{
-    model::problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem},
+    model::{
+        problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem},
+        user,
+    },
     repository::{
         problem::ProblemRepository, session::SessionRepository, testcase::TestcaseRepository,
+        user::UserRepository,
     },
 };
 
 #[derive(Clone)]
-pub struct ProblemService<PR: ProblemRepository, SR: SessionRepository, TR: TestcaseRepository> {
+pub struct ProblemService<
+    PR: ProblemRepository,
+    UR: UserRepository,
+    SR: SessionRepository,
+    TR: TestcaseRepository,
+> {
     problem_repository: PR,
+    user_repository: UR,
     session_repository: SR,
     testcase_repository: TR,
 }
 
-impl<PR: ProblemRepository, SR: SessionRepository, TR: TestcaseRepository>
-    ProblemService<PR, SR, TR>
+impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: TestcaseRepository>
+    ProblemService<PR, UR, SR, TR>
 {
-    pub fn new(problem_repository: PR, session_repository: SR, testcase_repository: TR) -> Self {
+    pub fn new(
+        problem_repository: PR,
+        user_repository: UR,
+        session_repository: SR,
+        testcase_repository: TR,
+    ) -> Self {
         Self {
             problem_repository,
+            user_repository,
             session_repository,
             testcase_repository,
         }
@@ -37,8 +53,8 @@ pub enum ProblemError {
     InternalServerError,
 }
 
-impl<PR: ProblemRepository, SR: SessionRepository, TR: TestcaseRepository>
-    ProblemService<PR, SR, TR>
+impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: TestcaseRepository>
+    ProblemService<PR, UR, SR, TR>
 {
     pub async fn get_problem(
         &self,
@@ -201,6 +217,20 @@ impl<PR: ProblemRepository, SR: SessionRepository, TR: TestcaseRepository>
             .map_err(|_| ProblemError::InternalServerError)?
             .ok_or(ProblemError::Unauthorized)?;
 
+        let user = self
+            .user_repository
+            .get_user_by_display_id(display_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?
+            .ok_or(ProblemError::NotFound)?;
+
+        match user.role {
+            domain::model::user::UserRole::Admin | domain::model::user::UserRole::TrapUser => {}
+            _ => {
+                return Err(ProblemError::Forbidden);
+            }
+        }
+
         let problem_id = self
             .problem_repository
             .create_problem(CreateNormalProblem {
@@ -222,5 +252,42 @@ impl<PR: ProblemRepository, SR: SessionRepository, TR: TestcaseRepository>
             .ok_or(ProblemError::NotFound)?;
 
         Ok(problem.into())
+    }
+
+    pub async fn delete_problem(
+        &self,
+        session_id: Option<&str>,
+        problem_id: i64,
+    ) -> anyhow::Result<(), ProblemError> {
+        let user_id = match session_id {
+            Some(session_id) => self
+                .session_repository
+                .get_display_id_by_session_id(session_id)
+                .await
+                .map_err(|_| ProblemError::InternalServerError)?,
+            None => None,
+        };
+
+        let problem = self
+            .problem_repository
+            .get_problem(problem_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?
+            .ok_or(ProblemError::NotFound)?;
+
+        if user_id.is_none_or(|id| id != problem.author_id) {
+            if problem.is_public {
+                return Err(ProblemError::Forbidden);
+            } else {
+                return Err(ProblemError::NotFound);
+            }
+        }
+
+        self.problem_repository
+            .delete_problem(problem_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?;
+
+        Ok(())
     }
 }

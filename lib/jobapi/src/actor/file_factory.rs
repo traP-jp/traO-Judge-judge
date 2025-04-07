@@ -21,6 +21,13 @@ pub struct FileFactory {
 
 impl FileFactory {
     pub async fn new(receiver: mpsc::UnboundedReceiver<FileFactoryMessage>) -> Self {
+        // create outcomes folder
+        if let Err(e) = tokio::fs::create_dir("outcomes").await {
+            match e.kind() {
+                std::io::ErrorKind::AlreadyExists => (),
+                _ => panic!("Something went wrong on create_dir"),
+            }
+        }
         // warm-up ProblemRegistry client
         let problem_registry_client = ProblemRegistryClient::new().await;
         Self {
@@ -65,6 +72,7 @@ impl FileFactory {
                     .fetch(resource_id)
                     .await
                     .map_err(|e| {
+                        tracing::error!("Failed to fetch resource: {e}");
                         job::FilePlacementError::PlaceFailed(format!("ResourceFetchError: {e}"))
                     })?;
                 Ok(OutcomeToken::from_text(outcome_id, content).await)
