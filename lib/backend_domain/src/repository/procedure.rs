@@ -1,6 +1,6 @@
 use axum::async_trait;
 
-use crate::model::precedure::Procedure;
+use crate::model::procedure::Procedure;
 
 #[cfg_attr(feature = "mockall", mockall::automock)]
 #[async_trait]

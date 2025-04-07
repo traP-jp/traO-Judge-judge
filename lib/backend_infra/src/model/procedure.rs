@@ -1,4 +1,4 @@
-use domain::model::precedure::{
+use domain::model::procedure::{
     Dependency, EmptyDirectory, Execution, Procedure, RuntimeText, Text,
 };
 use serde::{Deserialize, Serialize};

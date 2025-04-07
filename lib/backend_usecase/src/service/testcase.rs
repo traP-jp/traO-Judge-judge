@@ -1,5 +1,5 @@
 use domain::repository::{
-    precedure::ProcedureRepository, problem::ProblemRepository, session::SessionRepository,
+    problem::ProblemRepository, procedure::ProcedureRepository, session::SessionRepository,
     testcase::TestcaseRepository,
 };
 use judge_core::model::{

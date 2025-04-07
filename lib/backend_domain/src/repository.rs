@@ -1,6 +1,7 @@
 pub mod auth;
-pub mod precedure;
+pub mod editorial;
 pub mod problem;
+pub mod procedure;
 pub mod session;
 pub mod submission;
 pub mod testcase;

@@ -5,6 +5,7 @@ use usecase::model::submission::{
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SubmissionResponse {
     pub id: i64,
     pub user_id: i64,
@@ -40,6 +41,7 @@ impl From<SubmissionDto> for SubmissionResponse {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct JudgeResultResponse {
     pub testcase_id: i64,
     pub testcase_name: String,
@@ -91,6 +93,7 @@ pub struct SubmissionGetQuery {
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SubmissionSummaryResponse {
     pub id: i64,
     pub user_id: i64,
