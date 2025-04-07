@@ -174,7 +174,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         session_id: Option<&str>,
         editorial_id: i64,
         query: UpdateEditorialData,
-    ) -> anyhow::Result<EditorialDto, EditorialError> {
+    ) -> anyhow::Result<(), EditorialError> {
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository
@@ -223,14 +223,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .await
             .map_err(|_| EditorialError::InternalServerError)?;
 
-        let editorial = self
-            .editorial_repository
-            .get_editorial(editorial_id)
-            .await
-            .map_err(|_| EditorialError::InternalServerError)?
-            .ok_or(EditorialError::InternalServerError)?;
-
-        Ok(editorial.into())
+        Ok(())
     }
 
     pub async fn delete_editorial(

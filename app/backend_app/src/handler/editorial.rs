@@ -99,10 +99,7 @@ pub async fn put_editorial(
         .put_editorial(session_id, editorial_id, query.into())
         .await
     {
-        Ok(editorial) => {
-            let resp = EditorialResponse::from(editorial);
-            Ok((StatusCode::NO_CONTENT, Json(resp)))
-        }
+        Ok(_) => Ok(StatusCode::NO_CONTENT),
         Err(e) => match e {
             EditorialError::ValidateError => Err(StatusCode::BAD_REQUEST),
             EditorialError::Forbidden => Err(StatusCode::FORBIDDEN),
