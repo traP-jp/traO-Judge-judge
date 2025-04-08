@@ -2,6 +2,7 @@ use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_s3::error::SdkError;
 use aws_sdk_s3::Client as S3Client;
 use judge_core::model::problem_registry;
+use std::env;
 
 #[derive(Clone)]
 pub struct ProblemRegistryClient {
@@ -24,10 +25,12 @@ impl problem_registry::ProblemRegistryClient for ProblemRegistryClient {
         &self,
         resource_id: judge_core::model::identifiers::ResourceId,
     ) -> Result<String, problem_registry::ResourceFetchError> {
+        // checked in lib/jobapi/src/aws.rs
+        let judge_bucket_name = env::var("JUDGE_BUCKET_NAME").unwrap();
         let s3_response = self
             .s3_client
             .get_object()
-            .bucket("trao-judge.s3.us-west-2.amazonaws.com")
+            .bucket(judge_bucket_name)
             .key(resource_id.to_string())
             .send()
             .await;
