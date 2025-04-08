@@ -50,13 +50,13 @@ impl problem_registry::ProblemRegistryClient for ProblemRegistryClient {
                 ));
             }
         };
-        let bytes: Vec<u8> = match s3_response.body.next() {
+        let bytes: Vec<u8> = match s3_response.body.next().await {
             None => {
                 return Err(problem_registry::ResourceFetchError::FetchFailed(
                     "Content is empty".to_string(),
                 ));
             }
-            Some(Ok(bytes)) => bytes,
+            Some(Ok(bytes)) => bytes.to_vec(),
             Some(Err(err)) => {
                 return Err(problem_registry::ResourceFetchError::FetchFailed(
                     err.to_string(),
