@@ -50,19 +50,14 @@ impl problem_registry::ProblemRegistryClient for ProblemRegistryClient {
                 ));
             }
         };
-        let bytes: Vec<u8> = match s3_response.body.next().await {
-            None => {
-                return Err(problem_registry::ResourceFetchError::FetchFailed(
-                    "Content is empty".to_string(),
-                ));
-            }
-            Some(Ok(bytes)) => bytes.to_vec(),
-            Some(Err(err)) => {
-                return Err(problem_registry::ResourceFetchError::FetchFailed(
-                    err.to_string(),
-                ));
-            }
-        };
+        let bytes: Vec<u8> = s3_response
+            .body
+            .collect()
+            .await
+            .map_err(|e| {
+                problem_registry::ResourceFetchError::FetchFailed(format!("Fetch Failed: {e}"))
+            })?
+            .to_vec();
         let content = String::from_utf8(bytes);
         match content {
             Ok(content) => Ok(content),
