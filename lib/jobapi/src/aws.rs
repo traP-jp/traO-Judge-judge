@@ -37,9 +37,7 @@ pub struct AwsClientType {
 impl AwsClientType {
     pub async fn new() -> Self {
         // check env
-        for key in [
-            "SECURITY_GROUP_ID",
-        ] {
+        for key in ["SECURITY_GROUP_ID", "JUDGE_BUCKET_NAME"] {
             if env::var(key).is_err() {
                 panic!("{} is not set", key);
             }
