@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - fix/#309-fix-s3-download
 
 jobs:
   build-judge-control-app:

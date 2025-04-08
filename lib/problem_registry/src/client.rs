@@ -34,7 +34,7 @@ impl problem_registry::ProblemRegistryClient for ProblemRegistryClient {
             .key(resource_id.to_string())
             .send()
             .await;
-        let s3_response = match s3_response {
+        let mut s3_response = match s3_response {
             Ok(_) => s3_response.unwrap(),
             Err(SdkError::ServiceError(err)) => {
                 if err.err().is_no_such_key() {
@@ -50,13 +50,18 @@ impl problem_registry::ProblemRegistryClient for ProblemRegistryClient {
                 ));
             }
         };
-        let bytes: Vec<u8> = match s3_response.body.bytes() {
+        let bytes: Vec<u8> = match s3_response.body.next() {
             None => {
                 return Err(problem_registry::ResourceFetchError::FetchFailed(
-                    "Failed to read content".to_string(),
+                    "Content is empty".to_string(),
                 ));
             }
-            Some(_) => s3_response.body.bytes().unwrap().to_vec(),
+            Some(Ok(bytes)) => bytes,
+            Some(Err(err)) => {
+                return Err(problem_registry::ResourceFetchError::FetchFailed(
+                    err.to_string(),
+                ));
+            }
         };
         let content = String::from_utf8(bytes);
         match content {
