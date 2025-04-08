@@ -12,4 +12,5 @@ anyhow = { workspace = true }
 futures = { workspace = true }
 tokio = { workspace = true }
 uuid = { workspace = true }
+rstest = { workspace = true }
 prost = { workspace = true }
