@@ -64,7 +64,7 @@ impl AwsClient for AwsClientType {
         let security_group_id = env::var("SECURITY_GROUP_ID")?;
 
         let read_file_base64 = |file_path: &str| {
-            let file = std::fs::read(file_path).context("Failed to read file")?;
+            let file = std::str::from_utf8(include_bytes!(file_path)).unwrap();
             Ok::<String, anyhow::Error>(BASE64_STANDARD.encode(file).to_string())
         };
 
