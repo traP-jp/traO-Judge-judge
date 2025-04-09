@@ -37,7 +37,7 @@ pub struct AwsClientType {
 impl AwsClientType {
     pub async fn new() -> Self {
         // check env
-        for key in ["SECURITY_GROUP_ID", "JUDGE_BUCKET_NAME"] {
+        for key in ["SECURITY_GROUP_ID", "SUBNET_ID", "JUDGE_BUCKET_NAME"] {
             if env::var(key).is_err() {
                 panic!("{} is not set", key);
             }
@@ -62,6 +62,7 @@ impl AwsClient for AwsClientType {
         );
 
         let security_group_id = env::var("SECURITY_GROUP_ID")?;
+        let subnet_id = env::var("SUBNET_ID")?;
 
         let created_instance = self
             .ec2_client
@@ -71,6 +72,7 @@ impl AwsClient for AwsClientType {
             )
             .instance_type(InstanceType::C6iLarge)
             .set_security_group_ids(Some(vec![security_group_id]))
+            .set_subnet_id(Some(subnet_id))
             .user_data(
                 BASE64_STANDARD
                     .encode(include_bytes!("../assets/user_data.sh"))
