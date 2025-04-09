@@ -71,7 +71,11 @@ impl AwsClient for AwsClientType {
             )
             .instance_type(InstanceType::C6iLarge)
             .set_security_group_ids(Some(vec![security_group_id]))
-            .user_data(BASE64_STANDARD.encode(include_bytes!("../assets/user_data.sh")).to_string())
+            .user_data(
+                BASE64_STANDARD
+                    .encode(include_bytes!("../assets/user_data.sh"))
+                    .to_string(),
+            )
             .min_count(1)
             .max_count(1)
             .set_placement(Some(
