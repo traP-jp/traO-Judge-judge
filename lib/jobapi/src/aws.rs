@@ -63,11 +63,6 @@ impl AwsClient for AwsClientType {
 
         let security_group_id = env::var("SECURITY_GROUP_ID")?;
 
-        let read_file_base64 = |file_path: &str| {
-            let file = std::fs::read(file_path).context("Failed to read file")?;
-            Ok::<String, anyhow::Error>(BASE64_STANDARD.encode(file).to_string())
-        };
-
         let created_instance = self
             .ec2_client
             .run_instances()
@@ -76,7 +71,11 @@ impl AwsClient for AwsClientType {
             )
             .instance_type(InstanceType::C6iLarge)
             .set_security_group_ids(Some(vec![security_group_id]))
-            .user_data(read_file_base64("assets/user_data.sh").context("Failed to read user data")?)
+            .user_data(
+                BASE64_STANDARD
+                    .encode(include_bytes!("../assets/user_data.sh"))
+                    .to_string(),
+            )
             .min_count(1)
             .max_count(1)
             .set_placement(Some(
