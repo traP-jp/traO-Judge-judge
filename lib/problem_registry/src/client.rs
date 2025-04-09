@@ -34,7 +34,7 @@ impl problem_registry::ProblemRegistryClient for ProblemRegistryClient {
             .key(resource_id.to_string())
             .send()
             .await;
-        let s3_response = match s3_response {
+        let mut s3_response = match s3_response {
             Ok(_) => s3_response.unwrap(),
             Err(SdkError::ServiceError(err)) => {
                 if err.err().is_no_such_key() {
@@ -50,14 +50,14 @@ impl problem_registry::ProblemRegistryClient for ProblemRegistryClient {
                 ));
             }
         };
-        let bytes: Vec<u8> = match s3_response.body.bytes() {
-            None => {
-                return Err(problem_registry::ResourceFetchError::FetchFailed(
-                    "Failed to read content".to_string(),
-                ));
-            }
-            Some(_) => s3_response.body.bytes().unwrap().to_vec(),
-        };
+        let bytes: Vec<u8> = s3_response
+            .body
+            .collect()
+            .await
+            .map_err(|e| {
+                problem_registry::ResourceFetchError::FetchFailed(format!("Fetch Failed: {e}"))
+            })?
+            .to_vec();
         let content = String::from_utf8(bytes);
         match content {
             Ok(content) => Ok(content),
