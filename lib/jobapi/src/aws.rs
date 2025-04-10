@@ -38,8 +38,6 @@ impl AwsClientType {
     pub async fn new() -> Self {
         // check env
         for key in [
-            "AWS_ACCESS_KEY_ID",
-            "AWS_SECRET_ACCESS_KEY",
             "SECURITY_GROUP_ID",
             "SUBNET_ID",
             "JUDGE_BUCKET_NAME",
