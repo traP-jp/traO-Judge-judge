@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use usecase::model::user::{UserDto, UserRoleDto};
 use uuid::Uuid;
 
+use super::{problems::ProblemSummariesResponses, submissions::SubmissionSummariesResponse};
+
 #[derive(Serialize, Deserialize)]
 pub enum UserRoleResponse {
     #[serde(rename = "commonUser")]
@@ -32,6 +34,8 @@ pub struct UserResponse {
     pub traq_id: Option<String>,
     pub github_id: Option<String>,
     pub icon_url: Option<String>,
+    pub post_problems: ProblemSummariesResponses,
+    pub submit_problems: SubmissionSummariesResponse,
     pub x_link: Option<String>,
     pub github_link: Option<String>,
     pub self_introduction: String,
@@ -49,6 +53,8 @@ impl From<UserDto> for UserResponse {
             traq_id: user.traq_id,
             github_id: user.github_id,
             icon_url: user.icon_url,
+            post_problems: user.post_problems.into(),
+            submit_problems: user.submit_problems.into(),
             x_link: user.x_link,
             github_link: user.github_link,
             self_introduction: user.self_introduction,

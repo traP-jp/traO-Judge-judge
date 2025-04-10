@@ -1,3 +1,4 @@
+use crate::model::testcase::TestcaseSummaryDto;
 use domain::model::problem::NormalProblem;
 use sqlx::types::chrono;
 
@@ -17,10 +18,24 @@ pub struct CreateNormalProblemData {
     pub time_limit: i32,
     pub memory_limit: i32,
     pub difficulty: i32,
-    // pub judgecode_path: String,
 }
 
-#[derive(Debug)]
+pub enum ProblemOrderByData {
+    CreatedAtAsc,
+    CreatedAtDesc,
+    UpdatedAtAsc,
+    UpdatedAtDesc,
+    DifficultyAsc,
+    DifficultyDesc,
+}
+
+pub struct ProblemGetQueryData {
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+    pub order_by: ProblemOrderByData,
+    pub user_query: Option<i64>,
+}
+
 pub struct NormalProblemDto {
     pub id: i64,
     pub author_id: i64,
@@ -31,7 +46,7 @@ pub struct NormalProblemDto {
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
-    pub judgecode_path: String,
+    pub testcases: Vec<TestcaseSummaryDto>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -48,7 +63,42 @@ impl From<NormalProblem> for NormalProblemDto {
             difficulty: problem.difficulty,
             is_public: problem.is_public,
             solved_count: problem.solved_count,
-            judgecode_path: problem.judgecode_path,
+            testcases: vec![],
+            created_at: problem.created_at,
+            updated_at: problem.updated_at,
+        }
+    }
+}
+
+pub struct NormalProblemSummaryDto {
+    pub id: i64,
+    pub author_id: i64,
+    pub title: String,
+    pub time_limit: i32,
+    pub memory_limit: i32,
+    pub difficulty: i32,
+    pub is_public: bool,
+    pub solved_count: i32,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+pub struct NormalProblemsDto {
+    pub total: i64,
+    pub problems: Vec<NormalProblemSummaryDto>,
+}
+
+impl From<NormalProblem> for NormalProblemSummaryDto {
+    fn from(problem: NormalProblem) -> Self {
+        NormalProblemSummaryDto {
+            id: problem.id,
+            author_id: problem.author_id,
+            title: problem.title,
+            time_limit: problem.time_limit,
+            memory_limit: problem.memory_limit,
+            difficulty: problem.difficulty,
+            is_public: problem.is_public,
+            solved_count: problem.solved_count,
             created_at: problem.created_at,
             updated_at: problem.updated_at,
         }

@@ -41,6 +41,8 @@ impl AwsClientType {
             "AWS_ACCESS_KEY_ID",
             "AWS_SECRET_ACCESS_KEY",
             "SECURITY_GROUP_ID",
+            "SUBNET_ID",
+            "JUDGE_BUCKET_NAME",
             "EXEC_CONTAINER_IAM_ROLE",
         ] {
             if env::var(key).is_err() {
@@ -67,11 +69,7 @@ impl AwsClient for AwsClientType {
         );
 
         let security_group_id = env::var("SECURITY_GROUP_ID")?;
-
-        let read_file_base64 = |file_path: &str| {
-            let file = std::fs::read(file_path).context("Failed to read file")?;
-            Ok::<String, anyhow::Error>(BASE64_STANDARD.encode(file).to_string())
-        };
+        let subnet_id = env::var("SUBNET_ID")?;
 
         let created_instance = self
             .ec2_client
@@ -81,7 +79,12 @@ impl AwsClient for AwsClientType {
             )
             .instance_type(InstanceType::C6iLarge)
             .set_security_group_ids(Some(vec![security_group_id]))
-            .user_data(read_file_base64("assets/user_data.sh").context("Failed to read user data")?)
+            .set_subnet_id(Some(subnet_id))
+            .user_data(
+                BASE64_STANDARD
+                    .encode(include_bytes!("../assets/user_data.sh"))
+                    .to_string(),
+            )
             .min_count(1)
             .max_count(1)
             .set_placement(Some(
@@ -108,9 +111,6 @@ impl AwsClient for AwsClientType {
             .context("Failed to get private ip address")?;
         let ip_addr = Ipv4Addr::from_str(ip_addr_str).context("Failed to parse IP address")?;
 
-        // TODO: use logger
-        println!("Created {aws_id}.");
-
         self.aws_instance_table.insert(
             instance_id,
             AwsInstanceInfo {
@@ -119,30 +119,35 @@ impl AwsClient for AwsClientType {
             },
         );
 
-        // TODO: use logger
-        println!("Private IP: {}", ip_addr);
+        tracing::info!("Instance created: {aws_id}, {ip_addr}");
+
         Ok(ip_addr)
     }
 
     async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error> {
+        let aws_id = self
+            .aws_instance_table
+            .get(&instance_id)
+            .context("Failed to get instance ID from instance ID")?
+            .aws_id
+            .clone();
         let response = self
             .ec2_client
             .terminate_instances()
-            .instance_ids(
-                self.aws_instance_table
-                    .get(&instance_id)
-                    .context("Failed to get instance ID from instance ID")?
-                    .aws_id
-                    .clone(),
-            )
+            .instance_ids(&aws_id)
             .send()
             .await
             .context("Failed to terminate instance")?;
+
         ensure!(
             !response.terminating_instances().is_empty(),
             "Failed to terminate instance"
         );
+
         self.aws_instance_table.remove(&instance_id);
+
+        tracing::info!("Instance terminated: {aws_id}");
+
         Ok(())
     }
     async fn place_file(
@@ -164,7 +169,22 @@ impl AwsClient for AwsClientType {
                 file.write_all(result.body.bytes().unwrap())?;
                 Ok(())
             }
-            _ => todo!(),
+            FileConf::EmptyDirectory => {
+                std::fs::create_dir_all(file_name.to_string())?; // TODO place先パス
+                Ok(())
+            }
+            FileConf::RuntimeText(_) => {
+                let result = self
+                    .s3_client
+                    .get_object()
+                    .bucket("traO-judge") // TODO S3バケット名
+                    .key(outcome_id.to_string() + "/" + file_name.to_string().as_str()) // TODO S3上のパス
+                    .send()
+                    .await?;
+                let mut file = File::open(file_name.to_string())?; // TODO place先パス
+                file.write_all(result.body.bytes().unwrap())?;
+                Ok(())
+            }
         }
     }
 }

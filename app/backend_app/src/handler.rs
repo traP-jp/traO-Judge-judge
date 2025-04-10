@@ -5,6 +5,7 @@ use axum::{
 };
 
 pub mod auth;
+pub mod editorial;
 pub mod problems;
 pub mod submissions;
 pub mod users;
@@ -27,19 +28,38 @@ pub fn make_router(di_container: DiContainer) -> Router {
         .route("/me/password", put(users::put_me_password))
         .route("/:userId", get(users::get_user));
 
-    let submission_router = Router::new().route("/:submissionId", get(submissions::get_submission));
+    let submission_router = Router::new()
+        .route("/", get(submissions::get_submissions))
+        .route("/:submissionId", get(submissions::get_submission));
 
     let problem_router = Router::new()
-        .route("/", post(problems::post_problem))
+        .route(
+            "/",
+            post(problems::post_problem).get(problems::get_problems),
+        )
         .route(
             "/:problemId",
-            get(problems::get_problem).put(problems::put_problem),
+            get(problems::get_problem)
+                .put(problems::put_problem)
+                .delete(problems::delete_problem),
+        )
+        .route(
+            "/:problemId/editorials",
+            get(editorial::get_editorials).post(editorial::post_editorial),
         );
+
+    let editorials_router = Router::new().route(
+        "/:editorialId",
+        get(editorial::get_editorial)
+            .put(editorial::put_editorial)
+            .delete(editorial::delete_editorial),
+    );
 
     Router::new()
         .nest("/", auth_router)
         .nest("/users", user_router)
         .nest("/submissions", submission_router)
         .nest("/problems", problem_router)
+        .nest("/editorials", editorials_router)
         .with_state(di_container)
 }

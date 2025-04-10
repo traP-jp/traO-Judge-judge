@@ -1,20 +1,45 @@
-use crate::model::problem::{CreateNormalProblemData, NormalProblemDto, UpdateNormalProblemData};
+use crate::model::problem::{
+    CreateNormalProblemData, NormalProblemDto, NormalProblemsDto, ProblemGetQueryData,
+    ProblemOrderByData, UpdateNormalProblemData,
+};
 use domain::{
-    model::problem::{CreateNormalProblem, UpdateNormalProblem},
-    repository::{problem::ProblemRepository, session::SessionRepository},
+    model::{
+        problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem},
+        user,
+    },
+    repository::{
+        problem::ProblemRepository, session::SessionRepository, testcase::TestcaseRepository,
+        user::UserRepository,
+    },
 };
 
 #[derive(Clone)]
-pub struct ProblemService<PR: ProblemRepository, SR: SessionRepository> {
+pub struct ProblemService<
+    PR: ProblemRepository,
+    UR: UserRepository,
+    SR: SessionRepository,
+    TR: TestcaseRepository,
+> {
     problem_repository: PR,
+    user_repository: UR,
     session_repository: SR,
+    testcase_repository: TR,
 }
 
-impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
-    pub fn new(problem_repository: PR, session_repository: SR) -> Self {
+impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: TestcaseRepository>
+    ProblemService<PR, UR, SR, TR>
+{
+    pub fn new(
+        problem_repository: PR,
+        user_repository: UR,
+        session_repository: SR,
+        testcase_repository: TR,
+    ) -> Self {
         Self {
             problem_repository,
+            user_repository,
             session_repository,
+            testcase_repository,
         }
     }
 }
@@ -28,7 +53,9 @@ pub enum ProblemError {
     InternalServerError,
 }
 
-impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
+impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: TestcaseRepository>
+    ProblemService<PR, UR, SR, TR>
+{
     pub async fn get_problem(
         &self,
         session_id: Option<String>,
@@ -56,7 +83,73 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
             }
         }
 
-        Ok(problem.into())
+        let testcases = self
+            .testcase_repository
+            .get_testcases(problem_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?;
+
+        Ok(NormalProblemDto {
+            id: problem.id,
+            author_id: problem.author_id,
+            title: problem.title,
+            statement: problem.statement,
+            time_limit: problem.time_limit,
+            memory_limit: problem.memory_limit,
+            difficulty: problem.difficulty,
+            is_public: problem.is_public,
+            solved_count: problem.solved_count,
+            testcases: testcases.into_iter().map(|x| x.into()).collect(),
+            created_at: problem.created_at,
+            updated_at: problem.updated_at,
+        })
+    }
+
+    pub async fn get_problems_by_query(
+        &self,
+        session_id: Option<String>,
+        query: ProblemGetQueryData,
+    ) -> anyhow::Result<NormalProblemsDto, ProblemError> {
+        let display_id = match session_id {
+            Some(session_id) => self
+                .session_repository
+                .get_display_id_by_session_id(&session_id)
+                .await
+                .map_err(|_| ProblemError::InternalServerError)?,
+            None => None,
+        };
+
+        let query = ProblemGetQuery {
+            user_id: display_id,
+            user_query: query.user_query,
+            limit: query.limit.unwrap_or(50),
+            offset: query.offset.unwrap_or(0),
+            order_by: match query.order_by {
+                ProblemOrderByData::CreatedAtAsc => ProblemOrderBy::CreatedAtAsc,
+                ProblemOrderByData::CreatedAtDesc => ProblemOrderBy::CreatedAtDesc,
+                ProblemOrderByData::UpdatedAtAsc => ProblemOrderBy::UpdatedAtAsc,
+                ProblemOrderByData::UpdatedAtDesc => ProblemOrderBy::UpdatedAtDesc,
+                ProblemOrderByData::DifficultyAsc => ProblemOrderBy::DifficultyAsc,
+                ProblemOrderByData::DifficultyDesc => ProblemOrderBy::DifficultyDesc,
+            },
+        };
+
+        let total = self
+            .problem_repository
+            .get_problems_by_query_count(query.clone())
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?;
+
+        let problems = self
+            .problem_repository
+            .get_problems_by_query(query)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?;
+
+        Ok(NormalProblemsDto {
+            total: total,
+            problems: problems.into_iter().map(|p| p.into()).collect(),
+        })
     }
 
     pub async fn update_problem(
@@ -94,7 +187,7 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
                     title: body.title.unwrap_or(problem.title),
                     is_public: body.is_public.unwrap_or(problem.is_public),
                     difficulty: body.difficulty.unwrap_or(problem.difficulty),
-                    statement: body.statement,
+                    statement: body.statement.unwrap_or(problem.statement),
                     time_limit: body.time_limit.unwrap_or(problem.time_limit),
                     memory_limit: body.memory_limit.unwrap_or(problem.memory_limit),
                 },
@@ -124,6 +217,20 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
             .map_err(|_| ProblemError::InternalServerError)?
             .ok_or(ProblemError::Unauthorized)?;
 
+        let user = self
+            .user_repository
+            .get_user_by_display_id(display_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?
+            .ok_or(ProblemError::NotFound)?;
+
+        match user.role {
+            domain::model::user::UserRole::Admin | domain::model::user::UserRole::TrapUser => {}
+            _ => {
+                return Err(ProblemError::Forbidden);
+            }
+        }
+
         let problem_id = self
             .problem_repository
             .create_problem(CreateNormalProblem {
@@ -133,7 +240,6 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
                 time_limit: body.time_limit,
                 memory_limit: body.memory_limit,
                 difficulty: body.difficulty,
-                judgecode_path: "todo".to_string(),
             })
             .await
             .map_err(|_| ProblemError::InternalServerError)?;
@@ -146,5 +252,42 @@ impl<PR: ProblemRepository, SR: SessionRepository> ProblemService<PR, SR> {
             .ok_or(ProblemError::NotFound)?;
 
         Ok(problem.into())
+    }
+
+    pub async fn delete_problem(
+        &self,
+        session_id: Option<&str>,
+        problem_id: i64,
+    ) -> anyhow::Result<(), ProblemError> {
+        let user_id = match session_id {
+            Some(session_id) => self
+                .session_repository
+                .get_display_id_by_session_id(session_id)
+                .await
+                .map_err(|_| ProblemError::InternalServerError)?,
+            None => None,
+        };
+
+        let problem = self
+            .problem_repository
+            .get_problem(problem_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?
+            .ok_or(ProblemError::NotFound)?;
+
+        if user_id.is_none_or(|id| id != problem.author_id) {
+            if problem.is_public {
+                return Err(ProblemError::Forbidden);
+            } else {
+                return Err(ProblemError::NotFound);
+            }
+        }
+
+        self.problem_repository
+            .delete_problem(problem_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?;
+
+        Ok(())
     }
 }

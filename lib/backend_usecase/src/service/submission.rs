@@ -1,6 +1,12 @@
-use crate::model::submission::{JudgeResultDto, SubmissionDto};
-use domain::repository::{
-    problem::ProblemRepository, session::SessionRepository, submission::SubmissionRepository,
+use crate::model::submission::{
+    JudgeResultDto, SubmissionDto, SubmissionGetQueryData, SubmissionOrderByData,
+    SubmissionSummaryDto, SubmissionsDto,
+};
+use domain::{
+    model::submission::{SubmissionGetQuery, SubmissionOrderBy},
+    repository::{
+        problem::ProblemRepository, session::SessionRepository, submission::SubmissionRepository,
+    },
 };
 
 #[derive(Clone)]
@@ -82,7 +88,7 @@ impl<SeR: SessionRepository, SuR: SubmissionRepository, PR: ProblemRepository>
             .map_err(|_| SubmissionError::InternalServerError)?;
 
         Ok(SubmissionDto {
-            id: submission.id.to_string(),
+            id: submission.id,
             user_id: submission.user_id,
             user_name: submission.user_name,
             problem_id: submission.problem_id,
@@ -104,6 +110,72 @@ impl<SeR: SessionRepository, SuR: SubmissionRepository, PR: ProblemRepository>
                     memory: testcase.memory,
                 })
                 .collect(),
+        })
+    }
+
+    pub async fn get_submissions(
+        &self,
+        session_id: Option<String>,
+        query: SubmissionGetQueryData,
+    ) -> anyhow::Result<SubmissionsDto, SubmissionError> {
+        let user_id = match session_id {
+            Some(session_id) => {
+                let display_id = self
+                    .session_repository
+                    .get_display_id_by_session_id(&session_id)
+                    .await
+                    .map_err(|_| SubmissionError::InternalServerError)?
+                    .ok_or(SubmissionError::NotFound)?;
+
+                Some(display_id)
+            }
+            None => None,
+        };
+
+        let query = SubmissionGetQuery {
+            user_id: user_id,
+            limit: query.limit.unwrap_or(50),
+            offset: query.offset.unwrap_or(0),
+            judge_status: query.judge_status,
+            language_id: query.language_id,
+            user_name: query.user_name,
+            user_query: query.user_query,
+            order_by: match query.order_by {
+                SubmissionOrderByData::SubmittedAtAsc => SubmissionOrderBy::SubmittedAtAsc,
+                SubmissionOrderByData::SubmittedAtDesc => SubmissionOrderBy::SubmittedAtDesc,
+                SubmissionOrderByData::TimeConsumptionAsc => SubmissionOrderBy::TimeConsumptionAsc,
+                SubmissionOrderByData::TimeConsumptionDesc => {
+                    SubmissionOrderBy::TimeConsumptionDesc
+                }
+                SubmissionOrderByData::ScoreAsc => SubmissionOrderBy::ScoreAsc,
+                SubmissionOrderByData::ScoreDesc => SubmissionOrderBy::ScoreDesc,
+                SubmissionOrderByData::MemoryConsumptionAsc => {
+                    SubmissionOrderBy::MemoryConsumptionAsc
+                }
+                SubmissionOrderByData::MemoryConsumptionDesc => {
+                    SubmissionOrderBy::MemoryConsumptionDesc
+                }
+                SubmissionOrderByData::CodeLengthAsc => SubmissionOrderBy::CodeLengthAsc,
+                SubmissionOrderByData::CodeLengthDesc => SubmissionOrderBy::CodeLengthDesc,
+            },
+            problem_id: query.problem_id,
+        };
+
+        let total = self
+            .submission_repository
+            .get_submissions_count_by_query(query.clone())
+            .await
+            .map_err(|_| SubmissionError::InternalServerError)?;
+
+        let submissions = self
+            .submission_repository
+            .get_submissions_by_query(query)
+            .await
+            .map_err(|_| SubmissionError::InternalServerError)?;
+
+        Ok(SubmissionsDto {
+            total: total,
+            submissions: submissions.into_iter().map(|s| s.into()).collect(),
         })
     }
 }

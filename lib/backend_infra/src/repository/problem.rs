@@ -1,10 +1,12 @@
 use crate::model::problem::NormalProblemRow;
 use axum::async_trait;
 use domain::{
-    model::problem::{CreateNormalProblem, NormalProblem, UpdateNormalProblem},
+    model::problem::{
+        CreateNormalProblem, NormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem,
+    },
     repository::problem::ProblemRepository,
 };
-use sqlx::MySqlPool;
+use sqlx::{MySqlPool, QueryBuilder};
 
 #[derive(Clone)]
 pub struct ProblemRepositoryImpl {
@@ -27,6 +29,81 @@ impl ProblemRepository for ProblemRepositoryImpl {
                 .await?;
 
         Ok(problem.map(|problem| problem.into()))
+    }
+
+    async fn get_problems_by_query(
+        &self,
+        query: ProblemGetQuery,
+    ) -> anyhow::Result<Vec<NormalProblem>> {
+        let mut query_builder = QueryBuilder::new("SELECT * FROM normal_problems WHERE");
+
+        query_builder.push(" (is_public = TRUE");
+        if let Some(user_id) = query.user_id {
+            query_builder.push(" OR author_id = ").push_bind(user_id);
+        }
+        query_builder.push(")");
+
+        if let Some(user_query) = query.user_query {
+            query_builder
+                .push(" AND author_id = ")
+                .push_bind(user_query);
+        }
+
+        query_builder.push(" ORDER BY ");
+
+        match query.order_by {
+            ProblemOrderBy::CreatedAtAsc => {
+                query_builder.push("created_at ASC");
+            }
+            ProblemOrderBy::CreatedAtDesc => {
+                query_builder.push("created_at DESC");
+            }
+            ProblemOrderBy::UpdatedAtAsc => {
+                query_builder.push("updated_at ASC");
+            }
+            ProblemOrderBy::UpdatedAtDesc => {
+                query_builder.push("updated_at DESC");
+            }
+            ProblemOrderBy::DifficultyAsc => {
+                query_builder.push("difficulty ASC");
+            }
+            ProblemOrderBy::DifficultyDesc => {
+                query_builder.push("difficulty DESC");
+            }
+        }
+
+        query_builder.push(" LIMIT ").push_bind(query.limit);
+        query_builder.push(" OFFSET ").push_bind(query.offset);
+
+        let problems = query_builder
+            .build_query_as::<NormalProblemRow>()
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(problems.into_iter().map(|problem| problem.into()).collect())
+    }
+
+    async fn get_problems_by_query_count(&self, query: ProblemGetQuery) -> anyhow::Result<i64> {
+        let mut query_builder = QueryBuilder::new("SELECT COUNT(1) FROM normal_problems WHERE");
+
+        query_builder.push(" (is_public = TRUE");
+        if let Some(user_id) = query.user_id {
+            query_builder.push(" OR author_id = ").push_bind(user_id);
+        }
+        query_builder.push(")");
+
+        if let Some(user_query) = query.user_query {
+            query_builder
+                .push(" AND author_id = ")
+                .push_bind(user_query);
+        }
+
+        let count = query_builder
+            .build_query_scalar::<i64>()
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(count)
     }
 
     async fn update_problem(
@@ -56,7 +133,7 @@ impl ProblemRepository for ProblemRepositoryImpl {
 
     async fn create_problem(&self, create_problem: CreateNormalProblem) -> anyhow::Result<i64> {
         let problem_id = sqlx::query(
-            "INSERT INTO normal_problems (author_id, title, statement, time_limit, memory_limit, difficulty, judgecode_path) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO normal_problems (author_id, title, statement, time_limit, memory_limit, difficulty) VALUES (?, ?, ?, ?, ?, ?)",
         )
         .bind(create_problem.author_id)
         .bind(create_problem.title)
@@ -64,7 +141,6 @@ impl ProblemRepository for ProblemRepositoryImpl {
         .bind(create_problem.time_limit)
         .bind(create_problem.memory_limit)
         .bind(create_problem.difficulty)
-        .bind(create_problem.judgecode_path)
         .execute(&self.pool)
         .await
         .map_err(|e| {
@@ -73,5 +149,14 @@ impl ProblemRepository for ProblemRepositoryImpl {
         })?;
 
         Ok(problem_id.last_insert_id() as i64)
+    }
+
+    async fn delete_problem(&self, id: i64) -> anyhow::Result<()> {
+        sqlx::query("DELETE FROM normal_problems WHERE id = ?")
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
     }
 }

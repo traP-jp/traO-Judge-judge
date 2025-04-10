@@ -1,10 +1,21 @@
+pub mod common;
 pub mod v0;
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::gen_stub_pyfunction;
 
-#[pymodule]
+#[pymodule(name = "util")]
 /// This module provides utilities for traOJudge v1 spec.
-fn traopy_util_v1(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_wrapped(pyo3::wrap_pymodule!(v0::traopy_util_v1))?;
+fn util_module(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    v0::v0_module(m)?;
+    common::common_module(m)?;
+    m.add_function(wrap_pyfunction!(_marker_fn, m)?)?;
+    Ok(())
+}
+
+#[gen_stub_pyfunction(module = "traopy_util.util")]
+#[pyfunction]
+/// Marker to ensure pyo3_stub_gen imports nested submodules
+pub fn _marker_fn() -> PyResult<()> {
     Ok(())
 }
 

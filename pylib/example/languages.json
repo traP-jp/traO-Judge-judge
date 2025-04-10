@@ -1,0 +1,11 @@
+{
+    "languages": [
+        {
+            "name": "C++23(gcc)",
+            "binName": "g++",
+            "compile": "cp $TRAOJUDGE_BUILD_SOURCE $TRAOJUDGE_BUILD_TEMPDIR/main.cpp && g++ -std=c++23 -o $TRAOJUDGE_BUILD_OUTPUT $TRAOJUDGE_BUILD_TEMPDIR/main.cpp",
+            "run": "$TRAOJUDGE_BUILD_OUTPUT",
+            "libraries": []
+        }
+    ]
+}

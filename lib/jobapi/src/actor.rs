@@ -1,21 +1,8 @@
-#![allow(unused)]
-use actix::prelude::*;
-use judge_core::*;
+pub mod file_factory;
+pub mod instance;
+pub mod instance_pool;
 
-pub mod handler;
-pub mod message;
-
-pub struct InstanceSupervisor;
-impl Actor for InstanceSupervisor {
-    type Context = Context<Self>;
-}
-
-pub struct Instance;
-impl Actor for Instance {
-    type Context = Context<Self>;
-}
-
-pub struct FileFactory;
-impl Actor for FileFactory {
-    type Context = Context<Self>;
+pub enum Running {
+    Continue,
+    Stop,
 }

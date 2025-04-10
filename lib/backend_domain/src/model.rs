@@ -1,7 +1,10 @@
+pub mod editorial;
 pub mod jwt;
 pub mod problem;
+pub mod procedure;
 pub mod rules;
-pub mod submisson;
+pub mod submission;
+pub mod testcase;
 pub mod user;
 
 #[cfg(test)]

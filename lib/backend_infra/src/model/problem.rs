@@ -13,7 +13,6 @@ pub struct NormalProblemRow {
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
-    pub judgecode_path: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -30,7 +29,6 @@ impl From<NormalProblemRow> for NormalProblem {
             difficulty: val.difficulty,
             is_public: val.is_public,
             solved_count: val.solved_count,
-            judgecode_path: val.judgecode_path,
             created_at: val.created_at,
             updated_at: val.updated_at,
         }
