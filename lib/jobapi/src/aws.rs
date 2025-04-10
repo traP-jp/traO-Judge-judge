@@ -1,7 +1,7 @@
 use anyhow::{ensure, Context};
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_ec2::{
-    types::{InstanceType, Placement},
+    types::{IamInstanceProfileSpecification, InstanceType, Placement},
     Client as Ec2Client,
 };
 use aws_sdk_s3::Client as S3Client;
@@ -36,7 +36,12 @@ pub struct AwsClientType {
 impl AwsClientType {
     pub async fn new() -> Self {
         // check env
-        for key in ["SECURITY_GROUP_ID", "SUBNET_ID", "JUDGE_BUCKET_NAME"] {
+        for key in [
+            "SECURITY_GROUP_ID",
+            "SUBNET_ID",
+            "JUDGE_BUCKET_NAME",
+            "EXEC_CONTAINER_IAM_ROLE",
+        ] {
             if env::var(key).is_err() {
                 panic!("{} is not set", key);
             }
@@ -81,6 +86,11 @@ impl AwsClient for AwsClientType {
             .max_count(1)
             .set_placement(Some(
                 Placement::builder().availability_zone("us-west-2a").build(),
+            ))
+            .set_iam_instance_profile(Some(
+                IamInstanceProfileSpecification::builder()
+                    .arn(env::var("EXEC_CONTAINER_IAM_ROLE").unwrap().as_str())
+                    .build(),
             ))
             .send()
             .await
