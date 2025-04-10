@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use judge_core::model::job;
 use judge_exec_grpc::generated::{
     execute_service_client::ExecuteServiceClient, Dependency, ExecuteRequest,
@@ -8,7 +7,7 @@ use uuid::Uuid;
 
 use crate::jobapi::OutcomeToken;
 
-#[async_trait]
+#[axum::async_trait]
 pub trait GrpcClient {
     async fn execute(
         &mut self,
@@ -30,7 +29,7 @@ impl GrpcClientType {
     }
 }
 
-#[async_trait]
+#[axum::async_trait]
 impl GrpcClient for GrpcClientType {
     async fn execute(
         &mut self,

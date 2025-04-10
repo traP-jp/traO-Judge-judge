@@ -45,6 +45,11 @@ bollard = "0.18.1"
 bytes = "1.10.1"
 flate2 = "1.1.0"
 sha2 = "0.10.8"
+async-channel = "2.3.1"
+aws-sdk-ec2 = "1.116.0"
+base64 = "0.22.1"
+dotenv = "0.15.0"
+tar = "0.4.44"
 
 [workspace]
 members = [

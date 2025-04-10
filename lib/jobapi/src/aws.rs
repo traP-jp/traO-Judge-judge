@@ -1,5 +1,4 @@
 use anyhow::{ensure, Context};
-use async_trait::async_trait;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_ec2::{
     types::{InstanceType, Placement},
@@ -11,7 +10,7 @@ use judge_core::model::job::FileConf;
 use std::{collections::HashMap, env, fs::File, io::Write, net::Ipv4Addr, str::FromStr};
 use uuid::Uuid;
 
-#[async_trait]
+#[axum::async_trait]
 pub trait AwsClient {
     async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error>;
     async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error>;
@@ -53,7 +52,7 @@ impl AwsClientType {
     }
 }
 
-#[async_trait]
+#[axum::async_trait]
 impl AwsClient for AwsClientType {
     async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error> {
         ensure!(
