@@ -41,6 +41,7 @@ impl AwsClientType {
             "AWS_ACCESS_KEY_ID",
             "AWS_SECRET_ACCESS_KEY",
             "SECURITY_GROUP_ID",
+            "EXEC_CONTAINER_IAM_ROLE",
         ] {
             if env::var(key).is_err() {
                 panic!("{} is not set", key);
@@ -88,7 +89,7 @@ impl AwsClient for AwsClientType {
             ))
             .set_iam_instance_profile(Some(
                 IamInstanceProfileSpecification::builder()
-                    .arn("arn:aws:iam::222634386193:instance-profile/traO-infra-exec")
+                    .arn(env::var("EXEC_CONTAINER_IAM_ROLE").unwrap().as_str())
                     .build(),
             ))
             .send()
