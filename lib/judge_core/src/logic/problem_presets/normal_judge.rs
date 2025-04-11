@@ -14,7 +14,7 @@ static NJ_RUN_SCRIPT: &str = include_str!("./normal_judge_run.py");
 static NJ_SUMMARIZE_SCRIPT: &str = include_str!("./normal_judge_summarize.py");
 
 static COMPILE_PHASE_TIME_RESERVED_MS: i64 = 30000;
-static TEST_PHASE_TIME_RESERVED_MS: i64 = 6000;
+static TEST_PHASE_TIME_RESERVED_MS: i64 = 11000;
 static SUMMARIZE_PHASE_TIME_RESERVED_MS: i64 = 2000;
 
 pub fn create_normal_judge_procedure(
