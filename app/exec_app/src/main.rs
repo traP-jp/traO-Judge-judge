@@ -78,6 +78,7 @@ impl ExecApp {
         &self,
         dependency: Vec<Dependency>,
     ) -> Result<ExecuteResponse, anyhow::Error> {
+        tracing::info!("calculating hash");
         let hashes: HashMap<_, _> = dependency
             .iter()
             .map(|dep| {
@@ -93,12 +94,14 @@ impl ExecApp {
                 )
             })
             .collect();
+        tracing::info!("hashes: {:?}", hashes);
 
         // create container
         let env_vars: Vec<String> = dependency
             .iter()
             .map(|dep| format!("{}=\"/outcome/{}\"", &dep.envvar, hashes[&dep.envvar]))
             .collect();
+        tracing::info!("env_vars: {:?}", env_vars);
         let create_container_response = self
             .docker_api
             .create_container(
@@ -124,8 +127,9 @@ impl ExecApp {
             .warnings
             .iter()
             .for_each(|warning| {
-                println!("warning: {}", warning);
+                tracing::info!("warning: {}", warning);
             });
+        tracing::info!("starting container");
         self.docker_api
             .start_container(
                 ExecApp::DOCKER_CONTAINER_NAME,
@@ -133,7 +137,20 @@ impl ExecApp {
             )
             .await?;
 
+        tracing::info!("writing outcomes");
         // write outcomes to /outcome
+        self.docker_api
+            .create_exec(
+                ExecApp::DOCKER_CONTAINER_NAME,
+                CreateExecOptions {
+                    cmd: Some(vec!["mkdir", "/outcome"]),
+                    attach_stdout: Some(true),
+                    attach_stderr: Some(true),
+                    ..CreateExecOptions::default()
+                },
+            )
+            .await?;
+        tracing::info!("directory created");
         for dep in &dependency {
             let mut tar = GzDecoder::new(&dep.outcome[..]);
             let mut file: Vec<u8> = Vec::new();
@@ -150,8 +167,13 @@ impl ExecApp {
                 .await?;
         }
 
+        tracing::info!("executing container");
+
         // exec script
         let exec_container_entry_point = env::var(SCRIPT_PATH)?;
+
+        tracing::info!("entrypoint: {}", exec_container_entry_point);
+
         self.docker_api
             .create_exec(
                 ExecApp::DOCKER_CONTAINER_NAME,
@@ -163,6 +185,7 @@ impl ExecApp {
                 },
             )
             .await?;
+        tracing::info!("chmod done");
         let message = self
             .docker_api
             .create_exec(
@@ -175,6 +198,9 @@ impl ExecApp {
                 },
             )
             .await?;
+        tracing::info!("exec created");
+
+        tracing::info!("output: {:?}", message);
 
         // get exec result
         let result = self
@@ -279,6 +305,10 @@ impl ExecuteService for ExecApp {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+    tracing::info!("starting exec app");
     let addr = "0.0.0.0:50051".parse().unwrap();
     let exec_app = ExecApp::default();
     Server::builder()
