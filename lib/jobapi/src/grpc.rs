@@ -65,10 +65,14 @@ impl GrpcClient for GrpcClientType {
                 exec_time_ms: 998244353,
             })
             .await
-            .unwrap();
-        let outcome = resp.get_ref().clone().outcome;
+            .unwrap()
+            .into_inner();
+
+        tracing::info!("Execute response received: {:?}", resp);
+
+        let outcome = resp.outcome;
         let outcome_id = Uuid::now_v7();
-        let output = resp.get_ref().clone().output.unwrap();
+        let output = resp.output.unwrap();
         Ok((
             OutcomeToken::from_binary(outcome_id, &outcome).await,
             std::process::Output {
