@@ -109,7 +109,7 @@ impl ExecApp {
                 Config {
                     image: Some(self.docker_image_name.as_str()),
                     env: Some(env_vars.iter().map(|s| s.as_str()).collect()),
-                    cmd: Some(vec!["/bin/bash"]),
+                    cmd: Some(vec!["sleep", "infinity"]),
                     host_config: Some(HostConfig {
                         cpuset_cpus: Some("0".to_string()),
                         memory: Some(2 * 1024 * 1024 * 1024), // 2GiB
@@ -152,6 +152,17 @@ impl ExecApp {
 
         // exec script
         let exec_container_entry_point = env::var(SCRIPT_PATH)?;
+        self.docker_api
+            .create_exec(
+                ExecApp::DOCKER_CONTAINER_NAME,
+                CreateExecOptions {
+                    cmd: Some(vec!["chmod", "+x", exec_container_entry_point.as_str()]),
+                    attach_stdout: Some(true),
+                    attach_stderr: Some(true),
+                    ..CreateExecOptions::default()
+                },
+            )
+            .await?;
         let message = self
             .docker_api
             .create_exec(
