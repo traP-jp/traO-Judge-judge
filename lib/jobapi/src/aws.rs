@@ -1,5 +1,7 @@
 use anyhow::{ensure, Context};
 use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_ec2::types::builders::BlockDeviceMappingBuilder;
+use aws_sdk_ec2::types::{BlockDeviceMapping, EbsBlockDevice};
 use aws_sdk_ec2::{
     types::{IamInstanceProfileSpecification, InstanceType, Placement},
     Client as Ec2Client,
@@ -92,6 +94,16 @@ impl AwsClient for AwsClientType {
                     .arn(env::var("EXEC_CONTAINER_IAM_ROLE").unwrap().as_str())
                     .build(),
             ))
+            .block_device_mappings(
+                BlockDeviceMappingBuilder::default()
+                    .ebs(
+                        EbsBlockDevice::builder()
+                            .volume_size(32)
+                            .delete_on_termination(true)
+                            .build(),
+                    )
+                    .build(),
+            )
             .send()
             .await
             .context("Failed to create instance")?;
