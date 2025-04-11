@@ -156,8 +156,8 @@ impl AwsClient for AwsClientType {
             .context("Failed to terminate instance")?;
 
         ensure!(
-            !response.terminating_instances().is_empty(),
-            "Failed to terminate instance"
+            !response.terminating_instances().is_none(),
+            "Failed to terminate instance: no value was sent"
         );
 
         self.aws_instance_table.remove(&instance_id);
