@@ -34,7 +34,9 @@ impl<
         })
     }
 
+    #[tracing::instrument(skip(self))]
     pub async fn run(self) -> anyhow::Result<HashMap<RuntimeId, judge_output::ExecutionJobResult>> {
+        tracing::info!("Starting the runner");
         {
             let first_futures = {
                 let mut first_futures = Vec::new();
@@ -60,11 +62,14 @@ impl<
                     judge_output::ExecutionJobResult::EarlyExit,
                 );
             }
+            tracing::info!("Runner completed");
             Ok(outputs.clone())
         }
     }
 
+    #[tracing::instrument]
     fn create_file_confs(procedure: &runtime::Procedure) -> HashMap<RuntimeId, job::FileConf> {
+        tracing::info!("Creating file configurations");
         let mut file_confs = HashMap::new();
         for text in procedure.texts.iter() {
             let file_conf = job::FileConf::Text(text.resource_id.clone());
@@ -78,13 +83,16 @@ impl<
             let file_conf = job::FileConf::EmptyDirectory;
             file_confs.insert(empty_directory.runtime_id.clone(), file_conf);
         }
+        tracing::info!("File configurations created");
         file_confs
     }
 
+    #[tracing::instrument(skip(job_api))]
     async fn create_exec_confs(
         procedure: &runtime::Procedure,
         job_api: &JobApiType,
     ) -> anyhow::Result<HashMap<RuntimeId, (ReservationToken, Vec<runtime::Dependency>)>> {
+        tracing::info!("Creating execution configurations");
         let mut reservations_vec = job_api
             .reserve_execution(procedure.executions.len())
             .await
@@ -104,30 +112,37 @@ impl<
                 .collect();
             reservations.insert(execution.runtime_id.clone(), (reservation, dependencies));
         }
+        tracing::info!("Execution configurations created");
         Ok(reservations)
     }
 
+    #[tracing::instrument(skip(self))]
     async fn run_file_job(
         &self,
         runtime_id: RuntimeId,
         file_conf: job::FileConf,
     ) -> anyhow::Result<()> {
+        tracing::info!("Running file job for {}", runtime_id);
         let outcome_token = self
             .job_api
             .place_file(file_conf)
             .await
             .context(format!("Failed to place file for runtime {}", runtime_id))?;
         let outcomes = self.new_outcome(runtime_id, outcome_token).await;
+        tracing::info!("File job for {} completed", runtime_id);
         self.run_next(&outcomes).await?;
+        tracing::info!("Returning from file job for {}", runtime_id);
         Ok(())
     }
 
+    #[tracing::instrument(skip(self, reservation, dependencies))]
     async fn run_execution_job(
         &self,
         runtime_id: RuntimeId,
         reservation: ReservationToken,
         dependencies: Vec<job::Dependency<OutcomeToken>>,
     ) -> anyhow::Result<()> {
+        tracing::info!("Running execution job for {}", runtime_id);
         let (outcome_token, output) = self
             .job_api
             .execute(reservation, dependencies)
@@ -136,6 +151,7 @@ impl<
         let result = judge_output::parse(&output)
             .map_err(|e| anyhow::anyhow!(e.to_string()))
             .context("Failed to parse output")?;
+        tracing::info!("Execution job for {} completed", runtime_id);
         if match &result {
             judge_output::ExecutionResult::Displayable(result_inner) => {
                 result_inner.continue_status.clone()
@@ -158,6 +174,7 @@ impl<
             );
             std::mem::drop(outputs);
         }
+        tracing::info!("Returning from execution job for {}", runtime_id);
         Ok(())
     }
 
@@ -175,7 +192,10 @@ impl<
         };
         outcomes
     }
+
+    #[tracing::instrument(skip(self, outcomes))]
     async fn run_next(&self, outcomes: &HashMap<RuntimeId, OutcomeToken>) -> anyhow::Result<()> {
+        tracing::info!("Running next jobs");
         let next_job_futures = {
             let mut next_job_futures = Vec::new();
             let mut exec_confs = self.exec_confs.lock().await;
@@ -213,6 +233,7 @@ impl<
             .await
             .into_iter()
             .collect::<Result<Vec<_>, _>>()?;
+        tracing::info!("Next jobs completed");
         Ok(())
     }
 }
