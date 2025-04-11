@@ -23,18 +23,24 @@ use tonic::{transport::Server, Request, Response, Status};
 
 pub struct ExecApp {
     docker_api: Docker,
+    docker_image_name: String,
 }
 
 impl Default for ExecApp {
     fn default() -> Self {
+        for key in ["DOCKER_IMAGE_NAME"] {
+            if env::var(key).is_err() {
+                panic!("{} is not set", key);
+            }
+        }
         ExecApp {
             docker_api: Docker::connect_with_socket_defaults().unwrap(),
+            docker_image_name: env::var("DOCKER_IMAGE_NAME").unwrap(),
         }
     }
 }
 
 impl ExecApp {
-    const DOCKER_IMAGE_NAME: &'static str = "exec-container-image";
     const DOCKER_CONTAINER_NAME: &'static str = "exec-container";
 
     async fn executing(&self) -> bool {
@@ -101,7 +107,7 @@ impl ExecApp {
                     ..CreateContainerOptions::default()
                 }),
                 Config {
-                    image: Some(ExecApp::DOCKER_IMAGE_NAME),
+                    image: Some(self.docker_image_name.as_str()),
                     env: Some(env_vars.iter().map(|s| s.as_str()).collect()),
                     cmd: Some(vec!["/bin/bash"]),
                     host_config: Some(HostConfig {
