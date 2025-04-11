@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - develop
-      - feat/#324-pull-image-from-ecr
 
 jobs:
   build-exec-app:
