@@ -43,6 +43,8 @@ impl AwsClientType {
             "SUBNET_ID",
             "JUDGE_BUCKET_NAME",
             "EXEC_CONTAINER_IAM_ROLE",
+            "EXEC_INSTANCE_AMI",
+            "DOCKER_IMAGE_NAME",
         ] {
             if env::var(key).is_err() {
                 panic!("{} is not set", key);
@@ -69,19 +71,22 @@ impl AwsClient for AwsClientType {
 
         let security_group_id = env::var("SECURITY_GROUP_ID")?;
         let subnet_id = env::var("SUBNET_ID")?;
+        let ami_id = env::var("EXEC_INSTANCE_AMI")?;
+        let docker_image_name = env::var("DOCKER_IMAGE_NAME")?;
 
         let created_instance = self
             .ec2_client
             .run_instances()
-            .image_id(
-                "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
-            )
+            .image_id(ami_id)
             .instance_type(InstanceType::C6iLarge)
             .set_security_group_ids(Some(vec![security_group_id]))
             .set_subnet_id(Some(subnet_id))
             .user_data(
                 BASE64_STANDARD
-                    .encode(include_bytes!("../assets/user_data.sh"))
+                    .encode(format!(
+                        "#!/bin/bash\nDOCKER_IMAGE_NAME={} /root/exec-app >> /log.txt 2>&1",
+                        docker_image_name
+                    ))
                     .to_string(),
             )
             .min_count(1)
@@ -151,8 +156,8 @@ impl AwsClient for AwsClientType {
             .context("Failed to terminate instance")?;
 
         ensure!(
-            !response.terminating_instances().is_empty(),
-            "Failed to terminate instance"
+            !response.terminating_instances().is_none(),
+            "Failed to terminate instance: no value was sent"
         );
 
         self.aws_instance_table.remove(&instance_id);
