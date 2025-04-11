@@ -23,7 +23,7 @@ pub struct GrpcClientType {
 impl GrpcClientType {
     pub async fn new(instance_ip: Ipv4Addr) -> Self {
         // 1 秒間隔で 60 回ポーリング
-        let policy = RetryPolicy::fixed(Duration::from_secs(1)).with_max_retries(60);
+        let policy = RetryPolicy::fixed(Duration::from_secs(1)).with_max_retries(600);
         let exec_client = policy
             .retry_if(
                 || async move {
