@@ -8,6 +8,7 @@ use aws_sdk_s3::Client as S3Client;
 use base64::{prelude::BASE64_STANDARD, Engine};
 use judge_core::model::job::FileConf;
 use std::{collections::HashMap, env, fs::File, io::Write, net::Ipv4Addr, str::FromStr};
+use aws_sdk_ec2::types::{BlockDeviceMapping, EbsBlockDevice};
 use uuid::Uuid;
 
 #[axum::async_trait]
@@ -92,6 +93,13 @@ impl AwsClient for AwsClientType {
                     .arn(env::var("EXEC_CONTAINER_IAM_ROLE").unwrap().as_str())
                     .build(),
             ))
+            .block_device_mappings(BlockDeviceMapping {
+                ebs: Some(EbsBlockDevice {
+                    volume_size: Some(32),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            })
             .send()
             .await
             .context("Failed to create instance")?;
