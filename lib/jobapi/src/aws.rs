@@ -1,7 +1,7 @@
 use anyhow::{ensure, Context};
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_ec2::types::builders::BlockDeviceMappingBuilder;
-use aws_sdk_ec2::types::{BlockDeviceMapping, EbsBlockDevice};
+use aws_sdk_ec2::types::{BlockDeviceMapping, EbsBlockDevice, VolumeType};
 use aws_sdk_ec2::{
     types::{IamInstanceProfileSpecification, InstanceType, Placement},
     Client as Ec2Client,
@@ -95,11 +95,13 @@ impl AwsClient for AwsClientType {
                     .build(),
             ))
             .block_device_mappings(
-                BlockDeviceMappingBuilder::default()
+                BlockDeviceMapping::builder()
+                    .device_name("/dev/xvda")
                     .ebs(
                         EbsBlockDevice::builder()
                             .volume_size(32)
                             .delete_on_termination(true)
+                            .volume_type(VolumeType::Gp3)
                             .build(),
                     )
                     .build(),
