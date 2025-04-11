@@ -1,5 +1,7 @@
 use anyhow::{ensure, Context};
 use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_ec2::types::builders::BlockDeviceMappingBuilder;
+use aws_sdk_ec2::types::{BlockDeviceMapping, EbsBlockDevice};
 use aws_sdk_ec2::{
     types::{IamInstanceProfileSpecification, InstanceType, Placement},
     Client as Ec2Client,
@@ -8,7 +10,6 @@ use aws_sdk_s3::Client as S3Client;
 use base64::{prelude::BASE64_STANDARD, Engine};
 use judge_core::model::job::FileConf;
 use std::{collections::HashMap, env, fs::File, io::Write, net::Ipv4Addr, str::FromStr};
-use aws_sdk_ec2::types::{BlockDeviceMapping, EbsBlockDevice};
 use uuid::Uuid;
 
 #[axum::async_trait]
@@ -93,13 +94,16 @@ impl AwsClient for AwsClientType {
                     .arn(env::var("EXEC_CONTAINER_IAM_ROLE").unwrap().as_str())
                     .build(),
             ))
-            .block_device_mappings(BlockDeviceMapping {
-                ebs: Some(EbsBlockDevice {
-                    volume_size: Some(32),
-                    ..Default::default()
-                }),
-                ..Default::default()
-            })
+            .block_device_mappings(
+                BlockDeviceMappingBuilder::default()
+                    .ebs(
+                        EbsBlockDevice::builder()
+                            .volume_size(32)
+                            .delete_on_termination(true)
+                            .build(),
+                    )
+                    .build(),
+            )
             .send()
             .await
             .context("Failed to create instance")?;
