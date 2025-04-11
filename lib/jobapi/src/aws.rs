@@ -156,7 +156,7 @@ impl AwsClient for AwsClientType {
             .context("Failed to terminate instance")?;
 
         ensure!(
-            !response.terminating_instances().is_none(),
+            !response.terminating_instances().is_empty(),
             "Failed to terminate instance: no value was sent"
         );
 
