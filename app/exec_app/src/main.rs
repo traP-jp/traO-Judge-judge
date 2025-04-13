@@ -160,7 +160,7 @@ impl ExecApp {
                     ExecApp::DOCKER_CONTAINER_NAME,
                     Some(UploadToContainerOptions {
                         path: "/outcome/",
-                        no_overwrite_dir_non_dir: "True".parse()?,
+                        no_overwrite_dir_non_dir: "True",
                     }),
                     Bytes::from(file),
                 )
