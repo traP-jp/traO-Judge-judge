@@ -48,7 +48,7 @@ pub struct ReservationToken {}
 
 #[derive(Debug, Clone)]
 pub struct OutcomeToken {
-    outcome_id: Uuid,
+    pub outcome_id: Uuid,
     path_to_tar_gz: PathBuf,
 }
 

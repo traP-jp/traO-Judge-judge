@@ -11,8 +11,6 @@ use flate2::read::GzDecoder;
 use judge_core::constant::env_var_exec::{OUTPUT_PATH, SCRIPT_PATH};
 use judge_exec_grpc::generated::execute_service_server::{ExecuteService, ExecuteServiceServer};
 use judge_exec_grpc::generated::{Dependency, ExecuteRequest, ExecuteResponse, Output};
-use sha2::{Digest, Sha256};
-use std::collections::HashMap;
 use std::env;
 use std::io::Read;
 use std::ops::Not;
@@ -78,28 +76,9 @@ impl ExecApp {
         &self,
         dependency: Vec<Dependency>,
     ) -> Result<ExecuteResponse, anyhow::Error> {
-        tracing::info!("calculating hash");
-        let hashes: HashMap<_, _> = dependency
-            .iter()
-            .map(|dep| {
-                (
-                    dep.envvar.clone(),
-                    format!("{:x}", Sha256::digest(&dep.outcome)),
-                )
-            })
-            .map(|(envvar, hash)| {
-                (
-                    envvar.clone(),
-                    format!("{:x}", Sha256::digest(hash + ":" + &envvar)),
-                )
-            })
-            .collect();
-        tracing::info!("hashes: {:?}", hashes);
-
-        // create container
         let env_vars: Vec<String> = dependency
             .iter()
-            .map(|dep| format!("{}=\"/outcome/{}\"", &dep.envvar, hashes[&dep.envvar]))
+            .map(|dep| format!("{}=\"/outcome/{}\"", &dep.envvar, dep.outcome_uuid))
             .collect();
         tracing::info!("env_vars: {:?}", env_vars);
         let create_container_response = self
@@ -159,8 +138,8 @@ impl ExecApp {
                 .upload_to_container(
                     ExecApp::DOCKER_CONTAINER_NAME,
                     Some(UploadToContainerOptions {
-                        path: format!("/outcome/{}", hashes[&dep.envvar]),
-                        no_overwrite_dir_non_dir: "True".parse()?,
+                        path: "/outcome/",
+                        no_overwrite_dir_non_dir: "True",
                     }),
                     Bytes::from(file),
                 )

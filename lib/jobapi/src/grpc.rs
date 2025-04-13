@@ -55,6 +55,7 @@ impl GrpcClient for GrpcClientType {
         for job::Dependency { envvar, outcome } in dependency {
             request.push(Dependency {
                 envvar,
+                outcome_uuid: outcome.outcome_id.to_string(),
                 outcome: outcome.to_binary().await.to_vec(),
             })
         }

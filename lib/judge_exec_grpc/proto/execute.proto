@@ -11,7 +11,8 @@ message ExecuteRequest {
 
 message Dependency {
   string envvar = 1;
-  bytes outcome = 2;
+  string outcome_uuid = 2;
+  bytes outcome = 3;
 }
 
 message Output {
