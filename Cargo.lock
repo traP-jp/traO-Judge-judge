@@ -1664,6 +1664,8 @@ dependencies = [
  "sha2 0.10.8",
  "tokio",
  "tonic",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -2774,6 +2776,7 @@ dependencies = [
  "serde_json",
  "thiserror 1.0.69",
  "tokio",
+ "tracing",
  "uuid",
 ]
 

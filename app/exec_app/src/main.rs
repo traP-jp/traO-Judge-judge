@@ -159,7 +159,7 @@ impl ExecApp {
                 .upload_to_container(
                     ExecApp::DOCKER_CONTAINER_NAME,
                     Some(UploadToContainerOptions {
-                        path: format!("/outcome/{}", hashes[&dep.envvar]),
+                        path: "/outcome/",
                         no_overwrite_dir_non_dir: "True".parse()?,
                     }),
                     Bytes::from(file),
