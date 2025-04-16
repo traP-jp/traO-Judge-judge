@@ -7,7 +7,10 @@ pub mod handler;
 pub mod model;
 
 pub async fn run() -> anyhow::Result<()> {
-    let provider = Provider::new().await.unwrap();
+    let provider = Provider::new().await.map_err(|e| {
+        tracing::error!("Failed to create provider: {}", e);
+        e
+    })?;
     let di_container = DiContainer::new(provider).await;
 
     let app = handler::make_router(di_container).layer(TraceLayer::new_for_http()).layer(
