@@ -52,7 +52,6 @@ impl Provider {
         migrate!("./migrations").run(&pool).await?;
         session_store.migrate().await?;
 
-
         Ok(Self {
             pool,
             session_store,
