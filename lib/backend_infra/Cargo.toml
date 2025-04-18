@@ -24,8 +24,6 @@ sqlx = { workspace = true }
 jsonwebtoken = { workspace = true }
 lettre = { workspace = true }
 fancy-regex = { workspace = true }
-aws-sdk-s3 = { workspace = true }
-aws-config = { workspace = true }
 domain = { path = "../backend_domain" }
 
 [dependencies.async-sqlx-session]

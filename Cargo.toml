@@ -26,7 +26,7 @@ axum = "0.7"
 http-body-util = "0.1.0"
 axum-extra = { version = "0.9", features = ["typed-header"] }
 tower = { version = "0.4", features = ["full"] }
-tower-http = { version = "0.5.0", features = ["add-extension", "trace", "fs"] }
+tower-http = { version = "0.5.0", features = ["add-extension", "trace", "fs", "cors"] }
 reqwest = "0.12.5"
 bcrypt = "0.15"
 async-session = "3.0.0"
