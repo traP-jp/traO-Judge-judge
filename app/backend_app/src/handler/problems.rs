@@ -20,7 +20,7 @@ pub async fn get_problem(
     TypedHeader(cookie): TypedHeader<Cookie>,
     Path(problem_id): Path<i64>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id").map(|s| s.to_string());
+    let session_id = cookie.get("session_id");
 
     match di_container
         .problem_service()
@@ -46,7 +46,7 @@ pub async fn get_problems(
     TypedHeader(cookie): TypedHeader<Cookie>,
     Query(query): Query<ProblemGetQuery>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id").map(|s| s.to_string());
+    let session_id = cookie.get("session_id");
 
     match di_container
         .problem_service()
@@ -91,7 +91,7 @@ pub async fn put_problem(
     Path(problem_id): Path<i64>,
     Json(body): Json<UpdateNormalProblem>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id").ok_or(StatusCode::UNAUTHORIZED)?;
+    let session_id = cookie.get("session_id");
 
     match di_container
         .problem_service()
@@ -125,7 +125,7 @@ pub async fn post_problem(
     TypedHeader(cookie): TypedHeader<Cookie>,
     Json(body): Json<CreateNormalProblem>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id").ok_or(StatusCode::UNAUTHORIZED)?;
+    let session_id = cookie.get("session_id");
 
     match di_container
         .problem_service()
