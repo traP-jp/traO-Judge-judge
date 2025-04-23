@@ -25,11 +25,11 @@ jobs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
           target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-cargo-all-features-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-
     - name: Build dependencies
-      run: cargo build --locked --all-features --lib
+      run: cargo build --locked --all-features
 
   build-judge-control-app:
     needs: build-dependencies
