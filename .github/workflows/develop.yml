@@ -8,6 +8,5 @@ on:
 
 jobs:
 
-  test-judge-control-app:
-    uses: ./.github/workflows/_test-judge-control-app.yml
-    
+  test-rust-base:
+    uses: ./.github/workflows/_test-rust-base.yml
