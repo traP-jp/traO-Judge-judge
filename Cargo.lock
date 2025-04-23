@@ -874,8 +874,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-session",
- "aws-config",
- "aws-sdk-s3",
  "axum",
  "axum-extra",
  "bcrypt",
@@ -1484,8 +1482,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-session",
- "aws-config",
- "aws-sdk-s3",
  "axum",
  "axum-extra",
  "bcrypt",
@@ -2594,8 +2590,6 @@ dependencies = [
  "anyhow",
  "async-session",
  "async-sqlx-session",
- "aws-config",
- "aws-sdk-s3",
  "axum",
  "axum-extra",
  "bcrypt",
