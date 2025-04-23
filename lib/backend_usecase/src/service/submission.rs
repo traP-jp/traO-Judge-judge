@@ -119,16 +119,11 @@ impl<SeR: SessionRepository, SuR: SubmissionRepository, PR: ProblemRepository>
         query: SubmissionGetQueryData,
     ) -> anyhow::Result<SubmissionsDto, SubmissionError> {
         let user_id = match session_id {
-            Some(session_id) => {
-                let display_id = self
-                    .session_repository
-                    .get_display_id_by_session_id(&session_id)
-                    .await
-                    .map_err(|_| SubmissionError::InternalServerError)?
-                    .ok_or(SubmissionError::NotFound)?;
-
-                Some(display_id)
-            }
+            Some(session_id) => self
+                .session_repository
+                .get_display_id_by_session_id(&session_id)
+                .await
+                .map_err(|_| SubmissionError::InternalServerError)?,
             None => None,
         };
 
