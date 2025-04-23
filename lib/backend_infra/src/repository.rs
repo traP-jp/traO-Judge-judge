@@ -6,3 +6,4 @@ pub mod session;
 pub mod submission;
 pub mod testcase;
 pub mod user;
+pub mod dep_name;
