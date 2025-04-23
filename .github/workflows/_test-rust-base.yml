@@ -41,7 +41,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Build test for judge_control_app
-      run: cargo build -p judge_control_app
+      run: cargo build --locked -p judge_control_app
   build-backend-app:
     needs: build-dependencies
     runs-on: ubuntu-latest
@@ -52,7 +52,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Build test for backend_app
-      run: cargo build -p backend_app
+      run: cargo build --locked -p backend_app
   build-exec-app:
     needs: build-dependencies
     runs-on: ubuntu-latest
@@ -63,7 +63,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Build test for exec_app
-      run: cargo build -p exec_app
+      run: cargo build --locked -p exec_app
   cargo-test:
     needs: build-dependencies
     runs-on: ubuntu-latest
@@ -74,7 +74,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Run test
-      run: cargo test
+      run: cargo test --locked
   cargo-format:
     needs: build-dependencies
     runs-on: ubuntu-latest
