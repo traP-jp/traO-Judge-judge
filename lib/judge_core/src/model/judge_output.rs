@@ -58,4 +58,3 @@ pub enum ExecutionOutputParseError {
     #[error("Non-zero exit code: {0}")]
     NonZeroExitCode(String),
 }
-
