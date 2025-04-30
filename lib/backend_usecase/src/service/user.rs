@@ -288,7 +288,7 @@ impl<
                     .await
                     .map_err(|_| UserError::InternalServerError)?;
 
-                let icon_url = format!("{}/{}", std::env::var("ICON_HOST_URI").unwrap(), uuid,);
+                let icon_url = format!("{}/{}", std::env::var("ICON_HOST_URI").unwrap(), uuid);
                 Some(icon_url)
             }
             None => None,
