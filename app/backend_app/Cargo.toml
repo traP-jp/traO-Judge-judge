@@ -24,6 +24,7 @@ sqlx = { workspace = true }
 jsonwebtoken = { workspace = true }
 lettre = { workspace = true }
 fancy-regex = { workspace = true }
+oauth2 = { workspace = true }
 usecase = { path = "../../lib/backend_usecase" }
 infra = { path = "../../lib/backend_infra" }
 
