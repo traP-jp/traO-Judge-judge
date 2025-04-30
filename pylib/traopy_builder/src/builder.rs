@@ -251,7 +251,10 @@ impl Builder {
                 .get_many(judge_resp.keys().cloned().collect())
                 .await
                 .map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to get name: {:?}", e))
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Failed to get name: {:?}",
+                        e
+                    ))
                 })?
                 .into_iter()
                 .map(|(id, name)| match name {
