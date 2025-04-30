@@ -19,7 +19,6 @@ impl UpdateUserData {
     pub fn validate(&self) -> anyhow::Result<()> {
         let rules = vec![
             (&self.user_name, RuleType::UserName),
-            (&self.icon, RuleType::Icon),
             (&self.x_link, RuleType::XLink),
             (&self.github_link, RuleType::GitHubLink),
             (&self.self_introduction, RuleType::SelfIntroduction),
