@@ -6,6 +6,7 @@ use axum::{
 
 pub mod auth;
 pub mod editorial;
+pub mod icon;
 pub mod problems;
 pub mod submissions;
 pub mod users;
