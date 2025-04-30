@@ -26,14 +26,3 @@ impl From<TestcaseRow> for TestcaseSummary {
         }
     }
 }
-
-#[derive(Debug, Clone, sqlx::FromRow)]
-pub struct CreateTestcaseRow {
-    pub id: Uuid,
-    pub name: String,
-    pub problem_id: i64,
-    pub input_id: Uuid,
-    pub output_id: Uuid,
-    pub created_at: chrono::DateTime<chrono::Utc>,
-    pub updated_at: chrono::DateTime<chrono::Utc>,
-}
