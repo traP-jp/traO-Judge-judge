@@ -4,3 +4,4 @@ pub mod procedure;
 pub mod submission;
 pub mod testcase;
 pub mod user;
+pub mod uuid;

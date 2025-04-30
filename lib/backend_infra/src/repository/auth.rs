@@ -1,7 +1,8 @@
-use crate::model::user::UserIdRow;
 use axum::async_trait;
 use domain::{model::user::UserId, repository::auth::AuthRepository};
 use sqlx::MySqlPool;
+
+use crate::model::uuid::UuidRow;
 
 #[derive(Clone)]
 pub struct AuthRepositoryImpl {
@@ -21,7 +22,7 @@ impl AuthRepository for AuthRepositoryImpl {
         let hash = bcrypt::hash(password, self.bcrypt_cost)?;
 
         sqlx::query("INSERT INTO users_passwords (user_id, password) VALUES (?, ?)")
-            .bind(UserIdRow(id.into()))
+            .bind(UuidRow(id.into()))
             .bind(&hash)
             .execute(&self.pool)
             .await?;
@@ -34,7 +35,7 @@ impl AuthRepository for AuthRepositoryImpl {
 
         sqlx::query("UPDATE users_passwords SET password = ? WHERE user_id = ?")
             .bind(&hash)
-            .bind(UserIdRow(id.into()))
+            .bind(UuidRow(id.into()))
             .execute(&self.pool)
             .await?;
 
@@ -45,7 +46,7 @@ impl AuthRepository for AuthRepositoryImpl {
         let hash = sqlx::query_scalar::<_, String>(
             "SELECT password FROM users_passwords WHERE user_id = ?",
         )
-        .bind(UserIdRow(id.into()))
+        .bind(UuidRow(id.into()))
         .fetch_one(&self.pool)
         .await?;
 
