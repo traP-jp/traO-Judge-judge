@@ -1,3 +1,4 @@
+use base64::{prelude::BASE64_STANDARD, Engine};
 use lettre::Address;
 
 use crate::model::{
@@ -11,8 +12,8 @@ use domain::{
         jwt::EmailToken, problem::ProblemGetQuery, submission::SubmissionGetQuery, user::UpdateUser,
     },
     repository::{
-        auth::AuthRepository, problem::ProblemRepository, session::SessionRepository,
-        submission::SubmissionRepository, user::UserRepository,
+        auth::AuthRepository, icon::IconRepository, problem::ProblemRepository,
+        session::SessionRepository, submission::SubmissionRepository, user::UserRepository,
     },
 };
 
@@ -21,6 +22,7 @@ pub struct UserService<
     UR: UserRepository,
     SR: SessionRepository,
     AR: AuthRepository,
+    IR: IconRepository,
     PR: ProblemRepository,
     SubR: SubmissionRepository,
     C: MailClient,
@@ -28,6 +30,7 @@ pub struct UserService<
     user_repository: UR,
     session_repository: SR,
     auth_repository: AR,
+    icon_repository: IR,
     problem_repository: PR,
     submission_repository: SubR,
     mail_client: C,
@@ -37,15 +40,17 @@ impl<
         UR: UserRepository,
         SR: SessionRepository,
         AR: AuthRepository,
+        IR: IconRepository,
         PR: ProblemRepository,
         SubR: SubmissionRepository,
         C: MailClient,
-    > UserService<UR, SR, AR, PR, SubR, C>
+    > UserService<UR, SR, AR, IR, PR, SubR, C>
 {
     pub fn new(
         user_repository: UR,
         session_repository: SR,
         auth_repository: AR,
+        icon_repository: IR,
         problem_repository: PR,
         submission_repository: SubR,
         mail_client: C,
@@ -54,6 +59,7 @@ impl<
             user_repository,
             session_repository,
             auth_repository,
+            icon_repository,
             problem_repository,
             submission_repository,
             mail_client,
@@ -73,10 +79,11 @@ impl<
         UR: UserRepository,
         SR: SessionRepository,
         AR: AuthRepository,
+        IR: IconRepository,
         PR: ProblemRepository,
         SubR: SubmissionRepository,
         C: MailClient,
-    > UserService<UR, SR, AR, PR, SubR, C>
+    > UserService<UR, SR, AR, IR, PR, SubR, C>
 {
     pub async fn get_user(
         &self,
@@ -250,8 +257,42 @@ impl<
             .map_err(|_| UserError::InternalServerError)?
             .ok_or(UserError::InternalServerError)?;
 
-        // todo (icon)
-        let icon_url = body.icon_url.map(|_| "todo".to_string());
+        let icon_url = match body.icon {
+            Some(icon) => {
+                let binary_data = BASE64_STANDARD
+                    .decode(icon)
+                    .map_err(|_| UserError::ValidateError)?;
+
+                let mime_type = infer::get(&binary_data)
+                    .ok_or(UserError::ValidateError)?
+                    .mime_type();
+
+                if !mime_type.starts_with("image/") {
+                    return Err(UserError::ValidateError);
+                }
+
+                if binary_data.len() > 256 * 1024 {
+                    return Err(UserError::ValidateError);
+                }
+
+                let uuid = uuid::Uuid::now_v7();
+
+                let icon = domain::model::icon::Icon {
+                    id: uuid,
+                    content_type: mime_type.to_string(),
+                    icon: binary_data,
+                };
+
+                self.icon_repository
+                    .create_icon(icon)
+                    .await
+                    .map_err(|_| UserError::InternalServerError)?;
+
+                let icon_url = format!("{}/{}", std::env::var("ICON_HOST_URI").unwrap(), uuid);
+                Some(icon_url)
+            }
+            None => None,
+        };
 
         self.user_repository
             .update_user(

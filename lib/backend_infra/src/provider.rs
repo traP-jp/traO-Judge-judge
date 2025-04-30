@@ -5,7 +5,10 @@ use sqlx::{
     MySql, MySqlPool, Pool,
 };
 
-use crate::repository::{editorial::EditorialRepositoryImpl, procedure::ProcedureRepositoryImpl};
+use crate::repository::{
+    editorial::EditorialRepositoryImpl, icon::IconRepositoryImpl,
+    procedure::ProcedureRepositoryImpl,
+};
 
 use super::{
     external::mail::MailClientImpl,
@@ -69,6 +72,10 @@ impl Provider {
 
     pub fn provide_user_repository(&self) -> UserRepositoryImpl {
         UserRepositoryImpl::new(self.pool.clone())
+    }
+
+    pub fn provide_icon_repository(&self) -> IconRepositoryImpl {
+        IconRepositoryImpl::new(self.pool.clone())
     }
 
     pub fn provide_submission_repository(&self) -> SubmissionRepositoryImpl {
