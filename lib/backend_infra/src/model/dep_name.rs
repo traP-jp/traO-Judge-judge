@@ -1,8 +1,7 @@
-use uuid::Uuid;
-
+use super::uuid::UuidRow;
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct DepNameRow {
-    pub dep_id: Uuid, // UuidRowに変更する
+    pub dep_id: UuidRow,
     pub name: String,
 }

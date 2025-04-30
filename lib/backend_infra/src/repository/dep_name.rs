@@ -5,23 +5,18 @@ use axum::async_trait;
 use judge_core::model::{dep_name_repository::DepNameRepository, identifiers::DepId};
 use sqlx::{MySqlPool, QueryBuilder};
 
-use crate::model::dep_name::DepNameRow;
-
-
+use crate::model::{dep_name::DepNameRow, uuid::UuidRow};
 
 #[derive(Clone)]
 pub struct DepNameRepositoryImpl {
     pool: MySqlPool,
 }
 
-
 impl DepNameRepositoryImpl {
     pub fn new(pool: MySqlPool) -> Self {
         Self { pool }
     }
 }
-
-
 
 #[async_trait]
 impl DepNameRepository<i64> for DepNameRepositoryImpl {
@@ -30,16 +25,15 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
         problem_id: i64,
         dep_id_to_name: HashMap<DepId, String>,
     ) -> anyhow::Result<()> {
-        let mut query_builder = QueryBuilder::new(
-            "INSERT INTO dep_name (problem_id, dep_id, name) VALUES ",
-        );
+        let mut query_builder =
+            QueryBuilder::new("INSERT INTO dep_name (problem_id, dep_id, name) VALUES ");
 
         let mut separated = query_builder.separated(", ");
         for (dep_id, name) in dep_id_to_name {
             separated.push("(");
             separated.push_bind_unseparated(problem_id);
             separated.push_unseparated(", ");
-            separated.push_bind_unseparated(dep_id.into());
+            separated.push_bind_unseparated(UuidRow(dep_id.into()));
             separated.push_unseparated(", ");
             separated.push_bind_unseparated(name);
             separated.push_unseparated(")");
@@ -53,13 +47,12 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
         &self,
         dep_ids: Vec<DepId>,
     ) -> anyhow::Result<HashMap<DepId, Option<String>>> {
-        let mut query_builder = QueryBuilder::new(
-            "SELECT dep_id, name FROM dep_name WHERE dep_id IN (",
-        );
+        let mut query_builder =
+            QueryBuilder::new("SELECT dep_id, name FROM dep_name WHERE dep_id IN (");
 
         let mut separated = query_builder.separated(", ");
-        for dep_id in &dep_ids {
-            separated.push_bind(dep_id.into());
+        for dep_id in dep_ids.iter() {
+            separated.push_bind_unseparated(UuidRow(dep_id.clone().into()));
         }
         query_builder.push(")");
 
@@ -70,7 +63,7 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
 
         let mut dep_id_to_name = HashMap::new();
         for dep_name in dep_names {
-            dep_id_to_name.insert(dep_name.dep_id.into(), Some(dep_name.name));
+            dep_id_to_name.insert(dep_name.dep_id.0.into(), Some(dep_name.name));
         }
 
         for dep_id in dep_ids {
@@ -94,15 +87,16 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
         &self,
         problem_id: i64,
     ) -> anyhow::Result<HashMap<DepId, String>> {
-        let dep_names : Vec<DepNameRow> = sqlx::query_as::<_, DepNameRow>(
-            "SELECT dep_id, name FROM dep_name WHERE problem_id = ?")
+        let dep_names: Vec<DepNameRow> = sqlx::query_as::<_, DepNameRow>(
+            "SELECT dep_id, name FROM dep_name WHERE problem_id = ?",
+        )
         .bind(problem_id)
         .fetch_all(&self.pool)
         .await?;
 
         let mut dep_id_to_name = HashMap::new();
         for dep_name in dep_names {
-            dep_id_to_name.insert(dep_name.dep_id.into(), dep_name.name);
+            dep_id_to_name.insert(dep_name.dep_id.0.into(), dep_name.name);
         }
 
         Ok(dep_id_to_name)
