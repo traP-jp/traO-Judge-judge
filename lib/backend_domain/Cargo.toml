@@ -25,6 +25,7 @@ jsonwebtoken = { workspace = true }
 lettre = { workspace = true }
 fancy-regex = { workspace = true }
 mockall = { workspace = true, optional = true }
+judge_core = { path = "../judge_core" }
 
 [features]
 mockall = ["dep:mockall"]

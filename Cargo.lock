@@ -1488,6 +1488,7 @@ dependencies = [
  "fancy-regex",
  "http-body-util",
  "jsonwebtoken",
+ "judge_core",
  "lettre",
  "mockall",
  "reqwest",
