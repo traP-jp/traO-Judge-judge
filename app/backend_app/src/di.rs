@@ -9,8 +9,8 @@ use infra::{
     },
 };
 use usecase::service::{
-    auth::AuthenticationService, editorial::EditorialService, problem::ProblemService,
-    submission::SubmissionService, user::UserService,
+    auth::AuthenticationService, editorial::EditorialService, language::LanguageService,
+    problem::ProblemService, submission::SubmissionService, user::UserService,
 };
 
 #[derive(Clone)]
@@ -39,6 +39,7 @@ pub struct DiContainer {
         SubmissionService<SessionRepositoryImpl, SubmissionRepositoryImpl, ProblemRepositoryImpl>,
     editorial_service:
         EditorialService<SessionRepositoryImpl, EditorialRepositoryImpl, ProblemRepositoryImpl>,
+    language_service: LanguageService,
 }
 
 impl DiContainer {
@@ -74,6 +75,7 @@ impl DiContainer {
                 provider.provide_editorial_repository(),
                 provider.provide_problem_repository(),
             ),
+            language_service: LanguageService::new(),
         }
     }
 
@@ -124,5 +126,9 @@ impl DiContainer {
     ) -> &EditorialService<SessionRepositoryImpl, EditorialRepositoryImpl, ProblemRepositoryImpl>
     {
         &self.editorial_service
+    }
+
+    pub fn language_service(&self) -> &LanguageService {
+        &self.language_service
     }
 }
