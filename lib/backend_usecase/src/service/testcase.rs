@@ -92,8 +92,12 @@ impl<
     pub async fn get_testcases(
         &self,
         session_id: Option<&str>,
-        problem_id: i64,
+        problem_id: String,
     ) -> Result<Vec<TestcaseSummaryDto>, TestcaseError> {
+        let problem_id = problem_id
+            .parse::<i64>()
+            .map_err(|_| TestcaseError::ValidateError)?;
+
         let problem = self
             .problem_repository
             .get_problem(problem_id)
