@@ -52,7 +52,7 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
 
         let mut separated = query_builder.separated(", ");
         for dep_id in dep_ids.iter() {
-            separated.push_bind_unseparated(UuidRow(dep_id.clone().into()));
+            separated.push_bind(UuidRow(dep_id.clone().into()));
         }
         query_builder.push(")");
 
