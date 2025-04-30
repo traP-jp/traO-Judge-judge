@@ -1,5 +1,5 @@
 mod has_cycle;
-pub mod judge_api_impl;
+pub mod judge_service_impl;
 pub mod output_parser;
 pub mod problem_presets;
 pub mod procedure_builder;

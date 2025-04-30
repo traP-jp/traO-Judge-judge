@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 #[derive(Debug)]
-pub struct JudgeApiImpl<
+pub struct JudgeServiceImpl<
     RToken: Send + Sync + 'static,
     OToken: Clone + Send + Sync + 'static,
     JobApi: job::JobApi<RToken, OToken>,
@@ -17,7 +17,7 @@ impl<
         RToken: Send + Sync + 'static,
         OToken: Clone + Send + Sync + 'static,
         JobApi: job::JobApi<RToken, OToken>,
-    > JudgeApiImpl<RToken, OToken, JobApi>
+    > JudgeServiceImpl<RToken, OToken, JobApi>
 {
     pub fn new(job_api: JobApi) -> Self {
         Self {
@@ -31,7 +31,7 @@ impl<
         RToken: Send + Sync + 'static,
         OToken: Clone + Send + Sync + 'static,
         JobApi: job::JobApi<RToken, OToken>,
-    > Clone for JudgeApiImpl<RToken, OToken, JobApi>
+    > Clone for JudgeServiceImpl<RToken, OToken, JobApi>
 {
     fn clone(&self) -> Self {
         Self {
@@ -46,7 +46,7 @@ impl<
         RToken: Send + Sync + 'static,
         OToken: Clone + Send + Sync + 'static,
         JobApi: job::JobApi<RToken, OToken>,
-    > judge::JudgeApi for JudgeApiImpl<RToken, OToken, JobApi>
+    > judge::JudgeService for JudgeServiceImpl<RToken, OToken, JobApi>
 {
     async fn judge(&self, judge_request: judge::JudgeRequest) -> judge::JudgeResponse {
         let (runtime_procedure, identifier_map) = registered_procedure_converter::convert(
