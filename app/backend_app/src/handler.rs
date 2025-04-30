@@ -56,8 +56,7 @@ pub fn make_router(di_container: DiContainer) -> Router {
             .delete(editorial::delete_editorial),
     );
 
-    let icon_router = Router::new()
-        .route("/:iconId", get(icon::get_icon));
+    let icon_router = Router::new().route("/:iconId", get(icon::get_icon));
 
     Router::new()
         .nest("/", auth_router)

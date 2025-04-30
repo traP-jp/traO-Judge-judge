@@ -1,5 +1,5 @@
-use domain::model::icon::Icon;
 use super::uuid::UuidRow;
+use domain::model::icon::Icon;
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct IconRow {
