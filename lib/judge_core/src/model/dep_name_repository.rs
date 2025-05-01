@@ -12,7 +12,7 @@ pub trait DepNameRepository<IdType>: Clone + Send + Sync {
     async fn get_many(
         &self,
         dep_ids: Vec<identifiers::DepId>,
-    ) -> HashMap<identifiers::DepId, Option<String>>;
+    ) -> Result<HashMap<identifiers::DepId, Option<String>>>;
     async fn remove_many(&self, problem_id: IdType) -> Result<()>;
     async fn get_many_by_problem_id(
         &self,

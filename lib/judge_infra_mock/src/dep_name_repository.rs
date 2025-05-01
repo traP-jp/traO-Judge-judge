@@ -47,7 +47,7 @@ impl dep_name_repository::DepNameRepository<i64> for DepNameRepository {
     async fn get_many(
         &self,
         dep_ids: Vec<identifiers::DepId>,
-    ) -> HashMap<identifiers::DepId, Option<String>> {
+    ) -> Result<HashMap<identifiers::DepId, Option<String>>> {
         let dep_id_to_name = {
             let mut dep_id_to_name = HashMap::new();
             let dep_names = self.dep_names.lock().await;
@@ -57,7 +57,7 @@ impl dep_name_repository::DepNameRepository<i64> for DepNameRepository {
             std::mem::drop(dep_names);
             dep_id_to_name
         };
-        dep_id_to_name
+        Ok(dep_id_to_name)
     }
 
     async fn remove_many(&self, problem_id: i64) -> Result<()> {
