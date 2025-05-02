@@ -1,8 +1,8 @@
 /*
 use back_judge_grpc::{
-    generated::judge_service_server::JudgeServiceServer, server::WrappedJudgeApi,
+    generated::judge_service_server::JudgeServiceServer, server::WrappedJudgeService,
 };
-use judge_core::logic::judge_api_impl::JudgeApiImpl;
+use judge_core::logic::judge_service_impl::JudgeServiceImpl;
 use judge_infra_mock::jobapi::jobapi::JobApi;
 use judge_infra_mock::multi_proc_problem_registry::registry_client::RegistryClient;
 
@@ -31,10 +31,10 @@ async fn main() {
     let jobapi = JobApi::new(jobapi_cache_dir.into(), problem_registry_client)
         .expect("Failed to create JobApi");
     tracing::info!("JobApi created");
-    let inner_judge_api = JudgeApiImpl::new(jobapi);
-    tracing::info!("JudgeApiImpl created");
-    let wrapped_judge_api = WrappedJudgeApi::new(inner_judge_api);
-    let grpc_service = JudgeServiceServer::new(wrapped_judge_api);
+    let inner_judge_service = JudgeServiceImpl::new(jobapi);
+    tracing::info!("JudgeServiceImpl created");
+    let wrapped_judge_service = WrappedJudgeService::new(inner_judge_service);
+    let grpc_service = JudgeServiceServer::new(wrapped_judge_service);
     tracing::info!("JudgeServiceServer created");
     tracing::info!("Starting grpc service on {}", grpc_service_addr);
     tonic::transport::Server::builder()
