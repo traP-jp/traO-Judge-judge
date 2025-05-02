@@ -18,7 +18,9 @@ use judge_core::{
 };
 use uuid::Uuid;
 
-use crate::model::testcase::{CreateTestcaseData, TestcaseDto, TestcaseSummaryDto};
+use crate::model::testcase::{
+    CreateTestcaseData, TestcaseDto, TestcaseSummaryDto, UpdateTestcaseData,
+};
 
 #[derive(Clone)]
 pub struct TestcaseService<
@@ -73,7 +75,6 @@ impl<
 #[derive(Debug)]
 pub enum TestcaseError {
     ValidateError,
-    Unauthorized,
     Forbidden,
     NotFound,
     InternalServerError,
@@ -345,6 +346,299 @@ impl<
         // testcasesの更新
         self.testcase_repository
             .delete_testcases(problem_id)
+            .await
+            .map_err(|_| TestcaseError::InternalServerError)?;
+        self.testcase_repository
+            .create_testcases(new_testcases)
+            .await
+            .map_err(|_| TestcaseError::InternalServerError)?;
+
+        Ok(())
+    }
+
+    pub async fn delete_testcase(
+        &self,
+        session_id: Option<&str>,
+        testcase_id: String,
+    ) -> Result<(), TestcaseError> {
+        let testcase_id =
+            Uuid::parse_str(&testcase_id).map_err(|_| TestcaseError::ValidateError)?;
+
+        let testcase = self
+            .testcase_repository
+            .get_testcase(testcase_id)
+            .await
+            .map_err(|_| TestcaseError::InternalServerError)?
+            .ok_or(TestcaseError::NotFound)?;
+
+        let problem = self
+            .problem_repository
+            .get_problem(testcase.problem_id)
+            .await
+            .map_err(|_| TestcaseError::InternalServerError)?
+            .ok_or(TestcaseError::NotFound)?;
+
+        let user_id = match session_id {
+            Some(session_id) => self
+                .session_repository
+                .get_display_id_by_session_id(session_id)
+                .await
+                .map_err(|_| TestcaseError::InternalServerError)?,
+            None => None,
+        };
+
+        if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
+            return Err(TestcaseError::NotFound);
+        }
+
+        if user_id.is_none_or(|x| x != problem.author_id) {
+            return Err(TestcaseError::Forbidden);
+        }
+
+        let now_testcases = self
+            .testcase_repository
+            .get_testcases(problem.id)
+            .await
+            .map_err(|_| TestcaseError::InternalServerError)?;
+
+        let mut new_testcases = Vec::new();
+        for testcase in now_testcases.iter() {
+            if testcase.id != testcase_id {
+                let input = self
+                    .problem_registry_client
+                    .fetch(testcase.input_id.into())
+                    .await
+                    .map_err(|_| TestcaseError::InternalServerError)?;
+
+                let output = self
+                    .problem_registry_client
+                    .fetch(testcase.output_id.into())
+                    .await
+                    .map_err(|_| TestcaseError::InternalServerError)?;
+
+                new_testcases.push(NormalJudgeTestcase {
+                    name: testcase.name.clone(),
+                    input,
+                    expected_output: output,
+                });
+            }
+        }
+
+        let procedure = create_normal_judge_procedure(new_testcases)
+            .map_err(|_| TestcaseError::InternalServerError)?;
+
+        let registered_procedure = register(
+            procedure,
+            self.problem_registry_server.clone(),
+            self.dep_name_repository.clone(),
+            problem.id,
+        )
+        .await
+        .map_err(|_| TestcaseError::InternalServerError)?;
+
+        self.procedure_repository
+            .update_precedure(problem.id, registered_procedure)
+            .await
+            .map_err(|_| TestcaseError::InternalServerError)?;
+
+        // データベースに保存するためのtestcasesを作成
+        let name_to_id = {
+            let id_to_name = self
+                .dep_name_repository
+                .get_many_by_problem_id(problem.id)
+                .await
+                .map_err(|_| TestcaseError::InternalServerError)?;
+            let mut name_to_id = std::collections::HashMap::new();
+            for (id, name) in id_to_name {
+                name_to_id.insert(name, id);
+            }
+            name_to_id
+        };
+        let mut new_testcases: Vec<CreateTestcase> = Vec::new();
+        for testcase in now_testcases.iter() {
+            if testcase.id != testcase_id {
+                let input_id = name_to_id
+                    .get(testcase_input_name(&testcase.name).as_str())
+                    .ok_or(TestcaseError::InternalServerError)?;
+
+                let output_id = name_to_id
+                    .get(testcase_expected_name(&testcase.name).as_str())
+                    .ok_or(TestcaseError::InternalServerError)?;
+
+                new_testcases.push(CreateTestcase {
+                    id: testcase.id,
+                    problem_id: problem.id,
+                    name: testcase.name.clone(),
+                    input_id: input_id.to_owned().into(),
+                    output_id: output_id.to_owned().into(),
+                });
+            }
+        }
+
+        // testcasesの更新
+        self.testcase_repository
+            .delete_testcases(problem.id)
+            .await
+            .map_err(|_| TestcaseError::InternalServerError)?;
+        self.testcase_repository
+            .create_testcases(new_testcases)
+            .await
+            .map_err(|_| TestcaseError::InternalServerError)?;
+
+        Ok(())
+    }
+
+    pub async fn put_testcase(
+        &self,
+        session_id: Option<&str>,
+        testcase_id: String,
+        put_testcase: UpdateTestcaseData,
+    ) -> Result<(), TestcaseError> {
+        let testcase_id =
+            Uuid::parse_str(&testcase_id).map_err(|_| TestcaseError::ValidateError)?;
+
+        let testcase = self
+            .testcase_repository
+            .get_testcase(testcase_id)
+            .await
+            .map_err(|_| TestcaseError::InternalServerError)?
+            .ok_or(TestcaseError::NotFound)?;
+
+        let problem = self
+            .problem_repository
+            .get_problem(testcase.problem_id)
+            .await
+            .map_err(|_| TestcaseError::InternalServerError)?
+            .ok_or(TestcaseError::NotFound)?;
+
+        let user_id = match session_id {
+            Some(session_id) => self
+                .session_repository
+                .get_display_id_by_session_id(session_id)
+                .await
+                .map_err(|_| TestcaseError::InternalServerError)?,
+            None => None,
+        };
+
+        if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
+            return Err(TestcaseError::NotFound);
+        }
+
+        if user_id.is_none_or(|x| x != problem.author_id) {
+            return Err(TestcaseError::Forbidden);
+        }
+
+        let now_testcases = self
+            .testcase_repository
+            .get_testcases(problem.id)
+            .await
+            .map_err(|_| TestcaseError::InternalServerError)?;
+
+        // 地震を除いたtestcasesの名前が一致するか判定
+        for testcase in now_testcases.iter() {
+            if testcase.id != testcase_id && put_testcase.name == testcase.name {
+                return Err(TestcaseError::ValidateError);
+            }
+        }
+
+        // procedureを作成し、保存
+        let mut new_testcases = Vec::new();
+        for testcase in now_testcases.iter() {
+            if testcase.id != testcase_id {
+                let input = self
+                    .problem_registry_client
+                    .fetch(testcase.input_id.into())
+                    .await
+                    .map_err(|_| TestcaseError::InternalServerError)?;
+
+                let output = self
+                    .problem_registry_client
+                    .fetch(testcase.output_id.into())
+                    .await
+                    .map_err(|_| TestcaseError::InternalServerError)?;
+
+                new_testcases.push(NormalJudgeTestcase {
+                    name: testcase.name.clone(),
+                    input,
+                    expected_output: output,
+                });
+            } else {
+                new_testcases.push(NormalJudgeTestcase {
+                    name: put_testcase.name.clone(),
+                    input: put_testcase.input.clone(),
+                    expected_output: put_testcase.output.clone(),
+                });
+            }
+        }
+
+        let procedure = create_normal_judge_procedure(new_testcases)
+            .map_err(|_| TestcaseError::InternalServerError)?;
+        let registered_procedure = register(
+            procedure,
+            self.problem_registry_server.clone(),
+            self.dep_name_repository.clone(),
+            problem.id,
+        )
+        .await
+        .map_err(|_| TestcaseError::InternalServerError)?;
+        self.procedure_repository
+            .update_precedure(problem.id, registered_procedure)
+            .await
+            .map_err(|_| TestcaseError::InternalServerError)?;
+
+        // データベースに保存するためのtestcasesを作成
+        let name_to_id = {
+            let id_to_name = self
+                .dep_name_repository
+                .get_many_by_problem_id(problem.id)
+                .await
+                .map_err(|_| TestcaseError::InternalServerError)?;
+            let mut name_to_id = std::collections::HashMap::new();
+            for (id, name) in id_to_name {
+                name_to_id.insert(name, id);
+            }
+            name_to_id
+        };
+        let mut new_testcases: Vec<CreateTestcase> = Vec::new();
+        for testcase in now_testcases.iter() {
+            if testcase.id != testcase_id {
+                let input_id = name_to_id
+                    .get(testcase_input_name(&testcase.name).as_str())
+                    .ok_or(TestcaseError::InternalServerError)?;
+
+                let output_id = name_to_id
+                    .get(testcase_expected_name(&testcase.name).as_str())
+                    .ok_or(TestcaseError::InternalServerError)?;
+
+                new_testcases.push(CreateTestcase {
+                    id: testcase.id,
+                    problem_id: problem.id,
+                    name: testcase.name.clone(),
+                    input_id: input_id.to_owned().into(),
+                    output_id: output_id.to_owned().into(),
+                });
+            } else {
+                let input_id = name_to_id
+                    .get(testcase_input_name(&put_testcase.name).as_str())
+                    .ok_or(TestcaseError::InternalServerError)?;
+
+                let output_id = name_to_id
+                    .get(testcase_expected_name(&put_testcase.name).as_str())
+                    .ok_or(TestcaseError::InternalServerError)?;
+
+                new_testcases.push(CreateTestcase {
+                    id: testcase.id,
+                    problem_id: problem.id,
+                    name: put_testcase.name.clone(),
+                    input_id: input_id.to_owned().into(),
+                    output_id: output_id.to_owned().into(),
+                });
+            }
+        }
+
+        // testcasesの更新
+        self.testcase_repository
+            .delete_testcases(problem.id)
             .await
             .map_err(|_| TestcaseError::InternalServerError)?;
         self.testcase_repository

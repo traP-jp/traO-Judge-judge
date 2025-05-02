@@ -26,6 +26,7 @@ lettre = { workspace = true }
 fancy-regex = { workspace = true }
 usecase = { path = "../../lib/backend_usecase" }
 infra = { path = "../../lib/backend_infra" }
+judge_infra_mock = { path = "../../lib/judge_infra_mock" }
 
 [dev-dependencies]
 domain = { path = "../../lib/backend_domain" }

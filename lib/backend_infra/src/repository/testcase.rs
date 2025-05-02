@@ -41,6 +41,10 @@ impl TestcaseRepository for TestcaseRepositoryImpl {
     }
 
     async fn create_testcases(&self, testcases: Vec<CreateTestcase>) -> anyhow::Result<()> {
+        if testcases.is_empty() {
+            return Ok(());
+        }
+
         let mut query_builder = sqlx::QueryBuilder::new(
             "INSERT INTO `testcases` (`id`, `problem_id`, `name`, `input_id`, `output_id`) VALUES ",
         );

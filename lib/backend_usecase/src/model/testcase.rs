@@ -35,3 +35,9 @@ pub struct CreateTestcaseData {
     pub input: String,
     pub output: String,
 }
+
+pub struct UpdateTestcaseData {
+    pub name: String,
+    pub input: String,
+    pub output: String,
+}
