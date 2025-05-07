@@ -280,6 +280,7 @@ impl<
         let procedure = create_normal_judge_procedure(new_testcases)
             .map_err(|_| TestcaseError::InternalServerError)?;
 
+        self.dep_name_repository.remove_many(problem_id).await.map_err(|_| TestcaseError::InternalServerError)?;
         let registered_procedure = register(
             procedure,
             self.problem_registry_server.clone(),
@@ -288,6 +289,17 @@ impl<
         )
         .await
         .map_err(|_| TestcaseError::InternalServerError)?;
+
+        let dep_id_to_resource_id = {
+            let mut dep_id_to_resource_id = std::collections::HashMap::new();
+            for text in registered_procedure.texts.iter() {
+                dep_id_to_resource_id.insert(
+                    text.dep_id,
+                    text.resource_id,
+                );
+            }
+            dep_id_to_resource_id
+        };
 
         self.procedure_repository
             .update_precedure(problem_id, registered_procedure)
@@ -313,9 +325,15 @@ impl<
             let input_id = name_to_id
                 .get(testcase_input_name(&testcase.name).as_str())
                 .ok_or(TestcaseError::InternalServerError)?;
+            let input_id = dep_id_to_resource_id
+                .get(input_id)
+                .ok_or(TestcaseError::InternalServerError)?;
 
             let output_id = name_to_id
                 .get(testcase_expected_name(&testcase.name).as_str())
+                .ok_or(TestcaseError::InternalServerError)?;
+            let output_id = dep_id_to_resource_id
+                .get(output_id)
                 .ok_or(TestcaseError::InternalServerError)?;
 
             new_testcases.push(CreateTestcase {
@@ -330,8 +348,14 @@ impl<
             let input_id = name_to_id
                 .get(testcase_input_name(&testcase.name).as_str())
                 .ok_or(TestcaseError::InternalServerError)?;
+            let input_id = dep_id_to_resource_id
+                .get(input_id)
+                .ok_or(TestcaseError::InternalServerError)?;
             let output_id = name_to_id
                 .get(testcase_expected_name(&testcase.name).as_str())
+                .ok_or(TestcaseError::InternalServerError)?;
+            let output_id = dep_id_to_resource_id
+                .get(output_id)
                 .ok_or(TestcaseError::InternalServerError)?;
 
             new_testcases.push(CreateTestcase {
@@ -427,6 +451,7 @@ impl<
         let procedure = create_normal_judge_procedure(new_testcases)
             .map_err(|_| TestcaseError::InternalServerError)?;
 
+        self.dep_name_repository.remove_many(problem.id).await.map_err(|_| TestcaseError::InternalServerError)?;
         let registered_procedure = register(
             procedure,
             self.problem_registry_server.clone(),
@@ -435,6 +460,17 @@ impl<
         )
         .await
         .map_err(|_| TestcaseError::InternalServerError)?;
+
+        let dep_id_to_resource_id = {
+            let mut dep_id_to_resource_id = std::collections::HashMap::new();
+            for text in registered_procedure.texts.iter() {
+                dep_id_to_resource_id.insert(
+                    text.dep_id,
+                    text.resource_id,
+                );
+            }
+            dep_id_to_resource_id
+        };
 
         self.procedure_repository
             .update_precedure(problem.id, registered_procedure)
@@ -460,9 +496,15 @@ impl<
                 let input_id = name_to_id
                     .get(testcase_input_name(&testcase.name).as_str())
                     .ok_or(TestcaseError::InternalServerError)?;
+                let input_id = dep_id_to_resource_id
+                    .get(input_id)
+                    .ok_or(TestcaseError::InternalServerError)?;
 
                 let output_id = name_to_id
                     .get(testcase_expected_name(&testcase.name).as_str())
+                    .ok_or(TestcaseError::InternalServerError)?;
+                let output_id = dep_id_to_resource_id
+                    .get(output_id)
                     .ok_or(TestcaseError::InternalServerError)?;
 
                 new_testcases.push(CreateTestcase {
@@ -573,6 +615,8 @@ impl<
 
         let procedure = create_normal_judge_procedure(new_testcases)
             .map_err(|_| TestcaseError::InternalServerError)?;
+
+        self.dep_name_repository.remove_many(problem.id).await.map_err(|_| TestcaseError::InternalServerError)?;
         let registered_procedure = register(
             procedure,
             self.problem_registry_server.clone(),
@@ -581,6 +625,18 @@ impl<
         )
         .await
         .map_err(|_| TestcaseError::InternalServerError)?;
+
+        let dep_id_to_resource_id = {
+            let mut dep_id_to_resource_id = std::collections::HashMap::new();
+            for text in registered_procedure.texts.iter() {
+                dep_id_to_resource_id.insert(
+                    text.dep_id,
+                    text.resource_id,
+                );
+            }
+            dep_id_to_resource_id
+        };
+
         self.procedure_repository
             .update_precedure(problem.id, registered_procedure)
             .await
@@ -605,9 +661,15 @@ impl<
                 let input_id = name_to_id
                     .get(testcase_input_name(&testcase.name).as_str())
                     .ok_or(TestcaseError::InternalServerError)?;
+                let input_id = dep_id_to_resource_id
+                    .get(input_id)
+                    .ok_or(TestcaseError::InternalServerError)?;
 
                 let output_id = name_to_id
                     .get(testcase_expected_name(&testcase.name).as_str())
+                    .ok_or(TestcaseError::InternalServerError)?;
+                let output_id = dep_id_to_resource_id
+                    .get(output_id)
                     .ok_or(TestcaseError::InternalServerError)?;
 
                 new_testcases.push(CreateTestcase {
@@ -621,9 +683,15 @@ impl<
                 let input_id = name_to_id
                     .get(testcase_input_name(&put_testcase.name).as_str())
                     .ok_or(TestcaseError::InternalServerError)?;
+                let input_id = dep_id_to_resource_id
+                    .get(input_id)
+                    .ok_or(TestcaseError::InternalServerError)?;
 
                 let output_id = name_to_id
                     .get(testcase_expected_name(&put_testcase.name).as_str())
+                    .ok_or(TestcaseError::InternalServerError)?;
+                let output_id = dep_id_to_resource_id
+                    .get(output_id)
                     .ok_or(TestcaseError::InternalServerError)?;
 
                 new_testcases.push(CreateTestcase {
