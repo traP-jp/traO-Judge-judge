@@ -48,6 +48,9 @@ impl Provider {
         session_store.migrate().await?;
 
         let temp_dir = PathBuf::from("./tempdir");
+        if !temp_dir.exists() {
+            std::fs::create_dir_all(&temp_dir)?;
+        }
 
         Ok(Self {
             pool,
@@ -65,6 +68,9 @@ impl Provider {
         session_store.migrate().await?;
 
         let temp_dir = PathBuf::from("./tempdir");
+        if !temp_dir.exists() {
+            std::fs::create_dir_all(&temp_dir)?;
+        }
 
         Ok(Self {
             pool,
