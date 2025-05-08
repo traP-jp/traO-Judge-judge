@@ -1,0 +1,47 @@
+name: _rust-build-check
+
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-applications:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+    permissions:
+      contents: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Build applications
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-release-3apps-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+    - name: Build dependencies
+      run: cargo build --locked --release --verbose --bin judge_control_app --bin backend_app --bin exec_app
+  cargo-test:
+    needs: build-applications
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+    permissions:
+      contents: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Run test
+      run: cargo test --locked
