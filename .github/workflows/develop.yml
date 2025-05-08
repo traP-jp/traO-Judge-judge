@@ -9,4 +9,4 @@ on:
 jobs:
 
   test-rust-base:
-    uses: ./.github/workflows/_test-rust-base.yml
+    uses: ./.github/workflows/_rust-build-check.yml
