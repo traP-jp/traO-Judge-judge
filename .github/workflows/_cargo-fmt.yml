@@ -23,7 +23,8 @@ jobs:
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         cargo fmt --all
         if [ -n "$(git status --porcelain)" ]; then
+          git checkout -B $GITHUB_HEAD_REF
           git add .
           git commit -m "github-actions[bot]: cargo fmt"
-          git push
+          git push origin $GITHUB_HEAD_REF
         fi
