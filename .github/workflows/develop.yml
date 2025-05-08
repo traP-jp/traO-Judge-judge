@@ -11,5 +11,8 @@ on:
 
 jobs:
 
-  test-rust-base:
+  cargo-build:
     uses: ./.github/workflows/_rust-build-check.yml
+  cargo-fmt:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/_cargo-fmt.yml
