@@ -1,10 +1,7 @@
 name: Integration test(backend)
 
 on:
-  push:
-    branches: [ "develop" ]
-  pull_request:
-    branches: [ "develop" ]
+  workflow_call:
 
 env:
   CARGO_TERM_COLOR: always
