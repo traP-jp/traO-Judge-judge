@@ -26,6 +26,6 @@ jobs:
           git checkout -B $GITHUB_HEAD_REF
           git add .
           git commit -m "github-actions[bot]: cargo fmt"
-          git pull --rebase origin $GITHUB_HEAD_REF || true
+          git pull --rebase origin $GITHUB_HEAD_REF
           git push origin $GITHUB_HEAD_REF
         fi
