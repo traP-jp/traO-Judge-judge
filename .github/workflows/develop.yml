@@ -16,3 +16,5 @@ jobs:
     uses: ./.github/workflows/_cargo-fmt.yml
   cargo-test:
     uses: ./.github/workflows/_cargo_test.yml
+  uv-build:
+    uses: ./.github/workflows/_uv-build.yml
