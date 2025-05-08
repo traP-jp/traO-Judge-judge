@@ -17,3 +17,5 @@ jobs:
     uses: ./.github/workflows/_cargo_test.yml
   uv-build:
     uses: ./.github/workflows/_uv-build.yml
+  backend-integration-test:
+    uses: ./.github/workflows/_backend-with-external.yml
