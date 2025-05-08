@@ -19,13 +19,4 @@ jobs:
       uses: actions/checkout@v4
     - name: Check formatting
       run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        cargo fmt --all
-        if [ -n "$(git status --porcelain)" ]; then
-          git checkout -B $GITHUB_HEAD_REF
-          git add .
-          git commit -m "github-actions[bot]: cargo fmt"
-          git pull --rebase origin $GITHUB_HEAD_REF
-          git push origin $GITHUB_HEAD_REF
-        fi
+        cargo fmt --all --check
