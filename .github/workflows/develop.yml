@@ -1,7 +1,7 @@
 name: CI (develop)
 
 permissions:
-  contents: read
+  contents: write
 
 on:
     push:
@@ -10,8 +10,11 @@ on:
       branches: [ "develop" ]  
 
 jobs:
-
   cargo-build:
+    permissions:
+      contents: read
     uses: ./.github/workflows/_rust-build-check.yml
   cargo-fmt:
+    permissions:
+      contents: write
     uses: ./.github/workflows/_cargo-fmt.yml
