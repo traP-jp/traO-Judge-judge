@@ -18,4 +18,4 @@ jobs:
   uv-build:
     uses: ./.github/workflows/_uv-build.yml
   backend-integration-test:
-    uses: ./.github/workflows/_backend-integration-test.yml
+    uses: ./.github/workflows/_backend-with-external.yml
