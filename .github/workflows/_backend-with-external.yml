@@ -3,6 +3,9 @@ name: Integration test(backend)
 on:
   workflow_call:
 
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
 
