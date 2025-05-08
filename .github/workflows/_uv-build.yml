@@ -3,6 +3,9 @@ name: Build check(python)
 on:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   build-traopy-util:
     runs-on: ubuntu-latest
