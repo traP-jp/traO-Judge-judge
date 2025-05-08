@@ -1,0 +1,22 @@
+name: _cargo-fmt
+
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  cargo-format:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+    permissions:
+      contents: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Check formatting
+      run: |
+        cargo fmt --all --check
