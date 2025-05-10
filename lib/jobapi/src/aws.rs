@@ -84,7 +84,7 @@ impl AwsClient for AwsClientType {
             .user_data(
                 BASE64_STANDARD
                     .encode(format!(
-                        "#!/bin/bash\nDOCKER_IMAGE_NAME={} /root/exec-app >> /log.txt 2>&1",
+                        "#!/bin/bash\naws s3 cp s3://trao-infra-resources/exec-app/exec-app /root/exec-app >> /log.txt 2>&1\nchmod +x /root/exec-app >> /log.txt 2>&1\nDOCKER_IMAGE_NAME={} /root/exec-app >> /log.txt 2>&1",
                         docker_image_name
                     ))
                     .to_string(),

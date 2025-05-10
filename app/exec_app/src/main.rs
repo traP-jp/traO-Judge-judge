@@ -4,7 +4,7 @@ use bollard::container::{
     RemoveContainerOptions, StartContainerOptions, UploadToContainerOptions,
 };
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
-use bollard::models::HostConfig;
+use bollard::models::{HostConfig, Mount, MountTypeEnum};
 use bollard::Docker;
 use bytes::Bytes;
 use flate2::read::GzDecoder;
@@ -13,9 +13,10 @@ use judge_exec_grpc::generated::execute_service_server::{ExecuteService, Execute
 use judge_exec_grpc::generated::{Dependency, ExecuteRequest, ExecuteResponse, Output};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::env;
 use std::io::Read;
 use std::ops::Not;
+use std::{env, fs};
+use tar::Archive;
 use tokio::time::timeout;
 use tonic::async_trait;
 use tonic::codegen::tokio_stream::StreamExt;
@@ -96,6 +97,21 @@ impl ExecApp {
             .collect();
         tracing::info!("hashes: {:?}", hashes);
 
+        tracing::info!("writing outcomes");
+        // write outcomes to /outcomes (dir in host)
+        if fs::exists("/outcomes")? {
+            fs::remove_dir_all("/outcomes")?;
+        }
+        fs::create_dir("/outcomes")?;
+        tracing::info!("directory created");
+        for dep in &dependency {
+            let tar = GzDecoder::new(&dep.outcome[..]);
+            let mut archive = Archive::new(tar);
+            archive.unpack(format!("/outcomes/{}", hashes[&dep.envvar]))?;
+
+            tracing::info!("file created: {}", hashes[&dep.envvar]);
+        }
+
         // create container
         let env_vars: Vec<String> = dependency
             .iter()
@@ -116,6 +132,13 @@ impl ExecApp {
                     host_config: Some(HostConfig {
                         cpuset_cpus: Some("0".to_string()),
                         memory: Some(2 * 1024 * 1024 * 1024), // 2GiB
+                        mounts: Some(vec![Mount {
+                            target: Some("/outcomes".to_string()),
+                            source: Some("/outcomes".to_string()),
+                            typ: Some(MountTypeEnum::BIND),
+                            read_only: Some(false),
+                            ..Default::default()
+                        }]),
                         ..HostConfig::default()
                     }),
                     network_disabled: Some(true),
@@ -136,36 +159,6 @@ impl ExecApp {
                 None::<StartContainerOptions<String>>,
             )
             .await?;
-
-        tracing::info!("writing outcomes");
-        // write outcomes to /outcome
-        self.docker_api
-            .create_exec(
-                ExecApp::DOCKER_CONTAINER_NAME,
-                CreateExecOptions {
-                    cmd: Some(vec!["mkdir", "/outcome"]),
-                    attach_stdout: Some(true),
-                    attach_stderr: Some(true),
-                    ..CreateExecOptions::default()
-                },
-            )
-            .await?;
-        tracing::info!("directory created");
-        for dep in &dependency {
-            let mut tar = GzDecoder::new(&dep.outcome[..]);
-            let mut file: Vec<u8> = Vec::new();
-            tar.read_to_end(file.as_mut())?;
-            self.docker_api
-                .upload_to_container(
-                    ExecApp::DOCKER_CONTAINER_NAME,
-                    Some(UploadToContainerOptions {
-                        path: format!("/outcome/{}", hashes[&dep.envvar]),
-                        no_overwrite_dir_non_dir: "True".parse()?,
-                    }),
-                    Bytes::from(file),
-                )
-                .await?;
-        }
 
         tracing::info!("executing container");
 
@@ -238,6 +231,7 @@ impl ExecApp {
         let mut ouput = self.docker_api.download_from_container(
             ExecApp::DOCKER_CONTAINER_NAME,
             Some(DownloadFromContainerOptions::<String> {
+                // TODO OUTPUT_PATHを実行時に渡す
                 path: env::var(OUTPUT_PATH)?,
             }),
         );
