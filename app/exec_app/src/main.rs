@@ -4,16 +4,21 @@ use bollard::container::{
     RemoveContainerOptions, StartContainerOptions, UploadToContainerOptions,
 };
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
-use bollard::models::HostConfig;
+use bollard::models::{HostConfig, Mount, MountTypeEnum};
 use bollard::Docker;
 use bytes::Bytes;
 use flate2::read::GzDecoder;
 use judge_core::constant::env_var_exec::{OUTPUT_PATH, SCRIPT_PATH};
 use judge_exec_grpc::generated::execute_service_server::{ExecuteService, ExecuteServiceServer};
 use judge_exec_grpc::generated::{Dependency, ExecuteRequest, ExecuteResponse, Output};
-use std::env;
+use sha2::{Digest, Sha256};
+use std::collections::HashMap;
+use std::fs::Permissions;
 use std::io::Read;
 use std::ops::Not;
+use std::os::unix::fs::PermissionsExt;
+use std::{env, fs};
+use tar::Archive;
 use tokio::time::timeout;
 use tonic::async_trait;
 use tonic::codegen::tokio_stream::StreamExt;
@@ -76,10 +81,30 @@ impl ExecApp {
         &self,
         dependency: Vec<Dependency>,
     ) -> Result<ExecuteResponse, anyhow::Error> {
-        let env_vars: Vec<String> = dependency
+        println!("{:?}", dependency);
+        tracing::info!("writing outcomes");
+        // write outcomes to /outcomes (dir in host)
+        if fs::exists("/outcomes")? {
+            fs::remove_dir_all("/outcomes")?;
+        }
+        fs::create_dir("/outcomes")?;
+        tracing::info!("directory created");
+        for dep in &dependency {
+            let tar = GzDecoder::new(&dep.outcome[..]);
+            let mut archive = Archive::new(tar);
+            archive.unpack("/outcomes/")?;
+            tracing::info!("file created: {}", &dep.envvar);
+        }
+
+        // create container
+        let mut env_vars: Vec<String> = dependency
             .iter()
-            .map(|dep| format!("{}=\"/outcome/{}\"", &dep.envvar, dep.outcome_uuid))
+            .map(|dep| format!("{}=/outcomes/{}", &dep.envvar, dep.outcome_uuid))
             .collect();
+        // TODO: TRAOJUDGE_LANGUAGES_JSONはコンテナイメージ内に配置されているべき
+        env_vars.append(&mut vec![
+            "TRAOJUDGE_LANGUAGES_JSON=/languages.json".to_string()
+        ]);
         tracing::info!("env_vars: {:?}", env_vars);
         let create_container_response = self
             .docker_api
@@ -95,6 +120,13 @@ impl ExecApp {
                     host_config: Some(HostConfig {
                         cpuset_cpus: Some("0".to_string()),
                         memory: Some(2 * 1024 * 1024 * 1024), // 2GiB
+                        mounts: Some(vec![Mount {
+                            target: Some("/outcomes".to_string()),
+                            source: Some("/outcomes".to_string()),
+                            typ: Some(MountTypeEnum::BIND),
+                            read_only: Some(false),
+                            ..Default::default()
+                        }]),
                         ..HostConfig::default()
                     }),
                     network_disabled: Some(true),
@@ -116,54 +148,19 @@ impl ExecApp {
             )
             .await?;
 
-        tracing::info!("writing outcomes");
-        // write outcomes to /outcome
-        self.docker_api
-            .create_exec(
-                ExecApp::DOCKER_CONTAINER_NAME,
-                CreateExecOptions {
-                    cmd: Some(vec!["mkdir", "/outcome"]),
-                    attach_stdout: Some(true),
-                    attach_stderr: Some(true),
-                    ..CreateExecOptions::default()
-                },
-            )
-            .await?;
-        tracing::info!("directory created");
-        for dep in &dependency {
-            let mut tar = GzDecoder::new(&dep.outcome[..]);
-            let mut file: Vec<u8> = Vec::new();
-            tar.read_to_end(file.as_mut())?;
-            self.docker_api
-                .upload_to_container(
-                    ExecApp::DOCKER_CONTAINER_NAME,
-                    Some(UploadToContainerOptions {
-                        path: "/outcome/",
-                        no_overwrite_dir_non_dir: "True",
-                    }),
-                    Bytes::from(file),
-                )
-                .await?;
-        }
-
         tracing::info!("executing container");
 
         // exec script
-        let exec_container_entry_point = env::var(SCRIPT_PATH)?;
+        let exec_container_entry_point: String = dependency
+            .iter()
+            .filter(|dep| dep.envvar == SCRIPT_PATH)
+            .map(|dep| format!("/outcomes/{}", dep.outcome_uuid))
+            .next()
+            .expect(format!("outcome \"{}\" not found", SCRIPT_PATH).as_str());
 
         tracing::info!("entrypoint: {}", exec_container_entry_point);
 
-        self.docker_api
-            .create_exec(
-                ExecApp::DOCKER_CONTAINER_NAME,
-                CreateExecOptions {
-                    cmd: Some(vec!["chmod", "+x", exec_container_entry_point.as_str()]),
-                    attach_stdout: Some(true),
-                    attach_stderr: Some(true),
-                    ..CreateExecOptions::default()
-                },
-            )
-            .await?;
+        fs::set_permissions(&exec_container_entry_point, Permissions::from_mode(0o755))?;
         tracing::info!("chmod done");
         let message = self
             .docker_api
@@ -217,7 +214,13 @@ impl ExecApp {
         let mut ouput = self.docker_api.download_from_container(
             ExecApp::DOCKER_CONTAINER_NAME,
             Some(DownloadFromContainerOptions::<String> {
-                path: env::var(OUTPUT_PATH)?,
+                // TODO OUTPUT_PATHを実行時に渡す
+                path: dependency
+                    .iter()
+                    .filter(|dep| dep.envvar == OUTPUT_PATH)
+                    .map(|dep| format!("/outcomes/{}", dep.outcome_uuid))
+                    .next()
+                    .expect(format!("outcome \"{}\" not found", OUTPUT_PATH).as_str()),
             }),
         );
         let mut output_bytes: Vec<u8> = vec![];

@@ -1670,6 +1670,7 @@ dependencies = [
  "judge_core",
  "judge_exec_grpc",
  "sha2 0.10.8",
+ "tar",
  "tokio",
  "tonic",
  "tracing",
