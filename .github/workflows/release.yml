@@ -1,5 +1,8 @@
 name: CI (release)
 
+permissions:
+  contents: read
+
 on:
     push:
       branches:
@@ -10,7 +13,5 @@ on:
         - release
 
 jobs:
-
-  test-judge-control-app:
-    uses: ./.github/workflows/_test-judge-control-app-release.yml
-    
+  develop-ci:
+    uses: ./.github/workflows/develop.yml

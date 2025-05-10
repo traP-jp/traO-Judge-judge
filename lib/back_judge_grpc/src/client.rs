@@ -3,11 +3,11 @@ use anyhow::Result;
 use judge_core::model::judge;
 
 #[derive(Debug, Clone)]
-pub struct RemoteJudgeApiClient {
+pub struct RemoteJudgeServiceClient {
     grpc_client: generated::judge_service_client::JudgeServiceClient<tonic::transport::Channel>,
 }
 
-impl RemoteJudgeApiClient {
+impl RemoteJudgeServiceClient {
     pub async fn new(uri: &str) -> anyhow::Result<Self> {
         let channel = tonic::transport::Channel::from_shared(uri.to_string())?
             .connect()
@@ -18,7 +18,7 @@ impl RemoteJudgeApiClient {
 }
 
 #[axum::async_trait]
-impl judge::JudgeApi for RemoteJudgeApiClient {
+impl judge::JudgeService for RemoteJudgeServiceClient {
     async fn judge(&self, request: judge::JudgeRequest) -> judge::JudgeResponse {
         let grpc_request: generated::JudgeRequest = request.into();
         let mut grpc_client = self.grpc_client.clone();
