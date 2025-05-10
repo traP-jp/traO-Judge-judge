@@ -16,6 +16,8 @@ use std::collections::HashMap;
 use std::io::Read;
 use std::ops::Not;
 use std::{env, fs};
+use std::fs::Permissions;
+use std::os::unix::fs::PermissionsExt;
 use tar::Archive;
 use tokio::time::timeout;
 use tonic::async_trait;
@@ -97,7 +99,7 @@ impl ExecApp {
         // create container
         let env_vars: Vec<String> = dependency
             .iter()
-            .map(|dep| format!("{}=\"/outcome/{}\"", &dep.envvar, dep.outcome_uuid))
+            .map(|dep| format!("{}=\"/outcomes/{}\"", &dep.envvar, dep.outcome_uuid))
             .collect();
         tracing::info!("env_vars: {:?}", env_vars);
         let create_container_response = self
@@ -154,17 +156,7 @@ impl ExecApp {
 
         tracing::info!("entrypoint: {}", exec_container_entry_point);
 
-        self.docker_api
-            .create_exec(
-                ExecApp::DOCKER_CONTAINER_NAME,
-                CreateExecOptions {
-                    cmd: Some(vec!["chmod", "+x", exec_container_entry_point.as_str()]),
-                    attach_stdout: Some(true),
-                    attach_stderr: Some(true),
-                    ..CreateExecOptions::default()
-                },
-            )
-            .await?;
+        fs::set_permissions(&exec_container_entry_point, Permissions::from_mode(0o755))?;
         tracing::info!("chmod done");
         let message = self
             .docker_api
