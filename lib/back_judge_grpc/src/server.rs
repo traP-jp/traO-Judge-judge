@@ -5,11 +5,11 @@ use judge_core::model::judge;
 use tracing;
 
 #[derive(Debug, Clone)]
-pub struct WrappedJudgeApi<Inner: judge::JudgeApi> {
+pub struct WrappedJudgeService<Inner: judge::JudgeService> {
     inner_api: Inner,
 }
 
-impl<Inner: judge::JudgeApi> WrappedJudgeApi<Inner> {
+impl<Inner: judge::JudgeService> WrappedJudgeService<Inner> {
     pub fn new(inner_api: Inner) -> Self {
         Self {
             inner_api: inner_api,
@@ -18,8 +18,8 @@ impl<Inner: judge::JudgeApi> WrappedJudgeApi<Inner> {
 }
 
 #[async_trait]
-impl<Inner: judge::JudgeApi> generated::judge_service_server::JudgeService
-    for WrappedJudgeApi<Inner>
+impl<Inner: judge::JudgeService> generated::judge_service_server::JudgeService
+    for WrappedJudgeService<Inner>
 {
     async fn judge(
         &self,

@@ -1,7 +1,9 @@
-use judge_core::logic::{self, judge_api_impl::JudgeApiImpl, procedure_builder::ProcedureBuilder};
+use judge_core::logic::{
+    self, judge_service_impl::JudgeServiceImpl, procedure_builder::ProcedureBuilder,
+};
 use judge_core::model::{
     dep_name_repository::DepNameRepository as _,
-    judge::{JudgeApi as _, JudgeRequest},
+    judge::{JudgeRequest, JudgeService as _},
     procedure::writer_schema::{self, *},
 };
 use judge_infra_mock::{
@@ -238,18 +240,24 @@ impl Builder {
         .map_err(|_| {
             PyErr::new::<pyo3::exceptions::PyValueError, _>("Failed to register procedure")
         })?;
-        let judge_api = JudgeApiImpl::new(job_api);
+        let judge_service = JudgeServiceImpl::new(job_api);
         let judge_req = JudgeRequest {
             procedure: regi_procedure,
             runtime_texts: label_to_content,
         };
-        let judge_resp = judge_api.judge(judge_req).await.map_err(|e| {
+        let judge_resp = judge_service.judge(judge_req).await.map_err(|e| {
             PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to judge: {:?}", e))
         })?;
         let judge_resp_with_name = {
             let dep_to_name = dn_repo
                 .get_many(judge_resp.keys().cloned().collect())
                 .await
+                .map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Failed to get name: {:?}",
+                        e
+                    ))
+                })?
                 .into_iter()
                 .map(|(id, name)| match name {
                     Some(name) => Ok((id, name)),

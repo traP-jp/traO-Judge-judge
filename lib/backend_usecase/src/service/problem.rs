@@ -3,10 +3,7 @@ use crate::model::problem::{
     ProblemOrderByData, UpdateNormalProblemData,
 };
 use domain::{
-    model::{
-        problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem},
-        user,
-    },
+    model::problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem},
     repository::{
         problem::ProblemRepository, session::SessionRepository, testcase::TestcaseRepository,
         user::UserRepository,
@@ -58,7 +55,7 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
 {
     pub async fn get_problem(
         &self,
-        session_id: Option<String>,
+        session_id: Option<&str>,
         problem_id: i64,
     ) -> anyhow::Result<NormalProblemDto, ProblemError> {
         let problem = self
@@ -107,7 +104,7 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
 
     pub async fn get_problems_by_query(
         &self,
-        session_id: Option<String>,
+        session_id: Option<&str>,
         query: ProblemGetQueryData,
     ) -> anyhow::Result<NormalProblemsDto, ProblemError> {
         let display_id = match session_id {
@@ -154,7 +151,7 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
 
     pub async fn update_problem(
         &self,
-        session_id: &str,
+        session_id: Option<&str>,
         problem_id: i64,
         body: UpdateNormalProblemData,
     ) -> anyhow::Result<NormalProblemDto, ProblemError> {
@@ -165,18 +162,20 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
             .map_err(|_| ProblemError::InternalServerError)?
             .ok_or(ProblemError::NotFound)?;
 
-        let display_id = self
-            .session_repository
-            .get_display_id_by_session_id(&session_id)
-            .await
-            .map_err(|_| ProblemError::InternalServerError)?
-            .ok_or(ProblemError::Unauthorized)?;
+        let display_id = match session_id {
+            Some(session_id) => self
+                .session_repository
+                .get_display_id_by_session_id(session_id)
+                .await
+                .map_err(|_| ProblemError::InternalServerError)?,
+            None => None,
+        };
 
-        if display_id != problem.author_id {
-            if !problem.is_public {
-                return Err(ProblemError::NotFound);
-            } else {
+        if display_id.is_none_or(|id| id != problem.author_id) {
+            if problem.is_public {
                 return Err(ProblemError::Forbidden);
+            } else {
+                return Err(ProblemError::NotFound);
             }
         }
 
@@ -207,22 +206,25 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
 
     pub async fn create_problem(
         &self,
-        session_id: &str,
+        session_id: Option<&str>,
         body: CreateNormalProblemData,
     ) -> anyhow::Result<NormalProblemDto, ProblemError> {
-        let display_id = self
-            .session_repository
-            .get_display_id_by_session_id(&session_id)
-            .await
-            .map_err(|_| ProblemError::InternalServerError)?
-            .ok_or(ProblemError::Unauthorized)?;
+        let display_id = match session_id {
+            Some(session_id) => self
+                .session_repository
+                .get_display_id_by_session_id(session_id)
+                .await
+                .map_err(|_| ProblemError::InternalServerError)?
+                .ok_or(ProblemError::Forbidden)?,
+            None => return Err(ProblemError::Forbidden),
+        };
 
         let user = self
             .user_repository
             .get_user_by_display_id(display_id)
             .await
             .map_err(|_| ProblemError::InternalServerError)?
-            .ok_or(ProblemError::NotFound)?;
+            .ok_or(ProblemError::Forbidden)?;
 
         match user.role {
             domain::model::user::UserRole::Admin | domain::model::user::UserRole::TrapUser => {}

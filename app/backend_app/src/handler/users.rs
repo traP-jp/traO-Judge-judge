@@ -95,7 +95,7 @@ pub async fn put_me(
             session_id,
             UpdateUserData {
                 user_name: body.user_name,
-                icon_url: body.icon,
+                icon: body.icon,
                 x_link: body.x_link,
                 github_link: body.github_link,
                 self_introduction: body.self_introduction,

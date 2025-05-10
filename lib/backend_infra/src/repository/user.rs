@@ -1,4 +1,4 @@
-use crate::model::user::{UserIdRow, UserRow};
+use crate::model::{user::UserRow, uuid::UuidRow};
 use axum::async_trait;
 use domain::{
     model::user::{UpdateUser, User, UserId},
@@ -39,7 +39,7 @@ impl UserRepository for UserRepositoryImpl {
     }
 
     async fn create_user_by_email(&self, name: &str, email: &str) -> anyhow::Result<UserId> {
-        let id = UserIdRow::new(Uuid::now_v7());
+        let id = UuidRow::new(Uuid::now_v7());
 
         sqlx::query("INSERT INTO users (id, name, email) VALUES (?, ?, ?)")
             .bind(id)

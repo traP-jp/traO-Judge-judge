@@ -24,9 +24,8 @@ sqlx = { workspace = true }
 jsonwebtoken = { workspace = true }
 lettre = { workspace = true }
 fancy-regex = { workspace = true }
-aws-sdk-s3 = { workspace = true }
-aws-config = { workspace = true }
 domain = { path = "../backend_domain" }
+judge_core = { path = "../judge_core" }
 
 [dependencies.async-sqlx-session]
 git = "https://github.com/maxcountryman/async-sqlx-session.git"

@@ -148,7 +148,7 @@ impl<
             .execute(reservation, dependencies)
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
-        let result = judge_output::parse(&output)
+        let result = super::output_parser::parse(&output)
             .map_err(|e| anyhow::anyhow!(e.to_string()))
             .context("Failed to parse output")?;
         tracing::info!("Execution job for {} completed", runtime_id);
