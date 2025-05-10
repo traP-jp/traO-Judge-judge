@@ -1,5 +1,6 @@
 use judge_core::model::*;
 use tokio::sync::{mpsc, oneshot};
+use uuid::Uuid;
 
 use crate::actor::{
     instance::{Instance, InstanceMessage},
@@ -14,6 +15,7 @@ pub enum InstancePoolMessage {
     },
     Execution {
         reservation: ReservationToken,
+        outcome_id_for_res: Uuid,
         dependencies: Vec<job::Dependency<OutcomeToken>>,
         respond_to:
             oneshot::Sender<Result<(OutcomeToken, std::process::Output), job::ExecutionError>>,
@@ -57,10 +59,13 @@ impl InstancePool {
             }
             InstancePoolMessage::Execution {
                 reservation,
+                outcome_id_for_res,
                 dependencies,
                 respond_to,
             } => {
-                let result = self.handle_execution(reservation, dependencies).await;
+                let result = self
+                    .handle_execution(reservation, outcome_id_for_res, dependencies)
+                    .await;
                 respond_to.send(result).unwrap();
                 Running::Continue
             }
@@ -88,11 +93,13 @@ impl InstancePool {
     async fn handle_execution(
         &mut self,
         reservation: ReservationToken,
+        outcome_id_for_res: Uuid,
         dependencies: Vec<job::Dependency<OutcomeToken>>,
     ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError> {
         let (tx, rx) = oneshot::channel();
         self.instance_tx
             .send(InstanceMessage::Execution {
+                outcome_id_for_res,
                 dependencies,
                 respond_to: tx,
             })

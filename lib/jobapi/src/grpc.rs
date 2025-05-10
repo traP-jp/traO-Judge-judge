@@ -12,6 +12,7 @@ use crate::jobapi::OutcomeToken;
 pub trait GrpcClient {
     async fn execute(
         &mut self,
+        outcome_id_for_res: Uuid,
         dependency: Vec<job::Dependency<OutcomeToken>>,
     ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError>;
 }
@@ -49,6 +50,7 @@ impl GrpcClientType {
 impl GrpcClient for GrpcClientType {
     async fn execute(
         &mut self,
+        outcome_id_for_res: Uuid,
         dependency: Vec<job::Dependency<OutcomeToken>>,
     ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError> {
         let mut request = vec![];
@@ -72,10 +74,9 @@ impl GrpcClient for GrpcClientType {
         tracing::info!("Execute response received: {:?}", resp);
 
         let outcome = resp.outcome;
-        let outcome_id = Uuid::now_v7();
         let output = resp.output.unwrap();
         Ok((
-            OutcomeToken::from_binary(outcome_id, &outcome).await,
+            OutcomeToken::from_binary(outcome_id_for_res, &outcome).await,
             std::process::Output {
                 status: ExitStatusExt::from_raw(output.exit_code),
                 stdout: output.stdout.as_bytes().to_vec(),
