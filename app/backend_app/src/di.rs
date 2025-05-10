@@ -2,15 +2,15 @@ use infra::{
     external::mail::MailClientImpl,
     provider::Provider,
     repository::{
-        auth::AuthRepositoryImpl, editorial::EditorialRepositoryImpl,
+        auth::AuthRepositoryImpl, editorial::EditorialRepositoryImpl, icon::IconRepositoryImpl,
         problem::ProblemRepositoryImpl, session::SessionRepositoryImpl,
         submission::SubmissionRepositoryImpl, testcase::TestcaseRepositoryImpl,
         user::UserRepositoryImpl,
     },
 };
 use usecase::service::{
-    auth::AuthenticationService, editorial::EditorialService, problem::ProblemService,
-    submission::SubmissionService, user::UserService,
+    auth::AuthenticationService, editorial::EditorialService, icon::IconService,
+    problem::ProblemService, submission::SubmissionService, user::UserService,
 };
 
 #[derive(Clone)]
@@ -31,10 +31,12 @@ pub struct DiContainer {
         UserRepositoryImpl,
         SessionRepositoryImpl,
         AuthRepositoryImpl,
+        IconRepositoryImpl,
         ProblemRepositoryImpl,
         SubmissionRepositoryImpl,
         MailClientImpl,
     >,
+    icon_service: IconService<IconRepositoryImpl>,
     submission_service:
         SubmissionService<SessionRepositoryImpl, SubmissionRepositoryImpl, ProblemRepositoryImpl>,
     editorial_service:
@@ -60,10 +62,12 @@ impl DiContainer {
                 provider.provide_user_repository(),
                 provider.provide_session_repository(),
                 provider.provide_auth_repository(),
+                provider.provide_icon_repository(),
                 provider.provide_problem_repository(),
                 provider.provide_submission_repository(),
                 provider.provide_mail_client(),
             ),
+            icon_service: IconService::new(provider.provide_icon_repository()),
             submission_service: SubmissionService::new(
                 provider.provide_session_repository(),
                 provider.provide_submission_repository(),
@@ -83,6 +87,7 @@ impl DiContainer {
         UserRepositoryImpl,
         SessionRepositoryImpl,
         AuthRepositoryImpl,
+        IconRepositoryImpl,
         ProblemRepositoryImpl,
         SubmissionRepositoryImpl,
         MailClientImpl,
@@ -99,6 +104,10 @@ impl DiContainer {
         MailClientImpl,
     > {
         &self.auth_service
+    }
+
+    pub fn icon_service(&self) -> &IconService<IconRepositoryImpl> {
+        &self.icon_service
     }
 
     pub fn submission_service(

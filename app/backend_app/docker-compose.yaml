@@ -11,18 +11,6 @@ services:
       - 3306:3306
     volumes:
       - mysql:/var/lib/mysql
-  minio:
-    image: minio/minio:latest
-    environment:
-      MINIO_ACCESS_KEY: ${OBJECT_STORAGE_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${OBJECT_STORAGE_SECRET_KEY}
-    command: server /data --address :9000 --console-address :9001
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio-data:/data
 
 volumes:
   mysql:
-  minio-data:

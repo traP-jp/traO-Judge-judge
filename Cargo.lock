@@ -874,8 +874,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-session",
- "aws-config",
- "aws-sdk-s3",
  "axum",
  "axum-extra",
  "bcrypt",
@@ -1175,6 +1173,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6fac387a98bb7c37292057cffc56d62ecb629900026402633ae9160df93a8766"
 dependencies = [
  "nom 7.1.3",
+]
+
+[[package]]
+name = "cfb"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d38f2da7a0a2c4ccf0065be06397cc26a81f4e528be095826eee9d4adbb8c60f"
+dependencies = [
+ "byteorder",
+ "fnv",
+ "uuid",
 ]
 
 [[package]]
@@ -1484,14 +1493,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-session",
- "aws-config",
- "aws-sdk-s3",
  "axum",
  "axum-extra",
  "bcrypt",
  "fancy-regex",
  "http-body-util",
  "jsonwebtoken",
+ "judge_core",
  "lettre",
  "mockall",
  "reqwest",
@@ -2589,14 +2597,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f4c7245a08504955605670dbf141fceab975f15ca21570696aebe9d2e71576bd"
 
 [[package]]
+name = "infer"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a588916bfdfd92e71cacef98a63d9b1f0d74d6599980d11894290e7ddefffcf7"
+dependencies = [
+ "cfb",
+]
+
+[[package]]
 name = "infra"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-session",
  "async-sqlx-session",
- "aws-config",
- "aws-sdk-s3",
  "axum",
  "axum-extra",
  "bcrypt",
@@ -2604,6 +2619,7 @@ dependencies = [
  "fancy-regex",
  "http-body-util",
  "jsonwebtoken",
+ "judge_core",
  "lettre",
  "reqwest",
  "serde",
@@ -5469,10 +5485,12 @@ dependencies = [
  "aws-config",
  "aws-sdk-s3",
  "axum-extra",
+ "base64 0.22.1",
  "bcrypt",
  "domain",
  "fancy-regex",
  "http-body-util",
+ "infer",
  "jsonwebtoken",
  "judge_core",
  "lettre",

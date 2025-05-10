@@ -1,10 +1,10 @@
 name: Integration test(backend)
 
 on:
-  push:
-    branches: [ "develop" ]
-  pull_request:
-    branches: [ "develop" ]
+  workflow_call:
+
+permissions:
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -46,7 +46,5 @@ jobs:
                      -v /tmp/config:/root/.minio \
                      minio/minio server /data
 
-    - name: Build test
-      run: cargo build -p backend_app --release --verbose
     - name: Run test
       run: export CODEGEN_SKIP=true && source app/backend_app/.env.dev && cargo test -- --ignored backend

@@ -30,6 +30,8 @@ judge_core = { path = "../judge_core" }
 mockall = { workspace = true }
 rstest = { workspace = true }
 async-std = { workspace = true }
+base64 = { workspace = true }
+infer = { workspace = true }
 
 [dev-dependencies]
 domain = { path = "../backend_domain", features = ["mockall"] }
