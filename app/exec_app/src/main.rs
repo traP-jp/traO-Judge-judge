@@ -13,11 +13,11 @@ use judge_exec_grpc::generated::execute_service_server::{ExecuteService, Execute
 use judge_exec_grpc::generated::{Dependency, ExecuteRequest, ExecuteResponse, Output};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::fs::Permissions;
 use std::io::Read;
 use std::ops::Not;
-use std::{env, fs};
-use std::fs::Permissions;
 use std::os::unix::fs::PermissionsExt;
+use std::{env, fs};
 use tar::Archive;
 use tokio::time::timeout;
 use tonic::async_trait;
@@ -102,7 +102,9 @@ impl ExecApp {
             .map(|dep| format!("{}=/outcomes/{}", &dep.envvar, dep.outcome_uuid))
             .collect();
         // TODO: TRAOJUDGE_LANGUAGES_JSONはコンテナイメージ内に配置されているべき
-        env_vars.append(&mut vec!["TRAOJUDGE_LANGUAGES_JSON=/languages.json".to_string()]);
+        env_vars.append(&mut vec![
+            "TRAOJUDGE_LANGUAGES_JSON=/languages.json".to_string()
+        ]);
         tracing::info!("env_vars: {:?}", env_vars);
         let create_container_response = self
             .docker_api
