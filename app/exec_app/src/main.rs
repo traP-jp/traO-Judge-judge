@@ -79,6 +79,7 @@ impl ExecApp {
         &self,
         dependency: Vec<Dependency>,
     ) -> Result<ExecuteResponse, anyhow::Error> {
+        println!("{:?}", dependency);
         tracing::info!("writing outcomes");
         // write outcomes to /outcomes (dir in host)
         if fs::exists("/outcomes")? {
@@ -89,9 +90,8 @@ impl ExecApp {
         for dep in &dependency {
             let tar = GzDecoder::new(&dep.outcome[..]);
             let mut archive = Archive::new(tar);
-            archive.unpack(format!("/outcomes/{}", hashes[&dep.envvar]))?;
-
-            tracing::info!("file created: {}", hashes[&dep.envvar]);
+            archive.unpack("/outcomes/")?;
+            tracing::info!("file created: {}", &dep.envvar);
         }
 
         // create container
@@ -145,7 +145,12 @@ impl ExecApp {
         tracing::info!("executing container");
 
         // exec script
-        let exec_container_entry_point = env::var(SCRIPT_PATH)?;
+        let exec_container_entry_point: String = dependency
+            .iter()
+            .filter(|dep| dep.envvar == SCRIPT_PATH)
+            .map(|dep| format!("/outcomes/{}", dep.outcome_uuid))
+            .next()
+            .expect(format!("outcome \"{}\" not found", SCRIPT_PATH).as_str());
 
         tracing::info!("entrypoint: {}", exec_container_entry_point);
 
@@ -214,7 +219,12 @@ impl ExecApp {
             ExecApp::DOCKER_CONTAINER_NAME,
             Some(DownloadFromContainerOptions::<String> {
                 // TODO OUTPUT_PATHを実行時に渡す
-                path: env::var(OUTPUT_PATH)?,
+                path: dependency
+                    .iter()
+                    .filter(|dep| dep.envvar == OUTPUT_PATH)
+                    .map(|dep| format!("/outcomes/{}", dep.outcome_uuid))
+                    .next()
+                    .expect(format!("outcome \"{}\" not found", OUTPUT_PATH).as_str()),
             }),
         );
         let mut output_bytes: Vec<u8> = vec![];
