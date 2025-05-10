@@ -10,7 +10,9 @@ pub struct ExecuteRequest {
 pub struct Dependency {
     #[prost(string, tag = "1")]
     pub envvar: ::prost::alloc::string::String,
-    #[prost(bytes = "vec", tag = "2")]
+    #[prost(string, tag = "2")]
+    pub outcome_uuid: ::prost::alloc::string::String,
+    #[prost(bytes = "vec", tag = "3")]
     pub outcome: ::prost::alloc::vec::Vec<u8>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
