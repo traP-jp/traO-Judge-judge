@@ -97,10 +97,12 @@ impl ExecApp {
         }
 
         // create container
-        let env_vars: Vec<String> = dependency
+        let mut env_vars: Vec<String> = dependency
             .iter()
-            .map(|dep| format!("{}=\"/outcomes/{}\"", &dep.envvar, dep.outcome_uuid))
+            .map(|dep| format!("{}=/outcomes/{}", &dep.envvar, dep.outcome_uuid))
             .collect();
+        // TODO: TRAOJUDGE_LANGUAGES_JSONはコンテナイメージ内に配置されているべき
+        env_vars.append(&mut vec!["TRAOJUDGE_LANGUAGES_JSON=/languages.json".to_string()]);
         tracing::info!("env_vars: {:?}", env_vars);
         let create_container_response = self
             .docker_api
