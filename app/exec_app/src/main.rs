@@ -79,24 +79,6 @@ impl ExecApp {
         &self,
         dependency: Vec<Dependency>,
     ) -> Result<ExecuteResponse, anyhow::Error> {
-        tracing::info!("calculating hash");
-        let hashes: HashMap<_, _> = dependency
-            .iter()
-            .map(|dep| {
-                (
-                    dep.envvar.clone(),
-                    format!("{:x}", Sha256::digest(&dep.outcome)),
-                )
-            })
-            .map(|(envvar, hash)| {
-                (
-                    envvar.clone(),
-                    format!("{:x}", Sha256::digest(hash + ":" + &envvar)),
-                )
-            })
-            .collect();
-        tracing::info!("hashes: {:?}", hashes);
-
         tracing::info!("writing outcomes");
         // write outcomes to /outcomes (dir in host)
         if fs::exists("/outcomes")? {
@@ -115,7 +97,7 @@ impl ExecApp {
         // create container
         let env_vars: Vec<String> = dependency
             .iter()
-            .map(|dep| format!("{}=\"/outcome/{}\"", &dep.envvar, hashes[&dep.envvar]))
+            .map(|dep| format!("{}=\"/outcome/{}\"", &dep.envvar, dep.outcome_uuid))
             .collect();
         tracing::info!("env_vars: {:?}", env_vars);
         let create_container_response = self

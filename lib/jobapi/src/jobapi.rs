@@ -48,7 +48,7 @@ pub struct ReservationToken {}
 
 #[derive(Debug, Clone)]
 pub struct OutcomeToken {
-    outcome_id: Uuid,
+    pub outcome_id: Uuid,
     path_to_tar_gz: PathBuf,
 }
 
@@ -137,13 +137,14 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
             })?;
         let dependency_for_res = job::Dependency {
             envvar: env_var_exec::OUTPUT_PATH.to_string(),
-            outcome: outcome_for_res,
+            outcome: outcome_for_res.clone(),
         };
         dependencies.push(dependency_for_res);
         let (tx, rx) = oneshot::channel();
         self.instance_pool_tx
             .send(InstancePoolMessage::Execution {
                 reservation,
+                outcome_id_for_res: outcome_for_res.outcome_id,
                 dependencies,
                 respond_to: tx,
             })
