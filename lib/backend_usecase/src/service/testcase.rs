@@ -302,7 +302,7 @@ impl<
         };
 
         self.procedure_repository
-            .update_precedure(problem_id, registered_procedure)
+            .update_procedure(problem_id, registered_procedure)
             .await
             .map_err(|_| TestcaseError::InternalServerError)?;
 
@@ -473,7 +473,7 @@ impl<
         };
 
         self.procedure_repository
-            .update_precedure(problem.id, registered_procedure)
+            .update_procedure(problem.id, registered_procedure)
             .await
             .map_err(|_| TestcaseError::InternalServerError)?;
 
@@ -576,7 +576,7 @@ impl<
             .await
             .map_err(|_| TestcaseError::InternalServerError)?;
 
-        // 地震を除いたtestcasesの名前が一致するか判定
+        // 自身を除いたtestcasesの名前が一致するか判定
         for testcase in now_testcases.iter() {
             if testcase.id != testcase_id && put_testcase.name == testcase.name {
                 return Err(TestcaseError::ValidateError);
@@ -638,7 +638,7 @@ impl<
         };
 
         self.procedure_repository
-            .update_precedure(problem.id, registered_procedure)
+            .update_procedure(problem.id, registered_procedure)
             .await
             .map_err(|_| TestcaseError::InternalServerError)?;
 
