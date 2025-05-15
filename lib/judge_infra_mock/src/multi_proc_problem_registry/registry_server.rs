@@ -27,7 +27,7 @@ impl ProblemRegistryServer for RegistryServer {
     ) -> Result<(), RegistrationError> {
         let uuid: uuid::Uuid = resource_id.into();
         let path = self.cache_dir.join(uuid.to_string());
-        if tokio::fs::try_exists(&path).await.is_ok() {
+        if tokio::fs::try_exists(&path).await.unwrap_or(true) {
             return Err(RegistrationError::InternalError(format!(
                 "Resource {} already exists",
                 resource_id

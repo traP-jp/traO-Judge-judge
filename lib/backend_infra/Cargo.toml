@@ -26,6 +26,7 @@ lettre = { workspace = true }
 fancy-regex = { workspace = true }
 domain = { path = "../backend_domain" }
 judge_core = { path = "../judge_core" }
+judge_infra_mock = { path = "../../lib/judge_infra_mock" }
 
 [dependencies.async-sqlx-session]
 git = "https://github.com/maxcountryman/async-sqlx-session.git"
