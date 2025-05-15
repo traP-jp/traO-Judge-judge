@@ -1,6 +1,5 @@
 use anyhow::{ensure, Context};
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_ec2::types::builders::BlockDeviceMappingBuilder;
 use aws_sdk_ec2::types::{BlockDeviceMapping, EbsBlockDevice, VolumeType};
 use aws_sdk_ec2::{
     types::{IamInstanceProfileSpecification, InstanceType, Placement},
@@ -8,20 +7,13 @@ use aws_sdk_ec2::{
 };
 use aws_sdk_s3::Client as S3Client;
 use base64::{prelude::BASE64_STANDARD, Engine};
-use judge_core::model::job::FileConf;
-use std::{collections::HashMap, env, fs::File, io::Write, net::Ipv4Addr, str::FromStr};
+use std::{collections::HashMap, env, net::Ipv4Addr, str::FromStr};
 use uuid::Uuid;
 
 #[axum::async_trait]
 pub trait AwsClient {
     async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error>;
     async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error>;
-    async fn place_file(
-        &self,
-        outcome_id: Uuid,
-        file_name: Uuid,
-        file_conf: FileConf,
-    ) -> Result<(), anyhow::Error>;
 }
 
 struct AwsInstanceInfo {
@@ -165,43 +157,6 @@ impl AwsClient for AwsClientType {
         tracing::info!("Instance terminated: {aws_id}");
 
         Ok(())
-    }
-    async fn place_file(
-        &self,
-        outcome_id: Uuid,
-        file_name: Uuid,
-        file_conf: FileConf,
-    ) -> Result<(), anyhow::Error> {
-        match file_conf {
-            FileConf::Text(resource_id) => {
-                let result = self
-                    .s3_client
-                    .get_object()
-                    .bucket("traO-judge") // TODO S3バケット名
-                    .key(outcome_id.to_string() + "/" + file_name.to_string().as_str()) // TODO S3上のパス
-                    .send()
-                    .await?;
-                let mut file = File::open(file_name.to_string())?; // TODO place先パス
-                file.write_all(result.body.bytes().unwrap())?;
-                Ok(())
-            }
-            FileConf::EmptyDirectory => {
-                std::fs::create_dir_all(file_name.to_string())?; // TODO place先パス
-                Ok(())
-            }
-            FileConf::RuntimeText(_) => {
-                let result = self
-                    .s3_client
-                    .get_object()
-                    .bucket("traO-judge") // TODO S3バケット名
-                    .key(outcome_id.to_string() + "/" + file_name.to_string().as_str()) // TODO S3上のパス
-                    .send()
-                    .await?;
-                let mut file = File::open(file_name.to_string())?; // TODO place先パス
-                file.write_all(result.body.bytes().unwrap())?;
-                Ok(())
-            }
-        }
     }
 }
 
