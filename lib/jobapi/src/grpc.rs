@@ -6,22 +6,13 @@ use judge_exec_grpc::generated::{
 use std::{error::Error, net::Ipv4Addr, os::unix::process::ExitStatusExt, time::Duration};
 use uuid::Uuid;
 
-use crate::jobapi::OutcomeToken;
+use crate::{jobapi::OutcomeToken, model::grpc};
 
-#[axum::async_trait]
-pub trait GrpcClient {
-    async fn execute(
-        &mut self,
-        outcome_id_for_res: Uuid,
-        dependency: Vec<job::Dependency<OutcomeToken>>,
-    ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError>;
-}
-
-pub struct GrpcClientType {
+pub struct GrpcClient {
     exec_client: ExecuteServiceClient<tonic::transport::Channel>,
 }
 
-impl GrpcClientType {
+impl GrpcClient {
     pub async fn new(instance_ip: Ipv4Addr) -> Self {
         // 1 秒間隔で 60 回ポーリング
         let policy = RetryPolicy::fixed(Duration::from_secs(1)).with_max_retries(600);
@@ -47,7 +38,7 @@ impl GrpcClientType {
 }
 
 #[axum::async_trait]
-impl GrpcClient for GrpcClientType {
+impl grpc::GrpcClient for GrpcClient {
     async fn execute(
         &mut self,
         outcome_id_for_res: Uuid,

@@ -3,9 +3,11 @@ use tokio::sync::oneshot;
 use uuid::Uuid;
 
 use crate::actor::Running;
-use crate::aws::{AwsClient, AwsClientType};
-use crate::grpc::{GrpcClient, GrpcClientType};
+use crate::aws::AwsClient; // TODO: 具体的な型に依存しないように直す
+use crate::grpc::GrpcClient; // TODO: 具体的な型に依存しないように直す
 use crate::jobapi::OutcomeToken;
+use crate::model::aws::AwsClient as _;
+use crate::model::grpc::GrpcClient as _;
 
 pub enum InstanceMessage {
     Execution {
@@ -24,17 +26,17 @@ pub struct Instance {
     // multi-consumer
     receiver: async_channel::Receiver<InstanceMessage>,
     // TODO: use generics
-    aws_client: AwsClientType,
-    grpc_client: GrpcClientType,
+    aws_client: AwsClient,
+    grpc_client: GrpcClient,
 }
 
 impl Instance {
     pub async fn new(receiver: async_channel::Receiver<InstanceMessage>) -> Self {
         let instance_id = Uuid::now_v7();
         // warm-up AWS & gRPC client
-        let mut aws_client = AwsClientType::new().await;
+        let mut aws_client = AwsClient::new().await;
         let instance_ip = aws_client.create_instance(instance_id).await.unwrap();
-        let grpc_client = GrpcClientType::new(instance_ip).await;
+        let grpc_client = GrpcClient::new(instance_ip).await;
         Self {
             instance_id,
             receiver,
