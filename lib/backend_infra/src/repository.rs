@@ -1,5 +1,7 @@
 pub mod auth;
+pub mod dep_name;
 pub mod editorial;
+pub mod icon;
 pub mod problem;
 pub mod procedure;
 pub mod session;

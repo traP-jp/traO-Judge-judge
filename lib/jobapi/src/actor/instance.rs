@@ -9,6 +9,7 @@ use crate::jobapi::OutcomeToken;
 
 pub enum InstanceMessage {
     Execution {
+        outcome_id_for_res: Uuid,
         dependencies: Vec<job::Dependency<OutcomeToken>>,
         respond_to:
             oneshot::Sender<Result<(OutcomeToken, std::process::Output), job::ExecutionError>>,
@@ -53,10 +54,14 @@ impl Instance {
     async fn handle(&mut self, msg: InstanceMessage) -> Running {
         match msg {
             InstanceMessage::Execution {
+                outcome_id_for_res,
                 dependencies,
                 respond_to,
             } => {
-                let result = self.grpc_client.execute(dependencies).await;
+                let result = self
+                    .grpc_client
+                    .execute(outcome_id_for_res, dependencies)
+                    .await;
                 respond_to.send(result).unwrap();
                 Running::Continue
             }

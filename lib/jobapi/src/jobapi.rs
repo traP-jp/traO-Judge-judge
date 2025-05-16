@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use flate2::{write::GzEncoder, Compression};
-use judge_core::model::job;
+use judge_core::{constant::env_var_exec, model::job};
 use tokio::{
     io::AsyncWriteExt,
     sync::{mpsc, oneshot},
@@ -48,7 +48,7 @@ pub struct ReservationToken {}
 
 #[derive(Debug, Clone)]
 pub struct OutcomeToken {
-    outcome_id: Uuid,
+    pub outcome_id: Uuid,
     path_to_tar_gz: PathBuf,
 }
 
@@ -127,12 +127,24 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
     async fn execute(
         &self,
         reservation: ReservationToken,
-        dependencies: Vec<job::Dependency<OutcomeToken>>,
+        mut dependencies: Vec<job::Dependency<OutcomeToken>>,
     ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError> {
+        let outcome_for_res = self
+            .place_file(job::FileConf::EmptyDirectory)
+            .await
+            .map_err(|e| {
+                job::ExecutionError::InternalError(format!("Failed to create EmptyDirectory: {e}"))
+            })?;
+        let dependency_for_res = job::Dependency {
+            envvar: env_var_exec::OUTPUT_PATH.to_string(),
+            outcome: outcome_for_res.clone(),
+        };
+        dependencies.push(dependency_for_res);
         let (tx, rx) = oneshot::channel();
         self.instance_pool_tx
             .send(InstancePoolMessage::Execution {
                 reservation,
+                outcome_id_for_res: outcome_for_res.outcome_id,
                 dependencies,
                 respond_to: tx,
             })

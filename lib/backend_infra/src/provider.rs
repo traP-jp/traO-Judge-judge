@@ -1,11 +1,19 @@
+use std::path::PathBuf;
+
 use async_sqlx_session::MySqlSessionStore;
+use judge_infra_mock::multi_proc_problem_registry::{
+    registry_client::RegistryClient, registry_server::RegistryServer,
+};
 use sqlx::{
     migrate,
     mysql::{MySqlConnectOptions, MySqlPoolOptions},
     MySql, MySqlPool, Pool,
 };
 
-use crate::repository::{editorial::EditorialRepositoryImpl, procedure::ProcedureRepositoryImpl};
+use crate::repository::{
+    dep_name::DepNameRepositoryImpl, editorial::EditorialRepositoryImpl, icon::IconRepositoryImpl,
+    procedure::ProcedureRepositoryImpl,
+};
 
 use super::{
     external::mail::MailClientImpl,
@@ -21,6 +29,7 @@ pub struct Provider {
     pool: MySqlPool,
     session_store: MySqlSessionStore,
     bcrypt_cost: u32,
+    temp_dir: PathBuf,
 }
 
 impl Provider {
@@ -38,10 +47,16 @@ impl Provider {
         migrate!("./migrations").run(&pool).await?;
         session_store.migrate().await?;
 
+        let temp_dir = PathBuf::from("./tempdir");
+        if !temp_dir.exists() {
+            std::fs::create_dir_all(&temp_dir)?;
+        }
+
         Ok(Self {
             pool,
             session_store,
             bcrypt_cost: bcrypt::DEFAULT_COST,
+            temp_dir,
         })
     }
 
@@ -52,10 +67,16 @@ impl Provider {
         migrate!("./migrations").run(&pool).await?;
         session_store.migrate().await?;
 
+        let temp_dir = PathBuf::from("./tempdir");
+        if !temp_dir.exists() {
+            std::fs::create_dir_all(&temp_dir)?;
+        }
+
         Ok(Self {
             pool,
             session_store,
             bcrypt_cost: bcrypt::DEFAULT_COST,
+            temp_dir,
         })
     }
 
@@ -69,6 +90,10 @@ impl Provider {
 
     pub fn provide_user_repository(&self) -> UserRepositoryImpl {
         UserRepositoryImpl::new(self.pool.clone())
+    }
+
+    pub fn provide_icon_repository(&self) -> IconRepositoryImpl {
+        IconRepositoryImpl::new(self.pool.clone())
     }
 
     pub fn provide_submission_repository(&self) -> SubmissionRepositoryImpl {
@@ -91,8 +116,22 @@ impl Provider {
         ProcedureRepositoryImpl::new(self.pool.clone())
     }
 
+    pub fn provide_dep_name_repository(
+        &self,
+    ) -> crate::repository::dep_name::DepNameRepositoryImpl {
+        DepNameRepositoryImpl::new(self.pool.clone())
+    }
+
     pub fn provide_mail_client(&self) -> MailClientImpl {
         MailClientImpl::new().unwrap()
+    }
+
+    pub fn provide_problem_registry_client(&self) -> RegistryClient {
+        RegistryClient::new(self.temp_dir.clone())
+    }
+
+    pub fn provide_problem_registry_server(&self) -> RegistryServer {
+        RegistryServer::new(self.temp_dir.clone())
     }
 }
 

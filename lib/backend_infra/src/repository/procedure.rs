@@ -1,5 +1,6 @@
 use axum::async_trait;
-use domain::{model::procedure::Procedure, repository::procedure::ProcedureRepository};
+use domain::repository::procedure::ProcedureRepository;
+use judge_core::model::procedure::registered::Procedure;
 use sqlx::MySqlPool;
 
 use crate::model::procedure::{ProcedureJson, ProcedureRow};
@@ -28,7 +29,7 @@ impl ProcedureRepository for ProcedureRepositoryImpl {
         Ok(())
     }
 
-    async fn update_precedure(&self, problem_id: i64, procedure: Procedure) -> anyhow::Result<()> {
+    async fn update_procedure(&self, problem_id: i64, procedure: Procedure) -> anyhow::Result<()> {
         let procedure = ProcedureJson::from(procedure);
 
         sqlx::query("UPDATE `procedures` SET `procedure` = ? WHERE `problem_id` = ?")
