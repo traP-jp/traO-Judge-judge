@@ -1,9 +1,8 @@
-use again::RetryPolicy;
 use judge_core::model::job;
 use judge_exec_grpc::generated::{
     execute_service_client::ExecuteServiceClient, Dependency, ExecuteRequest,
 };
-use std::{error::Error, net::Ipv4Addr, os::unix::process::ExitStatusExt, time::Duration};
+use std::{net::Ipv4Addr, os::unix::process::ExitStatusExt};
 use uuid::Uuid;
 
 use crate::jobapi::OutcomeToken;
@@ -22,27 +21,10 @@ pub struct GrpcClientType {
 }
 
 impl GrpcClientType {
-    pub async fn new(instance_ip: Ipv4Addr) -> Self {
-        // 1 秒間隔で 60 回ポーリング
-        let policy = RetryPolicy::fixed(Duration::from_secs(1)).with_max_retries(600);
-        let exec_client = policy
-            .retry_if(
-                || async move {
-                    ExecuteServiceClient::connect(format!("http://{}:{}", instance_ip, 50051)).await
-                },
-                |e: &tonic::transport::Error| {
-                    // ConnectionRefused のときのみリトライ
-                    e.source()
-                        .and_then(|s| s.source())
-                        .and_then(|s| s.source())
-                        .and_then(|s| s.downcast_ref::<std::io::Error>())
-                        .map(|e| e.kind())
-                        .is_some_and(|k| k == std::io::ErrorKind::ConnectionRefused)
-                },
-            )
+    pub async fn try_new(instance_ip: Ipv4Addr) -> Result<Self, tonic::transport::Error> {
+        ExecuteServiceClient::connect(format!("http://{}:{}", instance_ip, 50051))
             .await
-            .unwrap(); // unexpected
-        Self { exec_client }
+            .map(|exec_client| Self { exec_client })
     }
 }
 

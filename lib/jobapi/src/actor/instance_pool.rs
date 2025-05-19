@@ -85,7 +85,11 @@ impl InstancePool {
             self.actual_instance_count += 1;
             let instance_rx = self.instance_rx.clone();
             tokio::spawn(async move {
-                Instance::new(instance_rx).await.run().await;
+                // FIXME: インスタンス生成失敗時に actual_instance_count がずれる，直したとしてインスタンス不足の状態が続き無限ループに陥る
+                let instance = Instance::try_new(instance_rx).await;
+                if let Ok(mut instance) = instance {
+                    instance.run().await;
+                }
             });
         }
         Ok(result)

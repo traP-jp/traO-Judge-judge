@@ -1,3 +1,6 @@
+use std::time::Duration;
+
+use again::RetryPolicy;
 use judge_core::model::job;
 use tokio::sync::oneshot;
 use uuid::Uuid;
@@ -29,18 +32,24 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub async fn new(receiver: async_channel::Receiver<InstanceMessage>) -> Self {
+    pub async fn try_new(
+        receiver: async_channel::Receiver<InstanceMessage>,
+    ) -> anyhow::Result<Self> {
         let instance_id = Uuid::now_v7();
         // warm-up AWS & gRPC client
         let mut aws_client = AwsClientType::new().await;
-        let instance_ip = aws_client.create_instance(instance_id).await.unwrap();
-        let grpc_client = GrpcClientType::new(instance_ip).await;
-        Self {
+        let instance_ip = aws_client.create_instance(instance_id).await?;
+        let grpc_client = RetryPolicy::fixed(Duration::from_secs(1))
+            .with_max_retries(600)
+            .retry(|| GrpcClientType::try_new(instance_ip))
+            .await?;
+        // TODO: 失敗時に try_new 呼び出し前の状態まで戻す (related: https://github.com/traP-jp/traO-Judge-judge/issues/321)
+        Ok(Self {
             instance_id,
             receiver,
             aws_client,
             grpc_client,
-        }
+        })
     }
     pub async fn run(&mut self) {
         while let Ok(msg) = self.receiver.recv().await {
