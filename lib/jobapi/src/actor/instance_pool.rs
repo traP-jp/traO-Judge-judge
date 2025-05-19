@@ -54,7 +54,7 @@ impl InstancePool {
         match msg {
             InstancePoolMessage::Reservation { count, respond_to } => {
                 let result = self.handle_reservation(count).await;
-                respond_to.send(result).unwrap();
+                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Continue
             }
             InstancePoolMessage::Execution {
@@ -66,7 +66,7 @@ impl InstancePool {
                 let result = self
                     .handle_execution(reservation, outcome_id_for_res, dependencies)
                     .await;
-                respond_to.send(result).unwrap();
+                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Continue
             }
         }
