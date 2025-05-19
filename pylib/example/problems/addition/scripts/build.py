@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/bin/env python-traopy-util-v0
+#/bin/bash
 import os
 import asyncio
 from traopy_util.util import v0 as trau # type: ignore[reportMissingModuleSource]
@@ -9,9 +10,13 @@ async def main():
     language_info = trau.get_language_info(language_tag)
     outcome_path = os.environ.get(trau.exec_job_outcome_path_envvar())
     source_path = os.environ.get("BUILD_SOURCE_PATH")
-    tempdir_path = os.environ.get("BUILD_TEMPDIR")
+    tempdir_path = f"{os.environ.get("BUILD_TEMPDIR")}/tempdir"
+    logfile_path = f"{os.environ.get('BUILD_TEMPDIR')}/build.log"
+    os.makedirs(tempdir_path, exist_ok=True)
+    with open(logfile_path, "w") as f:
+        f.write("")
     exec_stats = await trau.exec_with_stats(
-        cmd=language_info.compile,
+        cmd=f"{language_info.compile} 2> {logfile_path}",
         envs={
             trau.build_output_envvar(): f"{outcome_path}/main.out",
             trau.build_source_envvar(): source_path,
@@ -29,12 +34,15 @@ async def main():
         )
     else:
         if exec_stats.exit_code != 0:
+            with open(logfile_path, "r") as f:
+                log_content = f.read()
             json = trau.jsonify_displayable_output(
                 status=trau.JudgeStatus.CE,
                 time_ms=exec_stats.time_ms,
                 memory_kib=exec_stats.memory_kib,
                 score=0,
                 continue_next=False,
+                message=log_content
             )
         else:
             json = trau.jsonify_displayable_output(

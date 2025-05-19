@@ -1,0 +1,1 @@
+"{\"testPhase_case_1\":\"EarlyExit\",\"testPhase_sample_2\":\"EarlyExit\",\"summaryPhase\":\"EarlyExit\",\"testPhase_case_2\":\"EarlyExit\",\"testPhase_case_3\":\"EarlyExit\",\"compilePhase\":{\"ExecutionResult\":{\"Displayable\":{\"status\":\"CE\",\"time\":6.0,\"memory\":21076.0,\"score\":0,\"message\":null,\"continue_status\":\"Stop\"}}},\"testPhase_sample_1\":\"EarlyExit\"}"

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/bin/env python-traopy-util-v0
 from traopy_util.util import v0 as trau # type: ignore[reportMissingModuleSource]
 from traopy_util.util import common as trau_common # type: ignore[reportMissingModuleSource]
 import asyncio
@@ -18,6 +18,7 @@ async def main():
     language_info = trau.get_language_info(language_tag)
     command = f"sudo -u participant {language_info.run} < {input_file_path} > {output_file_path}"
 
+    subprocess.run(["bash", "-c", "readlink /bin/coreutils 1>&2"], check=True)
     subprocess.run(["useradd", "participant"], check=True)
     subprocess.run(["chmod", "777", f"{build_output_path}/main.out"], check=True)
     subprocess.run(["chmod", "777", source_path], check=True)

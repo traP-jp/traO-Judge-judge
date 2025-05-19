@@ -102,7 +102,8 @@ impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient>
         let config = Config {
             image: Some(self.container_image_name.as_str()),
             env: Some(envvars_vec.iter().map(|x| x.as_str()).collect()),
-            cmd: Some(vec!["/bin/sh", "-c", cmd_inner.as_str()]),
+            entrypoint: Some(vec![]),
+            cmd: Some(vec!["/bin/bash", "-c", cmd_inner.as_str()]),
             host_config: Some(HostConfig {
                 binds: Some(vec![format!(
                     "{}:{}",
@@ -128,7 +129,7 @@ impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient>
             .start_container(&container.id, None::<StartContainerOptions<String>>)
             .await
             .map_err(|e| ExecutionError::InternalError(e.to_string()))?;
-        let wait = docker
+        let wait: bollard::secret::ContainerWaitResponse = docker
             .wait_container(&container_name, None::<WaitContainerOptions<String>>)
             .next()
             .await
@@ -143,6 +144,8 @@ impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient>
             .map_err(|e| ExecutionError::InternalError(e.to_string()))?;
         let stdout = stdout_string.into_bytes();
         let stderr = stderr_string.into_bytes();
+        println!("stdout: {}", String::from_utf8_lossy(&stdout));
+        println!("stderr: {}", String::from_utf8_lossy(&stderr));
         let output = Output {
             status: std::process::ExitStatus::from_raw(exit_code as i32),
             //            status: std::process::ExitStatus::from_raw(0),

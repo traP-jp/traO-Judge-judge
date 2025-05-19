@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/bin/env python-traopy-util-v0
 from traopy_util.util import v0 as trau # type: ignore[reportMissingModuleSource]
 from traopy_util.util import common as trau_common # type: ignore[reportMissingModuleSource]
 import os
