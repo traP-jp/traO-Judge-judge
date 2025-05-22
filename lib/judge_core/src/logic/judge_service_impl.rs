@@ -14,10 +14,10 @@ pub struct JudgeServiceImpl<
 }
 
 impl<
-        RToken: Send + Sync + 'static,
-        OToken: Clone + Send + Sync + 'static,
-        JobApi: job::JobApi<RToken, OToken>,
-    > JudgeServiceImpl<RToken, OToken, JobApi>
+    RToken: Send + Sync + 'static,
+    OToken: Clone + Send + Sync + 'static,
+    JobApi: job::JobApi<RToken, OToken>,
+> JudgeServiceImpl<RToken, OToken, JobApi>
 {
     pub fn new(job_api: JobApi) -> Self {
         Self {
@@ -28,10 +28,10 @@ impl<
 }
 
 impl<
-        RToken: Send + Sync + 'static,
-        OToken: Clone + Send + Sync + 'static,
-        JobApi: job::JobApi<RToken, OToken>,
-    > Clone for JudgeServiceImpl<RToken, OToken, JobApi>
+    RToken: Send + Sync + 'static,
+    OToken: Clone + Send + Sync + 'static,
+    JobApi: job::JobApi<RToken, OToken>,
+> Clone for JudgeServiceImpl<RToken, OToken, JobApi>
 {
     fn clone(&self) -> Self {
         Self {
@@ -43,10 +43,10 @@ impl<
 
 #[axum::async_trait]
 impl<
-        RToken: Send + Sync + 'static,
-        OToken: Clone + Send + Sync + 'static,
-        JobApi: job::JobApi<RToken, OToken>,
-    > judge::JudgeService for JudgeServiceImpl<RToken, OToken, JobApi>
+    RToken: Send + Sync + 'static,
+    OToken: Clone + Send + Sync + 'static,
+    JobApi: job::JobApi<RToken, OToken>,
+> judge::JudgeService for JudgeServiceImpl<RToken, OToken, JobApi>
 {
     async fn judge(&self, judge_request: judge::JudgeRequest) -> judge::JudgeResponse {
         let (runtime_procedure, identifier_map) = registered_procedure_converter::convert(

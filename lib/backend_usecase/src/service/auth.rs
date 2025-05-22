@@ -211,7 +211,9 @@ mod signup_request_tests {
     use rstest::*;
     #[fixture]
     fn setup_env() -> () {
-        std::env::set_var("JWT_SECRET_KEY", "secret_test");
+        unsafe {
+            std::env::set_var("JWT_SECRET_KEY", "secret_test");
+        }
     }
 
     #[rstest]
@@ -280,7 +282,9 @@ mod signup_tests {
     use uuid::Uuid;
     #[fixture]
     fn setup_env() -> () {
-        std::env::set_var("JWT_SECRET_KEY", "secret_test");
+        unsafe {
+            std::env::set_var("JWT_SECRET_KEY", "secret_test");
+        }
     }
 
     fn create_signup_data(user_name: &str, password: &str, email: &str) -> SignUpData {
@@ -554,7 +558,9 @@ mod reset_password_request_tests {
     use rstest::*;
     #[fixture]
     fn setup_env() -> () {
-        std::env::set_var("JWT_SECRET_KEY", "secret_test");
+        unsafe {
+            std::env::set_var("JWT_SECRET_KEY", "secret_test");
+        }
     }
 
     #[rstest]
@@ -623,7 +629,9 @@ mod reset_password_tests {
     use uuid::Uuid;
     #[fixture]
     fn setup_env() -> () {
-        std::env::set_var("JWT_SECRET_KEY", "secret_test");
+        unsafe {
+            std::env::set_var("JWT_SECRET_KEY", "secret_test");
+        }
     }
 
     fn create_reset_password_data(email: &str, password: &str) -> ResetPasswordData {

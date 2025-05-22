@@ -1,4 +1,4 @@
-use sqlx::{prelude::FromRow, Decode, Encode, MySql, Type};
+use sqlx::{Decode, Encode, MySql, Type, prelude::FromRow};
 use uuid::Uuid;
 
 #[derive(Debug, FromRow, Clone, Copy, PartialEq, Eq, Hash)]

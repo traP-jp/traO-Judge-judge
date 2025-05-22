@@ -1,9 +1,9 @@
 use super::tokens::{OutcomeToken, RegistrationToken};
 use bollard::container::StartContainerOptions;
 use bollard::{
+    Docker,
     container::{Config, CreateContainerOptions, WaitContainerOptions},
     service::{HostConfig, Mount},
-    Docker,
 };
 use futures::StreamExt;
 use judge_core::constant::env_var_exec;

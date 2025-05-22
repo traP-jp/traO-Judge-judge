@@ -1,8 +1,8 @@
 use axum::async_trait;
 use lettre::{
-    message::{header, Mailbox, SinglePart},
-    transport::smtp::authentication::Credentials,
     Address, Message, SmtpTransport, Transport,
+    message::{Mailbox, SinglePart, header},
+    transport::smtp::authentication::Credentials,
 };
 
 use domain::external::mail::MailClient;

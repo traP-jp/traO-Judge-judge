@@ -8,7 +8,7 @@ use domain::{
 use judge_core::{
     constant::job_name::v0_features::{testcase_expected_name, testcase_input_name},
     logic::{
-        problem_presets::normal_judge::{create_normal_judge_procedure, NormalJudgeTestcase},
+        problem_presets::normal_judge::{NormalJudgeTestcase, create_normal_judge_procedure},
         writer_schema_registerer::register,
     },
     model::{
@@ -42,14 +42,14 @@ pub struct TestcaseService<
 }
 
 impl<
-        PR: ProblemRepository,
-        SR: SessionRepository,
-        TR: TestcaseRepository,
-        PcR: ProcedureRepository,
-        RPC: ProblemRegistryClient,
-        PRS: ProblemRegistryServer,
-        DNR: DepNameRepository<i64>,
-    > TestcaseService<PR, SR, TR, PcR, RPC, PRS, DNR>
+    PR: ProblemRepository,
+    SR: SessionRepository,
+    TR: TestcaseRepository,
+    PcR: ProcedureRepository,
+    RPC: ProblemRegistryClient,
+    PRS: ProblemRegistryServer,
+    DNR: DepNameRepository<i64>,
+> TestcaseService<PR, SR, TR, PcR, RPC, PRS, DNR>
 {
     pub fn new(
         problem_repository: PR,
@@ -81,14 +81,14 @@ pub enum TestcaseError {
 }
 
 impl<
-        PR: ProblemRepository,
-        SR: SessionRepository,
-        TR: TestcaseRepository,
-        PcR: ProcedureRepository,
-        RPC: ProblemRegistryClient,
-        PRS: ProblemRegistryServer,
-        DNR: DepNameRepository<i64>,
-    > TestcaseService<PR, SR, TR, PcR, RPC, PRS, DNR>
+    PR: ProblemRepository,
+    SR: SessionRepository,
+    TR: TestcaseRepository,
+    PcR: ProcedureRepository,
+    RPC: ProblemRegistryClient,
+    PRS: ProblemRegistryServer,
+    DNR: DepNameRepository<i64>,
+> TestcaseService<PR, SR, TR, PcR, RPC, PRS, DNR>
 {
     pub async fn get_testcases(
         &self,

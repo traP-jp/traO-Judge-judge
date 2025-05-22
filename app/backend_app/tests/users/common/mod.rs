@@ -1,6 +1,6 @@
 use axum::{
     body::Body,
-    http::{request, Request},
+    http::{Request, request},
 };
 
 pub mod check;
