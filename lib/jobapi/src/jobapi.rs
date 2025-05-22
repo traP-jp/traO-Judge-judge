@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use flate2::{write::GzEncoder, Compression};
+use flate2::{Compression, write::GzEncoder};
 use judge_core::{constant::env_var_exec, model::job};
 use tokio::{
     io::AsyncWriteExt,

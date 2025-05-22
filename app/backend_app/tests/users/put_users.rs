@@ -11,7 +11,7 @@ use domain::repository::session::SessionRepository;
 use domain::repository::user::UserRepository;
 use http_body_util::BodyExt;
 use infra::provider::Provider;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tower::ServiceExt;
 
 #[ignore]

@@ -3,8 +3,8 @@ use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
 
 use crate::actor::{
-    instance::{Instance, InstanceMessage},
     Running,
+    instance::{Instance, InstanceMessage},
 };
 use crate::jobapi::{OutcomeToken, ReservationToken};
 

@@ -82,7 +82,7 @@ fn dfs(
 
 #[cfg(test)]
 mod tests {
-    use super::{has_cycle, Edge};
+    use super::{Edge, has_cycle};
     use rstest::rstest;
     #[rstest]
 

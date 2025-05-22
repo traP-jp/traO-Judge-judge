@@ -48,12 +48,14 @@ fn test_password_validate() {
     assert!(rule.validate("Aa12345678_").is_err());
     assert!(rule.validate("Aa12345678-").is_err());
 
-    assert!(rule
-        .validate("AaBb123456789012345678901234567890123456789012345678901234567890")
-        .is_ok());
-    assert!(rule
-        .validate("AaBb1234567890123456789012345678901234567890123456789012345678901")
-        .is_err());
+    assert!(
+        rule.validate("AaBb123456789012345678901234567890123456789012345678901234567890")
+            .is_ok()
+    );
+    assert!(
+        rule.validate("AaBb1234567890123456789012345678901234567890123456789012345678901")
+            .is_err()
+    );
 }
 
 #[test]
@@ -116,7 +118,8 @@ fn test_github_link_validate() {
     assert!(rule.validate("https://github.com/01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567").is_ok());
     assert!(rule.validate("https://github.com/012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678").is_err());
 
-    assert!(rule
-        .validate("https://github.com/a/a/projects?query=is%3Aopen")
-        .is_err());
+    assert!(
+        rule.validate("https://github.com/a/a/projects?query=is%3Aopen")
+            .is_err()
+    );
 }
