@@ -81,6 +81,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
             .bind(query.statement)
             .bind(query.is_public)
             .bind(query.id)
+            .bind("解説".to_string())
             .execute(&self.pool)
             .await?;
 
