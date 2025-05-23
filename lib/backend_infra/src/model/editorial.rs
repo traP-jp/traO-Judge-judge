@@ -11,6 +11,7 @@ pub struct EditorialRow {
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
     pub is_public: bool,
+    pub title: String,
 }
 
 impl From<EditorialRow> for Editorial {
@@ -35,6 +36,7 @@ pub struct EditorialSummaryRow {
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
     pub is_public: bool,
+    pub title: String,
 }
 
 impl From<EditorialSummaryRow> for EditorialSummary {
