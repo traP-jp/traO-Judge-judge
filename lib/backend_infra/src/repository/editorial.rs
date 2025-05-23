@@ -77,11 +77,11 @@ impl EditorialRepository for EditorialRepositoryImpl {
     }
 
     async fn update_editorial(&self, query: UpdateEditorial) -> anyhow::Result<()> {
-        sqlx::query("UPDATE editorials SET statement = ?, is_public = ? WHERE id = ?")
+        sqlx::query("UPDATE editorials SET statement = ?, is_public = ? , title = ? WHERE id = ?")
             .bind(query.statement)
             .bind(query.is_public)
-            .bind(query.id)
             .bind("解説".to_string())
+            .bind(query.id)
             .execute(&self.pool)
             .await?;
 
