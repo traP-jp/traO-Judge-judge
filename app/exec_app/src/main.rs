@@ -1,11 +1,11 @@
 use anyhow::Context as _;
+use bollard::Docker;
 use bollard::container::{
     Config, CreateContainerOptions, DownloadFromContainerOptions, ListContainersOptions, LogOutput,
     RemoveContainerOptions, StartContainerOptions, UploadToContainerOptions,
 };
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::models::{HostConfig, Mount, MountTypeEnum};
-use bollard::Docker;
 use bytes::Bytes;
 use flate2::read::GzDecoder;
 use judge_core::constant::env_var_exec::{OUTPUT_PATH, SCRIPT_PATH};
@@ -22,7 +22,7 @@ use tar::Archive;
 use tokio::time::timeout;
 use tonic::async_trait;
 use tonic::codegen::tokio_stream::StreamExt;
-use tonic::{transport::Server, Request, Response, Status};
+use tonic::{Request, Response, Status, transport::Server};
 
 pub struct ExecApp {
     docker_api: Docker,
@@ -103,7 +103,7 @@ impl ExecApp {
             .collect();
         // TODO: TRAOJUDGE_LANGUAGES_JSONはコンテナイメージ内に配置されているべき
         env_vars.append(&mut vec![
-            "TRAOJUDGE_LANGUAGES_JSON=/languages.json".to_string()
+            "TRAOJUDGE_LANGUAGES_JSON=/languages.json".to_string(),
         ]);
         tracing::info!("env_vars: {:?}", env_vars);
         let create_container_response = self

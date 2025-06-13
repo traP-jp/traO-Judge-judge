@@ -2,15 +2,20 @@ use infra::{
     external::mail::MailClientImpl,
     provider::Provider,
     repository::{
-        auth::AuthRepositoryImpl, editorial::EditorialRepositoryImpl, icon::IconRepositoryImpl,
-        problem::ProblemRepositoryImpl, session::SessionRepositoryImpl,
-        submission::SubmissionRepositoryImpl, testcase::TestcaseRepositoryImpl,
-        user::UserRepositoryImpl,
+        auth::AuthRepositoryImpl, dep_name::DepNameRepositoryImpl,
+        editorial::EditorialRepositoryImpl, icon::IconRepositoryImpl,
+        problem::ProblemRepositoryImpl, procedure::ProcedureRepositoryImpl,
+        session::SessionRepositoryImpl, submission::SubmissionRepositoryImpl,
+        testcase::TestcaseRepositoryImpl, user::UserRepositoryImpl,
     },
+};
+use judge_infra_mock::multi_proc_problem_registry::{
+    registry_client::RegistryClient, registry_server::RegistryServer,
 };
 use usecase::service::{
     auth::AuthenticationService, editorial::EditorialService, icon::IconService,
-    problem::ProblemService, submission::SubmissionService, user::UserService,
+    problem::ProblemService, submission::SubmissionService, testcase::TestcaseService,
+    user::UserService,
 };
 
 #[derive(Clone)]
@@ -41,6 +46,15 @@ pub struct DiContainer {
         SubmissionService<SessionRepositoryImpl, SubmissionRepositoryImpl, ProblemRepositoryImpl>,
     editorial_service:
         EditorialService<SessionRepositoryImpl, EditorialRepositoryImpl, ProblemRepositoryImpl>,
+    testcase_service: TestcaseService<
+        ProblemRepositoryImpl,
+        SessionRepositoryImpl,
+        TestcaseRepositoryImpl,
+        ProcedureRepositoryImpl,
+        RegistryClient, // mock
+        RegistryServer, // mock
+        DepNameRepositoryImpl,
+    >,
 }
 
 impl DiContainer {
@@ -77,6 +91,15 @@ impl DiContainer {
                 provider.provide_session_repository(),
                 provider.provide_editorial_repository(),
                 provider.provide_problem_repository(),
+            ),
+            testcase_service: TestcaseService::new(
+                provider.provide_problem_repository(),
+                provider.provide_session_repository(),
+                provider.provide_testcase_repository(),
+                provider.provide_procedure_repository(),
+                provider.provide_problem_registry_client(),
+                provider.provide_problem_registry_server(),
+                provider.provide_dep_name_repository(),
             ),
         }
     }
@@ -133,5 +156,19 @@ impl DiContainer {
     ) -> &EditorialService<SessionRepositoryImpl, EditorialRepositoryImpl, ProblemRepositoryImpl>
     {
         &self.editorial_service
+    }
+
+    pub fn testcase_service(
+        &self,
+    ) -> &TestcaseService<
+        ProblemRepositoryImpl,
+        SessionRepositoryImpl,
+        TestcaseRepositoryImpl,
+        ProcedureRepositoryImpl,
+        RegistryClient, // mock
+        RegistryServer, // mock
+        DepNameRepositoryImpl,
+    > {
+        &self.testcase_service
     }
 }

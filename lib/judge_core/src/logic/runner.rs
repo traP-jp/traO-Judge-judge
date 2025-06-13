@@ -17,10 +17,10 @@ pub struct Runner<
 }
 
 impl<
-        ReservationToken: Send + Sync + 'static,
-        OutcomeToken: Clone + Send + Sync + 'static,
-        JobApiType: job::JobApi<ReservationToken, OutcomeToken>,
-    > Runner<ReservationToken, OutcomeToken, JobApiType>
+    ReservationToken: Send + Sync + 'static,
+    OutcomeToken: Clone + Send + Sync + 'static,
+    JobApiType: job::JobApi<ReservationToken, OutcomeToken>,
+> Runner<ReservationToken, OutcomeToken, JobApiType>
 {
     pub async fn new(job_api: JobApiType, procedure: runtime::Procedure) -> anyhow::Result<Self> {
         let file_confs = Self::create_file_confs(&procedure);

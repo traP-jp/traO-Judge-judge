@@ -1,0 +1,35 @@
+{
+    "name": "traO-Judge Dev Container",
+    "dockerComposeFile": "compose.yaml",
+    "service": "devcontainer",
+    "workspaceFolder": "/workspace",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                // Rust
+                "rust-lang.rust-analyzer",
+                "dustypomerleau.rust-syntax",
+                "fill-labs.dependi",
+                "cordx56.rustowl-vscode",
+                // Nix
+                "jnoortheen.nix-ide",
+                "bbenoist.nix",
+                // Python
+                "charliermarsh.ruff",
+                "astral-sh.ty",
+                // Other languages
+                "tamasfe.even-better-toml",
+                "ms-azuretools.vscode-docker",
+                // Grossaries
+                "github.copilot",
+                "github.copilot-chat",
+                "mosapride.zenkaku",
+                "ms-ceintl.vscode-language-pack-ja",
+                "postman.postman-for-vscode",
+                "pixl-garden.bongocat",
+                "wayou.vscode-todo-highlight",
+                "seatonjiang.gitmoji-vscode"
+            ]
+        }
+    }
+}

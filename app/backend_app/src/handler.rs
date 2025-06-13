@@ -1,7 +1,7 @@
 use crate::di::DiContainer;
 use axum::{
-    routing::{get, post, put},
     Router,
+    routing::{get, post, put},
 };
 
 pub mod auth;
@@ -9,6 +9,7 @@ pub mod editorial;
 pub mod icon;
 pub mod problems;
 pub mod submissions;
+pub mod testcase;
 pub mod users;
 
 pub fn make_router(di_container: DiContainer) -> Router {
@@ -47,6 +48,10 @@ pub fn make_router(di_container: DiContainer) -> Router {
         .route(
             "/:problemId/editorials",
             get(editorial::get_editorials).post(editorial::post_editorial),
+        )
+        .route(
+            "/:problemId/testcases",
+            get(testcase::get_testcases).post(testcase::post_testcase),
         );
 
     let editorials_router = Router::new().route(
@@ -54,6 +59,13 @@ pub fn make_router(di_container: DiContainer) -> Router {
         get(editorial::get_editorial)
             .put(editorial::put_editorial)
             .delete(editorial::delete_editorial),
+    );
+
+    let testcases_router = Router::new().route(
+        "/:testcaseId",
+        get(testcase::get_testcase)
+            .put(testcase::put_testcase)
+            .delete(testcase::delete_testcase),
     );
 
     let icon_router = Router::new().route("/:iconId", get(icon::get_icon));
@@ -64,6 +76,7 @@ pub fn make_router(di_container: DiContainer) -> Router {
         .nest("/submissions", submission_router)
         .nest("/problems", problem_router)
         .nest("/editorials", editorials_router)
+        .nest("/testcases", testcases_router)
         .nest("/icons", icon_router)
         .with_state(di_container)
 }

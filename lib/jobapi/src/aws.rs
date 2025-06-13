@@ -1,12 +1,12 @@
-use anyhow::{ensure, Context};
+use anyhow::{Context, ensure};
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_ec2::types::{BlockDeviceMapping, EbsBlockDevice, VolumeType};
 use aws_sdk_ec2::{
-    types::{IamInstanceProfileSpecification, InstanceType, Placement},
     Client as Ec2Client,
+    types::{IamInstanceProfileSpecification, InstanceType, Placement},
 };
 use aws_sdk_s3::Client as S3Client;
-use base64::{prelude::BASE64_STANDARD, Engine};
+use base64::{Engine, prelude::BASE64_STANDARD};
 use std::{collections::HashMap, env, net::Ipv4Addr, str::FromStr};
 use uuid::Uuid;
 

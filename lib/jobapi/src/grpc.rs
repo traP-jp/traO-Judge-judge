@@ -1,7 +1,7 @@
 use again::RetryPolicy;
 use judge_core::model::job;
 use judge_exec_grpc::generated::{
-    execute_service_client::ExecuteServiceClient, Dependency, ExecuteRequest,
+    Dependency, ExecuteRequest, execute_service_client::ExecuteServiceClient,
 };
 use std::{error::Error, net::Ipv4Addr, os::unix::process::ExitStatusExt, time::Duration};
 use uuid::Uuid;

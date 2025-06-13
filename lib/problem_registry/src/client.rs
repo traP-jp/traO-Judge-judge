@@ -1,6 +1,6 @@
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_s3::error::SdkError;
 use aws_sdk_s3::Client as S3Client;
+use aws_sdk_s3::error::SdkError;
 use judge_core::model::problem_registry;
 use std::env;
 
