@@ -7,8 +7,8 @@ use uuid::Uuid;
 use crate::jobapi::{OutcomeToken, ReservationToken};
 use crate::{
     actor::{
-        instance::{Instance, InstanceMessage},
         Running,
+        instance::{Instance, InstanceMessage},
     },
     model::{aws::AwsClient, grpc::GrpcClient},
 };

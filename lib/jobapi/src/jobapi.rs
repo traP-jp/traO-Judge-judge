@@ -1,6 +1,6 @@
 use std::{future::Future, net::Ipv4Addr, path::PathBuf, sync::Arc};
 
-use flate2::{write::GzEncoder, Compression};
+use flate2::{Compression, write::GzEncoder};
 use judge_core::{
     constant::env_var_exec,
     model::{job, problem_registry::ProblemRegistryClient},
