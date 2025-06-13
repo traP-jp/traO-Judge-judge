@@ -59,7 +59,7 @@ impl<P: ProblemRegistryClient> FileFactory<P> {
                 respond_to,
             } => {
                 let result = self.handle_file_placement(file_conf).await;
-                respond_to.send(result).unwrap();
+                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Continue
             }
         }

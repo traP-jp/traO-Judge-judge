@@ -135,19 +135,16 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
         count: usize,
     ) -> Result<Vec<ReservationToken>, job::ReservationError> {
         let (tx, rx) = oneshot::channel();
-        self.inner
+        let _ = self
+            .inner
             .instance_pool_tx
             .send(InstancePoolMessage::Reservation {
                 count,
                 respond_to: tx,
-            })
-            .map_err(|e| {
-                tracing::error!("Failed to send InstancePoolMessage::Reservation: {e}");
-                job::ReservationError::ReserveFailed(format!("SendError: {e}"))
-            })?;
+            }); // if this send fails, so does the recv.await below
         rx.await.map_err(|e| {
-            tracing::error!("Failed to recv response of InstancePoolMessage::Reservation: {e}");
-            job::ReservationError::ReserveFailed(format!("RecvError: {e}"))
+            tracing::error!("InstancePool task has been killed: {e}");
+            job::ReservationError::ReserveFailed(format!("InstancePool task has been killed: {e}"))
         })?
     }
 
@@ -168,21 +165,18 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
         };
         dependencies.push(dependency_for_res);
         let (tx, rx) = oneshot::channel();
-        self.inner
+        let _ = self
+            .inner
             .instance_pool_tx
             .send(InstancePoolMessage::Execution {
                 reservation,
                 outcome_id_for_res: outcome_for_res.outcome_id,
                 dependencies,
                 respond_to: tx,
-            })
-            .map_err(|e| {
-                tracing::error!("Failed to send InstancePoolMessage::Execution: {e}");
-                job::ExecutionError::InternalError(format!("SendError: {e}"))
-            })?;
+            }); // if this send fails, so does the recv.await below
         rx.await.map_err(|e| {
-            tracing::error!("Failed to recv response of InstancePoolMessage::Execution: {e}");
-            job::ExecutionError::InternalError(format!("RecvError: {e}"))
+            tracing::error!("InstancePool task has been killed: {e}");
+            job::ExecutionError::InternalError(format!("InstancePool task has been killed: {e}"))
         })?
     }
 
@@ -191,19 +185,16 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
         file_conf: job::FileConf,
     ) -> Result<OutcomeToken, job::FilePlacementError> {
         let (tx, rx) = oneshot::channel();
-        self.inner
+        let _ = self
+            .inner
             .file_factory_tx
             .send(FileFactoryMessage::FilePlacement {
                 file_conf,
                 respond_to: tx,
-            })
-            .map_err(|e| {
-                tracing::error!("Failed to send FileFactoryMessage::FilePlacement: {e}");
-                job::FilePlacementError::PlaceFailed(format!("SendError: {e}"))
-            })?;
+            }); // if this send fails, so does the recv.await below
         rx.await.map_err(|e| {
-            tracing::error!("Failed to recv response of FileFactoryMessage::FilePlacement: {e}");
-            job::FilePlacementError::PlaceFailed(format!("RecvError: {e}"))
+            tracing::error!("FileFactory task has been killed: {e}");
+            job::FilePlacementError::PlaceFailed(format!("FileFactory task has been killed: {e}"))
         })?
     }
 }

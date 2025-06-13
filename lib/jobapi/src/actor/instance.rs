@@ -73,12 +73,12 @@ impl<A: AwsClient, G: GrpcClient> Instance<A, G> {
                     .grpc_client
                     .execute(outcome_id_for_res, dependencies)
                     .await;
-                respond_to.send(result).unwrap();
+                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Continue
             }
             InstanceMessage::Terminate { respond_to } => {
                 let result = self.aws_client.terminate_instance(self.instance_id).await;
-                respond_to.send(result).unwrap();
+                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Stop
             }
         }

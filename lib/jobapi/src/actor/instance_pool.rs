@@ -75,7 +75,7 @@ where
         match msg {
             InstancePoolMessage::Reservation { count, respond_to } => {
                 let result = self.handle_reservation(count).await;
-                respond_to.send(result).unwrap();
+                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Continue
             }
             InstancePoolMessage::Execution {
@@ -87,7 +87,7 @@ where
                 let result = self
                     .handle_execution(reservation, outcome_id_for_res, dependencies)
                     .await;
-                respond_to.send(result).unwrap();
+                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Continue
             }
         }
@@ -123,20 +123,17 @@ where
         dependencies: Vec<job::Dependency<OutcomeToken>>,
     ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError> {
         let (tx, rx) = oneshot::channel();
-        self.instance_tx
+        let _ = self
+            .instance_tx
             .send(InstanceMessage::Execution {
                 outcome_id_for_res,
                 dependencies,
                 respond_to: tx,
             })
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to send InstanceMessage::Execution: {e}");
-                job::ExecutionError::InternalError(format!("SendError: {e}"))
-            })?;
+            .await; // if this send fails, so does the recv.await below
         let result = rx.await.map_err(|e| {
-            tracing::error!("Failed to recv response of InstanceMessage::Execution: {e}");
-            job::ExecutionError::InternalError(format!("RecvError: {e}"))
+            tracing::error!("Instance task has been killed: {e}");
+            job::ExecutionError::InternalError(format!("Instance task has been killed: {e}"))
         })?;
 
         drop(reservation);
@@ -144,17 +141,16 @@ where
         while self.actual_instance_count > self.desired_instance_count() {
             self.actual_instance_count -= 1;
             let (tx, rx) = oneshot::channel();
-            self.instance_tx
+            let _ = self
+                .instance_tx
                 .send(InstanceMessage::Terminate { respond_to: tx })
-                .await
-                .map_err(|e| {
-                    tracing::error!("Failed to send InstanceMessage::Terminate: {e}");
-                    job::ExecutionError::InternalError(format!("SendError: {e}"))
-                })?;
+                .await; // if this send fails, so does the recv.await below
             rx.await
                 .map_err(|e| {
-                    tracing::error!("Failed to recv response of InstanceMessage::Terminate: {e}");
-                    job::ExecutionError::InternalError(format!("RecvError: {e}"))
+                    tracing::error!("Instance task has been killed: {e}");
+                    job::ExecutionError::InternalError(format!(
+                        "Instance task has been killed: {e}"
+                    ))
                 })?
                 .map_err(|e| {
                     tracing::error!("Something went wrong on AWS client: {e}");
