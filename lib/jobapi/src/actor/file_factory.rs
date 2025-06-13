@@ -1,6 +1,7 @@
+use std::future::Future;
+
 use judge_core::model::job;
-use judge_core::model::problem_registry::ProblemRegistryClient as _;
-use problem_registry::client::ProblemRegistryClient;
+use judge_core::model::problem_registry::ProblemRegistryClient;
 use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
 
@@ -14,13 +15,20 @@ pub enum FileFactoryMessage {
     },
 }
 
-pub struct FileFactory {
+pub struct FileFactory<P> {
     receiver: mpsc::UnboundedReceiver<FileFactoryMessage>,
-    problem_registry_client: ProblemRegistryClient,
+    problem_registry_client: P,
 }
 
-impl FileFactory {
-    pub async fn new(receiver: mpsc::UnboundedReceiver<FileFactoryMessage>) -> Self {
+impl<P: ProblemRegistryClient> FileFactory<P> {
+    pub async fn new<PFut, PF>(
+        receiver: mpsc::UnboundedReceiver<FileFactoryMessage>,
+        problem_registry_client_factory: PF,
+    ) -> Self
+    where
+        PFut: Future<Output = P>,
+        PF: Fn() -> PFut,
+    {
         // create outcomes folder
         if let Err(e) = tokio::fs::create_dir("outcomes").await {
             match e.kind() {
@@ -29,7 +37,7 @@ impl FileFactory {
             }
         }
         // warm-up ProblemRegistry client
-        let problem_registry_client = ProblemRegistryClient::new().await;
+        let problem_registry_client = problem_registry_client_factory().await;
         Self {
             receiver,
             problem_registry_client,
