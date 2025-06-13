@@ -1,45 +1,71 @@
-use std::path::PathBuf;
+use std::{future::Future, net::Ipv4Addr, path::PathBuf, sync::Arc};
 
 use flate2::{write::GzEncoder, Compression};
-use judge_core::{constant::env_var_exec, model::job};
+use judge_core::{
+    constant::env_var_exec,
+    model::{job, problem_registry::ProblemRegistryClient},
+};
 use tokio::{
     io::AsyncWriteExt,
     sync::{mpsc, oneshot},
 };
 use uuid::Uuid;
 
-use crate::actor::{
-    file_factory::{FileFactory, FileFactoryMessage},
-    instance_pool::{InstancePool, InstancePoolMessage},
+use crate::{
+    actor::{
+        file_factory::{FileFactory, FileFactoryMessage},
+        instance_pool::{InstancePool, InstancePoolMessage},
+    },
+    model::{aws::AwsClient, grpc::GrpcClient},
 };
 
+#[derive(Clone)]
 pub struct JobApi {
+    inner: Arc<JobApiInner>,
+}
+
+struct JobApiInner {
     instance_pool_tx: mpsc::UnboundedSender<InstancePoolMessage>,
     file_factory_tx: mpsc::UnboundedSender<FileFactoryMessage>,
 }
 
 impl JobApi {
-    pub fn new() -> Self {
+    pub fn new<A, G, P, AFut, GFut, PFut, AF, GF, PF>(
+        aws_client_factory: AF,
+        grpc_client_factory: GF,
+        problem_registry_client_factory: PF,
+    ) -> Self
+    where
+        A: AwsClient + Send,
+        G: GrpcClient + Send,
+        P: ProblemRegistryClient + Send,
+        AFut: Future<Output = A> + Send,
+        GFut: Future<Output = G> + Send,
+        PFut: Future<Output = P> + Send,
+        AF: Fn() -> AFut + Send + Sync + Clone + 'static,
+        GF: Fn(Ipv4Addr) -> GFut + Send + Sync + Clone + 'static,
+        PF: Fn() -> PFut + Send + Sync + Clone + 'static,
+    {
         let (instance_pool_tx, instance_pool_rx) = mpsc::unbounded_channel();
-        // TODO: join
         tokio::spawn(async move {
-            InstancePool::new(instance_pool_rx).await.run().await;
+            InstancePool::new(instance_pool_rx, aws_client_factory, grpc_client_factory)
+                .await
+                .run()
+                .await;
         });
         let (file_factory_tx, file_factory_rx) = mpsc::unbounded_channel();
-        // TODO: join
         tokio::spawn(async move {
-            FileFactory::new(file_factory_rx).await.run().await;
+            FileFactory::new(file_factory_rx, problem_registry_client_factory)
+                .await
+                .run()
+                .await;
         });
         Self {
-            instance_pool_tx,
-            file_factory_tx,
+            inner: Arc::new(JobApiInner {
+                instance_pool_tx,
+                file_factory_tx,
+            }),
         }
-    }
-}
-
-impl Clone for JobApi {
-    fn clone(&self) -> Self {
-        JobApi::new()
     }
 }
 
@@ -109,7 +135,8 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
         count: usize,
     ) -> Result<Vec<ReservationToken>, job::ReservationError> {
         let (tx, rx) = oneshot::channel();
-        self.instance_pool_tx
+        self.inner
+            .instance_pool_tx
             .send(InstancePoolMessage::Reservation {
                 count,
                 respond_to: tx,
@@ -141,7 +168,8 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
         };
         dependencies.push(dependency_for_res);
         let (tx, rx) = oneshot::channel();
-        self.instance_pool_tx
+        self.inner
+            .instance_pool_tx
             .send(InstancePoolMessage::Execution {
                 reservation,
                 outcome_id_for_res: outcome_for_res.outcome_id,
@@ -163,7 +191,8 @@ impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
         file_conf: job::FileConf,
     ) -> Result<OutcomeToken, job::FilePlacementError> {
         let (tx, rx) = oneshot::channel();
-        self.file_factory_tx
+        self.inner
+            .file_factory_tx
             .send(FileFactoryMessage::FilePlacement {
                 file_conf,
                 respond_to: tx,
