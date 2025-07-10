@@ -48,7 +48,7 @@ impl From<EditorialSummaryRow> for EditorialSummary {
             id: val.id,
             problem_id: val.problem_id,
             author_id: val.author_id,
-            title: val.tutle,
+            title: val.title,
             created_at: val.created_at,
             updated_at: val.updated_at,
             is_public: val.is_public,
