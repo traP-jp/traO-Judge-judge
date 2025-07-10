@@ -49,7 +49,7 @@ impl<SeR: SessionRepository, SuR: SubmissionRepository, PR: ProblemRepository>
 {
     pub async fn get_submission(
         &self,
-        session_id: Option<String>,
+        session_id: Option<&str>,
         submission_id: i64,
     ) -> anyhow::Result<SubmissionDto, SubmissionError> {
         let submission = self
@@ -115,7 +115,7 @@ impl<SeR: SessionRepository, SuR: SubmissionRepository, PR: ProblemRepository>
 
     pub async fn get_submissions(
         &self,
-        session_id: Option<String>,
+        session_id: Option<&str>,
         query: SubmissionGetQueryData,
     ) -> anyhow::Result<SubmissionsDto, SubmissionError> {
         let user_id = match session_id {
