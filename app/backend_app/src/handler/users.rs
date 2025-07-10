@@ -121,7 +121,7 @@ pub async fn get_user(
     Path(display_id): Path<String>,
     TypedHeader(cookie): TypedHeader<Cookie>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id").map(|v| v.to_string());
+    let session_id = cookie.get("session_id");
 
     match di_container
         .user_service()

@@ -88,7 +88,7 @@ impl<
     pub async fn get_user(
         &self,
         display_id: String,
-        session_id: Option<String>,
+        session_id: Option<&str>,
     ) -> anyhow::Result<UserDto, UserError> {
         let user_id = match session_id {
             Some(session_id) => self
