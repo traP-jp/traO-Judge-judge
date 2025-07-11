@@ -22,7 +22,9 @@ pub struct JobService<ProblemRegistryClient: problem_registry::ProblemRegistryCl
     container_image_name: String,
 }
 
-impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient> JobService<ProblemRegistryClient> {
+impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient>
+    JobService<ProblemRegistryClient>
+{
     pub fn new(
         host_temp_dir: PathBuf,
         container_temp_dir: PathBuf,

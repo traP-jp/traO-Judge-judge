@@ -229,7 +229,9 @@ impl Builder {
             regi_client,
             container_image_name.clone(),
         )
-        .map_err(|_| PyErr::new::<pyo3::exceptions::PyValueError, _>("Failed to create JobService"))?;
+        .map_err(|_| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>("Failed to create JobService")
+        })?;
         let regi_procedure = logic::writer_schema_registerer::register(
             writer_procedure,
             regi_server,

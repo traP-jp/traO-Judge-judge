@@ -22,7 +22,10 @@ impl<
     JobServiceType: job::JobService<ReservationToken, OutcomeToken>,
 > Runner<ReservationToken, OutcomeToken, JobServiceType>
 {
-    pub async fn new(job_service: JobServiceType, procedure: runtime::Procedure) -> anyhow::Result<Self> {
+    pub async fn new(
+        job_service: JobServiceType,
+        procedure: runtime::Procedure,
+    ) -> anyhow::Result<Self> {
         let file_confs = Self::create_file_confs(&procedure);
         let exec_confs = Self::create_exec_confs(&procedure, &job_service).await?;
         Ok(Self {
