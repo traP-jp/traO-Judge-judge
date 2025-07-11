@@ -25,7 +25,7 @@ impl problem_registry::ProblemRegistryClient for ProblemRegistryClient {
         &self,
         resource_id: judge_core::model::identifiers::ResourceId,
     ) -> Result<String, problem_registry::ResourceFetchError> {
-        // checked in lib/jobapi/src/aws.rs
+        // checked in lib/job_service/src/aws.rs
         let judge_bucket_name = env::var("JUDGE_BUCKET_NAME").unwrap();
         let s3_response = self
             .s3_client

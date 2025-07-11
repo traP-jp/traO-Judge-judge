@@ -7,7 +7,7 @@ use judge_core::model::{
     procedure::writer_schema::{self, *},
 };
 use judge_infra_mock::{
-    dep_name_repository::DepNameRepository, jobapi::jobapi::JobApi,
+    dep_name_repository::DepNameRepository, job_service::job_service::JobApi,
     one_proc_problem_registry::new_registry,
 };
 use pyo3::prelude::*;

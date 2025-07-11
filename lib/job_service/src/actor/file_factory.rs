@@ -6,7 +6,7 @@ use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
 
 use crate::actor::Running;
-use crate::jobapi::OutcomeToken;
+use crate::job_service::OutcomeToken;
 
 pub enum FileFactoryMessage {
     FilePlacement {

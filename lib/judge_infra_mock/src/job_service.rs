@@ -1,2 +1,2 @@
-pub mod jobapi;
+pub mod job_service;
 pub mod tokens;

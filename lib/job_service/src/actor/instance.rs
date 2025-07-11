@@ -6,7 +6,7 @@ use tokio::sync::oneshot;
 use uuid::Uuid;
 
 use crate::actor::Running;
-use crate::jobapi::OutcomeToken;
+use crate::job_service::OutcomeToken;
 use crate::model::aws::AwsClient;
 use crate::model::grpc::GrpcClient;
 

@@ -166,7 +166,7 @@ mod tests {
     #[ignore]
     #[tokio::test]
     async fn test_create_instance() -> Result<(), anyhow::Error> {
-        // lib/jobapi/.env を読み込む
+        // lib/job_service/.env を読み込む
         dotenv().ok();
         let mut client = AwsClient::new().await;
         client.create_instance(Uuid::now_v7()).await?;
@@ -176,7 +176,7 @@ mod tests {
     #[ignore]
     #[tokio::test]
     async fn test_terminate_instance() -> Result<(), anyhow::Error> {
-        // lib/jobapi/.env を読み込む
+        // lib/job_service/.env を読み込む
         dotenv().ok();
         let mut client = AwsClient::new().await;
         let instance_id = Uuid::now_v7();

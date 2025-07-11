@@ -1,5 +1,5 @@
 [package]
-name = "jobapi"
+name = "job_service"
 version = { workspace = true }
 edition = { workspace = true }
 
