@@ -14,8 +14,8 @@ async fn main() {
 
     let problem_registry_dir = std::env::var("TRAOJUDGE_PROBLEM_REGISTRY_DIR")
         .expect("TRAOJUDGE_PROBLEM_REGISTRY_DIR must be set");
-    let job_service_cache_dir = std::env::var("TRAOJUDGE_JOBAPI_CACHE_DIR")
-        .expect("TRAOJUDGE_JOBAPI_CACHE_DIR must be set");
+    let job_service_cache_dir = std::env::var("TRAOJUDGE_JOB_SERVICE_CACHE_DIR")
+        .expect("TRAOJUDGE_JOB_SERVICE_CACHE_DIR must be set");
     let grpc_service_port = std::env::var("TRAOJUDGE_GRPC_SERVICE_PORT")
         .expect("TRAOJUDGE_GRPC_SERVICE_PORT must be set")
         .parse::<u16>()

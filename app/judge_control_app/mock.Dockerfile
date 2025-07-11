@@ -10,7 +10,7 @@ RUN --mount=type=cache,target=/var/cache/rustup,sharing=locked \
 FROM debian:bookworm-slim
 EXPOSE 8080
 ENV TRAOJUDGE_PROBLEM_REGISTRY_DIR=/trao/judge_control/registry
-ENV TRAOJUDGE_JOBAPI_CACHE_DIR=/trao/judge_control/cache
+ENV TRAOJUDGE_JOB_SERVICE_CACHE_DIR=/trao/judge_control/cache
 ENV TRAOJUDGE_GRPC_SERVICE_PORT=8080
 ENV RUST_LOG=debug
 COPY --from=builder /app/target/release/mock /app/target/release/mock
