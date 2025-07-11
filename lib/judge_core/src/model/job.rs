@@ -2,7 +2,7 @@ use super::identifiers::ResourceId;
 use std::process::Output;
 
 #[axum::async_trait]
-pub trait JobApi<
+pub trait JobService<
     ReservationToken: Send + Sync + 'static,
     OutcomeToken: Clone + Send + Sync + 'static,
 >: Clone + Send + Sync + 'static

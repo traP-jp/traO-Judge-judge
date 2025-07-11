@@ -7,19 +7,19 @@ use std::sync::Arc;
 pub struct JudgeServiceImpl<
     RToken: Send + Sync + 'static,
     OToken: Clone + Send + Sync + 'static,
-    JobApi: job::JobApi<RToken, OToken>,
+    JobService: job::JobService<RToken, OToken>,
 > {
-    job_api: JobApi,
+    job_api: JobService,
     _phantom: std::marker::PhantomData<(Arc<RToken>, OToken)>,
 }
 
 impl<
     RToken: Send + Sync + 'static,
     OToken: Clone + Send + Sync + 'static,
-    JobApi: job::JobApi<RToken, OToken>,
-> JudgeServiceImpl<RToken, OToken, JobApi>
+    JobService: job::JobService<RToken, OToken>,
+> JudgeServiceImpl<RToken, OToken, JobService>
 {
-    pub fn new(job_api: JobApi) -> Self {
+    pub fn new(job_api: JobService) -> Self {
         Self {
             job_api,
             _phantom: std::marker::PhantomData,
@@ -30,8 +30,8 @@ impl<
 impl<
     RToken: Send + Sync + 'static,
     OToken: Clone + Send + Sync + 'static,
-    JobApi: job::JobApi<RToken, OToken>,
-> Clone for JudgeServiceImpl<RToken, OToken, JobApi>
+    JobService: job::JobService<RToken, OToken>,
+> Clone for JudgeServiceImpl<RToken, OToken, JobService>
 {
     fn clone(&self) -> Self {
         Self {
@@ -45,8 +45,8 @@ impl<
 impl<
     RToken: Send + Sync + 'static,
     OToken: Clone + Send + Sync + 'static,
-    JobApi: job::JobApi<RToken, OToken>,
-> judge::JudgeService for JudgeServiceImpl<RToken, OToken, JobApi>
+    JobService: job::JobService<RToken, OToken>,
+> judge::JudgeService for JudgeServiceImpl<RToken, OToken, JobService>
 {
     async fn judge(&self, judge_request: judge::JudgeRequest) -> judge::JudgeResponse {
         let (runtime_procedure, identifier_map) = registered_procedure_converter::convert(

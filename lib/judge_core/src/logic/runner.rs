@@ -7,9 +7,9 @@ use tokio::sync::Mutex;
 pub struct Runner<
     ReservationToken: Send + Sync + 'static,
     OutcomeToken: Clone + Send + Sync + 'static,
-    JobApiType: job::JobApi<ReservationToken, OutcomeToken>,
+    JobServiceType: job::JobService<ReservationToken, OutcomeToken>,
 > {
-    job_api: JobApiType,
+    job_api: JobServiceType,
     outcomes: Arc<Mutex<HashMap<RuntimeId, OutcomeToken>>>,
     outputs: Arc<Mutex<HashMap<RuntimeId, judge_output::ExecutionJobResult>>>,
     exec_confs: Arc<Mutex<HashMap<RuntimeId, (ReservationToken, Vec<runtime::Dependency>)>>>,
@@ -19,10 +19,10 @@ pub struct Runner<
 impl<
     ReservationToken: Send + Sync + 'static,
     OutcomeToken: Clone + Send + Sync + 'static,
-    JobApiType: job::JobApi<ReservationToken, OutcomeToken>,
-> Runner<ReservationToken, OutcomeToken, JobApiType>
+    JobServiceType: job::JobService<ReservationToken, OutcomeToken>,
+> Runner<ReservationToken, OutcomeToken, JobServiceType>
 {
-    pub async fn new(job_api: JobApiType, procedure: runtime::Procedure) -> anyhow::Result<Self> {
+    pub async fn new(job_api: JobServiceType, procedure: runtime::Procedure) -> anyhow::Result<Self> {
         let file_confs = Self::create_file_confs(&procedure);
         let exec_confs = Self::create_exec_confs(&procedure, &job_api).await?;
         Ok(Self {
@@ -90,7 +90,7 @@ impl<
     #[tracing::instrument(skip(job_api))]
     async fn create_exec_confs(
         procedure: &runtime::Procedure,
-        job_api: &JobApiType,
+        job_api: &JobServiceType,
     ) -> anyhow::Result<HashMap<RuntimeId, (ReservationToken, Vec<runtime::Dependency>)>> {
         tracing::info!("Creating execution configurations");
         let mut reservations_vec = job_api

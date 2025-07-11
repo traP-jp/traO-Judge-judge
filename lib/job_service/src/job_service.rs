@@ -20,16 +20,16 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub struct JobApi {
-    inner: Arc<JobApiInner>,
+pub struct JobService {
+    inner: Arc<JobServiceInner>,
 }
 
-struct JobApiInner {
+struct JobServiceInner {
     instance_pool_tx: mpsc::UnboundedSender<InstancePoolMessage>,
     file_factory_tx: mpsc::UnboundedSender<FileFactoryMessage>,
 }
 
-impl JobApi {
+impl JobService {
     pub fn new<A, G, P, AFut, GFut, PFut, AF, GF, PF>(
         aws_client_factory: AF,
         grpc_client_factory: GF,
@@ -61,7 +61,7 @@ impl JobApi {
                 .await;
         });
         Self {
-            inner: Arc::new(JobApiInner {
+            inner: Arc::new(JobServiceInner {
                 instance_pool_tx,
                 file_factory_tx,
             }),
@@ -129,7 +129,7 @@ impl OutcomeToken {
 }
 
 #[axum::async_trait]
-impl job::JobApi<ReservationToken, OutcomeToken> for JobApi {
+impl job::JobService<ReservationToken, OutcomeToken> for JobService {
     async fn reserve_execution(
         &self,
         count: usize,

@@ -7,7 +7,7 @@ use judge_core::model::{
     procedure::writer_schema::{self, *},
 };
 use judge_infra_mock::{
-    dep_name_repository::DepNameRepository, job_service::job_service::JobApi,
+    dep_name_repository::DepNameRepository, job_service::job_service::JobService,
     one_proc_problem_registry::new_registry,
 };
 use pyo3::prelude::*;
@@ -223,13 +223,13 @@ impl Builder {
         let writer_procedure = self.inner.get_procedure();
         let (regi_server, regi_client) = new_registry();
         let dn_repo = DepNameRepository::new();
-        let job_api = JobApi::new(
+        let job_api = JobService::new(
             host_temp_dir,
             container_temp_dir,
             regi_client,
             container_image_name.clone(),
         )
-        .map_err(|_| PyErr::new::<pyo3::exceptions::PyValueError, _>("Failed to create JobApi"))?;
+        .map_err(|_| PyErr::new::<pyo3::exceptions::PyValueError, _>("Failed to create JobService"))?;
         let regi_procedure = logic::writer_schema_registerer::register(
             writer_procedure,
             regi_server,

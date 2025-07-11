@@ -3,7 +3,7 @@ use back_judge_grpc::{
     generated::judge_service_server::JudgeServiceServer, server::WrappedJudgeService,
 };
 use judge_core::logic::judge_service_impl::JudgeServiceImpl;
-use judge_infra_mock::job_service::job_service::JobApi;
+use judge_infra_mock::job_service::job_service::JobService;
 use judge_infra_mock::multi_proc_problem_registry::registry_client::RegistryClient;
 
 #[tokio::main]
@@ -28,9 +28,9 @@ async fn main() {
     tracing::info!("grpc_service_addr: {}", grpc_service_addr);
     let problem_registry_client = RegistryClient::new(problem_registry_dir.into());
     tracing::info!("ProblemRegistryClient created");
-    let job_service = JobApi::new(job_service_cache_dir.into(), problem_registry_client)
-        .expect("Failed to create JobApi");
-    tracing::info!("JobApi created");
+    let job_service = JobService::new(job_service_cache_dir.into(), problem_registry_client)
+        .expect("Failed to create JobService");
+    tracing::info!("JobService created");
     let inner_judge_service = JudgeServiceImpl::new(job_service);
     tracing::info!("JudgeServiceImpl created");
     let wrapped_judge_service = WrappedJudgeService::new(inner_judge_service);
