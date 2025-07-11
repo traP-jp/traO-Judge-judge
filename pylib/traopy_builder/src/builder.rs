@@ -223,7 +223,7 @@ impl Builder {
         let writer_procedure = self.inner.get_procedure();
         let (regi_server, regi_client) = new_registry();
         let dn_repo = DepNameRepository::new();
-        let job_api = JobService::new(
+        let job_service = JobService::new(
             host_temp_dir,
             container_temp_dir,
             regi_client,
@@ -240,7 +240,7 @@ impl Builder {
         .map_err(|_| {
             PyErr::new::<pyo3::exceptions::PyValueError, _>("Failed to register procedure")
         })?;
-        let judge_service = JudgeServiceImpl::new(job_api);
+        let judge_service = JudgeServiceImpl::new(job_service);
         let judge_req = JudgeRequest {
             procedure: regi_procedure,
             runtime_texts: label_to_content,

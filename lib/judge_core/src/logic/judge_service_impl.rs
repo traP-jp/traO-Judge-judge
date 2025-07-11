@@ -9,7 +9,7 @@ pub struct JudgeServiceImpl<
     OToken: Clone + Send + Sync + 'static,
     JobService: job::JobService<RToken, OToken>,
 > {
-    job_api: JobService,
+    job_service: JobService,
     _phantom: std::marker::PhantomData<(Arc<RToken>, OToken)>,
 }
 
@@ -19,9 +19,9 @@ impl<
     JobService: job::JobService<RToken, OToken>,
 > JudgeServiceImpl<RToken, OToken, JobService>
 {
-    pub fn new(job_api: JobService) -> Self {
+    pub fn new(job_service: JobService) -> Self {
         Self {
-            job_api,
+            job_service,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -35,7 +35,7 @@ impl<
 {
     fn clone(&self) -> Self {
         Self {
-            job_api: self.job_api.clone(),
+            job_service: self.job_service.clone(),
             _phantom: std::marker::PhantomData,
         }
     }
@@ -53,7 +53,7 @@ impl<
             &judge_request.procedure,
             &judge_request.runtime_texts,
         )?;
-        let runner = runner::Runner::new(self.job_api.clone(), runtime_procedure).await?;
+        let runner = runner::Runner::new(self.job_service.clone(), runtime_procedure).await?;
         let judge_results = runner.run().await?;
         let mut judge_results_depid = HashMap::new();
         for (runtime_id, result) in judge_results {
