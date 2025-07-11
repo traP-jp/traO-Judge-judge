@@ -56,7 +56,7 @@ impl grpc::GrpcClient for GrpcClient {
             .exec_client
             .execute(ExecuteRequest {
                 dependency: request,
-                exec_time_ms: 998244353,
+                exec_time_ms: 1800,
             })
             .await
             .unwrap()
