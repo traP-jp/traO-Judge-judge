@@ -4,7 +4,7 @@ use judge_core::model::*;
 use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
 
-use crate::jobapi::{OutcomeToken, ReservationToken};
+use crate::job_service::{OutcomeToken, ReservationToken};
 use crate::{
     actor::{
         Running,

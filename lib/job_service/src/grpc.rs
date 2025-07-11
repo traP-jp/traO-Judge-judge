@@ -6,7 +6,7 @@ use judge_exec_grpc::generated::{
 use std::{error::Error, net::Ipv4Addr, os::unix::process::ExitStatusExt, time::Duration};
 use uuid::Uuid;
 
-use crate::{jobapi::OutcomeToken, model::grpc};
+use crate::{job_service::OutcomeToken, model::grpc};
 
 pub struct GrpcClient {
     exec_client: ExecuteServiceClient<tonic::transport::Channel>,

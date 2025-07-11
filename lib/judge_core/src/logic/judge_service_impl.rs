@@ -7,21 +7,21 @@ use std::sync::Arc;
 pub struct JudgeServiceImpl<
     RToken: Send + Sync + 'static,
     OToken: Clone + Send + Sync + 'static,
-    JobApi: job::JobApi<RToken, OToken>,
+    JobService: job::JobService<RToken, OToken>,
 > {
-    job_api: JobApi,
+    job_service: JobService,
     _phantom: std::marker::PhantomData<(Arc<RToken>, OToken)>,
 }
 
 impl<
     RToken: Send + Sync + 'static,
     OToken: Clone + Send + Sync + 'static,
-    JobApi: job::JobApi<RToken, OToken>,
-> JudgeServiceImpl<RToken, OToken, JobApi>
+    JobService: job::JobService<RToken, OToken>,
+> JudgeServiceImpl<RToken, OToken, JobService>
 {
-    pub fn new(job_api: JobApi) -> Self {
+    pub fn new(job_service: JobService) -> Self {
         Self {
-            job_api,
+            job_service,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -30,12 +30,12 @@ impl<
 impl<
     RToken: Send + Sync + 'static,
     OToken: Clone + Send + Sync + 'static,
-    JobApi: job::JobApi<RToken, OToken>,
-> Clone for JudgeServiceImpl<RToken, OToken, JobApi>
+    JobService: job::JobService<RToken, OToken>,
+> Clone for JudgeServiceImpl<RToken, OToken, JobService>
 {
     fn clone(&self) -> Self {
         Self {
-            job_api: self.job_api.clone(),
+            job_service: self.job_service.clone(),
             _phantom: std::marker::PhantomData,
         }
     }
@@ -45,15 +45,15 @@ impl<
 impl<
     RToken: Send + Sync + 'static,
     OToken: Clone + Send + Sync + 'static,
-    JobApi: job::JobApi<RToken, OToken>,
-> judge::JudgeService for JudgeServiceImpl<RToken, OToken, JobApi>
+    JobService: job::JobService<RToken, OToken>,
+> judge::JudgeService for JudgeServiceImpl<RToken, OToken, JobService>
 {
     async fn judge(&self, judge_request: judge::JudgeRequest) -> judge::JudgeResponse {
         let (runtime_procedure, identifier_map) = registered_procedure_converter::convert(
             &judge_request.procedure,
             &judge_request.runtime_texts,
         )?;
-        let runner = runner::Runner::new(self.job_api.clone(), runtime_procedure).await?;
+        let runner = runner::Runner::new(self.job_service.clone(), runtime_procedure).await?;
         let judge_results = runner.run().await?;
         let mut judge_results_depid = HashMap::new();
         for (runtime_id, result) in judge_results {

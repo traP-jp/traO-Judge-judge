@@ -1,7 +1,7 @@
 use judge_core::model::job;
 use uuid::Uuid;
 
-use crate::jobapi::OutcomeToken;
+use crate::job_service::OutcomeToken;
 
 #[axum::async_trait]
 pub trait GrpcClient {
