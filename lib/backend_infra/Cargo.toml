@@ -4,32 +4,32 @@ version = { workspace = true }
 edition = { workspace = true }
 
 [dependencies]
+anyhow = { workspace = true }
+async-session = { workspace = true }
 axum = { workspace = true }
-http-body-util = { workspace = true }
 axum-extra = { workspace = true }
-tokio = { workspace = true }
+bcrypt = { workspace = true }
+domain = { path = "../backend_domain" }
+fancy-regex = { workspace = true }
+http-body-util = { workspace = true }
+jsonwebtoken = { workspace = true }
+judge_core = { path = "../judge_core" }
+judge_infra_mock = { path = "../../lib/judge_infra_mock" }
+lettre = { workspace = true }
+reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+sqlx = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
 tower = { workspace = true }
 tower-http = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 uuid = { workspace = true }
-reqwest = { workspace = true }
-anyhow = { workspace = true }
-thiserror = { workspace = true }
-bcrypt = { workspace = true }
-async-session = { workspace = true }
-sqlx = { workspace = true }
-jsonwebtoken = { workspace = true }
-lettre = { workspace = true }
-fancy-regex = { workspace = true }
-domain = { path = "../backend_domain" }
-judge_core = { path = "../judge_core" }
-judge_infra_mock = { path = "../../lib/judge_infra_mock" }
 
 [dependencies.async-sqlx-session]
-git = "https://github.com/maxcountryman/async-sqlx-session.git"
-default-features = false
 branch = "sqlx-0.7"
+default-features = false
 features = ["mysql"]
+git = "https://github.com/maxcountryman/async-sqlx-session.git"

@@ -4,13 +4,13 @@ version = { workspace = true }
 edition = { workspace = true }
 
 [dependencies]
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
-tokio = { workspace = true }
 anyhow = { workspace = true }
-tonic = { workspace = true }
-judge_core = { path = "../../lib/judge_core" }
-judge_infra_mock = { path = "../../lib/judge_infra_mock" }
 back_judge_grpc = { path = "../../lib/back_judge_grpc" }
 job_service = { path = "../../lib/job_service" }
+judge_core = { path = "../../lib/judge_core" }
+judge_infra_mock = { path = "../../lib/judge_infra_mock" }
 problem_registry = { path = "../../lib/problem_registry" }
+tokio = { workspace = true }
+tonic = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

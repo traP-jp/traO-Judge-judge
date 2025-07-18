@@ -4,10 +4,10 @@ version = { workspace = true }
 edition = { workspace = true }
 
 [dependencies]
-axum = { workspace = true }
-tokio = { workspace = true }
-futures = { workspace = true }
-uuid = { workspace = true }
 anyhow = { workspace = true }
+axum = { workspace = true }
 bollard = { workspace = true }
+futures = { workspace = true }
 judge_core = { path = "../judge_core" }
+tokio = { workspace = true }
+uuid = { workspace = true }
