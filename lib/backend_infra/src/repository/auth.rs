@@ -64,7 +64,6 @@ impl AuthRepository for AuthRepositoryImpl {
         Ok(bcrypt::verify(password, &hash)?)
     }
 
-
     async fn get_google_oauth2_url(&self, oauth_action: &str) -> anyhow::Result<String> {
         match oauth_action {
             "login" => Ok("https://example.com/google_oauth2_login".to_string()),
@@ -74,7 +73,11 @@ impl AuthRepository for AuthRepositoryImpl {
         }
     }
 
-    async fn get_google_oauth_by_authorize_code(&self, code: &str, oauth_action: &str) -> anyhow::Result<String> {
+    async fn get_google_oauth_by_authorize_code(
+        &self,
+        code: &str,
+        oauth_action: &str,
+    ) -> anyhow::Result<String> {
         match oauth_action {
             "login" => Ok(format!("https://example.com/google_oauth2_login/{}", code)),
             "signup" => Ok(format!("https://example.com/google_oauth2_signup/{}", code)),
@@ -123,7 +126,10 @@ impl AuthRepository for AuthRepositoryImpl {
         Ok(true)
     }
 
-    async fn get_user_id_by_google_oauth(&self, google_oauth: &str) -> anyhow::Result<Option<UserId>> {
+    async fn get_user_id_by_google_oauth(
+        &self,
+        google_oauth: &str,
+    ) -> anyhow::Result<Option<UserId>> {
         let user_id = sqlx::query_scalar::<_, UuidRow>(
             "SELECT user_id FROM user_authentications WHERE google_oauth = ?",
         )

@@ -86,18 +86,22 @@ impl EmailToken {
         claims.to_jwt(encode_key)
     }
 
-    pub fn encode_signup_jwt(email: Option<&str>, google_oauth: Option<&str>, github_oauth: Option<&str>, encode_key: String) -> anyhow::Result<String> {
+    pub fn encode_signup_jwt(
+        email: Option<&str>,
+        google_oauth: Option<&str>,
+        github_oauth: Option<&str>,
+        encode_key: String,
+    ) -> anyhow::Result<String> {
         let exp = (Utc::now() + Duration::minutes(60)).timestamp();
         let iat = Utc::now().timestamp();
         let nbf = Utc::now().timestamp();
 
-        let auth_method_count = [email, google_oauth, github_oauth]
-            .iter()
-            .flatten()
-            .count();
-        
+        let auth_method_count = [email, google_oauth, github_oauth].iter().flatten().count();
+
         if auth_method_count != 1 {
-            return Err(anyhow::anyhow!("At least one authentication method must be provided"));
+            return Err(anyhow::anyhow!(
+                "At least one authentication method must be provided"
+            ));
         }
 
         let claims = EmailToken {

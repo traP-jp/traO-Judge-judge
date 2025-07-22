@@ -5,7 +5,7 @@ use crate::model::google_oauth2::{
 use axum::{
     Json,
     extract::{Path, State},
-    http::{StatusCode, HeaderMap, header::SET_COOKIE},
+    http::{HeaderMap, StatusCode, header::SET_COOKIE},
     response::{IntoResponse, Response},
 };
 use axum_extra::TypedHeader;

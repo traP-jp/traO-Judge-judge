@@ -43,7 +43,7 @@ impl UserRepository for UserRepositoryImpl {
             .bind(UuidRow(id.into()))
             .fetch_optional(&self.pool)
             .await?;
-        
+
         Ok(user.map(|user| user.into()))
     }
 
