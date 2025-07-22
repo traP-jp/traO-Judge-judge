@@ -15,12 +15,15 @@ VALUES
     '2023-01-01 10:20:47'
 );
 
-INSERT INTO users_passwords
-(user_id, password)
+INSERT INTO user_authentications
+(user_id, password, github_oauth, google_oauth, traq_oauth)
 VALUES
 (
     UNHEX(REPLACE('11111111-1111-1111-1111-111111111111','-','')),
-    "test_password_1"
+    "test_password_1",
+    "test_github_oauth_1",
+    "test_google_oauth_1",
+    "test_traq_oauth_1"
 );
 
 INSERT INTO users 
