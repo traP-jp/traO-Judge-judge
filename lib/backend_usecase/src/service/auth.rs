@@ -62,7 +62,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
 
-        let jwt = EmailToken::encode_email_signup_jwt(&email, encode_key)
+        let jwt = EmailToken::encode_signup_jwt(Some(&email), None, None, encode_key)
             .map_err(|_| AuthError::InternalServerError)?;
 
         // todo
@@ -86,25 +86,53 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
 
-        let email =
-            EmailToken::get_email(&data.token, encode_key).map_err(|_| AuthError::Unauthorized)?;
+        let email = EmailToken::get_email(&data.token, encode_key.clone())
+            .map_err(|_| AuthError::Unauthorized)?;
 
-        if let Ok(true) = self.user_repository.is_exist_email(&email).await {
-            return Ok(());
+        let google_oauth = EmailToken::get_google_oauth(&data.token, encode_key)
+            .map_err(|_| AuthError::Unauthorized)?;
+
+        if let Some(email) = email {
+            if let Ok(true) = self.user_repository.is_exist_email(&email).await {
+                return Ok(());
+            }
+
+            let user_id = self
+                .user_repository
+                .create_user_by_email(&data.user_name, &email)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            self.auth_repository
+                .save_user_password(user_id, &data.password)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            Ok(())
+        } else if let Some(google_oauth) = google_oauth {
+            if let Ok(Some(_)) = self
+                .auth_repository
+                .get_user_id_by_google_oauth(&google_oauth)
+                .await
+            {
+                return Ok(());
+            }
+
+            let user_id = self
+                .user_repository
+                .create_user_without_email(&data.user_name)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            self.auth_repository
+                .save_user_google_oauth(user_id, &google_oauth)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            Ok(())
+        } else {
+            return Err(AuthError::InternalServerError);
         }
-
-        let user_id = self
-            .user_repository
-            .create_user_by_email(&data.user_name, &email)
-            .await
-            .map_err(|_| AuthError::InternalServerError)?;
-
-        self.auth_repository
-            .save_user_password(user_id, &data.password)
-            .await
-            .map_err(|_| AuthError::InternalServerError)?;
-
-        Ok(())
     }
 
     pub async fn login(&self, data: LoginData) -> anyhow::Result<String, AuthError> {
@@ -180,8 +208,9 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
 
-        let email =
-            EmailToken::get_email(&data.token, encode_key).map_err(|_| AuthError::Unauthorized)?;
+        let email = EmailToken::get_email(&data.token, encode_key)
+            .map_err(|_| AuthError::Unauthorized)?
+            .ok_or(AuthError::InternalServerError)?;
 
         let user = self
             .user_repository
@@ -292,7 +321,7 @@ mod signup_tests {
         SignUpData {
             user_name: user_name.to_string(),
             password: password.to_string(),
-            token: EmailToken::encode_email_signup_jwt(email, encode_key).unwrap(),
+            token: EmailToken::encode_signup_jwt(Some(email), None, None, encode_key).unwrap(),
         }
     }
 

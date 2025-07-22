@@ -16,7 +16,9 @@ pub struct EmailToken {
     iat: i64,
     nbf: i64,
     user_id: Option<i64>,
-    email: String,
+    email: Option<String>,
+    google_oauth: Option<String>,
+    github_oauth: Option<String>,
     action: Action,
 }
 
@@ -41,7 +43,7 @@ impl EmailToken {
         Ok(())
     }
 
-    pub fn get_email(jwt: &str, encode_key: String) -> anyhow::Result<String> {
+    pub fn get_email(jwt: &str, encode_key: String) -> anyhow::Result<Option<String>> {
         let token = jsonwebtoken::decode::<Self>(
             jwt,
             &jsonwebtoken::DecodingKey::from_secret(encode_key.as_ref()),
@@ -49,6 +51,16 @@ impl EmailToken {
         )?;
 
         Ok(token.claims.email)
+    }
+
+    pub fn get_google_oauth(jwt: &str, encode_key: String) -> anyhow::Result<Option<String>> {
+        let token = jsonwebtoken::decode::<Self>(
+            jwt,
+            &jsonwebtoken::DecodingKey::from_secret(encode_key.as_ref()),
+            &jsonwebtoken::Validation::default(),
+        )?;
+
+        Ok(token.claims.google_oauth)
     }
 
     pub fn encode_email_update_jwt(
@@ -65,24 +77,37 @@ impl EmailToken {
             iat,
             nbf,
             user_id: Some(user_id),
-            email: email.to_string(),
+            email: Some(email.to_string()),
+            google_oauth: None,
+            github_oauth: None,
             action: Action::change_email,
         };
 
         claims.to_jwt(encode_key)
     }
 
-    pub fn encode_email_signup_jwt(email: &str, encode_key: String) -> anyhow::Result<String> {
+    pub fn encode_signup_jwt(email: Option<&str>, google_oauth: Option<&str>, github_oauth: Option<&str>, encode_key: String) -> anyhow::Result<String> {
         let exp = (Utc::now() + Duration::minutes(60)).timestamp();
         let iat = Utc::now().timestamp();
         let nbf = Utc::now().timestamp();
+
+        let auth_method_count = [email, google_oauth, github_oauth]
+            .iter()
+            .flatten()
+            .count();
+        
+        if auth_method_count != 1 {
+            return Err(anyhow::anyhow!("At least one authentication method must be provided"));
+        }
 
         let claims = EmailToken {
             exp,
             iat,
             nbf,
             user_id: None,
-            email: email.to_string(),
+            email: email.map(|s| s.to_string()),
+            google_oauth: google_oauth.map(|s| s.to_string()),
+            github_oauth: github_oauth.map(|s| s.to_string()),
             action: Action::register_email,
         };
 
@@ -102,7 +127,9 @@ impl EmailToken {
             iat,
             nbf,
             user_id: None,
-            email: email.to_string(),
+            email: Some(email.to_string()),
+            google_oauth: None,
+            github_oauth: None,
             action: Action::reset_password,
         };
 

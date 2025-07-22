@@ -13,9 +13,9 @@ use judge_infra_mock::multi_proc_problem_registry::{
     registry_client::RegistryClient, registry_server::RegistryServer,
 };
 use usecase::service::{
-    auth::AuthenticationService, editorial::EditorialService, icon::IconService,
-    problem::ProblemService, submission::SubmissionService, testcase::TestcaseService,
-    user::UserService,
+    auth::AuthenticationService, editorial::EditorialService, google_oauth2::GoogleOAuth2Service,
+    icon::IconService, problem::ProblemService, submission::SubmissionService,
+    testcase::TestcaseService, user::UserService,
 };
 
 #[derive(Clone)]
@@ -55,6 +55,8 @@ pub struct DiContainer {
         RegistryServer, // mock
         DepNameRepositoryImpl,
     >,
+    google_oauth2_service:
+        GoogleOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl>,
 }
 
 impl DiContainer {
@@ -100,6 +102,11 @@ impl DiContainer {
                 provider.provide_problem_registry_client(),
                 provider.provide_problem_registry_server(),
                 provider.provide_dep_name_repository(),
+            ),
+            google_oauth2_service: GoogleOAuth2Service::new(
+                provider.provide_auth_repository(),
+                provider.provide_session_repository(),
+                provider.provide_user_repository(),
             ),
         }
     }
@@ -170,5 +177,11 @@ impl DiContainer {
         DepNameRepositoryImpl,
     > {
         &self.testcase_service
+    }
+
+    pub fn google_oauth2_service(
+        &self,
+    ) -> &GoogleOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl> {
+        &self.google_oauth2_service
     }
 }

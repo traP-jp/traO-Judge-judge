@@ -11,6 +11,7 @@ pub mod problems;
 pub mod submissions;
 pub mod testcase;
 pub mod users;
+pub mod google_oauth2;
 
 pub fn make_router(di_container: DiContainer) -> Router {
     let auth_router = Router::new()
@@ -70,6 +71,11 @@ pub fn make_router(di_container: DiContainer) -> Router {
 
     let icon_router = Router::new().route("/:iconId", get(icon::get_icon));
 
+    let google_oauth2_router = Router::new()
+        .route("/:oauthAction/params", get(google_oauth2::get_google_oauth2_params)        )
+        .route("/:oauthAction/authorize", post(google_oauth2::post_google_oauth2_authorize))
+        .route("/revoke", post(google_oauth2::post_google_oauth2_revoke));
+
     Router::new()
         .nest("/", auth_router)
         .nest("/users", user_router)
@@ -78,5 +84,6 @@ pub fn make_router(di_container: DiContainer) -> Router {
         .nest("/editorials", editorials_router)
         .nest("/testcases", testcases_router)
         .nest("/icons", icon_router)
+        .nest("/google-oauth2", google_oauth2_router)
         .with_state(di_container)
 }
