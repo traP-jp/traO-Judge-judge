@@ -11,6 +11,7 @@ pub struct ProblemRegistryClient {
 
 impl ProblemRegistryClient {
     pub async fn new() -> Self {
+        // FIXME: do not hard code!
         let region_provider = RegionProviderChain::default_provider().or_else("us-west-2");
         let config = aws_config::from_env().region(region_provider).load().await;
         Self {
@@ -26,6 +27,7 @@ impl problem_registry::ProblemRegistryClient for ProblemRegistryClient {
         resource_id: judge_core::model::identifiers::ResourceId,
     ) -> Result<String, problem_registry::ResourceFetchError> {
         // checked in lib/job_service/src/aws.rs
+        // FIXME: do not hard code!
         let judge_bucket_name = env::var("JUDGE_BUCKET_NAME").unwrap();
         let s3_response = self
             .s3_client
