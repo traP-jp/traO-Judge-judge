@@ -1,4 +1,4 @@
-use base64::{prelude::BASE64_STANDARD, Engine};
+use base64::{Engine, prelude::BASE64_STANDARD};
 use lettre::Address;
 
 use crate::model::{
@@ -37,14 +37,14 @@ pub struct UserService<
 }
 
 impl<
-        UR: UserRepository,
-        SR: SessionRepository,
-        AR: AuthRepository,
-        IR: IconRepository,
-        PR: ProblemRepository,
-        SubR: SubmissionRepository,
-        C: MailClient,
-    > UserService<UR, SR, AR, IR, PR, SubR, C>
+    UR: UserRepository,
+    SR: SessionRepository,
+    AR: AuthRepository,
+    IR: IconRepository,
+    PR: ProblemRepository,
+    SubR: SubmissionRepository,
+    C: MailClient,
+> UserService<UR, SR, AR, IR, PR, SubR, C>
 {
     pub fn new(
         user_repository: UR,
@@ -76,19 +76,19 @@ pub enum UserError {
 }
 
 impl<
-        UR: UserRepository,
-        SR: SessionRepository,
-        AR: AuthRepository,
-        IR: IconRepository,
-        PR: ProblemRepository,
-        SubR: SubmissionRepository,
-        C: MailClient,
-    > UserService<UR, SR, AR, IR, PR, SubR, C>
+    UR: UserRepository,
+    SR: SessionRepository,
+    AR: AuthRepository,
+    IR: IconRepository,
+    PR: ProblemRepository,
+    SubR: SubmissionRepository,
+    C: MailClient,
+> UserService<UR, SR, AR, IR, PR, SubR, C>
 {
     pub async fn get_user(
         &self,
         display_id: String,
-        session_id: Option<String>,
+        session_id: Option<&str>,
     ) -> anyhow::Result<UserDto, UserError> {
         let user_id = match session_id {
             Some(session_id) => self

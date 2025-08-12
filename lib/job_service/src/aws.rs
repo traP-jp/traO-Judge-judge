@@ -1,33 +1,29 @@
-use anyhow::{ensure, Context};
+use anyhow::{Context, ensure};
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_ec2::types::{BlockDeviceMapping, EbsBlockDevice, VolumeType};
 use aws_sdk_ec2::{
-    types::{IamInstanceProfileSpecification, InstanceType, Placement},
     Client as Ec2Client,
+    types::{IamInstanceProfileSpecification, InstanceType, Placement},
 };
 use aws_sdk_s3::Client as S3Client;
-use base64::{prelude::BASE64_STANDARD, Engine};
+use base64::{Engine, prelude::BASE64_STANDARD};
 use std::{collections::HashMap, env, net::Ipv4Addr, str::FromStr};
 use uuid::Uuid;
 
-#[axum::async_trait]
-pub trait AwsClient {
-    async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error>;
-    async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error>;
-}
+use crate::model::aws;
 
 struct AwsInstanceInfo {
     aws_id: String,
     ip_addr: Ipv4Addr,
 }
 
-pub struct AwsClientType {
+pub struct AwsClient {
     ec2_client: Ec2Client,
     aws_instance_table: HashMap<Uuid, AwsInstanceInfo>,
     s3_client: S3Client,
 }
 
-impl AwsClientType {
+impl AwsClient {
     pub async fn new() -> Self {
         // check env
         for key in [
@@ -54,7 +50,7 @@ impl AwsClientType {
 }
 
 #[axum::async_trait]
-impl AwsClient for AwsClientType {
+impl aws::AwsClient for AwsClient {
     async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error> {
         ensure!(
             !self.aws_instance_table.contains_key(&instance_id),
@@ -162,15 +158,17 @@ impl AwsClient for AwsClientType {
 
 #[cfg(test)]
 mod tests {
+    use crate::model::aws::AwsClient as _;
+
     use super::*;
     use dotenv::dotenv;
 
     #[ignore]
     #[tokio::test]
     async fn test_create_instance() -> Result<(), anyhow::Error> {
-        // lib/jobapi/.env を読み込む
+        // lib/job_service/.env を読み込む
         dotenv().ok();
-        let mut client = AwsClientType::new().await;
+        let mut client = AwsClient::new().await;
         client.create_instance(Uuid::now_v7()).await?;
         Ok(())
     }
@@ -178,9 +176,9 @@ mod tests {
     #[ignore]
     #[tokio::test]
     async fn test_terminate_instance() -> Result<(), anyhow::Error> {
-        // lib/jobapi/.env を読み込む
+        // lib/job_service/.env を読み込む
         dotenv().ok();
-        let mut client = AwsClientType::new().await;
+        let mut client = AwsClient::new().await;
         let instance_id = Uuid::now_v7();
         client.aws_instance_table.insert(
             instance_id,

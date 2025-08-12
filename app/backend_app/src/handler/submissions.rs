@@ -4,11 +4,11 @@ use crate::model::submissions::{
 use crate::{di::DiContainer, model::submissions::SubmissionGetQuery};
 use axum::extract::Query;
 use axum::{
+    Json,
     extract::{Path, State},
     response::IntoResponse,
-    Json,
 };
-use axum_extra::{headers::Cookie, TypedHeader};
+use axum_extra::{TypedHeader, headers::Cookie};
 use reqwest::StatusCode;
 use usecase::model::submission::{SubmissionGetQueryData, SubmissionOrderByData};
 use usecase::service::submission::SubmissionError;
@@ -18,7 +18,7 @@ pub async fn get_submission(
     TypedHeader(cookie): TypedHeader<Cookie>,
     Path(submission_id): Path<i64>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id").map(|s| s.to_string());
+    let session_id = cookie.get("session_id");
 
     match di_container
         .submission_service()
@@ -43,7 +43,7 @@ pub async fn get_submissions(
     TypedHeader(cookie): TypedHeader<Cookie>,
     Query(query): Query<SubmissionGetQuery>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id").map(|s| s.to_string());
+    let session_id = cookie.get("session_id");
 
     let query = SubmissionGetQueryData {
         limit: query.limit,

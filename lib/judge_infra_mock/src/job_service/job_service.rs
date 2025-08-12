@@ -1,9 +1,9 @@
 use super::tokens::{OutcomeToken, RegistrationToken};
 use bollard::container::StartContainerOptions;
 use bollard::{
+    Docker,
     container::{Config, CreateContainerOptions, WaitContainerOptions},
     service::{HostConfig, Mount},
-    Docker,
 };
 use futures::StreamExt;
 use judge_core::constant::env_var_exec;
@@ -15,14 +15,16 @@ use std::process::Output;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
-pub struct JobApi<ProblemRegistryClient: problem_registry::ProblemRegistryClient> {
+pub struct JobService<ProblemRegistryClient: problem_registry::ProblemRegistryClient> {
     host_temp_dir: PathBuf,
     container_temp_dir: PathBuf,
     problem_registry_client: ProblemRegistryClient,
     container_image_name: String,
 }
 
-impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient> JobApi<ProblemRegistryClient> {
+impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient>
+    JobService<ProblemRegistryClient>
+{
     pub fn new(
         host_temp_dir: PathBuf,
         container_temp_dir: PathBuf,
@@ -41,7 +43,7 @@ impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient> JobApi<Prob
 
 #[axum::async_trait]
 impl<ProblemRegistryClient: problem_registry::ProblemRegistryClient>
-    job::JobApi<RegistrationToken, OutcomeToken> for JobApi<ProblemRegistryClient>
+    job::JobService<RegistrationToken, OutcomeToken> for JobService<ProblemRegistryClient>
 {
     async fn reserve_execution(
         &self,

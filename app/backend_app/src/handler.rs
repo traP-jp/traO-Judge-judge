@@ -1,7 +1,7 @@
 use crate::di::DiContainer;
 use axum::{
-    routing::{get, post, put},
     Router,
+    routing::{get, post, put},
 };
 
 pub mod auth;

@@ -1,11 +1,14 @@
+use std::future::Future;
+use std::net::Ipv4Addr;
+
 use judge_core::model::job;
 use tokio::sync::oneshot;
 use uuid::Uuid;
 
 use crate::actor::Running;
-use crate::aws::{AwsClient, AwsClientType};
-use crate::grpc::{GrpcClient, GrpcClientType};
-use crate::jobapi::OutcomeToken;
+use crate::job_service::OutcomeToken;
+use crate::model::aws::AwsClient;
+use crate::model::grpc::GrpcClient;
 
 pub enum InstanceMessage {
     Execution {
@@ -19,22 +22,30 @@ pub enum InstanceMessage {
     },
 }
 
-pub struct Instance {
+pub struct Instance<A, G> {
     instance_id: Uuid,
-    // multi-consumer
-    receiver: async_channel::Receiver<InstanceMessage>,
-    // TODO: use generics
-    aws_client: AwsClientType,
-    grpc_client: GrpcClientType,
+    receiver: async_channel::Receiver<InstanceMessage>, // multi-consumer
+    aws_client: A,
+    grpc_client: G,
 }
 
-impl Instance {
-    pub async fn new(receiver: async_channel::Receiver<InstanceMessage>) -> Self {
+impl<A: AwsClient, G: GrpcClient> Instance<A, G> {
+    pub async fn new<AFut, GFut, AF, GF>(
+        receiver: async_channel::Receiver<InstanceMessage>,
+        aws_client_factory: AF,
+        grpc_client_factory: GF,
+    ) -> Self
+    where
+        AFut: Future<Output = A>,
+        GFut: Future<Output = G>,
+        AF: Fn() -> AFut,
+        GF: Fn(Ipv4Addr) -> GFut,
+    {
         let instance_id = Uuid::now_v7();
         // warm-up AWS & gRPC client
-        let mut aws_client = AwsClientType::new().await;
+        let mut aws_client = aws_client_factory().await;
         let instance_ip = aws_client.create_instance(instance_id).await.unwrap();
-        let grpc_client = GrpcClientType::new(instance_ip).await;
+        let grpc_client = grpc_client_factory(instance_ip).await;
         Self {
             instance_id,
             receiver,
@@ -62,12 +73,12 @@ impl Instance {
                     .grpc_client
                     .execute(outcome_id_for_res, dependencies)
                     .await;
-                respond_to.send(result).unwrap();
+                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Continue
             }
             InstanceMessage::Terminate { respond_to } => {
                 let result = self.aws_client.terminate_instance(self.instance_id).await;
-                respond_to.send(result).unwrap();
+                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Stop
             }
         }

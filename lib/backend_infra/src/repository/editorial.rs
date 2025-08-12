@@ -62,12 +62,13 @@ impl EditorialRepository for EditorialRepositoryImpl {
 
     async fn create_editorial(&self, query: CreateEditorial) -> anyhow::Result<i64> {
         let result = sqlx::query(
-            "INSERT INTO editorials (problem_id, author_id, statement, is_public) VALUES (?, ?, ?, ?)",
+            "INSERT INTO editorials (problem_id, author_id, statement, is_public, title) VALUES (?, ?, ?, ?, ?)",
         )
         .bind(query.problem_id)
         .bind(query.author_id)
         .bind(query.statement)
         .bind(query.is_public)
+        .bind("解説".to_string())
         .execute(&self.pool)
         .await?;
 
@@ -76,9 +77,10 @@ impl EditorialRepository for EditorialRepositoryImpl {
     }
 
     async fn update_editorial(&self, query: UpdateEditorial) -> anyhow::Result<()> {
-        sqlx::query("UPDATE editorials SET statement = ?, is_public = ? WHERE id = ?")
+        sqlx::query("UPDATE editorials SET statement = ?, is_public = ? , title = ? WHERE id = ?")
             .bind(query.statement)
             .bind(query.is_public)
+            .bind("解説".to_string())
             .bind(query.id)
             .execute(&self.pool)
             .await?;

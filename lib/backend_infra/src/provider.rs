@@ -5,9 +5,8 @@ use judge_infra_mock::multi_proc_problem_registry::{
     registry_client::RegistryClient, registry_server::RegistryServer,
 };
 use sqlx::{
-    migrate,
+    MySql, MySqlPool, Pool, migrate,
     mysql::{MySqlConnectOptions, MySqlPoolOptions},
-    MySql, MySqlPool, Pool,
 };
 
 use crate::repository::{

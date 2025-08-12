@@ -1,11 +1,11 @@
 use crate::di::DiContainer;
 use crate::model::users::{UpdateEmail, UpdateMe, UpdatePassword, UserResponse};
 use axum::{
+    Json,
     extract::{Path, State},
     response::IntoResponse,
-    Json,
 };
-use axum_extra::{headers::Cookie, TypedHeader};
+use axum_extra::{TypedHeader, headers::Cookie};
 use reqwest::StatusCode;
 use usecase::{
     model::user::{UpdatePasswordData, UpdateUserData},
@@ -121,7 +121,7 @@ pub async fn get_user(
     Path(display_id): Path<String>,
     TypedHeader(cookie): TypedHeader<Cookie>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id").map(|v| v.to_string());
+    let session_id = cookie.get("session_id");
 
     match di_container
         .user_service()

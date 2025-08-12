@@ -7,9 +7,9 @@ use tokio::sync::Mutex;
 pub struct Runner<
     ReservationToken: Send + Sync + 'static,
     OutcomeToken: Clone + Send + Sync + 'static,
-    JobApiType: job::JobApi<ReservationToken, OutcomeToken>,
+    JobServiceType: job::JobService<ReservationToken, OutcomeToken>,
 > {
-    job_api: JobApiType,
+    job_service: JobServiceType,
     outcomes: Arc<Mutex<HashMap<RuntimeId, OutcomeToken>>>,
     outputs: Arc<Mutex<HashMap<RuntimeId, judge_output::ExecutionJobResult>>>,
     exec_confs: Arc<Mutex<HashMap<RuntimeId, (ReservationToken, Vec<runtime::Dependency>)>>>,
@@ -17,16 +17,19 @@ pub struct Runner<
 }
 
 impl<
-        ReservationToken: Send + Sync + 'static,
-        OutcomeToken: Clone + Send + Sync + 'static,
-        JobApiType: job::JobApi<ReservationToken, OutcomeToken>,
-    > Runner<ReservationToken, OutcomeToken, JobApiType>
+    ReservationToken: Send + Sync + 'static,
+    OutcomeToken: Clone + Send + Sync + 'static,
+    JobServiceType: job::JobService<ReservationToken, OutcomeToken>,
+> Runner<ReservationToken, OutcomeToken, JobServiceType>
 {
-    pub async fn new(job_api: JobApiType, procedure: runtime::Procedure) -> anyhow::Result<Self> {
+    pub async fn new(
+        job_service: JobServiceType,
+        procedure: runtime::Procedure,
+    ) -> anyhow::Result<Self> {
         let file_confs = Self::create_file_confs(&procedure);
-        let exec_confs = Self::create_exec_confs(&procedure, &job_api).await?;
+        let exec_confs = Self::create_exec_confs(&procedure, &job_service).await?;
         Ok(Self {
-            job_api,
+            job_service,
             outcomes: Arc::new(Mutex::new(HashMap::new())),
             outputs: Arc::new(Mutex::new(HashMap::new())),
             exec_confs: Arc::new(Mutex::new(exec_confs)),
@@ -87,13 +90,13 @@ impl<
         file_confs
     }
 
-    #[tracing::instrument(skip(job_api))]
+    #[tracing::instrument(skip(job_service))]
     async fn create_exec_confs(
         procedure: &runtime::Procedure,
-        job_api: &JobApiType,
+        job_service: &JobServiceType,
     ) -> anyhow::Result<HashMap<RuntimeId, (ReservationToken, Vec<runtime::Dependency>)>> {
         tracing::info!("Creating execution configurations");
-        let mut reservations_vec = job_api
+        let mut reservations_vec = job_service
             .reserve_execution(procedure.executions.len())
             .await
             .context("Failed to reserve executions")?;
@@ -124,7 +127,7 @@ impl<
     ) -> anyhow::Result<()> {
         tracing::info!("Running file job for {}", runtime_id);
         let outcome_token = self
-            .job_api
+            .job_service
             .place_file(file_conf)
             .await
             .context(format!("Failed to place file for runtime {}", runtime_id))?;
@@ -144,7 +147,7 @@ impl<
     ) -> anyhow::Result<()> {
         tracing::info!("Running execution job for {}", runtime_id);
         let (outcome_token, output) = self
-            .job_api
+            .job_service
             .execute(reservation, dependencies)
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;

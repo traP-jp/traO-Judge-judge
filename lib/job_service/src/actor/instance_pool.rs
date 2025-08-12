@@ -1,12 +1,17 @@
+use std::{future::Future, net::Ipv4Addr};
+
 use judge_core::model::*;
 use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
 
-use crate::actor::{
-    instance::{Instance, InstanceMessage},
-    Running,
+use crate::job_service::{OutcomeToken, ReservationToken};
+use crate::{
+    actor::{
+        Running,
+        instance::{Instance, InstanceMessage},
+    },
+    model::{aws::AwsClient, grpc::GrpcClient},
 };
-use crate::jobapi::{OutcomeToken, ReservationToken};
 
 pub enum InstancePoolMessage {
     Reservation {
@@ -22,16 +27,30 @@ pub enum InstancePoolMessage {
     },
 }
 
-pub struct InstancePool {
+pub struct InstancePool<AF, GF> {
     receiver: mpsc::UnboundedReceiver<InstancePoolMessage>,
     instance_tx: async_channel::Sender<InstanceMessage>,
     instance_rx: async_channel::Receiver<InstanceMessage>,
     reservation_count: usize,
     actual_instance_count: usize,
+    aws_client_factory: AF,
+    grpc_client_factory: GF,
 }
 
-impl InstancePool {
-    pub async fn new(receiver: mpsc::UnboundedReceiver<InstancePoolMessage>) -> Self {
+impl<A, G, AFut, GFut, AF, GF> InstancePool<AF, GF>
+where
+    A: AwsClient + Send,
+    G: GrpcClient + Send,
+    AFut: Future<Output = A> + Send,
+    GFut: Future<Output = G> + Send,
+    AF: Fn() -> AFut + Send + Clone + 'static,
+    GF: Fn(Ipv4Addr) -> GFut + Send + Clone + 'static,
+{
+    pub async fn new(
+        receiver: mpsc::UnboundedReceiver<InstancePoolMessage>,
+        aws_client_factory: AF,
+        grpc_client_factory: GF,
+    ) -> Self {
         let (instance_tx, instance_rx) = async_channel::unbounded();
         Self {
             receiver,
@@ -39,6 +58,8 @@ impl InstancePool {
             instance_rx,
             reservation_count: 0,
             actual_instance_count: 0,
+            aws_client_factory,
+            grpc_client_factory,
         }
     }
     pub async fn run(&mut self) {
@@ -54,7 +75,7 @@ impl InstancePool {
         match msg {
             InstancePoolMessage::Reservation { count, respond_to } => {
                 let result = self.handle_reservation(count).await;
-                respond_to.send(result).unwrap();
+                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Continue
             }
             InstancePoolMessage::Execution {
@@ -66,7 +87,7 @@ impl InstancePool {
                 let result = self
                     .handle_execution(reservation, outcome_id_for_res, dependencies)
                     .await;
-                respond_to.send(result).unwrap();
+                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Continue
             }
         }
@@ -84,8 +105,13 @@ impl InstancePool {
         while self.actual_instance_count < self.desired_instance_count() {
             self.actual_instance_count += 1;
             let instance_rx = self.instance_rx.clone();
+            let aws_client_factory = self.aws_client_factory.clone();
+            let grpc_client_factory = self.grpc_client_factory.clone();
             tokio::spawn(async move {
-                Instance::new(instance_rx).await.run().await;
+                Instance::new(instance_rx, aws_client_factory, grpc_client_factory)
+                    .await
+                    .run()
+                    .await;
             });
         }
         Ok(result)
@@ -97,20 +123,17 @@ impl InstancePool {
         dependencies: Vec<job::Dependency<OutcomeToken>>,
     ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError> {
         let (tx, rx) = oneshot::channel();
-        self.instance_tx
+        let _ = self
+            .instance_tx
             .send(InstanceMessage::Execution {
                 outcome_id_for_res,
                 dependencies,
                 respond_to: tx,
             })
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to send InstanceMessage::Execution: {e}");
-                job::ExecutionError::InternalError(format!("SendError: {e}"))
-            })?;
+            .await; // if this send fails, so does the recv.await below
         let result = rx.await.map_err(|e| {
-            tracing::error!("Failed to recv response of InstanceMessage::Execution: {e}");
-            job::ExecutionError::InternalError(format!("RecvError: {e}"))
+            tracing::error!("Instance task has been killed: {e}");
+            job::ExecutionError::InternalError(format!("Instance task has been killed: {e}"))
         })?;
 
         drop(reservation);
@@ -118,17 +141,16 @@ impl InstancePool {
         while self.actual_instance_count > self.desired_instance_count() {
             self.actual_instance_count -= 1;
             let (tx, rx) = oneshot::channel();
-            self.instance_tx
+            let _ = self
+                .instance_tx
                 .send(InstanceMessage::Terminate { respond_to: tx })
-                .await
-                .map_err(|e| {
-                    tracing::error!("Failed to send InstanceMessage::Terminate: {e}");
-                    job::ExecutionError::InternalError(format!("SendError: {e}"))
-                })?;
+                .await; // if this send fails, so does the recv.await below
             rx.await
                 .map_err(|e| {
-                    tracing::error!("Failed to recv response of InstanceMessage::Terminate: {e}");
-                    job::ExecutionError::InternalError(format!("RecvError: {e}"))
+                    tracing::error!("Instance task has been killed: {e}");
+                    job::ExecutionError::InternalError(format!(
+                        "Instance task has been killed: {e}"
+                    ))
                 })?
                 .map_err(|e| {
                     tracing::error!("Something went wrong on AWS client: {e}");

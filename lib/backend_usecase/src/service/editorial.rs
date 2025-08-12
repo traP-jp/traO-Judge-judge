@@ -149,6 +149,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         let editorial = CreateEditorial {
             problem_id,
             author_id: user_id,
+            title: "解説".to_string(),
             statement: query.statement,
             is_public: query.is_public,
         };
@@ -214,6 +215,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
 
         let editorial = UpdateEditorial {
             id: editorial_id,
+            title: "解説".to_string(),
             statement: query.statement,
             is_public: query.is_public,
         };
