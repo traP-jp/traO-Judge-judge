@@ -6,8 +6,8 @@ use axum::{
 
 pub mod auth;
 pub mod editorial;
-pub mod language;
 pub mod icon;
+pub mod language;
 pub mod problems;
 pub mod submissions;
 pub mod testcase;
@@ -70,7 +70,7 @@ pub fn make_router(di_container: DiContainer) -> Router {
     );
 
     let icon_router = Router::new().route("/:iconId", get(icon::get_icon));
-    
+
     let language_router = Router::new().route("/", get(language::get_languages));
 
     Router::new()
