@@ -1,7 +1,6 @@
 pub mod editorial;
 pub mod icon;
 pub mod jwt;
-pub mod language;
 pub mod problem;
 pub mod rules;
 pub mod submission;
