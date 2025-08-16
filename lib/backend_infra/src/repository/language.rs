@@ -12,11 +12,8 @@ pub struct LanguageRepositoryImpl {
 
 impl LanguageRepositoryImpl {
     pub fn new() -> Self {
-        match load_languages() {
-            Ok(languages) => LanguageRepositoryImpl { languages },
-            Err(_) => LanguageRepositoryImpl {
-                languages: Vec::new(),
-            },
+        LanguageRepositoryImpl {
+            languages: load_languages().unwrap_or(Vec::new()),
         }
     }
 }
