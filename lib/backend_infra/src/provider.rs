@@ -11,7 +11,7 @@ use sqlx::{
 
 use crate::repository::{
     dep_name::DepNameRepositoryImpl, editorial::EditorialRepositoryImpl, icon::IconRepositoryImpl,
-    procedure::ProcedureRepositoryImpl,
+    language::LanguageRepositoryImpl, procedure::ProcedureRepositoryImpl,
 };
 
 use super::{
@@ -131,6 +131,10 @@ impl Provider {
 
     pub fn provide_problem_registry_server(&self) -> RegistryServer {
         RegistryServer::new(self.temp_dir.clone())
+    }
+
+    pub fn provide_language_repository(&self) -> LanguageRepositoryImpl {
+        LanguageRepositoryImpl::new()
     }
 }
 
