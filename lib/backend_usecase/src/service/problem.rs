@@ -268,9 +268,11 @@ impl<
             executions: vec![],
         };
 
-        if self.procedure_repository
+        if self
+            .procedure_repository
             .create_procedure(problem_id, procedure)
-            .await.is_err()
+            .await
+            .is_err()
         {
             let _ = self.problem_repository.delete_problem(problem_id).await;
             return Err(ProblemError::InternalServerError);
@@ -314,11 +316,6 @@ impl<
                 return Err(ProblemError::NotFound);
             }
         }
-
-        self.procedure_repository
-            .delete_procedure(problem_id)
-            .await
-            .map_err(|_| ProblemError::InternalServerError)?;
 
         self.problem_repository
             .delete_problem(problem_id)
