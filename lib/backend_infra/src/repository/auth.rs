@@ -174,10 +174,15 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn get_github_oauth2_url(&self, oauth_action: &str) -> anyhow::Result<String> {
+        let github_oauth2_endpoint = "https://github.com/login/oauth/authorize";
+        let client_id = std::env::var("GITHUB_OAUTH2_CLIENT_ID")?;
+        let redirect_uri =
+            std::env::var("FRONTEND_URL")? + &format!("/auth/github/{}/callback", oauth_action);
         match oauth_action {
-            "login" => Ok("https://example.com/github_oauth2_login".to_string()),
-            "signup" => Ok("https://example.com/github_oauth2_signup".to_string()),
-            "bind" => Ok("https://example.com/github_oauth2_bind".to_string()),
+            "login" | "signup" | "bind" => Ok(format!(
+                "{}?client_id={}&redirect_uri={}",
+                github_oauth2_endpoint, client_id, redirect_uri
+            )),
             _ => Err(anyhow::anyhow!("Invalid OAuth action")),
         }
     }
@@ -187,10 +192,52 @@ impl AuthRepository for AuthRepositoryImpl {
         code: &str,
         oauth_action: &str,
     ) -> anyhow::Result<String> {
+        let github_oauth2_endpoint = "https://github.com/login/oauth/access_token";
+        let client_id = std::env::var("GITHUB_OAUTH2_CLIENT_ID")?;
+        let client_secret = std::env::var("GITHUB_OAUTH2_CLIENT_SECRET")?;
+        let redirect_uri =
+            std::env::var("FRONTEND_URL")? + &format!("/auth/google/{}/callback", oauth_action);
+
+        let url = format!(
+            "{}?client_id={}&client_secret={}&code={}&redirect_uri={}",
+            github_oauth2_endpoint, client_id, client_secret, code, redirect_uri
+        );
+
+        let client = reqwest::Client::new();
+        let response = client.post(&url).send().await?;
+
+        if !response.status().is_success() {
+            return Err(anyhow::anyhow!("Failed to exchange authorization code"));
+        }
+
+        let response_json = response.json::<serde_json::Value>().await?;
+
+        let access_token = response_json
+            .get("access_token")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("Failed to retrieve GitHub OAuth Access Token"))?;
+
+        let response = client
+            .get("https://api.github.com/user")
+            .bearer_auth(access_token)
+            .header("Accept", "application/vnd.github+json")
+            .header("X-GitHub-Api-Version", "2022-11-28")
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            return Err(anyhow::anyhow!("Failed to get GitHub User Info"));
+        }
+
+        let response_json = response.json::<serde_json::Value>().await?;
+
+        let github_oauth = response_json
+            .get("id")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("Failed to retrieve GitHub OAuth"))?;
+
         match oauth_action {
-            "login" => Ok(format!("https://example.com/github_oauth2_login/{}", code)),
-            "signup" => Ok(format!("https://example.com/github_oauth2_signup/{}", code)),
-            "bind" => Ok(format!("https://example.com/github_oauth2_bind/{}", code)),
+            "login" | "signup" | "bind" => Ok(github_oauth.to_string()),
             _ => Err(anyhow::anyhow!("Invalid OAuth action")),
         }
     }
