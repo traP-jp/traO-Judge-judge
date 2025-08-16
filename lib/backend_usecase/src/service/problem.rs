@@ -261,12 +261,7 @@ impl<
             .await
             .map_err(|_| ProblemError::InternalServerError)?;
 
-        let procedure = Procedure {
-            runtime_texts: vec![],
-            texts: vec![],
-            empty_directories: vec![],
-            executions: vec![],
-        };
+        let procedure = Procedure::default();
 
         if self
             .procedure_repository
