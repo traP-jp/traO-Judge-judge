@@ -1,6 +1,6 @@
 use super::super::identifiers::{DepId, ResourceId};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Procedure {
     pub runtime_texts: Vec<RuntimeText>,
     pub texts: Vec<Text>,

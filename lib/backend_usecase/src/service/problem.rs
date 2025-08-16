@@ -5,10 +5,11 @@ use crate::model::problem::{
 use domain::{
     model::problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem},
     repository::{
-        problem::ProblemRepository, session::SessionRepository, testcase::TestcaseRepository,
-        user::UserRepository,
+        problem::ProblemRepository, procedure::ProcedureRepository, session::SessionRepository,
+        testcase::TestcaseRepository, user::UserRepository,
     },
 };
+use judge_core::model::procedure::registered::Procedure;
 
 #[derive(Clone)]
 pub struct ProblemService<
@@ -16,27 +17,36 @@ pub struct ProblemService<
     UR: UserRepository,
     SR: SessionRepository,
     TR: TestcaseRepository,
+    PRC: ProcedureRepository,
 > {
     problem_repository: PR,
     user_repository: UR,
     session_repository: SR,
     testcase_repository: TR,
+    procedure_repository: PRC,
 }
 
-impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: TestcaseRepository>
-    ProblemService<PR, UR, SR, TR>
+impl<
+    PR: ProblemRepository,
+    UR: UserRepository,
+    SR: SessionRepository,
+    TR: TestcaseRepository,
+    PRC: ProcedureRepository,
+> ProblemService<PR, UR, SR, TR, PRC>
 {
     pub fn new(
         problem_repository: PR,
         user_repository: UR,
         session_repository: SR,
         testcase_repository: TR,
+        procedure_repository: PRC,
     ) -> Self {
         Self {
             problem_repository,
             user_repository,
             session_repository,
             testcase_repository,
+            procedure_repository,
         }
     }
 }
@@ -50,8 +60,13 @@ pub enum ProblemError {
     InternalServerError,
 }
 
-impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: TestcaseRepository>
-    ProblemService<PR, UR, SR, TR>
+impl<
+    PR: ProblemRepository,
+    UR: UserRepository,
+    SR: SessionRepository,
+    TR: TestcaseRepository,
+    PRC: ProcedureRepository,
+> ProblemService<PR, UR, SR, TR, PRC>
 {
     pub async fn get_problem(
         &self,
@@ -245,6 +260,18 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
             })
             .await
             .map_err(|_| ProblemError::InternalServerError)?;
+
+        let procedure = Procedure::default();
+
+        if self
+            .procedure_repository
+            .create_procedure(problem_id, procedure)
+            .await
+            .is_err()
+        {
+            let _ = self.problem_repository.delete_problem(problem_id).await;
+            return Err(ProblemError::InternalServerError);
+        }
 
         let problem = self
             .problem_repository
