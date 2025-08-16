@@ -3,8 +3,7 @@ use serde_json::{Value, json};
 pub fn users_check_by_id(id: i64, resp_json: &mut Value) -> anyhow::Result<()> {
     let users_json = match id {
         1 => json!({
-            "id": "11111111-1111-1111-1111-111111111111",
-            "displayId": 1,
+            "id": "1",
             "name": "test_user_1",
             "traqId": null,
             "githubId": "test_github_id_1",
@@ -38,8 +37,7 @@ pub fn users_check_by_id(id: i64, resp_json: &mut Value) -> anyhow::Result<()> {
             "updatedAt": "2023-01-01T10:20:47Z",
         }),
         2 => json!({
-            "id": "22222222-2222-2222-2222-222222222222",
-            "displayId": 2,
+            "id": "2",
             "name": "test_user_2",
             "traqId": "test_traq_id_2",
             "githubId": null,
@@ -60,8 +58,7 @@ pub fn users_check_by_id(id: i64, resp_json: &mut Value) -> anyhow::Result<()> {
             "updatedAt": "2023-02-12T15:30:00Z",
         }),
         3 => json!({
-            "id": "33333333-3333-3333-3333-333333333333",
-            "displayId": 3,
+            "id": "3",
             "name": "test_user_3",
             "traqId": null,
             "githubId": null,
