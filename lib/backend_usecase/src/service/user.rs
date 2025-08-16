@@ -300,8 +300,7 @@ impl<
                 UpdateUser {
                     user_name: body.user_name.unwrap_or(user.name),
                     icon_url: icon_url.or(user.icon_url),
-                    x_link: body.x_link.or(user.x_link),
-                    github_link: body.github_link.or(user.github_link),
+                    x_id: body.x_id.or(user.x_id),
                     self_introduction: body.self_introduction.unwrap_or(user.self_introduction),
                 },
             )
