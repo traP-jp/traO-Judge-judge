@@ -268,14 +268,10 @@ impl<
             executions: vec![],
         };
 
-        self.procedure_repository
+        if self.procedure_repository
             .create_procedure(problem_id, procedure)
-            .await
-        if let Err(e) = self.procedure_repository
-            .create_procedure(problem_id, procedure)
-            .await
+            .await.is_err()
         {
-            // Attempt to rollback the problem creation if procedure creation fails
             let _ = self.problem_repository.delete_problem(problem_id).await;
             return Err(ProblemError::InternalServerError);
         }
