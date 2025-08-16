@@ -4,7 +4,7 @@ use crate::model::auth::ResetPasswordData;
 use crate::model::auth::{LoginData, SignUpData};
 use domain::{
     external::mail::MailClient,
-    model::jwt::EmailToken,
+    model::jwt::AuthToken,
     repository::session::SessionRepository,
     repository::{auth::AuthRepository, user::UserRepository},
 };
@@ -62,7 +62,10 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
 
-        let jwt = EmailToken::encode_signup_jwt(Some(&email), None, None, encode_key)
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
+            .map_err(|_| AuthError::InternalServerError)?;
+
+        let jwt = AuthToken::encode_signup_jwt(Some(&email), None, None, &encode_key, &encrypt_key)
             .map_err(|_| AuthError::InternalServerError)?;
 
         // todo
@@ -86,10 +89,13 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
 
-        let email = EmailToken::get_email(&data.token, encode_key.clone())
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
+            .map_err(|_| AuthError::InternalServerError)?;
+
+        let email = AuthToken::get_email(&data.token, &encode_key, &encrypt_key)
             .map_err(|_| AuthError::Unauthorized)?;
 
-        let google_oauth = EmailToken::get_google_oauth(&data.token, encode_key)
+        let google_oauth = AuthToken::get_google_oauth(&data.token, &encode_key, &encrypt_key)
             .map_err(|_| AuthError::Unauthorized)?;
 
         if let Some(email) = email {
@@ -184,7 +190,10 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
 
-        let jwt = EmailToken::encode_email_reset_password_jwt(&email, encode_key)
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
+            .map_err(|_| AuthError::InternalServerError)?;
+
+        let jwt = AuthToken::encode_email_reset_password_jwt(&email, &encode_key, &encrypt_key)
             .map_err(|_| AuthError::InternalServerError)?;
 
         // todo
@@ -208,7 +217,10 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
 
-        let email = EmailToken::get_email(&data.token, encode_key)
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
+            .map_err(|_| AuthError::InternalServerError)?;
+
+        let email = AuthToken::get_email(&data.token, &encode_key, &encrypt_key)
             .map_err(|_| AuthError::Unauthorized)?
             .ok_or(AuthError::InternalServerError)?;
 
@@ -302,7 +314,7 @@ mod signup_tests {
     use super::*;
     use domain::{
         external::mail::MockMailClient,
-        model::{jwt::EmailToken, user::UserId},
+        model::{jwt::AuthToken, user::UserId},
         repository::{
             auth::MockAuthRepository, session::MockSessionRepository, user::MockUserRepository,
         },
@@ -318,10 +330,13 @@ mod signup_tests {
 
     fn create_signup_data(user_name: &str, password: &str, email: &str) -> SignUpData {
         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY").unwrap();
+
         SignUpData {
             user_name: user_name.to_string(),
             password: password.to_string(),
-            token: EmailToken::encode_signup_jwt(Some(email), None, None, encode_key).unwrap(),
+            token: AuthToken::encode_signup_jwt(Some(email), None, None, &encode_key, &encrypt_key)
+                .unwrap(),
         }
     }
 
@@ -665,9 +680,11 @@ mod reset_password_tests {
 
     fn create_reset_password_data(email: &str, password: &str) -> ResetPasswordData {
         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY").unwrap();
+
         ResetPasswordData {
             password: password.to_string(),
-            token: EmailToken::encode_email_reset_password_jwt(email, encode_key.to_string())
+            token: AuthToken::encode_email_reset_password_jwt(email, &encode_key, &encrypt_key)
                 .unwrap(),
         }
     }

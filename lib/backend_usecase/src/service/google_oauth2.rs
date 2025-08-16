@@ -1,5 +1,5 @@
 use crate::model::google_oauth2::GoogleOAuth2AuthorizeDto;
-use domain::model::jwt::EmailToken;
+use domain::model::jwt::AuthToken;
 use domain::repository::{auth::AuthRepository, session::SessionRepository, user::UserRepository};
 
 #[derive(Clone)]
@@ -81,11 +81,14 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     }
                     None => {
                         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
-                        let sign_up_token = EmailToken::encode_signup_jwt(
+                        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY").unwrap();
+
+                        let sign_up_token = AuthToken::encode_signup_jwt(
                             None,
                             Some(&google_oauth),
                             None,
-                            encode_key,
+                            &encode_key,
+                            &encrypt_key,
                         )
                         .map_err(|_| GoogleOAuth2Error::InternalServerError)?;
                         Ok(GoogleOAuth2AuthorizeDto {
