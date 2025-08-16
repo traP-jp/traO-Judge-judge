@@ -271,7 +271,14 @@ impl<
         self.procedure_repository
             .create_procedure(problem_id, procedure)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?;
+        if let Err(e) = self.procedure_repository
+            .create_procedure(problem_id, procedure)
+            .await
+        {
+            // Attempt to rollback the problem creation if procedure creation fails
+            let _ = self.problem_repository.delete_problem(problem_id).await;
+            return Err(ProblemError::InternalServerError);
+        }
 
         let problem = self
             .problem_repository
