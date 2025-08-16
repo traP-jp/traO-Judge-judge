@@ -65,7 +65,6 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn get_google_oauth2_url(&self, oauth_action: &str) -> anyhow::Result<String> {
-        let google_oauth2_endpoint = "https://accounts.google.com/o/oauth2/v2/auth";
         let client_id = std::env::var("GOOGLE_OAUTH2_CLIENT_ID")?;
         let redirect_uri =
             std::env::var("FRONTEND_URL")? + &format!("/auth/google/{}/callback", oauth_action);
@@ -74,8 +73,8 @@ impl AuthRepository for AuthRepositoryImpl {
         let access_type = "online";
         match oauth_action {
             "login" | "signup" | "bind" => Ok(format!(
-                "{}?client_id={}&redirect_uri={}&response_type={}&scope={}&access_type={}",
-                google_oauth2_endpoint, client_id, redirect_uri, response_type, scope, access_type
+                "https://accounts.google.com/o/oauth2/v2/auth?client_id={}&redirect_uri={}&response_type={}&scope={}&access_type={}",
+                client_id, redirect_uri, response_type, scope, access_type
             )),
             _ => Err(anyhow::anyhow!("Invalid OAuth action")),
         }
@@ -86,7 +85,6 @@ impl AuthRepository for AuthRepositoryImpl {
         code: &str,
         oauth_action: &str,
     ) -> anyhow::Result<String> {
-        let google_oauth2_endpoint = "https://oauth2.googleapis.com/token";
         let client_id = std::env::var("GOOGLE_OAUTH2_CLIENT_ID")?;
         let client_secret = std::env::var("GOOGLE_OAUTH2_CLIENT_SECRET")?;
         let grant_type = "authorization_code";
@@ -94,8 +92,8 @@ impl AuthRepository for AuthRepositoryImpl {
             std::env::var("FRONTEND_URL")? + &format!("/auth/google/{}/callback", oauth_action);
 
         let url = format!(
-            "{}?client_id={}&client_secret={}&code={}&grant_type={}&redirect_uri={}",
-            google_oauth2_endpoint, client_id, client_secret, code, grant_type, redirect_uri
+            "https://oauth2.googleapis.com/token?client_id={}&client_secret={}&code={}&grant_type={}&redirect_uri={}",
+            client_id, client_secret, code, grant_type, redirect_uri
         );
 
         let client = reqwest::Client::new();
@@ -174,14 +172,13 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn get_github_oauth2_url(&self, oauth_action: &str) -> anyhow::Result<String> {
-        let github_oauth2_endpoint = "https://github.com/login/oauth/authorize";
         let client_id = std::env::var("GITHUB_OAUTH2_CLIENT_ID")?;
         let redirect_uri =
             std::env::var("FRONTEND_URL")? + &format!("/auth/github/{}/callback", oauth_action);
         match oauth_action {
             "login" | "signup" | "bind" => Ok(format!(
-                "{}?client_id={}&redirect_uri={}",
-                github_oauth2_endpoint, client_id, redirect_uri
+                "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}",
+                client_id, redirect_uri
             )),
             _ => Err(anyhow::anyhow!("Invalid OAuth action")),
         }
@@ -192,15 +189,14 @@ impl AuthRepository for AuthRepositoryImpl {
         code: &str,
         oauth_action: &str,
     ) -> anyhow::Result<String> {
-        let github_oauth2_endpoint = "https://github.com/login/oauth/access_token";
         let client_id = std::env::var("GITHUB_OAUTH2_CLIENT_ID")?;
         let client_secret = std::env::var("GITHUB_OAUTH2_CLIENT_SECRET")?;
         let redirect_uri =
             std::env::var("FRONTEND_URL")? + &format!("/auth/google/{}/callback", oauth_action);
 
         let url = format!(
-            "{}?client_id={}&client_secret={}&code={}&redirect_uri={}",
-            github_oauth2_endpoint, client_id, client_secret, code, redirect_uri
+            "https://github.com/login/oauth/access_token?client_id={}&client_secret={}&code={}&redirect_uri={}",
+            client_id, client_secret, code, redirect_uri
         );
 
         let client = reqwest::Client::new();
