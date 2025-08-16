@@ -4,9 +4,10 @@ use infra::{
     repository::{
         auth::AuthRepositoryImpl, dep_name::DepNameRepositoryImpl,
         editorial::EditorialRepositoryImpl, icon::IconRepositoryImpl,
-        problem::ProblemRepositoryImpl, procedure::ProcedureRepositoryImpl,
-        session::SessionRepositoryImpl, submission::SubmissionRepositoryImpl,
-        testcase::TestcaseRepositoryImpl, user::UserRepositoryImpl,
+        language::LanguageRepositoryImpl, problem::ProblemRepositoryImpl,
+        procedure::ProcedureRepositoryImpl, session::SessionRepositoryImpl,
+        submission::SubmissionRepositoryImpl, testcase::TestcaseRepositoryImpl,
+        user::UserRepositoryImpl,
     },
 };
 use judge_infra_mock::multi_proc_problem_registry::{
@@ -55,7 +56,7 @@ pub struct DiContainer {
         RegistryServer, // mock
         DepNameRepositoryImpl,
     >,
-    language_service: LanguageService,
+    language_service: LanguageService<LanguageRepositoryImpl>,
 }
 
 impl DiContainer {
@@ -102,7 +103,7 @@ impl DiContainer {
                 provider.provide_problem_registry_server(),
                 provider.provide_dep_name_repository(),
             ),
-            language_service: LanguageService::new(),
+            language_service: LanguageService::new(provider.provide_language_repository()),
         }
     }
 
@@ -174,7 +175,7 @@ impl DiContainer {
         &self.testcase_service
     }
 
-    pub fn language_service(&self) -> &LanguageService {
+    pub fn language_service(&self) -> &LanguageService<LanguageRepositoryImpl> {
         &self.language_service
     }
 }

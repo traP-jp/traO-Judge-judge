@@ -1,12 +1,16 @@
-use crate::model::language::{LanguageDto, LanguagesDto};
-use std::{env, fs};
+use crate::model::language::LanguageDto;
+use domain::repository::language::LanguageRepository;
 
 #[derive(Clone)]
-pub struct LanguageService {}
+pub struct LanguageService<LR: LanguageRepository> {
+    language_repository: LR,
+}
 
-impl LanguageService {
-    pub fn new() -> Self {
-        Self {}
+impl<LR: LanguageRepository> LanguageService<LR> {
+    pub fn new(language_repository: LR) -> Self {
+        Self {
+            language_repository,
+        }
     }
 }
 
@@ -14,14 +18,14 @@ pub enum LanguageError {
     InternalServerError,
 }
 
-impl LanguageService {
+impl<LR: LanguageRepository> LanguageService<LR> {
     pub async fn get_languages(&self) -> anyhow::Result<Vec<LanguageDto>, LanguageError> {
-        let var_name = "LANGUAGES_PATH";
-        let path = env::var(var_name).map_err(|_| LanguageError::InternalServerError)?;
-        let s = fs::read_to_string(path).map_err(|_| LanguageError::InternalServerError)?;
-        let languages: LanguagesDto =
-            serde_json::from_str(&s).map_err(|_| LanguageError::InternalServerError)?;
+        let languages = self
+            .language_repository
+            .get_languages()
+            .await
+            .map_err(|_| LanguageError::InternalServerError)?;
 
-        Ok(languages.languages)
+        Ok(languages.into_iter().map(|l| l.into()).collect())
     }
 }
