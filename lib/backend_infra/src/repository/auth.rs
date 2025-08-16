@@ -65,10 +65,18 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn get_google_oauth2_url(&self, oauth_action: &str) -> anyhow::Result<String> {
+        let google_oauth2_endpoint = "https://accounts.google.com/o/oauth2/v2/auth";
+        let client_id = std::env::var("GOOGLE_OAUTH2_CLIENT_ID")?;
+        let redirect_uri =
+            std::env::var("FRONTEND_URL")? + &format!("/auth/google/{}/callback", oauth_action);
+        let response_type = "code";
+        let scope = "openid";
+        let access_type = "online";
         match oauth_action {
-            "login" => Ok("https://example.com/google_oauth2_login".to_string()),
-            "signup" => Ok("https://example.com/google_oauth2_signup".to_string()),
-            "bind" => Ok("https://example.com/google_oauth2_bind".to_string()),
+            "login" | "signup" | "bind" => Ok(format!(
+                "{}?client_id={}&redirect_uri={}&response_type={}&scope={}&access_type={}",
+                google_oauth2_endpoint, client_id, redirect_uri, response_type, scope, access_type
+            )),
             _ => Err(anyhow::anyhow!("Invalid OAuth action")),
         }
     }
@@ -78,10 +86,35 @@ impl AuthRepository for AuthRepositoryImpl {
         code: &str,
         oauth_action: &str,
     ) -> anyhow::Result<String> {
+        let google_oauth2_endpoint = "https://oauth2.googleapis.com/token";
+        let client_id = std::env::var("GOOGLE_OAUTH2_CLIENT_ID")?;
+        let client_secret = std::env::var("GOOGLE_OAUTH2_CLIENT_SECRET")?;
+        let grant_type = "authorization_code";
+        let redirect_uri =
+            std::env::var("FRONTEND_URL")? + &format!("/auth/google/{}/callback", oauth_action);
+
+        let url = format!(
+            "{}?client_id={}&client_secret={}&code={}&grant_type={}&redirect_uri={}",
+            google_oauth2_endpoint, client_id, client_secret, code, grant_type, redirect_uri
+        );
+
+        let client = reqwest::Client::new();
+        let response = client.post(&url).send().await?;
+
+        if !response.status().is_success() {
+            return Err(anyhow::anyhow!("Failed to exchange authorization code"));
+        }
+
+        let response_json = response.json::<serde_json::Value>().await?;
+
+        let google_oauth = response_json
+            .get("id_token")
+            .and_then(|id_token| id_token.get("sub"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("Failed to retrieve Google OAuth"))?;
+
         match oauth_action {
-            "login" => Ok(format!("https://example.com/google_oauth2_login/{}", code)),
-            "signup" => Ok(format!("https://example.com/google_oauth2_signup/{}", code)),
-            "bind" => Ok(format!("https://example.com/google_oauth2_bind/{}", code)),
+            "login" | "signup" | "bind" => Ok(google_oauth.to_string()),
             _ => Err(anyhow::anyhow!("Invalid OAuth action")),
         }
     }

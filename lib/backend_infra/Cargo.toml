@@ -16,7 +16,7 @@ jsonwebtoken = { workspace = true }
 judge_core = { path = "../judge_core" }
 judge_infra_mock = { path = "../../lib/judge_infra_mock" }
 lettre = { workspace = true }
-reqwest = { workspace = true }
+reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true }
