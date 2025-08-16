@@ -28,8 +28,7 @@ impl From<UserRoleDto> for UserRoleResponse {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserResponse {
-    pub id: Uuid,
-    pub display_id: i64,
+    pub id: String,
     pub name: String,
     pub traq_id: Option<String>,
     pub github_id: Option<String>,
@@ -47,8 +46,7 @@ pub struct UserResponse {
 impl From<UserDto> for UserResponse {
     fn from(user: UserDto) -> Self {
         UserResponse {
-            id: user.id,
-            display_id: user.display_id,
+            id: user.display_id.to_string(),
             name: user.name,
             traq_id: user.traq_id,
             github_id: user.github_id,
