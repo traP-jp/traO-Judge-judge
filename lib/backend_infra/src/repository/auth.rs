@@ -139,4 +139,70 @@ impl AuthRepository for AuthRepositoryImpl {
 
         Ok(user_id.map(|id| UserId(id.0)))
     }
+
+    async fn get_github_oauth2_url(&self, oauth_action: &str) -> anyhow::Result<String> {
+        match oauth_action {
+            "login" => Ok("https://example.com/github_oauth2_login".to_string()),
+            "signup" => Ok("https://example.com/github_oauth2_signup".to_string()),
+            "bind" => Ok("https://example.com/github_oauth2_bind".to_string()),
+            _ => Err(anyhow::anyhow!("Invalid OAuth action")),
+        }
+    }
+
+    async fn get_github_oauth_by_authorize_code(
+        &self,
+        code: &str,
+        oauth_action: &str,
+    ) -> anyhow::Result<String> {
+        match oauth_action {
+            "login" => Ok(format!("https://example.com/github_oauth2_login/{}", code)),
+            "signup" => Ok(format!("https://example.com/github_oauth2_signup/{}", code)),
+            "bind" => Ok(format!("https://example.com/github_oauth2_bind/{}", code)),
+            _ => Err(anyhow::anyhow!("Invalid OAuth action")),
+        }
+    }
+
+    async fn save_user_github_oauth(&self, id: UserId, github_oauth: &str) -> anyhow::Result<()> {
+        sqlx::query("INSERT INTO user_authentications (user_id, github_oauth) VALUES (?, ?)")
+            .bind(UuidRow(id.into()))
+            .bind(github_oauth)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn verify_user_github_oauth(&self, id: UserId) -> anyhow::Result<bool> {
+        let github_oauth = sqlx::query_scalar::<_, Option<String>>(
+            "SELECT github_oauth FROM user_authentications WHERE user_id = ?",
+        )
+        .bind(UuidRow(id.into()))
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(github_oauth.is_some())
+    }
+
+    async fn delete_user_github_oauth(&self, id: UserId) -> anyhow::Result<bool> {
+        sqlx::query("UPDATE user_authentications SET github_oauth = NULL WHERE user_id = ?")
+            .bind(UuidRow(id.into()))
+            .execute(&self.pool)
+            .await?;
+
+        Ok(true)
+    }
+
+    async fn get_user_id_by_github_oauth(
+        &self,
+        github_oauth: &str,
+    ) -> anyhow::Result<Option<UserId>> {
+        let user_id = sqlx::query_scalar::<_, UuidRow>(
+            "SELECT user_id FROM user_authentications WHERE github_oauth = ?",
+        )
+        .bind(github_oauth)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(user_id.map(|id| UserId(id.0)))
+    }
 }

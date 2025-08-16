@@ -1,5 +1,6 @@
 pub mod auth;
 pub mod editorials;
+pub mod github_oauth2;
 pub mod google_oauth2;
 pub mod problems;
 pub mod submissions;

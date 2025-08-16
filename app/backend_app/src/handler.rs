@@ -6,6 +6,7 @@ use axum::{
 
 pub mod auth;
 pub mod editorial;
+pub mod github_oauth2;
 pub mod google_oauth2;
 pub mod icon;
 pub mod problems;
@@ -82,6 +83,17 @@ pub fn make_router(di_container: DiContainer) -> Router {
         )
         .route("/revoke", post(google_oauth2::post_google_oauth2_revoke));
 
+    let github_oauth2_router = Router::new()
+        .route(
+            "/:oauthAction/params",
+            get(github_oauth2::get_github_oauth2_params),
+        )
+        .route(
+            "/:oauthAction/authorize",
+            post(github_oauth2::post_github_oauth2_authorize),
+        )
+        .route("/revoke", post(github_oauth2::post_github_oauth2_revoke));
+
     Router::new()
         .nest("/", auth_router)
         .nest("/users", user_router)
@@ -91,5 +103,6 @@ pub fn make_router(di_container: DiContainer) -> Router {
         .nest("/testcases", testcases_router)
         .nest("/icons", icon_router)
         .nest("/google-oauth2", google_oauth2_router)
+        .nest("/github-oauth2", github_oauth2_router) // Assuming similar structure for GitHub OAuth2
         .with_state(di_container)
 }
