@@ -10,8 +10,7 @@ use super::{problem::NormalProblemsDto, submission::SubmissionsDto};
 pub struct UpdateUserData {
     pub user_name: Option<String>,
     pub icon: Option<String>,
-    pub x_link: Option<String>,
-    pub github_link: Option<String>,
+    pub x_id: Option<String>,
     pub self_introduction: Option<String>,
 }
 
@@ -19,8 +18,7 @@ impl UpdateUserData {
     pub fn validate(&self) -> anyhow::Result<()> {
         let rules = vec![
             (&self.user_name, RuleType::UserName),
-            (&self.x_link, RuleType::XLink),
-            (&self.github_link, RuleType::GitHubLink),
+            (&self.x_id, RuleType::XId),
             (&self.self_introduction, RuleType::SelfIntroduction),
         ];
         for (value, rule) in rules {
@@ -70,8 +68,7 @@ pub struct UserDto {
     pub icon_url: Option<String>,
     pub post_problems: NormalProblemsDto,
     pub submit_problems: SubmissionsDto,
-    pub x_link: Option<String>,
-    pub github_link: Option<String>,
+    pub x_id: Option<String>,
     pub self_introduction: String,
     pub role: UserRoleDto,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -89,8 +86,7 @@ impl UserDto {
             icon_url: user.icon_url,
             post_problems: problems,
             submit_problems: submissions,
-            x_link: user.x_link,
-            github_link: user.github_link,
+            x_id: user.x_id,
             self_introduction: user.self_introduction,
             role: user.role.into(),
             created_at: user.created_at,

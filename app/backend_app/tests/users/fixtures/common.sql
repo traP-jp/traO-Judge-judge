@@ -1,14 +1,13 @@
 ALTER TABLE users MODIFY updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;
 
 INSERT INTO users 
-(id, name, role, github_id, github_link, self_introduction, email, created_at, updated_at) 
+(id, name, role, github_id, self_introduction, email, created_at, updated_at) 
 VALUES 
 (
     UNHEX(REPLACE('11111111-1111-1111-1111-111111111111','-','')), 
     'test_user_1', 
     0,
     "test_github_id_1",
-    "https://github.com/test_user_1",
     "test_self_introduction_1",
     "test1@test.com",
     '2023-01-01 09:15:32',
@@ -24,14 +23,14 @@ VALUES
 );
 
 INSERT INTO users 
-(id, name, role, traq_id, x_link, created_at, updated_at) 
+(id, name, role, traq_id, x_id, created_at, updated_at) 
 VALUES 
 (
     UNHEX(REPLACE('22222222-2222-2222-2222-222222222222','-','')), 
     'test_user_2', 
     1,
     "test_traq_id_2",
-    "https://x.com/test_user_2",
+    "test_user_2",
     '2023-02-12 14:05:12',
     '2023-02-12 15:30:00'
 );

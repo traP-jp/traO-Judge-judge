@@ -35,8 +35,7 @@ pub struct UserResponse {
     pub icon_url: Option<String>,
     pub post_problems: ProblemSummariesResponses,
     pub submit_problems: SubmissionSummariesResponse,
-    pub x_link: Option<String>,
-    pub github_link: Option<String>,
+    pub x_id: Option<String>,
     pub self_introduction: String,
     pub role: UserRoleResponse,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -53,8 +52,7 @@ impl From<UserDto> for UserResponse {
             icon_url: user.icon_url,
             post_problems: user.post_problems.into(),
             submit_problems: user.submit_problems.into(),
-            x_link: user.x_link,
-            github_link: user.github_link,
+            x_id: user.x_id,
             self_introduction: user.self_introduction,
             role: user.role.into(),
             created_at: user.created_at,
@@ -80,7 +78,6 @@ pub struct UpdatePassword {
 pub struct UpdateMe {
     pub user_name: Option<String>,
     pub icon: Option<String>,
-    pub x_link: Option<String>,
-    pub github_link: Option<String>,
+    pub x_id: Option<String>,
     pub self_introduction: Option<String>,
 }

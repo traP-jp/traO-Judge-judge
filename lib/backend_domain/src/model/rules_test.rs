@@ -59,67 +59,19 @@ fn test_password_validate() {
 }
 
 #[test]
-fn test_x_link_validate() {
-    let rule = RuleType::XLink;
-    assert!(rule.validate("https://x.com/abc").is_ok());
-    assert!(rule.validate("http://x.com/abc").is_ok());
-    assert!(rule.validate("https://www.x.com/abc").is_ok());
-    assert!(rule.validate("http://www.x.com/abc").is_ok());
-    assert!(rule.validate("https://x.com/abc/def").is_ok());
-    assert!(rule.validate("www.x.com/abc/def").is_ok());
-    assert!(rule.validate("x.com/abc/def/").is_ok());
-    assert!(rule.validate("https://x.com").is_err());
-    assert!(rule.validate("http://x.com").is_err());
-    assert!(rule.validate("https://www.x.com").is_err());
-    assert!(rule.validate("http://www.x.com").is_err());
-    assert!(rule.validate("www.x.com/").is_err());
-    assert!(rule.validate("x.com/").is_err());
-    assert!(rule.validate("www.x.com").is_err());
-    assert!(rule.validate("x.com").is_err());
+fn test_x_id_validate() {
+    let rule = RuleType::XId;
+    assert!(rule.validate("abc").is_ok());
+    assert!(rule.validate("Abc").is_ok());
+    assert!(rule.validate("ABC").is_ok());
+    assert!(rule.validate("").is_err());
+    assert!(rule.validate("abc.def").is_err());
+    assert!(rule.validate("abc-def").is_err());
+    assert!(rule.validate("abc/def").is_err());
 
-    assert!(rule.validate("https://twitter.com/abc").is_ok());
-    assert!(rule.validate("https://twitter.com").is_err());
+    assert!(rule.validate("_D_e_f_").is_ok());
+    assert!(rule.validate("-Def").is_err());
 
-    assert!(rule.validate("https://x.com/abc/_D_e_f_").is_ok());
-    assert!(rule.validate("https://x.com/abc/-Def").is_err());
-
-    assert!(rule.validate("https://x.com/01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567").is_ok());
-    assert!(rule.validate("https://x.com/012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678").is_err());
-
-    assert!(rule.validate("https://x.com/home").is_ok());
-    assert!(rule.validate("https://x.com/explore").is_ok());
-    assert!(rule.validate("https://x.com/notification").is_ok());
-    assert!(rule.validate("https://x.com/messages").is_ok());
-    assert!(rule.validate("https://x.com/abc/status/0123456789").is_ok());
-}
-
-#[test]
-fn test_github_link_validate() {
-    let rule = RuleType::GitHubLink;
-    assert!(rule.validate("https://github.com/abc").is_ok());
-    assert!(rule.validate("http://github.com/abc").is_ok());
-    assert!(rule.validate("https://www.github.com/abc").is_ok());
-    assert!(rule.validate("http://www.github.com/abc").is_ok());
-    assert!(rule.validate("https://github.com/abc/def").is_ok());
-    assert!(rule.validate("www.github.com/abc/def").is_ok());
-    assert!(rule.validate("github.com/abc/def/").is_ok());
-    assert!(rule.validate("https://github.com").is_err());
-    assert!(rule.validate("http://github.com").is_err());
-    assert!(rule.validate("https://www.github.com").is_err());
-    assert!(rule.validate("http://www.github.com").is_err());
-    assert!(rule.validate("www.github.com/").is_err());
-    assert!(rule.validate("github.com/").is_err());
-    assert!(rule.validate("www.github.com").is_err());
-    assert!(rule.validate("github.com").is_err());
-
-    assert!(rule.validate("https://github.com/abc/_D_e_-f_").is_ok());
-    assert!(rule.validate("https://github.com/abc/@Def").is_err());
-
-    assert!(rule.validate("https://github.com/01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567").is_ok());
-    assert!(rule.validate("https://github.com/012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678").is_err());
-
-    assert!(
-        rule.validate("https://github.com/a/a/projects?query=is%3Aopen")
-            .is_err()
-    );
+    assert!(rule.validate("012345678901234").is_ok());
+    assert!(rule.validate("0123456789012345").is_err());
 }
