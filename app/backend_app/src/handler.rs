@@ -7,6 +7,7 @@ use axum::{
 pub mod auth;
 pub mod editorial;
 pub mod icon;
+pub mod language;
 pub mod problems;
 pub mod submissions;
 pub mod testcase;
@@ -74,6 +75,8 @@ pub fn make_router(di_container: DiContainer) -> Router {
 
     let icon_router = Router::new().route("/:iconId", get(icon::get_icon));
 
+    let language_router = Router::new().route("/", get(language::get_languages));
+
     Router::new()
         .nest("/", auth_router)
         .nest("/users", user_router)
@@ -82,5 +85,6 @@ pub fn make_router(di_container: DiContainer) -> Router {
         .nest("/editorials", editorials_router)
         .nest("/testcases", testcases_router)
         .nest("/icons", icon_router)
+        .nest("/languages", language_router)
         .with_state(di_container)
 }

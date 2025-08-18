@@ -66,8 +66,7 @@ pub struct User {
     pub traq_id: Option<String>,
     pub github_id: Option<String>,
     pub icon_url: Option<String>,
-    pub x_link: Option<String>,
-    pub github_link: Option<String>,
+    pub x_id: Option<String>,
     pub self_introduction: String,
     pub role: UserRole,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -77,7 +76,6 @@ pub struct User {
 pub struct UpdateUser {
     pub user_name: String,
     pub icon_url: Option<String>,
-    pub x_link: Option<String>,
-    pub github_link: Option<String>,
+    pub x_id: Option<String>,
     pub self_introduction: String,
 }

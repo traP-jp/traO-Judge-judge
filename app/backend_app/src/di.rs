@@ -4,9 +4,10 @@ use infra::{
     repository::{
         auth::AuthRepositoryImpl, dep_name::DepNameRepositoryImpl,
         editorial::EditorialRepositoryImpl, icon::IconRepositoryImpl,
-        problem::ProblemRepositoryImpl, procedure::ProcedureRepositoryImpl,
-        session::SessionRepositoryImpl, submission::SubmissionRepositoryImpl,
-        testcase::TestcaseRepositoryImpl, user::UserRepositoryImpl,
+        language::LanguageRepositoryImpl, problem::ProblemRepositoryImpl,
+        procedure::ProcedureRepositoryImpl, session::SessionRepositoryImpl,
+        submission::SubmissionRepositoryImpl, testcase::TestcaseRepositoryImpl,
+        user::UserRepositoryImpl,
     },
 };
 use judge_core::logic::judge_service_impl::JudgeServiceImpl;
@@ -16,8 +17,8 @@ use judge_infra_mock::multi_proc_problem_registry::{
 };
 use usecase::service::{
     auth::AuthenticationService, editorial::EditorialService, icon::IconService,
-    problem::ProblemService, submission::SubmissionService, testcase::TestcaseService,
-    user::UserService,
+    language::LanguageService, problem::ProblemService, submission::SubmissionService,
+    testcase::TestcaseService, user::UserService,
 };
 
 #[derive(Clone)]
@@ -33,6 +34,7 @@ pub struct DiContainer {
         UserRepositoryImpl,
         SessionRepositoryImpl,
         TestcaseRepositoryImpl,
+        ProcedureRepositoryImpl,
     >,
     user_service: UserService<
         UserRepositoryImpl,
@@ -69,6 +71,7 @@ pub struct DiContainer {
         RegistryServer, // mock
         DepNameRepositoryImpl,
     >,
+    language_service: LanguageService<LanguageRepositoryImpl>,
 }
 
 impl DiContainer {
@@ -85,6 +88,7 @@ impl DiContainer {
                 provider.provide_user_repository(),
                 provider.provide_session_repository(),
                 provider.provide_testcase_repository(),
+                provider.provide_procedure_repository(),
             ),
             user_service: UserService::new(
                 provider.provide_user_repository(),
@@ -120,6 +124,7 @@ impl DiContainer {
                 provider.provide_problem_registry_server(),
                 provider.provide_dep_name_repository(),
             ),
+            language_service: LanguageService::new(provider.provide_language_repository()),
         }
     }
 
@@ -178,6 +183,7 @@ impl DiContainer {
         UserRepositoryImpl,
         SessionRepositoryImpl,
         TestcaseRepositoryImpl,
+        ProcedureRepositoryImpl,
     > {
         &self.problem_service
     }
@@ -201,5 +207,9 @@ impl DiContainer {
         DepNameRepositoryImpl,
     > {
         &self.testcase_service
+    }
+
+    pub fn language_service(&self) -> &LanguageService<LanguageRepositoryImpl> {
+        &self.language_service
     }
 }

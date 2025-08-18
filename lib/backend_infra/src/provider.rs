@@ -13,7 +13,7 @@ use sqlx::{
 
 use crate::repository::{
     dep_name::DepNameRepositoryImpl, editorial::EditorialRepositoryImpl, icon::IconRepositoryImpl,
-    procedure::ProcedureRepositoryImpl,
+    language::LanguageRepositoryImpl, procedure::ProcedureRepositoryImpl,
 };
 
 use super::{
@@ -153,6 +153,10 @@ impl Provider {
             mock_job_service::JobService::new(host_temp_dir, container_temp_dir, pr_client, image)
                 .expect("Failed to init mock JobService");
         JudgeServiceImpl::new(job)
+    }
+
+    pub fn provide_language_repository(&self) -> LanguageRepositoryImpl {
+        LanguageRepositoryImpl::new()
     }
 }
 
