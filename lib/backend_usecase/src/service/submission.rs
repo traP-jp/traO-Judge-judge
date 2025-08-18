@@ -3,23 +3,21 @@ use crate::model::submission::{
     SubmissionOrderByData, SubmissionSummaryDto, SubmissionsDto,
 };
 use domain::{
-    model::{
-        submission::{
-            CreateJudgeResult, CreateSubmission, SubmissionGetQuery, SubmissionOrderBy,
-            UpdateSubmission,
-        },
-        testcase,
+    model::submission::{
+        CreateJudgeResult, CreateSubmission, SubmissionGetQuery, SubmissionOrderBy,
+        UpdateSubmission,
     },
     repository::{
-        problem::ProblemRepository, procedure::ProcedureRepository, session::SessionRepository,
-        submission::SubmissionRepository, testcase::TestcaseRepository, user::UserRepository,
+        language::LanguageRepository, problem::ProblemRepository, procedure::ProcedureRepository,
+        session::SessionRepository, submission::SubmissionRepository, testcase::TestcaseRepository,
+        user::UserRepository,
     },
 };
 use judge_core::{
     constant::label::single_judge,
     model::{
         dep_name_repository::DepNameRepository,
-        judge::{JudgeRequest, JudgeResponse, JudgeService},
+        judge::{JudgeRequest, JudgeService},
         judge_output::{ExecutionJobResult, ExecutionResult, JudgeStatus},
     },
 };
@@ -33,6 +31,7 @@ pub struct SubmissionService<
     PcR: ProcedureRepository,
     TR: TestcaseRepository,
     UR: UserRepository,
+    LR: LanguageRepository,
     DNR: DepNameRepository<i64>,
     JS: JudgeService,
 > {
@@ -40,9 +39,10 @@ pub struct SubmissionService<
     submission_repository: SuR,
     problem_repository: PR,
     procedure_repository: PcR,
-    user_repository: UR,
-    dep_name_repository: DNR,
     testcase_repository: TR,
+    user_repository: UR,
+    language_repository: LR,
+    dep_name_repository: DNR,
     judge_service: JS,
 }
 
@@ -53,9 +53,10 @@ impl<
     PcR: ProcedureRepository,
     TR: TestcaseRepository,
     UR: UserRepository,
+    LR: LanguageRepository,
     DNR: DepNameRepository<i64>,
     JS: JudgeService,
-> SubmissionService<SeR, SuR, PR, PcR, TR, UR, DNR, JS>
+> SubmissionService<SeR, SuR, PR, PcR, TR, UR, LR, DNR, JS>
 {
     pub fn new(
         session_repository: SeR,
@@ -64,6 +65,7 @@ impl<
         procedure_repository: PcR,
         testcase_repository: TR,
         user_repository: UR,
+        language_repository: LR,
         dep_name_repository: DNR,
         judge_service: JS,
     ) -> Self {
@@ -74,6 +76,7 @@ impl<
             procedure_repository,
             testcase_repository,
             user_repository,
+            language_repository,
             dep_name_repository,
             judge_service,
         }
@@ -95,9 +98,10 @@ impl<
     PcR: ProcedureRepository,
     TR: TestcaseRepository,
     UR: UserRepository,
+    LR: LanguageRepository,
     DNR: DepNameRepository<i64>,
     JS: JudgeService,
-> SubmissionService<SeR, SuR, PR, PcR, TR, UR, DNR, JS>
+> SubmissionService<SeR, SuR, PR, PcR, TR, UR, LR, DNR, JS>
 {
     pub async fn get_submission(
         &self,
@@ -242,6 +246,13 @@ impl<
             None => return Err(SubmissionError::Forbidden),
         };
 
+        let user = self
+            .user_repository
+            .get_user_by_display_id(display_id)
+            .await
+            .map_err(|_| SubmissionError::InternalServerError)?
+            .ok_or(SubmissionError::Forbidden)?;
+
         let problem = self
             .problem_repository
             .get_problem(problem_id)
@@ -253,12 +264,12 @@ impl<
             return Err(SubmissionError::NotFound);
         }
 
-        let user = self
-            .user_repository
-            .get_user_by_display_id(display_id)
+        let language_id = self
+            .language_repository
+            .language_to_id(body.language.clone())
             .await
             .map_err(|_| SubmissionError::InternalServerError)?
-            .ok_or(SubmissionError::NotFound)?;
+            .ok_or(SubmissionError::ValidateError)?;
 
         let procedure = self
             .procedure_repository
@@ -266,10 +277,6 @@ impl<
             .await
             .map_err(|_| SubmissionError::InternalServerError)?
             .ok_or(SubmissionError::InternalServerError)?;
-
-        // 仮置き
-        let language_id =
-            language_to_id(&body.language).map_err(|_| SubmissionError::InternalServerError)?;
 
         let submission = CreateSubmission {
             problem_id,
@@ -416,8 +423,4 @@ impl<
         // Return created submission via get_submission
         self.get_submission(session_id, submission_id).await
     }
-}
-
-fn language_to_id(language: &str) -> anyhow::Result<i32> {
-    Ok(0)
 }

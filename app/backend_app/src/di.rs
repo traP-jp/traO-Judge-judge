@@ -53,6 +53,7 @@ pub struct DiContainer {
         ProcedureRepositoryImpl,
         TestcaseRepositoryImpl,
         UserRepositoryImpl,
+        LanguageRepositoryImpl,
         DepNameRepositoryImpl,
         JudgeServiceImpl<
             mock_tokens::RegistrationToken,
@@ -107,6 +108,7 @@ impl DiContainer {
                 provider.provide_procedure_repository(),
                 provider.provide_testcase_repository(),
                 provider.provide_user_repository(),
+                provider.provide_language_repository(),
                 provider.provide_dep_name_repository(),
                 provider.provide_judge_service(),
             ),
@@ -166,6 +168,7 @@ impl DiContainer {
         ProcedureRepositoryImpl,
         TestcaseRepositoryImpl,
         UserRepositoryImpl,
+        LanguageRepositoryImpl,
         DepNameRepositoryImpl,
         JudgeServiceImpl<
             mock_tokens::RegistrationToken,

@@ -23,6 +23,13 @@ impl LanguageRepository for LanguageRepositoryImpl {
     async fn get_languages(&self) -> anyhow::Result<Vec<Language>> {
         Ok(self.languages.clone())
     }
+    async fn language_to_id(&self, language: String) -> anyhow::Result<Option<i32>> {
+        Ok(self
+            .languages
+            .iter()
+            .position(|l| l.name == *language)
+            .map(|v| v as i32))
+    }
 }
 
 fn load_languages() -> anyhow::Result<Vec<Language>> {
