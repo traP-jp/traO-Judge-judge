@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
 use async_sqlx_session::MySqlSessionStore;
+use judge_core::logic::judge_service_impl::JudgeServiceImpl;
+use judge_infra_mock::job_service::{job_service as mock_job_service, tokens as mock_tokens};
 use judge_infra_mock::multi_proc_problem_registry::{
     registry_client::RegistryClient, registry_server::RegistryServer,
 };
@@ -131,6 +133,26 @@ impl Provider {
 
     pub fn provide_problem_registry_server(&self) -> RegistryServer {
         RegistryServer::new(self.temp_dir.clone())
+    }
+
+    // Provide a local JudgeService using mock job service and multi-proc registry client
+    pub fn provide_judge_service(
+        &self,
+    ) -> JudgeServiceImpl<
+        mock_tokens::RegistrationToken,
+        mock_tokens::OutcomeToken,
+        mock_job_service::JobService<RegistryClient>,
+    > {
+        let host_temp_dir = self.temp_dir.clone();
+        let container_temp_dir = PathBuf::from("/tmp/trao");
+        let pr_client = self.provide_problem_registry_client();
+        // Image name assumption; ensure this exists in your environment
+        let image = std::env::var("TRAO_EXEC_IMAGE")
+            .unwrap_or_else(|_| "traojudge/exec:latest".to_string());
+        let job =
+            mock_job_service::JobService::new(host_temp_dir, container_temp_dir, pr_client, image)
+                .expect("Failed to init mock JobService");
+        JudgeServiceImpl::new(job)
     }
 }
 

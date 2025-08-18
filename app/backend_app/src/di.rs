@@ -9,6 +9,8 @@ use infra::{
         testcase::TestcaseRepositoryImpl, user::UserRepositoryImpl,
     },
 };
+use judge_core::logic::judge_service_impl::JudgeServiceImpl;
+use judge_infra_mock::job_service::{job_service as mock_job_service, tokens as mock_tokens};
 use judge_infra_mock::multi_proc_problem_registry::{
     registry_client::RegistryClient, registry_server::RegistryServer,
 };
@@ -42,8 +44,20 @@ pub struct DiContainer {
         MailClientImpl,
     >,
     icon_service: IconService<IconRepositoryImpl>,
-    submission_service:
-        SubmissionService<SessionRepositoryImpl, SubmissionRepositoryImpl, ProblemRepositoryImpl>,
+    submission_service: SubmissionService<
+        SessionRepositoryImpl,
+        SubmissionRepositoryImpl,
+        ProblemRepositoryImpl,
+        ProcedureRepositoryImpl,
+        TestcaseRepositoryImpl,
+        UserRepositoryImpl,
+        DepNameRepositoryImpl,
+        JudgeServiceImpl<
+            mock_tokens::RegistrationToken,
+            mock_tokens::OutcomeToken,
+            mock_job_service::JobService<RegistryClient>,
+        >,
+    >,
     editorial_service:
         EditorialService<SessionRepositoryImpl, EditorialRepositoryImpl, ProblemRepositoryImpl>,
     testcase_service: TestcaseService<
@@ -86,6 +100,11 @@ impl DiContainer {
                 provider.provide_session_repository(),
                 provider.provide_submission_repository(),
                 provider.provide_problem_repository(),
+                provider.provide_procedure_repository(),
+                provider.provide_testcase_repository(),
+                provider.provide_user_repository(),
+                provider.provide_dep_name_repository(),
+                provider.provide_judge_service(),
             ),
             editorial_service: EditorialService::new(
                 provider.provide_session_repository(),
@@ -135,8 +154,20 @@ impl DiContainer {
 
     pub fn submission_service(
         &self,
-    ) -> &SubmissionService<SessionRepositoryImpl, SubmissionRepositoryImpl, ProblemRepositoryImpl>
-    {
+    ) -> &SubmissionService<
+        SessionRepositoryImpl,
+        SubmissionRepositoryImpl,
+        ProblemRepositoryImpl,
+        ProcedureRepositoryImpl,
+        TestcaseRepositoryImpl,
+        UserRepositoryImpl,
+        DepNameRepositoryImpl,
+        JudgeServiceImpl<
+            mock_tokens::RegistrationToken,
+            mock_tokens::OutcomeToken,
+            mock_job_service::JobService<RegistryClient>,
+        >,
+    > {
         &self.submission_service
     }
 
