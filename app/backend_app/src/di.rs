@@ -46,19 +46,21 @@ pub struct DiContainer {
         MailClientImpl,
     >,
     icon_service: IconService<IconRepositoryImpl>,
-    submission_service: SubmissionService<
-        SessionRepositoryImpl,
-        SubmissionRepositoryImpl,
-        ProblemRepositoryImpl,
-        ProcedureRepositoryImpl,
-        TestcaseRepositoryImpl,
-        UserRepositoryImpl,
-        LanguageRepositoryImpl,
-        DepNameRepositoryImpl,
-        JudgeServiceImpl<
-            mock_tokens::RegistrationToken,
-            mock_tokens::OutcomeToken,
-            mock_job_service::JobService<RegistryClient>,
+    submission_service: std::sync::Arc<
+        SubmissionService<
+            SessionRepositoryImpl,
+            SubmissionRepositoryImpl,
+            ProblemRepositoryImpl,
+            ProcedureRepositoryImpl,
+            TestcaseRepositoryImpl,
+            UserRepositoryImpl,
+            LanguageRepositoryImpl,
+            DepNameRepositoryImpl,
+            JudgeServiceImpl<
+                mock_tokens::RegistrationToken,
+                mock_tokens::OutcomeToken,
+                mock_job_service::JobService<RegistryClient>,
+            >,
         >,
     >,
     editorial_service:
@@ -101,7 +103,7 @@ impl DiContainer {
                 provider.provide_mail_client(),
             ),
             icon_service: IconService::new(provider.provide_icon_repository()),
-            submission_service: SubmissionService::new(
+            submission_service: std::sync::Arc::new(SubmissionService::new(
                 provider.provide_session_repository(),
                 provider.provide_submission_repository(),
                 provider.provide_problem_repository(),
@@ -111,7 +113,7 @@ impl DiContainer {
                 provider.provide_language_repository(),
                 provider.provide_dep_name_repository(),
                 provider.provide_judge_service(),
-            ),
+            )),
             editorial_service: EditorialService::new(
                 provider.provide_session_repository(),
                 provider.provide_editorial_repository(),
@@ -161,19 +163,21 @@ impl DiContainer {
 
     pub fn submission_service(
         &self,
-    ) -> &SubmissionService<
-        SessionRepositoryImpl,
-        SubmissionRepositoryImpl,
-        ProblemRepositoryImpl,
-        ProcedureRepositoryImpl,
-        TestcaseRepositoryImpl,
-        UserRepositoryImpl,
-        LanguageRepositoryImpl,
-        DepNameRepositoryImpl,
-        JudgeServiceImpl<
-            mock_tokens::RegistrationToken,
-            mock_tokens::OutcomeToken,
-            mock_job_service::JobService<RegistryClient>,
+    ) -> &std::sync::Arc<
+        SubmissionService<
+            SessionRepositoryImpl,
+            SubmissionRepositoryImpl,
+            ProblemRepositoryImpl,
+            ProcedureRepositoryImpl,
+            TestcaseRepositoryImpl,
+            UserRepositoryImpl,
+            LanguageRepositoryImpl,
+            DepNameRepositoryImpl,
+            JudgeServiceImpl<
+                mock_tokens::RegistrationToken,
+                mock_tokens::OutcomeToken,
+                mock_job_service::JobService<RegistryClient>,
+            >,
         >,
     > {
         &self.submission_service

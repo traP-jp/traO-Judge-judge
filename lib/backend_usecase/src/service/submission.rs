@@ -25,15 +25,15 @@ use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct SubmissionService<
-    SeR: SessionRepository,
-    SuR: SubmissionRepository,
-    PR: ProblemRepository,
-    PcR: ProcedureRepository,
-    TR: TestcaseRepository,
-    UR: UserRepository,
-    LR: LanguageRepository,
-    DNR: DepNameRepository<i64>,
-    JS: JudgeService,
+    SeR: SessionRepository + Send + Sync + 'static,
+    SuR: SubmissionRepository + Send + Sync + 'static,
+    PR: ProblemRepository + Send + Sync + 'static,
+    PcR: ProcedureRepository + Send + Sync + 'static,
+    TR: TestcaseRepository + Send + Sync + 'static,
+    UR: UserRepository + Send + Sync + 'static,
+    LR: LanguageRepository + Send + Sync + 'static,
+    DNR: DepNameRepository<i64> + Send + Sync + 'static,
+    JS: JudgeService + Send + Sync + 'static,
 > {
     session_repository: SeR,
     submission_repository: SuR,
@@ -47,15 +47,15 @@ pub struct SubmissionService<
 }
 
 impl<
-    SeR: SessionRepository,
-    SuR: SubmissionRepository,
-    PR: ProblemRepository,
-    PcR: ProcedureRepository,
-    TR: TestcaseRepository,
-    UR: UserRepository,
-    LR: LanguageRepository,
-    DNR: DepNameRepository<i64>,
-    JS: JudgeService,
+    SeR: SessionRepository + Send + Sync + 'static,
+    SuR: SubmissionRepository + Send + Sync + 'static,
+    PR: ProblemRepository + Send + Sync + 'static,
+    PcR: ProcedureRepository + Send + Sync + 'static,
+    TR: TestcaseRepository + Send + Sync + 'static,
+    UR: UserRepository + Send + Sync + 'static,
+    LR: LanguageRepository + Send + Sync + 'static,
+    DNR: DepNameRepository<i64> + Send + Sync + 'static,
+    JS: JudgeService + Send + Sync + 'static,
 > SubmissionService<SeR, SuR, PR, PcR, TR, UR, LR, DNR, JS>
 {
     pub fn new(
@@ -92,15 +92,15 @@ pub enum SubmissionError {
 }
 
 impl<
-    SeR: SessionRepository,
-    SuR: SubmissionRepository,
-    PR: ProblemRepository,
-    PcR: ProcedureRepository,
-    TR: TestcaseRepository,
-    UR: UserRepository,
-    LR: LanguageRepository,
-    DNR: DepNameRepository<i64>,
-    JS: JudgeService,
+    SeR: SessionRepository + Send + Sync + 'static,
+    SuR: SubmissionRepository + Send + Sync + 'static,
+    PR: ProblemRepository + Send + Sync + 'static,
+    PcR: ProcedureRepository + Send + Sync + 'static,
+    TR: TestcaseRepository + Send + Sync + 'static,
+    UR: UserRepository + Send + Sync + 'static,
+    LR: LanguageRepository + Send + Sync + 'static,
+    DNR: DepNameRepository<i64> + Send + Sync + 'static,
+    JS: JudgeService + Send + Sync + 'static,
 > SubmissionService<SeR, SuR, PR, PcR, TR, UR, LR, DNR, JS>
 {
     pub async fn get_submission(
@@ -231,7 +231,7 @@ impl<
     }
 
     pub async fn create_submission(
-        &self,
+        self: &std::sync::Arc<Self>,
         session_id: Option<&str>,
         problem_id: i64,
         body: CreateSubmissionData,
@@ -314,7 +314,24 @@ impl<
             problem.memory_limit.to_string(),
         );
 
-        // need spawn
+        let self_clone = std::sync::Arc::clone(self);
+
+        tokio::spawn(async move {
+            let _ = self_clone
+                .async_judge_submission(submission_id, problem_id, procedure, runtime_texts)
+                .await;
+        });
+
+        self.get_submission(session_id, submission_id).await
+    }
+
+    async fn async_judge_submission(
+        &self,
+        submission_id: i64,
+        problem_id: i64,
+        procedure: judge_core::model::procedure::registered::Procedure,
+        runtime_texts: HashMap<String, String>,
+    ) -> anyhow::Result<(), SubmissionError> {
         let judge_response = self
             .judge_service
             .judge(JudgeRequest {
@@ -353,7 +370,7 @@ impl<
             match result {
                 ExecutionJobResult::ExecutionResult(exec) => match exec {
                     ExecutionResult::Displayable(res) => {
-                        total_score = total_score + res.score;
+                        total_score += res.score;
                         max_time = max_time.max(res.time as i32);
                         max_memory = max_memory.max(res.memory as i32);
                         overall_status = overall_status.max(res.status.clone());
@@ -420,7 +437,6 @@ impl<
             .await
             .map_err(|_| SubmissionError::InternalServerError)?;
 
-        // Return created submission via get_submission
-        self.get_submission(session_id, submission_id).await
+        Ok(())
     }
 }

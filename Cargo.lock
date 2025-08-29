@@ -882,6 +882,7 @@ dependencies = [
  "http-body-util",
  "infra",
  "jsonwebtoken",
+ "judge_core",
  "judge_infra_mock",
  "lettre",
  "reqwest",
