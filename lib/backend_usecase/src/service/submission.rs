@@ -381,22 +381,11 @@ impl<
                             .unwrap()
                             .unwrap_or_default();
 
-                        // let testcase_id =
-                        //     name_to_id.get(&testcase_name).cloned().unwrap_or_default();
-
-                        // testcase_idをUUIDにするまでの仮置き
-                        let testcase_id = i64::from_be_bytes(
-                            name_to_id
-                                .get(&testcase_name)
-                                .cloned()
-                                .unwrap_or_default()
-                                .as_bytes()[0..8]
-                                .try_into()
-                                .unwrap_or_default(),
-                        );
+                        let testcase_id =
+                            name_to_id.get(&testcase_name).cloned().unwrap_or_default();
 
                         testcase_results.push(CreateJudgeResult {
-                            submission_id: submission_id,
+                            submission_id,
                             testcase_id,
                             testcase_name,
                             judge_status: format!("{:?}", res.status),
