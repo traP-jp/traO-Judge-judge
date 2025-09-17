@@ -264,9 +264,9 @@ impl<
             return Err(SubmissionError::NotFound);
         }
 
-        let language_id = self
+        let language = self
             .language_repository
-            .language_to_id(body.language.clone())
+            .id_to_language(body.language_id)
             .await
             .map_err(|_| SubmissionError::InternalServerError)?
             .ok_or(SubmissionError::ValidateError)?;
@@ -282,7 +282,7 @@ impl<
             problem_id,
             user_id: display_id,
             user_name: user.name.clone(),
-            language_id: language_id,
+            language_id: body.language_id,
             source: body.source.clone(),
             judge_status: "WJ".to_string(),
             total_score: 0,
@@ -301,10 +301,7 @@ impl<
             single_judge::SUBMISSION_SOURCE.to_string(),
             body.source.clone(),
         );
-        runtime_texts.insert(
-            single_judge::LANGUAGE_TAG.to_string(),
-            body.language.clone(),
-        );
+        runtime_texts.insert(single_judge::LANGUAGE_TAG.to_string(), language.clone());
         runtime_texts.insert(
             single_judge::TIME_LIMIT_MS.to_string(),
             problem.time_limit.to_string(),

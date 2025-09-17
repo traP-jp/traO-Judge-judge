@@ -91,6 +91,6 @@ pub struct SubmissionGetQueryData {
 
 #[derive(Debug, Clone)]
 pub struct CreateSubmissionData {
-    pub language: String,
+    pub language_id: i32,
     pub source: String,
 }

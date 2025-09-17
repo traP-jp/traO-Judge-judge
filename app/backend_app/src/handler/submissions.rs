@@ -110,7 +110,7 @@ pub async fn post_submission(
             session_id,
             problem_id,
             CreateSubmissionData {
-                language: body.language,
+                language_id: body.language_id,
                 source: body.source,
             },
         )
