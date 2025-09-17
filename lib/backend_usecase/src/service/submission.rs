@@ -375,7 +375,7 @@ impl<
                         let testcase_name = testcase_names
                             .get(&dep_id)
                             .cloned()
-                            .unwrap()
+                            .flatten()
                             .unwrap_or_default();
 
                         let testcase_id =
