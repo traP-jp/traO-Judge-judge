@@ -259,12 +259,6 @@ impl<
 
         let icon_id = match body.icon {
             Some(icon) => {
-                if let Some(old_icon_id) = &user.icon_id {
-                    self.icon_repository
-                        .delete_icon(old_icon_id.to_owned())
-                        .await
-                        .map_err(|_| UserError::InternalServerError)?;
-                }
 
                 let binary_data = BASE64_STANDARD
                     .decode(icon)
@@ -282,6 +276,13 @@ impl<
                     return Err(UserError::ValidateError);
                 }
 
+                if let Some(old_icon_id) = &user.icon_id {
+                    self.icon_repository
+                        .delete_icon(old_icon_id.to_owned())
+                        .await
+                        .map_err(|_| UserError::InternalServerError)?;
+                }
+
                 let uuid = uuid::Uuid::now_v7();
 
                 let icon = domain::model::icon::Icon {
@@ -289,6 +290,7 @@ impl<
                     content_type: mime_type.to_string(),
                     icon: binary_data,
                 };
+
 
                 self.icon_repository
                     .create_icon(icon)
