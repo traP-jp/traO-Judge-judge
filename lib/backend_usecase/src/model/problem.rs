@@ -7,9 +7,9 @@ use validator::Validate;
 pub struct UpdateNormalProblemData {
     pub title: Option<String>,
     pub statement: Option<String>,
-    #[validate(range(min = 1, max = 32767))]
+    #[validate(range(min = 1, max = 65535))]
     pub time_limit: Option<i32>,
-    #[validate(range(min = 1, max = 32767))]
+    #[validate(range(min = 1, max = 65535))]
     pub memory_limit: Option<i32>,
     #[validate(range(min = 1, max = 10))]
     pub difficulty: Option<i32>,
