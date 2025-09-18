@@ -47,7 +47,7 @@ impl AuthMailTemplateProvider for DefaultAuthMailTemplateProvider {
 
     fn reset_password_request(&self, jwt: &str) -> AuthMailContent {
         AuthMailContent {
-            subject: "Reset password mail".to_string(),
+            subject: "Reset Password Email".to_string(),
             body: format!(
                 "Please click the link below to reset your password.\n\n{}/reset?jwt={jwt}",
                 self.base_url()
