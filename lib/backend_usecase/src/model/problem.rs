@@ -21,9 +21,9 @@ pub struct CreateNormalProblemData {
     // pub author_id: i64,
     pub title: String,
     pub statement: String,
-    #[validate(range(min = 1, max = 32767))]
+    #[validate(range(min = 1, max = 65535))]
     pub time_limit: i32,
-    #[validate(range(min = 1, max = 32767))]
+    #[validate(range(min = 1, max = 65535))]
     pub memory_limit: i32,
     #[validate(range(min = 1, max = 10))]
     pub difficulty: i32,
