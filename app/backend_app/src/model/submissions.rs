@@ -7,12 +7,12 @@ use usecase::model::submission::{
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubmissionResponse {
-    pub id: i64,
-    pub user_id: i64,
+    pub id: String,
+    pub user_id: String,
     pub user_name: String,
-    pub problem_id: i64,
+    pub problem_id: String,
     pub submitted_at: chrono::DateTime<chrono::Utc>,
-    pub language_id: i32,
+    pub language_id: String,
     pub total_score: i64,
     pub max_time: i32,
     pub max_memory: i32,
@@ -43,7 +43,7 @@ impl From<SubmissionDto> for SubmissionResponse {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JudgeResultResponse {
-    pub testcase_id: i64,
+    pub testcase_id: String,
     pub testcase_name: String,
     pub judge_status: String,
     pub score: i64,
@@ -85,22 +85,22 @@ pub struct SubmissionGetQuery {
     pub limit: Option<i64>,
     pub offset: Option<i64>,
     pub judge_status: Option<String>,
-    pub language_id: Option<i64>,
+    pub language_id: Option<String>,
     pub user_name: Option<String>,
-    pub user_id: Option<i64>,
+    pub user_id: Option<String>,
     pub order_by: Option<SubmissionOrderBy>,
-    pub problem_id: Option<i64>,
+    pub problem_id: Option<String>,
 }
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubmissionSummaryResponse {
-    pub id: i64,
-    pub user_id: i64,
+    pub id: String,
+    pub user_id: String,
     pub user_name: String,
-    pub problem_id: i64,
+    pub problem_id: String,
     pub submitted_at: chrono::DateTime<chrono::Utc>,
-    pub language_id: i32,
+    pub language_id: String,
     pub total_score: i64,
     pub max_time: i32,
     pub max_memory: i32,
@@ -148,6 +148,6 @@ impl From<SubmissionsDto> for SubmissionSummariesResponse {
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateSubmission {
-    pub language_id: i32,
+    pub language_id: String,
     pub source: String,
 }

@@ -71,8 +71,12 @@ impl<
     pub async fn get_problem(
         &self,
         session_id: Option<&str>,
-        problem_id: i64,
+        problem_id: String,
     ) -> anyhow::Result<NormalProblemDto, ProblemError> {
+        let problem_id: i64 = problem_id
+            .parse()
+            .map_err(|_| ProblemError::ValidateError)?;
+
         let problem = self
             .problem_repository
             .get_problem(problem_id)
@@ -102,8 +106,8 @@ impl<
             .map_err(|_| ProblemError::InternalServerError)?;
 
         Ok(NormalProblemDto {
-            id: problem.id,
-            author_id: problem.author_id,
+            id: problem.id.to_string(),
+            author_id: problem.author_id.to_string(),
             title: problem.title,
             statement: problem.statement,
             time_limit: problem.time_limit,
@@ -131,9 +135,16 @@ impl<
             None => None,
         };
 
+        let user_query = query.user_query.map_or(Ok(None), |user_id_str| {
+            let user_id: i64 = user_id_str
+                .parse()
+                .map_err(|_| ProblemError::ValidateError)?;
+            Ok(Some(user_id))
+        })?;
+
         let query = ProblemGetQuery {
             user_id: display_id,
-            user_query: query.user_query,
+            user_query: user_query,
             limit: query.limit.unwrap_or(50),
             offset: query.offset.unwrap_or(0),
             order_by: match query.order_by {
@@ -167,9 +178,13 @@ impl<
     pub async fn update_problem(
         &self,
         session_id: Option<&str>,
-        problem_id: i64,
+        problem_id: String,
         body: UpdateNormalProblemData,
     ) -> anyhow::Result<NormalProblemDto, ProblemError> {
+        let problem_id: i64 = problem_id
+            .parse()
+            .map_err(|_| ProblemError::ValidateError)?;
+
         let problem = self
             .problem_repository
             .get_problem(problem_id)
@@ -286,8 +301,12 @@ impl<
     pub async fn delete_problem(
         &self,
         session_id: Option<&str>,
-        problem_id: i64,
+        problem_id: String,
     ) -> anyhow::Result<(), ProblemError> {
+        let problem_id: i64 = problem_id
+            .parse()
+            .map_err(|_| ProblemError::ValidateError)?;
+
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository

@@ -18,7 +18,7 @@ use usecase::service::submission::SubmissionError;
 pub async fn get_submission(
     State(di_container): State<DiContainer>,
     TypedHeader(cookie): TypedHeader<Cookie>,
-    Path(submission_id): Path<i64>,
+    Path(submission_id): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let session_id = cookie.get("session_id");
 
@@ -99,7 +99,7 @@ pub async fn get_submissions(
 pub async fn post_submission(
     State(di_container): State<DiContainer>,
     TypedHeader(cookie): TypedHeader<Cookie>,
-    Path(problem_id): Path<i64>,
+    Path(problem_id): Path<String>,
     Json(body): Json<CreateSubmission>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let session_id = cookie.get("session_id");

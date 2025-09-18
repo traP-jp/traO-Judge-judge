@@ -6,8 +6,8 @@ use usecase::model::problem::{NormalProblemDto, NormalProblemSummaryDto, NormalP
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProblemResponse {
-    pub id: i64,
-    pub author_id: i64,
+    pub id: String,
+    pub author_id: String,
     pub title: String,
     pub statement: String,
     pub time_limit: i32,
@@ -42,8 +42,8 @@ impl From<NormalProblemDto> for ProblemResponse {
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProblemSummaryResponse {
-    pub id: i64,
-    pub author_id: i64,
+    pub id: String,
+    pub author_id: String,
     pub title: String,
     pub time_limit: i32,
     pub memory_limit: i32,
@@ -125,5 +125,5 @@ pub struct ProblemGetQuery {
     pub limit: Option<i64>,
     pub offset: Option<i64>,
     pub order_by: Option<ProblemOrderBy>,
-    pub user_id: Option<i64>,
+    pub user_id: Option<String>,
 }
