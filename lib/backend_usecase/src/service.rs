@@ -1,4 +1,5 @@
 pub mod auth;
+mod auth_mail_template;
 pub mod editorial;
 pub mod icon;
 pub mod language;
