@@ -1,22 +1,31 @@
 use crate::model::testcase::TestcaseSummaryDto;
 use domain::model::problem::NormalProblem;
 use sqlx::types::chrono;
+use validator::Validate;
 
+#[derive(Validate)]
 pub struct UpdateNormalProblemData {
     pub title: Option<String>,
     pub statement: Option<String>,
+    #[validate(range(min = 1, max = 32767))]
     pub time_limit: Option<i32>,
+    #[validate(range(min = 1, max = 32767))]
     pub memory_limit: Option<i32>,
+    #[validate(range(min = 1, max = 10))]
     pub difficulty: Option<i32>,
     pub is_public: Option<bool>,
 }
 
+#[derive(Validate)]
 pub struct CreateNormalProblemData {
     // pub author_id: i64,
     pub title: String,
     pub statement: String,
+    #[validate(range(min = 1, max = 32767))]
     pub time_limit: i32,
+    #[validate(range(min = 1, max = 32767))]
     pub memory_limit: i32,
+    #[validate(range(min = 1, max = 10))]
     pub difficulty: i32,
 }
 
