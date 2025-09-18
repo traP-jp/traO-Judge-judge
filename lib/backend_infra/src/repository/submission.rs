@@ -1,4 +1,5 @@
 use crate::model::submission::{JudgeResultRow, SubmissionRow};
+use crate::model::uuid::UuidRow;
 use axum::async_trait;
 use domain::{
     model::submission::{
@@ -234,7 +235,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
             separated.push("(");
             separated.push_bind_unseparated(r.submission_id);
             separated.push_unseparated(", ");
-            separated.push_bind_unseparated(r.testcase_id);
+            separated.push_bind_unseparated(UuidRow(r.testcase_id));
             separated.push_unseparated(", ");
             separated.push_bind_unseparated(r.testcase_name);
             separated.push_unseparated(", ");
