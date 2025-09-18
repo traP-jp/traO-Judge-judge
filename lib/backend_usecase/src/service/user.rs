@@ -257,8 +257,15 @@ impl<
             .map_err(|_| UserError::InternalServerError)?
             .ok_or(UserError::InternalServerError)?;
 
-        let icon_url = match body.icon {
+        let icon_id = match body.icon {
             Some(icon) => {
+                if let Some(old_icon_id) = &user.icon_id {
+                    self.icon_repository
+                        .delete_icon(old_icon_id.to_owned())
+                        .await
+                        .map_err(|_| UserError::InternalServerError)?;
+                }
+
                 let binary_data = BASE64_STANDARD
                     .decode(icon)
                     .map_err(|_| UserError::ValidateError)?;
@@ -288,8 +295,7 @@ impl<
                     .await
                     .map_err(|_| UserError::InternalServerError)?;
 
-                let icon_url = format!("{}/{}", std::env::var("ICON_HOST_URI").unwrap(), uuid);
-                Some(icon_url)
+                Some(uuid)
             }
             None => None,
         };
@@ -299,7 +305,7 @@ impl<
                 user_id,
                 UpdateUser {
                     user_name: body.user_name.unwrap_or(user.name),
-                    icon_url: icon_url.or(user.icon_url),
+                    icon_id: icon_id.or(user.icon_id),
                     x_id: body.x_id.or(user.x_id),
                     self_introduction: body.self_introduction.unwrap_or(user.self_introduction),
                 },

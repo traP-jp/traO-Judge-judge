@@ -36,13 +36,13 @@ VALUES
 );
 
 INSERT INTO users 
-(id, name, role, icon_url, created_at, updated_at) 
+(id, name, role, icon_id, created_at, updated_at) 
 VALUES 
 (
     UNHEX(REPLACE('33333333-3333-3333-3333-333333333333','-','')),
     'test_user_3', 
     2,
-    "https://icon.com/test_user_3",
+    UNHEX(REPLACE('33333333-3333-3333-3333-333333333333','-','')),
     '2023-03-20 08:00:00',
     '2023-03-20 08:45:00'
 );
