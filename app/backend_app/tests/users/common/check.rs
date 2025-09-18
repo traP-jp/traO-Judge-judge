@@ -11,9 +11,9 @@ pub fn users_check_by_id(id: i64, resp_json: &mut Value) -> anyhow::Result<()> {
             "postProblems": {
                 "problems": [
                     {
-                        "id": 1,
+                        "id": "1",
                         "title": "test",
-                        "authorId": 1,
+                        "authorId": "1",
                         "isPublic": true,
                         "difficulty": 1,
                         "timeLimit": 10,
