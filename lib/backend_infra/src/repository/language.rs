@@ -40,5 +40,13 @@ fn load_languages() -> anyhow::Result<Vec<Language>> {
     let path = env::var(var_name)?;
     let s = fs::read_to_string(path)?;
     let languages: LanguagesRow = serde_json::from_str(&s)?;
-    Ok(languages.languages.into_iter().map(|l| l.into()).collect())
+    Ok(languages
+        .languages
+        .into_iter()
+        .enumerate()
+        .map(|(id, l)| Language {
+            id: id as i32,
+            name: l.name,
+        })
+        .collect())
 }
