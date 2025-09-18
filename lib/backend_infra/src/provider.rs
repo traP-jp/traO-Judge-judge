@@ -161,13 +161,13 @@ impl Provider {
 }
 
 fn get_option_from_env() -> anyhow::Result<MySqlConnectOptions> {
-    let host = std::env::var("DB_HOSTNAME")?;
-    let port = std::env::var("DB_PORT")?
+    let host = std::env::var("NS_MARIADB_HOSTNAME")?;
+    let port = std::env::var("NS_MARIADB_PORT")?
         .parse()
         .map_err(|_| anyhow::anyhow!("DB_PORT must be a number"))?;
-    let user = std::env::var("DB_USERNAME")?;
-    let password = std::env::var("DB_PASSWORD")?;
-    let db_name = std::env::var("DB_DATABASE")?;
+    let user = std::env::var("NS_MARIADB_USER")?;
+    let password = std::env::var("NS_MARIADB_PASSWORD")?;
+    let db_name = std::env::var("NS_MARIADB_DATABASE")?;
 
     Ok(MySqlConnectOptions::new()
         .host(&host)
