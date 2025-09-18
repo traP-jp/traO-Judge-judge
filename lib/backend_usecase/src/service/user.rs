@@ -259,7 +259,6 @@ impl<
 
         let icon_id = match body.icon {
             Some(icon) => {
-
                 let binary_data = BASE64_STANDARD
                     .decode(icon)
                     .map_err(|_| UserError::ValidateError)?;
@@ -290,7 +289,6 @@ impl<
                     content_type: mime_type.to_string(),
                     icon: binary_data,
                 };
-
 
                 self.icon_repository
                     .create_icon(icon)
