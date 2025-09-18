@@ -10,6 +10,7 @@ use domain::{
     },
 };
 use judge_core::model::procedure::registered::Procedure;
+use validator::Validate;
 
 #[derive(Clone)]
 pub struct ProblemService<
@@ -181,6 +182,8 @@ impl<
         problem_id: String,
         body: UpdateNormalProblemData,
     ) -> anyhow::Result<NormalProblemDto, ProblemError> {
+        body.validate().map_err(|_| ProblemError::ValidateError)?;
+
         let problem_id: i64 = problem_id
             .parse()
             .map_err(|_| ProblemError::ValidateError)?;
@@ -239,6 +242,8 @@ impl<
         session_id: Option<&str>,
         body: CreateNormalProblemData,
     ) -> anyhow::Result<NormalProblemDto, ProblemError> {
+        body.validate().map_err(|_| ProblemError::ValidateError)?;
+
         let display_id = match session_id {
             Some(session_id) => self
                 .session_repository
