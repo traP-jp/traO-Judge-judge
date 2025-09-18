@@ -1,7 +1,6 @@
 use async_session::chrono;
 use serde::{Deserialize, Serialize};
 use usecase::model::user::{UserDto, UserRoleDto};
-use uuid::Uuid;
 
 use super::{problems::ProblemSummariesResponses, submissions::SubmissionSummariesResponse};
 
@@ -49,7 +48,13 @@ impl From<UserDto> for UserResponse {
             name: user.name,
             traq_id: user.traq_id,
             github_id: user.github_id,
-            icon_url: user.icon_url,
+            icon_url: user.icon_id.map(|icon_id| {
+                format!(
+                    "{}/{}",
+                    std::env::var("ICON_HOST_URI").unwrap_or_default(),
+                    icon_id
+                )
+            }),
             post_problems: user.post_problems.into(),
             submit_problems: user.submit_problems.into(),
             x_id: user.x_id,

@@ -60,7 +60,7 @@ pub fn users_check_by_id(id: i64, resp_json: &mut Value) -> anyhow::Result<()> {
             "name": "test_user_3",
             "traqId": null,
             "githubId": null,
-            "iconUrl": "https://icon.com/test_user_3",
+            "iconUrl": std::env::var("ICON_HOST_URI").unwrap_or_default() + "/33333333-3333-3333-3333-333333333333",
             "postProblems": {
                 "problems": [],
                 "total": 0,
