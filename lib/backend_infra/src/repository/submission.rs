@@ -1,7 +1,10 @@
 use crate::model::submission::{JudgeResultRow, SubmissionRow};
 use axum::async_trait;
 use domain::{
-    model::submission::{JudgeResult, Submission, SubmissionGetQuery, SubmissionOrderBy},
+    model::submission::{
+        CreateJudgeResult, CreateSubmission, JudgeResult, Submission, SubmissionGetQuery,
+        SubmissionOrderBy, UpdateSubmission,
+    },
     repository::submission::SubmissionRepository,
 };
 use sqlx::{MySqlPool, QueryBuilder};
@@ -179,5 +182,72 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
             .await?;
 
         Ok(count)
+    }
+
+    async fn create_submission(&self, submission: CreateSubmission) -> anyhow::Result<i64> {
+        let submission_id = sqlx::query(
+            "INSERT INTO submissions (problem_id, user_id, user_name, language_id, source, judge_status, total_score, max_time, max_memory) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind(submission.problem_id)
+        .bind(submission.user_id)
+        .bind(submission.user_name)
+        .bind(submission.language_id)
+        .bind(submission.source)
+        .bind(submission.judge_status)
+        .bind(submission.total_score)
+        .bind(submission.max_time)
+        .bind(submission.max_memory)
+        .execute(&self.pool)
+        .await?;
+
+        Ok(submission_id.last_insert_id() as i64)
+    }
+
+    async fn update_submission(
+        &self,
+        submission_id: i64,
+        submission: UpdateSubmission,
+    ) -> anyhow::Result<()> {
+        sqlx::query(
+            "UPDATE submissions SET judge_status = ?, total_score = ?, max_time = ?, max_memory = ? WHERE id = ?",
+        )
+        .bind(submission.judge_status)
+        .bind(submission.total_score)
+        .bind(submission.max_time)
+        .bind(submission.max_memory)
+        .bind(submission_id)
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    async fn create_judge_results(&self, results: Vec<CreateJudgeResult>) -> anyhow::Result<()> {
+        if results.is_empty() {
+            return Ok(());
+        }
+        let mut query_builder = QueryBuilder::new(
+            "INSERT INTO submission_testcases (submission_id, testcase_id, testcase_name, judge_status, score, time, memory) VALUES ",
+        );
+        let mut separated = query_builder.separated(", ");
+        for r in results.into_iter() {
+            separated.push("(");
+            separated.push_bind_unseparated(r.submission_id);
+            separated.push_unseparated(", ");
+            separated.push_bind_unseparated(r.testcase_id);
+            separated.push_unseparated(", ");
+            separated.push_bind_unseparated(r.testcase_name);
+            separated.push_unseparated(", ");
+            separated.push_bind_unseparated(r.judge_status);
+            separated.push_unseparated(", ");
+            separated.push_bind_unseparated(r.score);
+            separated.push_unseparated(", ");
+            separated.push_bind_unseparated(r.time);
+            separated.push_unseparated(", ");
+            separated.push_bind_unseparated(r.memory);
+            separated.push_unseparated(")");
+        }
+        query_builder.build().execute(&self.pool).await?;
+        Ok(())
     }
 }

@@ -1,4 +1,5 @@
 use async_session::chrono;
+use uuid::Uuid;
 
 pub struct Submission {
     pub id: i64,
@@ -16,6 +17,35 @@ pub struct Submission {
 
 pub struct JudgeResult {
     pub testcase_id: i64,
+    pub testcase_name: String,
+    pub judge_status: String,
+    pub score: i64,
+    pub time: i32,
+    pub memory: i32,
+}
+
+pub struct CreateSubmission {
+    pub problem_id: i64,
+    pub user_id: i64,
+    pub user_name: String,
+    pub language_id: i32,
+    pub source: String,
+    pub judge_status: String,
+    pub total_score: i64,
+    pub max_time: i32,
+    pub max_memory: i32,
+}
+
+pub struct UpdateSubmission {
+    pub judge_status: String,
+    pub total_score: i64,
+    pub max_time: i32,
+    pub max_memory: i32,
+}
+
+pub struct CreateJudgeResult {
+    pub submission_id: i64,
+    pub testcase_id: Uuid,
     pub testcase_name: String,
     pub judge_status: String,
     pub score: i64,

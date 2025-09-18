@@ -13,6 +13,7 @@ fancy-regex = { workspace = true }
 http-body-util = { workspace = true }
 infra = { path = "../../lib/backend_infra" }
 jsonwebtoken = { workspace = true }
+judge_core = { version = "0.1.0", path = "../../lib/judge_core" }
 judge_infra_mock = { path = "../../lib/judge_infra_mock" }
 lettre = { workspace = true }
 reqwest = { workspace = true }

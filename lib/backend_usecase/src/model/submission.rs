@@ -88,3 +88,9 @@ pub struct SubmissionGetQueryData {
     pub order_by: SubmissionOrderByData,
     pub problem_id: Option<i64>,
 }
+
+#[derive(Debug, Clone)]
+pub struct CreateSubmissionData {
+    pub language_id: i32,
+    pub source: String,
+}

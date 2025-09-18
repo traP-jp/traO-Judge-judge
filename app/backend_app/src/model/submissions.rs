@@ -144,3 +144,10 @@ impl From<SubmissionsDto> for SubmissionSummariesResponse {
         }
     }
 }
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateSubmission {
+    pub language_id: i32,
+    pub source: String,
+}
