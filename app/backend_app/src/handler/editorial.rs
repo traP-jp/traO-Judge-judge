@@ -11,7 +11,7 @@ use usecase::service::editorial::EditorialError;
 
 pub async fn get_editorial(
     State(di_container): State<DiContainer>,
-    Path(editorial_id): Path<i64>,
+    Path(editorial_id): Path<String>,
     TypedHeader(cookie): TypedHeader<Cookie>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let session_id = cookie.get("session_id");
@@ -36,7 +36,7 @@ pub async fn get_editorial(
 
 pub async fn get_editorials(
     State(di_container): State<DiContainer>,
-    Path(problem_id): Path<i64>,
+    Path(problem_id): Path<String>,
     TypedHeader(cookie): TypedHeader<Cookie>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let session_id = cookie.get("session_id");
@@ -63,7 +63,7 @@ pub async fn get_editorials(
 pub async fn post_editorial(
     State(di_container): State<DiContainer>,
     TypedHeader(cookie): TypedHeader<Cookie>,
-    Path(problem_id): Path<i64>,
+    Path(problem_id): Path<String>,
     Json(query): Json<CreateEditorial>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let session_id = cookie.get("session_id");
@@ -88,7 +88,7 @@ pub async fn post_editorial(
 
 pub async fn put_editorial(
     State(di_container): State<DiContainer>,
-    Path(editorial_id): Path<i64>,
+    Path(editorial_id): Path<String>,
     TypedHeader(cookie): TypedHeader<Cookie>,
     Json(query): Json<UpdateEditorial>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -111,7 +111,7 @@ pub async fn put_editorial(
 
 pub async fn delete_editorial(
     State(di_container): State<DiContainer>,
-    Path(editorial_id): Path<i64>,
+    Path(editorial_id): Path<String>,
     TypedHeader(cookie): TypedHeader<Cookie>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let session_id = cookie.get("session_id");

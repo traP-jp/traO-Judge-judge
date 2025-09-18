@@ -106,8 +106,12 @@ impl<
     pub async fn get_submission(
         &self,
         session_id: Option<&str>,
-        submission_id: i64,
+        submission_id: String,
     ) -> anyhow::Result<SubmissionDto, SubmissionError> {
+        let submission_id: i64 = submission_id
+            .parse()
+            .map_err(|_| SubmissionError::ValidateError)?;
+
         let submission = self
             .submission_repository
             .get_submission(submission_id)
@@ -144,12 +148,12 @@ impl<
             .map_err(|_| SubmissionError::InternalServerError)?;
 
         Ok(SubmissionDto {
-            id: submission.id,
-            user_id: submission.user_id,
+            id: submission.id.to_string(),
+            user_id: submission.user_id.to_string(),
             user_name: submission.user_name,
-            problem_id: submission.problem_id,
+            problem_id: submission.problem_id.to_string(),
             submitted_at: submission.submitted_at,
-            language_id: submission.language_id,
+            language_id: submission.language_id.to_string(),
             total_score: submission.total_score,
             max_time: submission.max_time,
             max_memory: submission.max_memory,
@@ -158,7 +162,7 @@ impl<
             judge_results: judge_results
                 .into_iter()
                 .map(|testcase| JudgeResultDto {
-                    testcase_id: testcase.testcase_id,
+                    testcase_id: testcase.testcase_id.to_string(),
                     testcase_name: testcase.testcase_name,
                     judge_status: testcase.judge_status,
                     score: testcase.score,
@@ -183,14 +187,35 @@ impl<
             None => None,
         };
 
+        let language_id = query.language_id.map_or(Ok(None), |lang_id_str| {
+            let lang_id: i64 = lang_id_str
+                .parse()
+                .map_err(|_| SubmissionError::ValidateError)?;
+            Ok(Some(lang_id))
+        })?;
+
+        let problem_id = query.problem_id.map_or(Ok(None), |prob_id_str| {
+            let prob_id: i64 = prob_id_str
+                .parse()
+                .map_err(|_| SubmissionError::ValidateError)?;
+            Ok(Some(prob_id))
+        })?;
+
+        let user_query = query.user_query.map_or(Ok(None), |user_id_str| {
+            let user_id: i64 = user_id_str
+                .parse()
+                .map_err(|_| SubmissionError::ValidateError)?;
+            Ok(Some(user_id))
+        })?;
+
         let query = SubmissionGetQuery {
             user_id: user_id,
             limit: query.limit.unwrap_or(50),
             offset: query.offset.unwrap_or(0),
             judge_status: query.judge_status,
-            language_id: query.language_id,
+            language_id: language_id,
             user_name: query.user_name,
-            user_query: query.user_query,
+            user_query: user_query,
             order_by: match query.order_by {
                 SubmissionOrderByData::SubmittedAtAsc => SubmissionOrderBy::SubmittedAtAsc,
                 SubmissionOrderByData::SubmittedAtDesc => SubmissionOrderBy::SubmittedAtDesc,
@@ -209,7 +234,7 @@ impl<
                 SubmissionOrderByData::CodeLengthAsc => SubmissionOrderBy::CodeLengthAsc,
                 SubmissionOrderByData::CodeLengthDesc => SubmissionOrderBy::CodeLengthDesc,
             },
-            problem_id: query.problem_id,
+            problem_id: problem_id,
         };
 
         let total = self
@@ -233,9 +258,13 @@ impl<
     pub async fn create_submission(
         self: &std::sync::Arc<Self>,
         session_id: Option<&str>,
-        problem_id: i64,
+        problem_id: String,
         body: CreateSubmissionData,
     ) -> anyhow::Result<SubmissionDto, SubmissionError> {
+        let problem_id: i64 = problem_id
+            .parse()
+            .map_err(|_| SubmissionError::ValidateError)?;
+
         let display_id = match session_id {
             Some(session_id) => self
                 .session_repository
@@ -264,9 +293,14 @@ impl<
             return Err(SubmissionError::NotFound);
         }
 
+        let language_id: i32 = body
+            .language_id
+            .parse()
+            .map_err(|_| SubmissionError::ValidateError)?;
+
         let language = self
             .language_repository
-            .id_to_language(body.language_id)
+            .id_to_language(language_id)
             .await
             .map_err(|_| SubmissionError::InternalServerError)?
             .ok_or(SubmissionError::ValidateError)?;
@@ -282,7 +316,7 @@ impl<
             problem_id,
             user_id: display_id,
             user_name: user.name.clone(),
-            language_id: body.language_id,
+            language_id: language_id,
             source: body.source.clone(),
             judge_status: "WJ".to_string(),
             total_score: 0,
@@ -319,7 +353,8 @@ impl<
                 .await;
         });
 
-        self.get_submission(session_id, submission_id).await
+        self.get_submission(session_id, submission_id.to_string())
+            .await
     }
 
     async fn async_judge_submission(

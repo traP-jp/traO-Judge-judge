@@ -33,12 +33,12 @@ pub struct ProblemGetQueryData {
     pub limit: Option<i64>,
     pub offset: Option<i64>,
     pub order_by: ProblemOrderByData,
-    pub user_query: Option<i64>,
+    pub user_query: Option<String>,
 }
 
 pub struct NormalProblemDto {
-    pub id: i64,
-    pub author_id: i64,
+    pub id: String,
+    pub author_id: String,
     pub title: String,
     pub statement: String,
     pub time_limit: i32,
@@ -54,8 +54,8 @@ pub struct NormalProblemDto {
 impl From<NormalProblem> for NormalProblemDto {
     fn from(problem: NormalProblem) -> Self {
         NormalProblemDto {
-            id: problem.id,
-            author_id: problem.author_id,
+            id: problem.id.to_string(),
+            author_id: problem.author_id.to_string(),
             title: problem.title,
             statement: problem.statement,
             time_limit: problem.time_limit,
@@ -71,8 +71,8 @@ impl From<NormalProblem> for NormalProblemDto {
 }
 
 pub struct NormalProblemSummaryDto {
-    pub id: i64,
-    pub author_id: i64,
+    pub id: String,
+    pub author_id: String,
     pub title: String,
     pub time_limit: i32,
     pub memory_limit: i32,
@@ -91,8 +91,8 @@ pub struct NormalProblemsDto {
 impl From<NormalProblem> for NormalProblemSummaryDto {
     fn from(problem: NormalProblem) -> Self {
         NormalProblemSummaryDto {
-            id: problem.id,
-            author_id: problem.author_id,
+            id: problem.id.to_string(),
+            author_id: problem.author_id.to_string(),
             title: problem.title,
             time_limit: problem.time_limit,
             memory_limit: problem.memory_limit,
