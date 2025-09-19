@@ -7,6 +7,7 @@ use domain::{
         editorial::EditorialRepository, problem::ProblemRepository, session::SessionRepository,
     },
 };
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct EditorialService<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository> {
@@ -43,9 +44,8 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         session_id: Option<&str>,
         editorial_id: String,
     ) -> anyhow::Result<EditorialDto, EditorialError> {
-        let editorial_id: i64 = editorial_id
-            .parse()
-            .map_err(|_| EditorialError::ValidateError)?;
+        let editorial_id =
+            Uuid::parse_str(&editorial_id).map_err(|_| EditorialError::ValidateError)?;
 
         let user_id = match session_id {
             Some(session_id) => self
@@ -188,9 +188,8 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         editorial_id: String,
         query: UpdateEditorialData,
     ) -> anyhow::Result<(), EditorialError> {
-        let editorial_id: i64 = editorial_id
-            .parse()
-            .map_err(|_| EditorialError::ValidateError)?;
+        let editorial_id =
+            Uuid::parse_str(&editorial_id).map_err(|_| EditorialError::ValidateError)?;
 
         let user_id = match session_id {
             Some(session_id) => self
@@ -249,9 +248,8 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         session_id: Option<&str>,
         editorial_id: String,
     ) -> anyhow::Result<(), EditorialError> {
-        let editorial_id: i64 = editorial_id
-            .parse()
-            .map_err(|_| EditorialError::ValidateError)?;
+        let editorial_id =
+            Uuid::parse_str(&editorial_id).map_err(|_| EditorialError::ValidateError)?;
 
         let user_id = match session_id {
             Some(session_id) => self
