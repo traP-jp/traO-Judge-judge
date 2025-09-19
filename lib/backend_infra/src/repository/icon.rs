@@ -37,4 +37,13 @@ impl IconRepository for IconRepositoryImpl {
 
         Ok(())
     }
+
+    async fn delete_icon(&self, id: Uuid) -> anyhow::Result<()> {
+        sqlx::query("DELETE FROM icons WHERE id = ?")
+            .bind(UuidRow(id))
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
 }

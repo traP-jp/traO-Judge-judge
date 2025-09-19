@@ -32,6 +32,7 @@ tower-http = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 uuid = { workspace = true }
+validator = { workspace = true }
 
 [dev-dependencies]
 domain = { features = ["mockall"], path = "../backend_domain" }
