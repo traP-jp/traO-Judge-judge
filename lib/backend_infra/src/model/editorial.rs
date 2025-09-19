@@ -2,9 +2,11 @@ use sqlx::types::chrono;
 
 use domain::model::editorial::{Editorial, EditorialSummary};
 
+use crate::model::uuid::UuidRow;
+
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct EditorialRow {
-    pub id: i64,
+    pub id: UuidRow,
     pub problem_id: i64,
     pub author_id: i64,
     pub statement: String,
@@ -17,7 +19,7 @@ pub struct EditorialRow {
 impl From<EditorialRow> for Editorial {
     fn from(val: EditorialRow) -> Self {
         Editorial {
-            id: val.id,
+            id: val.id.0,
             problem_id: val.problem_id,
             author_id: val.author_id,
             title: val.title,
@@ -31,7 +33,7 @@ impl From<EditorialRow> for Editorial {
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct EditorialSummaryRow {
-    pub id: i64,
+    pub id: UuidRow,
     pub problem_id: i64,
     pub author_id: i64,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -43,7 +45,7 @@ pub struct EditorialSummaryRow {
 impl From<EditorialSummaryRow> for EditorialSummary {
     fn from(val: EditorialSummaryRow) -> Self {
         EditorialSummary {
-            id: val.id,
+            id: val.id.0,
             problem_id: val.problem_id,
             author_id: val.author_id,
             title: val.title,

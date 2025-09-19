@@ -2,9 +2,11 @@ use sqlx::types::chrono;
 
 use domain::model::submission::{JudgeResult, Submission};
 
+use crate::model::uuid::UuidRow;
+
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct SubmissionRow {
-    pub id: i64,
+    pub id: UuidRow,
     pub problem_id: i64,
     pub user_id: i64,
     pub user_name: String,
@@ -20,7 +22,7 @@ pub struct SubmissionRow {
 impl From<SubmissionRow> for Submission {
     fn from(val: SubmissionRow) -> Self {
         Submission {
-            id: val.id,
+            id: val.id.0,
             problem_id: val.problem_id,
             user_id: val.user_id,
             user_name: val.user_name,
@@ -37,8 +39,8 @@ impl From<SubmissionRow> for Submission {
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct JudgeResultRow {
-    pub submission_id: i64,
-    pub testcase_id: i64,
+    pub submission_id: UuidRow,
+    pub testcase_id: UuidRow,
     pub testcase_name: String,
     pub judge_status: String,
     pub score: i64,
@@ -49,7 +51,7 @@ pub struct JudgeResultRow {
 impl From<JudgeResultRow> for JudgeResult {
     fn from(val: JudgeResultRow) -> Self {
         JudgeResult {
-            testcase_id: val.testcase_id,
+            testcase_id: val.testcase_id.0,
             testcase_name: val.testcase_name,
             judge_status: val.judge_status,
             score: val.score,

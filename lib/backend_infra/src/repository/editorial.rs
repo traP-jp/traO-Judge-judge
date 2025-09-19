@@ -1,4 +1,7 @@
-use crate::model::editorial::{EditorialRow, EditorialSummaryRow};
+use crate::model::{
+    editorial::{EditorialRow, EditorialSummaryRow},
+    uuid::UuidRow,
+};
 use axum::async_trait;
 use domain::{
     model::editorial::{
@@ -7,6 +10,7 @@ use domain::{
     repository::editorial::EditorialRepository,
 };
 use sqlx::{MySqlPool, QueryBuilder};
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct EditorialRepositoryImpl {
@@ -21,9 +25,9 @@ impl EditorialRepositoryImpl {
 
 #[async_trait]
 impl EditorialRepository for EditorialRepositoryImpl {
-    async fn get_editorial(&self, id: i64) -> anyhow::Result<Option<Editorial>> {
+    async fn get_editorial(&self, id: Uuid) -> anyhow::Result<Option<Editorial>> {
         let editorial = sqlx::query_as::<_, EditorialRow>("SELECT * FROM editorials WHERE id = ?")
-            .bind(id)
+            .bind(UuidRow(id))
             .fetch_optional(&self.pool)
             .await?;
 
@@ -60,10 +64,13 @@ impl EditorialRepository for EditorialRepositoryImpl {
             .collect())
     }
 
-    async fn create_editorial(&self, query: CreateEditorial) -> anyhow::Result<i64> {
-        let result = sqlx::query(
-            "INSERT INTO editorials (problem_id, author_id, statement, is_public, title) VALUES (?, ?, ?, ?, ?)",
+    async fn create_editorial(&self, query: CreateEditorial) -> anyhow::Result<Uuid> {
+        let id = Uuid::now_v7();
+
+        sqlx::query(
+            "INSERT INTO editorials (id, problem_id, author_id, statement, is_public, title) VALUES (?, ?, ?, ?, ?, ?)",
         )
+        .bind(UuidRow(id))
         .bind(query.problem_id)
         .bind(query.author_id)
         .bind(query.statement)
@@ -72,8 +79,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
         .execute(&self.pool)
         .await?;
 
-        let id = result.last_insert_id();
-        Ok(id as i64)
+        Ok(id)
     }
 
     async fn update_editorial(&self, query: UpdateEditorial) -> anyhow::Result<()> {
@@ -81,16 +87,16 @@ impl EditorialRepository for EditorialRepositoryImpl {
             .bind(query.statement)
             .bind(query.is_public)
             .bind("解説".to_string())
-            .bind(query.id)
+            .bind(UuidRow(query.id))
             .execute(&self.pool)
             .await?;
 
         Ok(())
     }
 
-    async fn delete_editorial(&self, id: i64) -> anyhow::Result<()> {
+    async fn delete_editorial(&self, id: Uuid) -> anyhow::Result<()> {
         sqlx::query("DELETE FROM editorials WHERE id = ?")
-            .bind(id)
+            .bind(UuidRow(id))
             .execute(&self.pool)
             .await?;
 
