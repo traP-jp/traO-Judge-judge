@@ -15,8 +15,11 @@ pub async fn run() -> anyhow::Result<()> {
     let di_container = DiContainer::new(provider).await;
 
     let origins = [
-        "http://localhost:3000".parse().unwrap(),
-        std::env::var("FRONTEND_URL").unwrap().parse().unwrap(),
+        "http://localhost:3000".parse().expect("Failed to parse hardcoded localhost URL"),
+        std::env::var("FRONTEND_URL")
+            .map_err(|e| anyhow::anyhow!("FRONTEND_URL env var missing: {}", e))?
+            .parse()
+            .map_err(|e| anyhow::anyhow!("FRONTEND_URL is invalid: {}", e))?,
     ];
 
     let cors = CorsLayer::new()
