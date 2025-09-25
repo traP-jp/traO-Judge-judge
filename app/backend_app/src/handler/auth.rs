@@ -57,10 +57,12 @@ pub async fn login(
         .await
     {
         Ok(session_id) => {
+            let cookie_domain =
+                std::env::var("COOKIE_DOMAIN").unwrap_or_else(|_| "localhost".to_string());
             let mut headers = HeaderMap::new();
             headers.insert(
                 SET_COOKIE,
-                format!("session_id={}; HttpOnly; SameSite=Lax", session_id)
+                format!("session_id={session_id}; Domain={cookie_domain}; HttpOnly; SameSite=Lax")
                     .parse()
                     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
             );
@@ -83,10 +85,12 @@ pub async fn logout(
 
     match di_container.auth_service().logout(session_id).await {
         Ok(_) => {
+            let cookie_domain =
+                std::env::var("COOKIE_DOMAIN").unwrap_or_else(|_| "localhost".to_string());
             let mut headers = HeaderMap::new();
             headers.insert(
                 SET_COOKIE,
-                "session_id=; HttpOnly; SameSite=Lax; Max-Age=-1"
+                format!("session_id=; Domain={cookie_domain}; HttpOnly; SameSite=Lax; Max-Age=-1")
                     .parse()
                     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
             );
