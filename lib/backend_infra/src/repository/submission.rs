@@ -27,11 +27,12 @@ impl SubmissionRepositoryImpl {
 #[async_trait]
 impl SubmissionRepository for SubmissionRepositoryImpl {
     async fn get_submission(&self, id: Uuid) -> anyhow::Result<Option<Submission>> {
-        let submission =
-            sqlx::query_as::<_, SubmissionRow>("SELECT * FROM submissions WHERE id = ?")
-                .bind(UuidRow(id))
-                .fetch_optional(&self.pool)
-                .await?;
+        let submission = sqlx::query_as::<_, SubmissionRow>(
+            "SELECT submissions.*, normal_problems.title as problem_title FROM submissions LEFT JOIN normal_problems ON normal_problems.id = submissions.problem_id WHERE submissions.id = ?"
+        )
+        .bind(UuidRow(id))
+        .fetch_optional(&self.pool)
+        .await?;
 
         Ok(submission.map(|submission| submission.into()))
     }
@@ -52,7 +53,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         query: SubmissionGetQuery,
     ) -> anyhow::Result<Vec<Submission>> {
         let mut query_builder = QueryBuilder::new(
-            "SELECT submissions.* FROM submissions LEFT JOIN normal_problems ON normal_problems.id = submissions.problem_id WHERE",
+            "SELECT submissions.*, normal_problems.title as problem_title FROM submissions LEFT JOIN normal_problems ON normal_problems.id = submissions.problem_id WHERE",
         );
 
         query_builder.push(" (normal_problems.is_public = TRUE");

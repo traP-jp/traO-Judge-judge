@@ -6,6 +6,7 @@ pub struct Submission {
     pub user_id: i64,
     pub user_name: String,
     pub problem_id: i64,
+    pub problem_title: String,
     pub submitted_at: chrono::DateTime<chrono::Utc>,
     pub language_id: i32,
     pub total_score: i64,
