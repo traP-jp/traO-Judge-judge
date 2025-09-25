@@ -8,6 +8,7 @@ use crate::model::uuid::UuidRow;
 pub struct SubmissionRow {
     pub id: UuidRow,
     pub problem_id: i64,
+    pub problem_title: String,
     pub user_id: i64,
     pub user_name: String,
     pub language_id: i32,
@@ -24,6 +25,7 @@ impl From<SubmissionRow> for Submission {
         Submission {
             id: val.id.0,
             problem_id: val.problem_id,
+            problem_title: val.problem_title,
             user_id: val.user_id,
             user_name: val.user_name,
             language_id: val.language_id,
