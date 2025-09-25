@@ -152,6 +152,7 @@ impl<
             user_id: submission.user_id.to_string(),
             user_name: submission.user_name,
             problem_id: submission.problem_id.to_string(),
+            problem_title: submission.problem_title,
             submitted_at: submission.submitted_at,
             language_id: submission.language_id.to_string(),
             total_score: submission.total_score,
