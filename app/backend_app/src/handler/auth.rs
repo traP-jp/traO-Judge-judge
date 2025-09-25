@@ -1,5 +1,3 @@
-use std::sync::LazyLock;
-
 use crate::di::DiContainer;
 use crate::model::auth::{LogIn, ResetPassword, ResetPasswordRequest, SignUp, SignUpRequest};
 use axum::{Json, extract::State, http::HeaderMap, response::IntoResponse};
@@ -9,9 +7,6 @@ use usecase::{
     model::auth::{LoginData, ResetPasswordData, SignUpData},
     service::auth::AuthError,
 };
-
-static COOKIE_DOMAIN: LazyLock<String> =
-    LazyLock::new(|| std::env::var("COOKIE_DOMAIN").expect("COOKIE_DOMAIN must be set"));
 
 pub async fn signup_request(
     State(di_container): State<DiContainer>,
@@ -65,12 +60,9 @@ pub async fn login(
             let mut headers = HeaderMap::new();
             headers.insert(
                 SET_COOKIE,
-                format!(
-                    "session_id={session_id}; Domain={}; HttpOnly; SameSite=Lax",
-                    *COOKIE_DOMAIN
-                )
-                .parse()
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+                format!("session_id={session_id}; Path=/; HttpOnly; SameSite=Lax")
+                    .parse()
+                    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
             );
 
             Ok((StatusCode::NO_CONTENT, headers))
@@ -94,12 +86,9 @@ pub async fn logout(
             let mut headers = HeaderMap::new();
             headers.insert(
                 SET_COOKIE,
-                format!(
-                    "session_id=; Domain={}; HttpOnly; SameSite=Lax; Max-Age=-1",
-                    *COOKIE_DOMAIN
-                )
-                .parse()
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+                "session_id=; HttpOnly; Path=/; SameSite=Lax; Max-Age=-1"
+                    .parse()
+                    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
             );
 
             Ok((StatusCode::NO_CONTENT, headers))
