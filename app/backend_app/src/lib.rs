@@ -32,8 +32,7 @@ pub async fn run() -> anyhow::Result<()> {
             http::Method::DELETE,
             http::Method::PUT,
         ])
-        .allow_headers([http::header::CONTENT_TYPE])
-        .allow_credentials(true);
+        .allow_headers(tower_http::cors::Any);
 
     let app = handler::make_router(di_container)
         .layer(TraceLayer::new_for_http())
