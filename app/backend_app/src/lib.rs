@@ -32,6 +32,7 @@ pub async fn run() -> anyhow::Result<()> {
             http::Method::DELETE,
             http::Method::PUT,
         ])
+        .allow_headers([http::header::CONTENT_TYPE])
         .allow_credentials(true);
 
     let app = handler::make_router(di_container)
