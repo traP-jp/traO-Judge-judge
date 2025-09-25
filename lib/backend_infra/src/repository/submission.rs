@@ -29,7 +29,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
     async fn get_submission(&self, id: Uuid) -> anyhow::Result<Option<Submission>> {
         let submission = sqlx::query_as::<_, SubmissionRow>(
             "SELECT submissions.*, normal_problems.title as problem_title FROM submissions LEFT JOIN normal_problems ON normal_problems.id = submissions.problem_id WHERE submissions.id = ?"
-        )   
+        )
         .bind(UuidRow(id))
         .fetch_optional(&self.pool)
         .await?;
