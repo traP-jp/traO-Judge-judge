@@ -1,6 +1,7 @@
 use crate::di::DiContainer;
+use axum::http;
 use infra::provider::Provider;
-use tower_http::trace::TraceLayer;
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 pub mod di;
 pub mod handler;
@@ -13,14 +14,29 @@ pub async fn run() -> anyhow::Result<()> {
     })?;
     let di_container = DiContainer::new(provider).await;
 
+    let origins = [
+        "http://localhost:3000"
+            .parse()
+            .expect("Failed to parse hardcoded localhost URL"),
+        std::env::var("FRONTEND_URL")
+            .map_err(|e| anyhow::anyhow!("FRONTEND_URL env var missing: {}", e))?
+            .parse()
+            .map_err(|e| anyhow::anyhow!("FRONTEND_URL is invalid: {}", e))?,
+    ];
+
+    let cors = CorsLayer::new()
+        .allow_origin(origins)
+        .allow_methods([
+            http::Method::POST,
+            http::Method::GET,
+            http::Method::DELETE,
+            http::Method::PUT,
+        ])
+        .allow_credentials(true);
+
     let app = handler::make_router(di_container)
         .layer(TraceLayer::new_for_http())
-        .layer(
-            tower_http::cors::CorsLayer::new()
-                .allow_origin(tower_http::cors::Any)
-                .allow_methods(tower_http::cors::Any)
-                .allow_headers(tower_http::cors::Any),
-        );
+        .layer(cors);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
 
