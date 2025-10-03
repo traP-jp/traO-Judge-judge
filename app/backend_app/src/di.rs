@@ -10,16 +10,16 @@ use infra::{
         user::UserRepositoryImpl,
     },
 };
-use judge_core::logic::judge_service_impl::JudgeServiceImpl;
-use judge_infra_mock::job_service::{job_service as mock_job_service, tokens as mock_tokens};
 use judge_infra_mock::multi_proc_problem_registry::{
     registry_client::RegistryClient, registry_server::RegistryServer,
+    
 };
 use usecase::service::{
     auth::AuthenticationService, editorial::EditorialService, icon::IconService,
     language::LanguageService, problem::ProblemService, submission::SubmissionService,
     testcase::TestcaseService, user::UserService,
 };
+use back_judge_grpc::client::RemoteJudgeServiceClient;
 
 #[derive(Clone)]
 pub struct DiContainer {
@@ -56,11 +56,7 @@ pub struct DiContainer {
             UserRepositoryImpl,
             LanguageRepositoryImpl,
             DepNameRepositoryImpl,
-            JudgeServiceImpl<
-                mock_tokens::RegistrationToken,
-                mock_tokens::OutcomeToken,
-                mock_job_service::JobService<RegistryClient>,
-            >,
+            RemoteJudgeServiceClient,
         >,
     >,
     editorial_service:
@@ -112,7 +108,7 @@ impl DiContainer {
                 provider.provide_user_repository(),
                 provider.provide_language_repository(),
                 provider.provide_dep_name_repository(),
-                provider.provide_judge_service(),
+                RemoteJudgeServiceClient::new("http://localhost:8080").await.expect("Failed to create RemoteJudgeServiceClient"),
             )),
             editorial_service: EditorialService::new(
                 provider.provide_session_repository(),
@@ -173,11 +169,7 @@ impl DiContainer {
             UserRepositoryImpl,
             LanguageRepositoryImpl,
             DepNameRepositoryImpl,
-            JudgeServiceImpl<
-                mock_tokens::RegistrationToken,
-                mock_tokens::OutcomeToken,
-                mock_job_service::JobService<RegistryClient>,
-            >,
+            RemoteJudgeServiceClient,
         >,
     > {
         &self.submission_service

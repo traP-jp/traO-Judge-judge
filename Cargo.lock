@@ -876,6 +876,7 @@ dependencies = [
  "async-session",
  "axum",
  "axum-extra",
+ "back_judge_grpc",
  "bcrypt",
  "domain",
  "fancy-regex",

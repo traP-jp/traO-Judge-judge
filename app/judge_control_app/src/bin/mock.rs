@@ -1,4 +1,4 @@
-/*
+
 use back_judge_grpc::{
     generated::judge_service_server::JudgeServiceServer, server::WrappedJudgeService,
 };
@@ -16,6 +16,8 @@ async fn main() {
         .expect("TRAOJUDGE_PROBLEM_REGISTRY_DIR must be set");
     let job_service_cache_dir = std::env::var("TRAOJUDGE_JOB_SERVICE_CACHE_DIR")
         .expect("TRAOJUDGE_JOB_SERVICE_CACHE_DIR must be set");
+    let container_dir = std::env::var("TRAOJUDGE_CONTAINER_DIR")
+        .expect("TRAOJUDGE_CONTAINER_DIR must be set");
     let grpc_service_port = std::env::var("TRAOJUDGE_GRPC_SERVICE_PORT")
         .expect("TRAOJUDGE_GRPC_SERVICE_PORT must be set")
         .parse::<u16>()
@@ -28,7 +30,7 @@ async fn main() {
     tracing::info!("grpc_service_addr: {}", grpc_service_addr);
     let problem_registry_client = RegistryClient::new(problem_registry_dir.into());
     tracing::info!("ProblemRegistryClient created");
-    let job_service = JobService::new(job_service_cache_dir.into(), problem_registry_client)
+    let job_service = JobService::new(job_service_cache_dir.into(), container_dir.into(), problem_registry_client, "trao-mock-exec:latest".to_string())
         .expect("Failed to create JobService");
     tracing::info!("JobService created");
     let inner_judge_service = JudgeServiceImpl::new(job_service);
@@ -42,9 +44,4 @@ async fn main() {
         .serve(grpc_service_addr)
         .await
         .expect("Failed to serve grpc service");
-}
-*/
-
-fn main() {
-    unimplemented!();
 }

@@ -97,6 +97,102 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         Ok(())
     }
 
+    /// Transaction化のガイド（参考：signup）
+    ///
+    /// 目的: `create_user_by_email` と `save_user_password` を **1つのトランザクション** にまとめ、
+    /// どちらかで失敗したら両方とも反映されない状態にする。
+    ///
+    /// --- 方式A: sqlx のトランザクションを渡す（最小変更） ---
+    /// ```ignore
+    /// use sqlx::{Pool, Database};
+    ///
+    /// pub async fn signup_in_tx<DB: Database>(
+    ///     &self,
+    ///     data: SignUpData,
+    ///     pool: &Pool<DB>,
+    /// ) -> anyhow::Result<(), AuthError> {
+    ///     // 入力バリデーション
+    ///     data.validate().map_err(|_| AuthError::ValidateError)?;
+    ///
+    ///     // Email 抽出
+    ///     let encode_key = std::env::var("JWT_SECRET_KEY")
+    ///         .map_err(|_| AuthError::InternalServerError)?;
+    ///     let email = EmailToken::get_email(&data.token, encode_key)
+    ///         .map_err(|_| AuthError::Unauthorized)?;
+    ///
+    ///     // トランザクション開始
+    ///     let mut tx = pool.begin().await.map_err(|_| AuthError::InternalServerError)?;
+    ///
+    ///     // 既存チェック（tx 経由のメソッドを用意する）
+    ///     if let Ok(true) = self.user_repository.is_exist_email_tx(&mut tx, &email).await {
+    ///         tx.commit().await.map_err(|_| AuthError::InternalServerError)?;
+    ///         return Ok(());
+    ///     }
+    ///
+    ///     // ユーザー作成 + パスワード保存（同一 tx 上）
+    ///     let user_id = self
+    ///         .user_repository
+    ///         .create_user_by_email_tx(&mut tx, &data.user_name, &email)
+    ///         .await
+    ///         .map_err(|_| AuthError::InternalServerError)?;
+    ///
+    ///     self
+    ///         .auth_repository
+    ///         .save_user_password_tx(&mut tx, user_id, &data.password)
+    ///         .await
+    ///         .map_err(|_| AuthError::InternalServerError)?;
+    ///
+    ///     // commit 後に外部副作用（メール等）を行うのが安全
+    ///     tx.commit().await.map_err(|_| AuthError::InternalServerError)?;
+    ///     Ok(())
+    /// }
+    /// ```
+    /// - 各 Repository に `*_tx` 版（`&mut Transaction` を受け取る）を追加します。
+    /// - 送信メールなどの外部副作用は **commit 後** に行うか、Outbox パターンを利用してください。
+    ///
+    /// --- 方式B: Unit-of-Work（トランザクション実行器）を注入 ---
+    /// ```ignore
+    /// pub trait TransactionRunner {
+    ///     type Tx;
+    ///     async fn run<T, E, F, Fut>(&self, f: F) -> Result<T, E>
+    ///     where
+    ///         F: for<'t> FnOnce(&'t mut Self::Tx) -> Fut + Send,
+    ///         Fut: core::future::Future<Output = Result<T, E>> + Send;
+    /// }
+    ///
+    /// pub async fn signup_uow<TR: TransactionRunner>(
+    ///     &self,
+    ///     data: SignUpData,
+    ///     uow: &TR,
+    /// ) -> anyhow::Result<(), AuthError> {
+    ///     data.validate().map_err(|_| AuthError::ValidateError)?;
+    ///
+    ///     let encode_key = std::env::var("JWT_SECRET_KEY")
+    ///         .map_err(|_| AuthError::InternalServerError)?;
+    ///     let email = EmailToken::get_email(&data.token, encode_key)
+    ///         .map_err(|_| AuthError::Unauthorized)?;
+    ///
+    ///     uow.run(|tx| async move {
+    ///         if let Ok(true) = self.user_repository.is_exist_email_tx(tx, &email).await {
+    ///             return Ok(());
+    ///         }
+    ///         let uid = self
+    ///             .user_repository
+    ///             .create_user_by_email_tx(tx, &data.user_name, &email)
+    ///             .await?;
+    ///         self
+    ///             .auth_repository
+    ///             .save_user_password_tx(tx, uid, &data.password)
+    ///             .await?;
+    ///         Ok(())
+    ///     })
+    ///     .await
+    ///     .map_err(|_| AuthError::InternalServerError)
+    /// }
+    /// ```
+    ///
+    /// どちらの方式でも、**ユーザー作成とパスワード保存**を同一トランザクションで行い、
+    /// 例外時は rollback されるようにしてください。
     pub async fn signup(&self, data: SignUpData) -> anyhow::Result<(), AuthError> {
         data.validate().map_err(|_| AuthError::ValidateError)?;
 

@@ -372,7 +372,16 @@ impl<
                 runtime_texts,
             })
             .await
-            .map_err(|_| SubmissionError::InternalServerError)?;
+            .map_err(|e| {
+                tracing::error!("Failed to judge submission {}: {}", submission_id, e);
+                SubmissionError::InternalServerError
+            })?;
+
+        tracing::info!(
+            "Judge response for submission {}: {:?}",
+            submission_id,
+            judge_response
+        );
 
         let keys = judge_response.keys().cloned().collect::<Vec<_>>();
         let testcase_names = self
@@ -427,7 +436,7 @@ impl<
                             memory: res.memory as i32,
                         });
                     }
-                    ExecutionResult::Hidden(_res) => {
+                    ExecutionResult::Hidden(res) => {
                         // todo
                     }
                 },
