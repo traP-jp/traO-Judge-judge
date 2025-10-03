@@ -405,7 +405,7 @@ impl<
                     ExecutionResult::Displayable(res) => {
                         total_score += res.score;
                         max_time = max_time.max(res.time as i32);
-                        max_memory = max_memory.max(res.memory as i32);
+                        max_memory = max_memory.max((res.memory / 1024.) as i32);
                         overall_status = overall_status.max(res.status.clone());
 
                         let testcase_name = testcase_names
@@ -424,7 +424,7 @@ impl<
                             judge_status: format!("{:?}", res.status),
                             score: res.score,
                             time: res.time as i32,
-                            memory: res.memory as i32,
+                            memory: (res.memory / 1024.) as i32,
                         });
                     }
                     ExecutionResult::Hidden(_res) => {
