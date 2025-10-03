@@ -22,6 +22,7 @@ use judge_core::{
     },
 };
 use std::collections::HashMap;
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct SubmissionService<
@@ -108,9 +109,8 @@ impl<
         session_id: Option<&str>,
         submission_id: String,
     ) -> anyhow::Result<SubmissionDto, SubmissionError> {
-        let submission_id: i64 = submission_id
-            .parse()
-            .map_err(|_| SubmissionError::ValidateError)?;
+        let submission_id =
+            Uuid::parse_str(&submission_id).map_err(|_| SubmissionError::ValidateError)?;
 
         let submission = self
             .submission_repository
@@ -152,6 +152,7 @@ impl<
             user_id: submission.user_id.to_string(),
             user_name: submission.user_name,
             problem_id: submission.problem_id.to_string(),
+            problem_title: submission.problem_title,
             submitted_at: submission.submitted_at,
             language_id: submission.language_id.to_string(),
             total_score: submission.total_score,
@@ -359,7 +360,7 @@ impl<
 
     async fn async_judge_submission(
         &self,
-        submission_id: i64,
+        submission_id: Uuid,
         problem_id: i64,
         procedure: judge_core::model::procedure::registered::Procedure,
         runtime_texts: HashMap<String, String>,

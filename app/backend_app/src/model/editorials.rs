@@ -19,7 +19,7 @@ pub struct EditorialResponse {
 impl From<EditorialDto> for EditorialResponse {
     fn from(value: EditorialDto) -> Self {
         EditorialResponse {
-            id: value.id.to_string(),
+            id: value.id,
             created_at: value.created_at,
             updated_at: value.updated_at,
             problem_id: value.problem_id.to_string(),
@@ -44,7 +44,7 @@ pub struct EditorialSummaryResponse {
 impl From<EditorialSummaryDto> for EditorialSummaryResponse {
     fn from(value: EditorialSummaryDto) -> Self {
         EditorialSummaryResponse {
-            id: value.id.to_string(),
+            id: value.id,
             created_at: value.created_at,
             updated_at: value.updated_at,
             problem_id: value.problem_id.to_string(),

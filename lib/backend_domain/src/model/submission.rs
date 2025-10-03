@@ -2,10 +2,11 @@ use async_session::chrono;
 use uuid::Uuid;
 
 pub struct Submission {
-    pub id: i64,
+    pub id: Uuid,
     pub user_id: i64,
     pub user_name: String,
     pub problem_id: i64,
+    pub problem_title: String,
     pub submitted_at: chrono::DateTime<chrono::Utc>,
     pub language_id: i32,
     pub total_score: i64,
@@ -16,7 +17,7 @@ pub struct Submission {
 }
 
 pub struct JudgeResult {
-    pub testcase_id: i64,
+    pub testcase_id: Uuid,
     pub testcase_name: String,
     pub judge_status: String,
     pub score: i64,
@@ -44,7 +45,7 @@ pub struct UpdateSubmission {
 }
 
 pub struct CreateJudgeResult {
-    pub submission_id: i64,
+    pub submission_id: Uuid,
     pub testcase_id: Uuid,
     pub testcase_name: String,
     pub judge_status: String,

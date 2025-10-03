@@ -1,5 +1,7 @@
-use crate::model::submission::{JudgeResultRow, SubmissionRow};
-use crate::model::uuid::UuidRow;
+use crate::model::{
+    submission::{JudgeResultRow, SubmissionRow},
+    uuid::UuidRow,
+};
 use axum::async_trait;
 use domain::{
     model::submission::{
@@ -9,6 +11,7 @@ use domain::{
     repository::submission::SubmissionRepository,
 };
 use sqlx::{MySqlPool, QueryBuilder};
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct SubmissionRepositoryImpl {
@@ -23,21 +26,22 @@ impl SubmissionRepositoryImpl {
 
 #[async_trait]
 impl SubmissionRepository for SubmissionRepositoryImpl {
-    async fn get_submission(&self, id: i64) -> anyhow::Result<Option<Submission>> {
-        let submission =
-            sqlx::query_as::<_, SubmissionRow>("SELECT * FROM submissions WHERE id = ?")
-                .bind(id)
-                .fetch_optional(&self.pool)
-                .await?;
+    async fn get_submission(&self, id: Uuid) -> anyhow::Result<Option<Submission>> {
+        let submission = sqlx::query_as::<_, SubmissionRow>(
+            "SELECT submissions.*, normal_problems.title as problem_title FROM submissions LEFT JOIN normal_problems ON normal_problems.id = submissions.problem_id WHERE submissions.id = ?"
+        )
+        .bind(UuidRow(id))
+        .fetch_optional(&self.pool)
+        .await?;
 
         Ok(submission.map(|submission| submission.into()))
     }
 
-    async fn get_submission_results(&self, id: i64) -> anyhow::Result<Vec<JudgeResult>> {
+    async fn get_submission_results(&self, id: Uuid) -> anyhow::Result<Vec<JudgeResult>> {
         let results = sqlx::query_as::<_, JudgeResultRow>(
             "SELECT * FROM submission_testcases WHERE submission_id = ?",
         )
-        .bind(id)
+        .bind(UuidRow(id))
         .fetch_all(&self.pool)
         .await?;
 
@@ -49,7 +53,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         query: SubmissionGetQuery,
     ) -> anyhow::Result<Vec<Submission>> {
         let mut query_builder = QueryBuilder::new(
-            "SELECT submissions.* FROM submissions LEFT JOIN normal_problems ON normal_problems.id = submissions.problem_id WHERE",
+            "SELECT submissions.*, normal_problems.title as problem_title FROM submissions LEFT JOIN normal_problems ON normal_problems.id = submissions.problem_id WHERE",
         );
 
         query_builder.push(" (normal_problems.is_public = TRUE");
@@ -185,10 +189,13 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         Ok(count)
     }
 
-    async fn create_submission(&self, submission: CreateSubmission) -> anyhow::Result<i64> {
-        let submission_id = sqlx::query(
-            "INSERT INTO submissions (problem_id, user_id, user_name, language_id, source, judge_status, total_score, max_time, max_memory) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    async fn create_submission(&self, submission: CreateSubmission) -> anyhow::Result<Uuid> {
+        let submission_id = Uuid::now_v7();
+
+        sqlx::query(
+            "INSERT INTO submissions (id, problem_id, user_id, user_name, language_id, source, judge_status, total_score, max_time, max_memory) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
+        .bind(UuidRow(submission_id))
         .bind(submission.problem_id)
         .bind(submission.user_id)
         .bind(submission.user_name)
@@ -201,12 +208,12 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         .execute(&self.pool)
         .await?;
 
-        Ok(submission_id.last_insert_id() as i64)
+        Ok(submission_id)
     }
 
     async fn update_submission(
         &self,
-        submission_id: i64,
+        submission_id: Uuid,
         submission: UpdateSubmission,
     ) -> anyhow::Result<()> {
         sqlx::query(
@@ -216,7 +223,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         .bind(submission.total_score)
         .bind(submission.max_time)
         .bind(submission.max_memory)
-        .bind(submission_id)
+        .bind(UuidRow(submission_id))
         .execute(&self.pool)
         .await?;
 
@@ -233,7 +240,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         let mut separated = query_builder.separated(", ");
         for r in results.into_iter() {
             separated.push("(");
-            separated.push_bind_unseparated(r.submission_id);
+            separated.push_bind_unseparated(UuidRow(r.submission_id));
             separated.push_unseparated(", ");
             separated.push_bind_unseparated(UuidRow(r.testcase_id));
             separated.push_unseparated(", ");

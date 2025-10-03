@@ -7,6 +7,7 @@ pub struct SubmissionDto {
     pub user_id: String,
     pub user_name: String,
     pub problem_id: String,
+    pub problem_title: String,
     pub submitted_at: chrono::DateTime<chrono::Utc>,
     pub language_id: String,
     pub total_score: i64,
@@ -31,6 +32,7 @@ pub struct JudgeResultDto {
 pub struct SubmissionSummaryDto {
     pub id: String,
     pub problem_id: String,
+    pub problem_title: String,
     pub user_id: String,
     pub user_name: String,
     pub submitted_at: chrono::DateTime<chrono::Utc>,
@@ -47,6 +49,7 @@ impl From<Submission> for SubmissionSummaryDto {
         SubmissionSummaryDto {
             id: submission.id.to_string(),
             problem_id: submission.problem_id.to_string(),
+            problem_title: submission.problem_title,
             user_id: submission.user_id.to_string(),
             user_name: submission.user_name,
             submitted_at: submission.submitted_at,

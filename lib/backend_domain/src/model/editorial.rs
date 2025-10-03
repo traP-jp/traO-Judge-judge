@@ -1,8 +1,9 @@
 use async_session::chrono;
+use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct Editorial {
-    pub id: i64,
+    pub id: Uuid,
     pub problem_id: i64,
     pub author_id: i64,
     pub title: String,
@@ -23,7 +24,7 @@ pub struct CreateEditorial {
 
 #[derive(Debug, Clone)]
 pub struct UpdateEditorial {
-    pub id: i64,
+    pub id: Uuid,
     pub title: String,
     pub statement: String,
     pub is_public: bool,
@@ -31,7 +32,7 @@ pub struct UpdateEditorial {
 
 #[derive(Debug, Clone)]
 pub struct EditorialSummary {
-    pub id: i64,
+    pub id: Uuid,
     pub problem_id: i64,
     pub author_id: i64,
     pub title: String,
