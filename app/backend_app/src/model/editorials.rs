@@ -7,11 +7,11 @@ use usecase::model::editorial::{
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EditorialResponse {
-    pub id: i64,
+    pub id: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
-    pub problem_id: i64,
-    pub author_id: i64,
+    pub problem_id: String,
+    pub author_id: String,
     pub statement: String,
     pub is_public: bool,
 }
@@ -22,8 +22,8 @@ impl From<EditorialDto> for EditorialResponse {
             id: value.id,
             created_at: value.created_at,
             updated_at: value.updated_at,
-            problem_id: value.problem_id,
-            author_id: value.author_id,
+            problem_id: value.problem_id.to_string(),
+            author_id: value.author_id.to_string(),
             statement: value.statement,
             is_public: value.is_public,
         }
@@ -33,11 +33,11 @@ impl From<EditorialDto> for EditorialResponse {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EditorialSummaryResponse {
-    pub id: i64,
+    pub id: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
-    pub problem_id: i64,
-    pub author_id: i64,
+    pub problem_id: String,
+    pub author_id: String,
     pub is_public: bool,
 }
 
@@ -47,8 +47,8 @@ impl From<EditorialSummaryDto> for EditorialSummaryResponse {
             id: value.id,
             created_at: value.created_at,
             updated_at: value.updated_at,
-            problem_id: value.problem_id,
-            author_id: value.author_id,
+            problem_id: value.problem_id.to_string(),
+            author_id: value.author_id.to_string(),
             is_public: value.is_public,
         }
     }

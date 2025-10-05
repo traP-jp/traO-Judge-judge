@@ -16,7 +16,7 @@ pub struct UpdateEditorialData {
 
 #[derive(Debug, Clone)]
 pub struct EditorialDto {
-    pub id: i64,
+    pub id: String,
     pub problem_id: i64,
     pub author_id: i64,
     pub title: String,
@@ -29,7 +29,7 @@ pub struct EditorialDto {
 impl From<Editorial> for EditorialDto {
     fn from(value: Editorial) -> Self {
         EditorialDto {
-            id: value.id,
+            id: value.id.to_string(),
             problem_id: value.problem_id,
             author_id: value.author_id,
             title: value.title,
@@ -43,7 +43,7 @@ impl From<Editorial> for EditorialDto {
 
 #[derive(Debug, Clone)]
 pub struct EditorialSummaryDto {
-    pub id: i64,
+    pub id: String,
     pub problem_id: i64,
     pub author_id: i64,
     pub title: String,
@@ -55,7 +55,7 @@ pub struct EditorialSummaryDto {
 impl From<EditorialSummary> for EditorialSummaryDto {
     fn from(value: EditorialSummary) -> Self {
         EditorialSummaryDto {
-            id: value.id,
+            id: value.id.to_string(),
             problem_id: value.problem_id,
             author_id: value.author_id,
             title: value.title,

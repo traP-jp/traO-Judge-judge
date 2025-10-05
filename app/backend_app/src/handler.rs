@@ -9,6 +9,7 @@ pub mod editorial;
 pub mod github_oauth2;
 pub mod google_oauth2;
 pub mod icon;
+pub mod language;
 pub mod problems;
 pub mod submissions;
 pub mod testcase;
@@ -48,6 +49,10 @@ pub fn make_router(di_container: DiContainer) -> Router {
                 .delete(problems::delete_problem),
         )
         .route(
+            "/:problemId/submissions",
+            post(submissions::post_submission),
+        )
+        .route(
             "/:problemId/editorials",
             get(editorial::get_editorials).post(editorial::post_editorial),
         )
@@ -71,6 +76,8 @@ pub fn make_router(di_container: DiContainer) -> Router {
     );
 
     let icon_router = Router::new().route("/:iconId", get(icon::get_icon));
+
+    let language_router = Router::new().route("/", get(language::get_languages));
 
     let google_oauth2_router = Router::new()
         .route(
@@ -102,7 +109,8 @@ pub fn make_router(di_container: DiContainer) -> Router {
         .nest("/editorials", editorials_router)
         .nest("/testcases", testcases_router)
         .nest("/icons", icon_router)
+        .nest("/languages", language_router)
         .nest("/google-oauth2", google_oauth2_router)
-        .nest("/github-oauth2", github_oauth2_router) // Assuming similar structure for GitHub OAuth2
+        .nest("/github-oauth2", github_oauth2_router)
         .with_state(di_container)
 }

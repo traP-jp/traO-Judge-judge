@@ -7,6 +7,7 @@ use domain::{
         editorial::EditorialRepository, problem::ProblemRepository, session::SessionRepository,
     },
 };
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct EditorialService<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository> {
@@ -41,8 +42,11 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
     pub async fn get_editorial(
         &self,
         session_id: Option<&str>,
-        editorial_id: i64,
+        editorial_id: String,
     ) -> anyhow::Result<EditorialDto, EditorialError> {
+        let editorial_id =
+            Uuid::parse_str(&editorial_id).map_err(|_| EditorialError::ValidateError)?;
+
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository
@@ -80,8 +84,12 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
     pub async fn get_editorials(
         &self,
         session_id: Option<&str>,
-        problem_id: i64,
+        problem_id: String,
     ) -> anyhow::Result<Vec<EditorialSummaryDto>, EditorialError> {
+        let problem_id: i64 = problem_id
+            .parse()
+            .map_err(|_| EditorialError::ValidateError)?;
+
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository
@@ -121,9 +129,13 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
     pub async fn post_editorial(
         &self,
         session_id: Option<&str>,
-        problem_id: i64,
+        problem_id: String,
         query: CreateEditorialData,
     ) -> anyhow::Result<EditorialDto, EditorialError> {
+        let problem_id: i64 = problem_id
+            .parse()
+            .map_err(|_| EditorialError::ValidateError)?;
+
         let problem = self
             .problem_repository
             .get_problem(problem_id)
@@ -173,9 +185,12 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
     pub async fn put_editorial(
         &self,
         session_id: Option<&str>,
-        editorial_id: i64,
+        editorial_id: String,
         query: UpdateEditorialData,
     ) -> anyhow::Result<(), EditorialError> {
+        let editorial_id =
+            Uuid::parse_str(&editorial_id).map_err(|_| EditorialError::ValidateError)?;
+
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository
@@ -231,8 +246,11 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
     pub async fn delete_editorial(
         &self,
         session_id: Option<&str>,
-        editorial_id: i64,
+        editorial_id: String,
     ) -> anyhow::Result<(), EditorialError> {
+        let editorial_id =
+            Uuid::parse_str(&editorial_id).map_err(|_| EditorialError::ValidateError)?;
+
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use lettre::Address;
 
 use crate::model::auth::ResetPasswordData;
@@ -8,6 +10,8 @@ use domain::{
     repository::session::SessionRepository,
     repository::{auth::AuthRepository, user::UserRepository},
 };
+
+use super::auth_mail_template::{AuthMailTemplateProvider, DefaultAuthMailTemplateProvider};
 
 #[derive(Clone)]
 pub struct AuthenticationService<
@@ -20,6 +24,7 @@ pub struct AuthenticationService<
     user_repository: UR,
     session_repository: SR,
     mail_client: C,
+    mail_template_provider: Arc<dyn AuthMailTemplateProvider>,
 }
 
 impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClient>
@@ -31,11 +36,28 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         session_repository: SR,
         mail_client: C,
     ) -> Self {
+        Self::with_template_provider(
+            auth_repository,
+            user_repository,
+            session_repository,
+            mail_client,
+            DefaultAuthMailTemplateProvider::default(),
+        )
+    }
+
+    pub fn with_template_provider(
+        auth_repository: AR,
+        user_repository: UR,
+        session_repository: SR,
+        mail_client: C,
+        mail_template_provider: impl AuthMailTemplateProvider + 'static,
+    ) -> Self {
         Self {
             auth_repository,
             user_repository,
             session_repository,
             mail_client,
+            mail_template_provider: Arc::new(mail_template_provider),
         }
     }
 }
@@ -68,15 +90,10 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let jwt = AuthToken::encode_signup_jwt(Some(&email), None, None, &encode_key, &encrypt_key)
             .map_err(|_| AuthError::InternalServerError)?;
 
-        // todo
-        let subject = "Verification mail";
-        let message = format!(
-            "Please click the link below to verify your email address.\n\n\
-            http://localhost:3000/verify?jwt={jwt}"
-        );
+        let mail = self.mail_template_provider.signup_request(&jwt);
 
         self.mail_client
-            .send_mail(user_address, subject, &message)
+            .send_mail(user_address, mail.subject.as_str(), mail.body.as_str())
             .await
             .map_err(|_| AuthError::InternalServerError)?;
 
@@ -196,15 +213,10 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let jwt = AuthToken::encode_email_reset_password_jwt(&email, &encode_key, &encrypt_key)
             .map_err(|_| AuthError::InternalServerError)?;
 
-        // todo
-        let subject = "Reset password mail";
-        let message = format!(
-            "Please click the link below to reset your password.\n\n\
-            http://localhost:3000/reset?jwt={jwt}"
-        );
+        let mail = self.mail_template_provider.reset_password_request(&jwt);
 
         self.mail_client
-            .send_mail(user_address, subject, &message)
+            .send_mail(user_address, mail.subject.as_str(), mail.body.as_str())
             .await
             .map_err(|_| AuthError::InternalServerError)?;
 
@@ -427,9 +439,8 @@ mod login_tests {
             name: "name".to_string(),
             traq_id: None,
             github_id: None,
-            icon_url: None,
-            x_link: None,
-            github_link: None,
+            icon_id: None,
+            x_id: None,
             self_introduction: "".to_string(),
             role: UserRole::CommonUser,
             created_at: chrono::Utc::now(),
@@ -696,9 +707,8 @@ mod reset_password_tests {
             name: "name".to_string(),
             traq_id: None,
             github_id: None,
-            icon_url: None,
-            x_link: None,
-            github_link: None,
+            icon_id: None,
+            x_id: None,
             self_introduction: "".to_string(),
             role: UserRole::CommonUser,
             created_at: chrono::Utc::now(),

@@ -18,7 +18,7 @@ use usecase::service::problem::ProblemError;
 pub async fn get_problem(
     State(di_container): State<DiContainer>,
     TypedHeader(cookie): TypedHeader<Cookie>,
-    Path(problem_id): Path<i64>,
+    Path(problem_id): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let session_id = cookie.get("session_id");
 
@@ -88,7 +88,7 @@ pub async fn get_problems(
 pub async fn put_problem(
     State(di_container): State<DiContainer>,
     TypedHeader(cookie): TypedHeader<Cookie>,
-    Path(problem_id): Path<i64>,
+    Path(problem_id): Path<String>,
     Json(body): Json<UpdateNormalProblem>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let session_id = cookie.get("session_id");
@@ -158,7 +158,7 @@ pub async fn post_problem(
 pub async fn delete_problem(
     State(di_container): State<DiContainer>,
     TypedHeader(cookie): TypedHeader<Cookie>,
-    Path(problem_id): Path<i64>,
+    Path(problem_id): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let session_id = cookie.get("session_id");
 

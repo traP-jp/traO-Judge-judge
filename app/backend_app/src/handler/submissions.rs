@@ -1,5 +1,5 @@
 use crate::model::submissions::{
-    SubmissionOrderBy, SubmissionResponse, SubmissionSummariesResponse,
+    CreateSubmission, SubmissionOrderBy, SubmissionResponse, SubmissionSummariesResponse,
 };
 use crate::{di::DiContainer, model::submissions::SubmissionGetQuery};
 use axum::extract::Query;
@@ -10,13 +10,15 @@ use axum::{
 };
 use axum_extra::{TypedHeader, headers::Cookie};
 use reqwest::StatusCode;
-use usecase::model::submission::{SubmissionGetQueryData, SubmissionOrderByData};
+use usecase::model::submission::{
+    CreateSubmissionData, SubmissionGetQueryData, SubmissionOrderByData,
+};
 use usecase::service::submission::SubmissionError;
 
 pub async fn get_submission(
     State(di_container): State<DiContainer>,
     TypedHeader(cookie): TypedHeader<Cookie>,
-    Path(submission_id): Path<i64>,
+    Path(submission_id): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let session_id = cookie.get("session_id");
 
@@ -84,6 +86,39 @@ pub async fn get_submissions(
         Ok(submissions) => {
             let resp = SubmissionSummariesResponse::from(submissions);
             Ok((StatusCode::OK, Json(resp)))
+        }
+        Err(e) => match e {
+            SubmissionError::ValidateError => Err(StatusCode::BAD_REQUEST),
+            SubmissionError::Forbidden => Err(StatusCode::FORBIDDEN),
+            SubmissionError::NotFound => Err(StatusCode::NOT_FOUND),
+            SubmissionError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        },
+    }
+}
+
+pub async fn post_submission(
+    State(di_container): State<DiContainer>,
+    TypedHeader(cookie): TypedHeader<Cookie>,
+    Path(problem_id): Path<String>,
+    Json(body): Json<CreateSubmission>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let session_id = cookie.get("session_id");
+
+    match di_container
+        .submission_service()
+        .create_submission(
+            session_id,
+            problem_id,
+            CreateSubmissionData {
+                language_id: body.language_id,
+                source: body.source,
+            },
+        )
+        .await
+    {
+        Ok(submission) => {
+            let resp = SubmissionResponse::from(submission);
+            Ok((StatusCode::CREATED, Json(resp)))
         }
         Err(e) => match e {
             SubmissionError::ValidateError => Err(StatusCode::BAD_REQUEST),

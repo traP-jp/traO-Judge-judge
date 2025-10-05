@@ -5,10 +5,12 @@ use crate::model::problem::{
 use domain::{
     model::problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem},
     repository::{
-        problem::ProblemRepository, session::SessionRepository, testcase::TestcaseRepository,
-        user::UserRepository,
+        problem::ProblemRepository, procedure::ProcedureRepository, session::SessionRepository,
+        testcase::TestcaseRepository, user::UserRepository,
     },
 };
+use judge_core::model::procedure::registered::Procedure;
+use validator::Validate;
 
 #[derive(Clone)]
 pub struct ProblemService<
@@ -16,27 +18,36 @@ pub struct ProblemService<
     UR: UserRepository,
     SR: SessionRepository,
     TR: TestcaseRepository,
+    PRC: ProcedureRepository,
 > {
     problem_repository: PR,
     user_repository: UR,
     session_repository: SR,
     testcase_repository: TR,
+    procedure_repository: PRC,
 }
 
-impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: TestcaseRepository>
-    ProblemService<PR, UR, SR, TR>
+impl<
+    PR: ProblemRepository,
+    UR: UserRepository,
+    SR: SessionRepository,
+    TR: TestcaseRepository,
+    PRC: ProcedureRepository,
+> ProblemService<PR, UR, SR, TR, PRC>
 {
     pub fn new(
         problem_repository: PR,
         user_repository: UR,
         session_repository: SR,
         testcase_repository: TR,
+        procedure_repository: PRC,
     ) -> Self {
         Self {
             problem_repository,
             user_repository,
             session_repository,
             testcase_repository,
+            procedure_repository,
         }
     }
 }
@@ -50,14 +61,23 @@ pub enum ProblemError {
     InternalServerError,
 }
 
-impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: TestcaseRepository>
-    ProblemService<PR, UR, SR, TR>
+impl<
+    PR: ProblemRepository,
+    UR: UserRepository,
+    SR: SessionRepository,
+    TR: TestcaseRepository,
+    PRC: ProcedureRepository,
+> ProblemService<PR, UR, SR, TR, PRC>
 {
     pub async fn get_problem(
         &self,
         session_id: Option<&str>,
-        problem_id: i64,
+        problem_id: String,
     ) -> anyhow::Result<NormalProblemDto, ProblemError> {
+        let problem_id: i64 = problem_id
+            .parse()
+            .map_err(|_| ProblemError::ValidateError)?;
+
         let problem = self
             .problem_repository
             .get_problem(problem_id)
@@ -87,8 +107,8 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
             .map_err(|_| ProblemError::InternalServerError)?;
 
         Ok(NormalProblemDto {
-            id: problem.id,
-            author_id: problem.author_id,
+            id: problem.id.to_string(),
+            author_id: problem.author_id.to_string(),
             title: problem.title,
             statement: problem.statement,
             time_limit: problem.time_limit,
@@ -116,9 +136,16 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
             None => None,
         };
 
+        let user_query = query.user_query.map_or(Ok(None), |user_id_str| {
+            let user_id: i64 = user_id_str
+                .parse()
+                .map_err(|_| ProblemError::ValidateError)?;
+            Ok(Some(user_id))
+        })?;
+
         let query = ProblemGetQuery {
             user_id: display_id,
-            user_query: query.user_query,
+            user_query: user_query,
             limit: query.limit.unwrap_or(50),
             offset: query.offset.unwrap_or(0),
             order_by: match query.order_by {
@@ -152,9 +179,15 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
     pub async fn update_problem(
         &self,
         session_id: Option<&str>,
-        problem_id: i64,
+        problem_id: String,
         body: UpdateNormalProblemData,
     ) -> anyhow::Result<NormalProblemDto, ProblemError> {
+        body.validate().map_err(|_| ProblemError::ValidateError)?;
+
+        let problem_id: i64 = problem_id
+            .parse()
+            .map_err(|_| ProblemError::ValidateError)?;
+
         let problem = self
             .problem_repository
             .get_problem(problem_id)
@@ -209,6 +242,8 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
         session_id: Option<&str>,
         body: CreateNormalProblemData,
     ) -> anyhow::Result<NormalProblemDto, ProblemError> {
+        body.validate().map_err(|_| ProblemError::ValidateError)?;
+
         let display_id = match session_id {
             Some(session_id) => self
                 .session_repository
@@ -246,6 +281,18 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
             .await
             .map_err(|_| ProblemError::InternalServerError)?;
 
+        let procedure = Procedure::default();
+
+        if self
+            .procedure_repository
+            .create_procedure(problem_id, procedure)
+            .await
+            .is_err()
+        {
+            let _ = self.problem_repository.delete_problem(problem_id).await;
+            return Err(ProblemError::InternalServerError);
+        }
+
         let problem = self
             .problem_repository
             .get_problem(problem_id)
@@ -259,8 +306,12 @@ impl<PR: ProblemRepository, UR: UserRepository, SR: SessionRepository, TR: Testc
     pub async fn delete_problem(
         &self,
         session_id: Option<&str>,
-        problem_id: i64,
+        problem_id: String,
     ) -> anyhow::Result<(), ProblemError> {
+        let problem_id: i64 = problem_id
+            .parse()
+            .map_err(|_| ProblemError::ValidateError)?;
+
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository
