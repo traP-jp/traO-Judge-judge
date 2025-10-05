@@ -108,6 +108,22 @@ impl AuthToken {
         Ok(auth_info.google_oauth)
     }
 
+    pub fn get_github_oauth(
+        jwt: &str,
+        encode_key: &str,
+        encrypt_key: &str,
+    ) -> anyhow::Result<Option<String>> {
+        let token = jsonwebtoken::decode::<Self>(
+            jwt,
+            &jsonwebtoken::DecodingKey::from_secret(encode_key.as_ref()),
+            &jsonwebtoken::Validation::default(),
+        )?;
+
+        let auth_info = AuthInfo::decrypt(&token.claims.payload, encrypt_key)?;
+
+        Ok(auth_info.github_oauth)
+    }
+
     pub fn encode_email_update_jwt(
         user_id: i64,
         email: &str,
