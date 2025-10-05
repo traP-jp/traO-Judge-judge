@@ -1,8 +1,8 @@
 pub mod auth;
 pub mod editorial;
-pub mod language;
 pub mod github_oauth2;
 pub mod google_oauth2;
+pub mod language;
 pub mod problem;
 pub mod submission;
 pub mod testcase;

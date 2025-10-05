@@ -156,7 +156,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .map_err(|_| AuthError::InternalServerError)?;
 
             Ok(())
-        }  else if let Some(github_oauth) = github_oauth {
+        } else if let Some(github_oauth) = github_oauth {
             if let Ok(Some(_)) = self
                 .auth_repository
                 .get_user_id_by_github_oauth(&github_oauth)
@@ -177,7 +177,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .map_err(|_| AuthError::InternalServerError)?;
 
             Ok(())
-        }else {
+        } else {
             return Err(AuthError::InternalServerError);
         }
     }
