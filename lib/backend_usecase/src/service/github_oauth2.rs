@@ -107,7 +107,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     .map_err(|_| GitHubOAuth2Error::InternalServerError)?
                     .ok_or(GitHubOAuth2Error::Unauthorized)?;
                 self.auth_repository
-                    .save_user_github_oauth(user_id, &github_oauth)
+                    .update_user_github_oauth(user_id, &github_oauth)
                     .await
                     .map_err(|_| GitHubOAuth2Error::InternalServerError)?;
                 Ok(GitHubOAuth2AuthorizeDto {

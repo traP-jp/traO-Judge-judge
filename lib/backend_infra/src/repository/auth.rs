@@ -127,15 +127,15 @@ impl AuthRepository for AuthRepositoryImpl {
         Ok(())
     }
 
-    // async fn update_user_google_oauth(&self, id: UserId, google_oauth: &str) -> anyhow::Result<()> {
-    //     sqlx::query("UPDATE user_authentications SET google_oauth = ? WHERE user_id = ?")
-    //         .bind(google_oauth)
-    //         .bind(UuidRow(id.into()))
-    //         .execute(&self.pool)
-    //         .await?;
+    async fn update_user_google_oauth(&self, id: UserId, google_oauth: &str) -> anyhow::Result<()> {
+        sqlx::query("UPDATE user_authentications SET google_oauth = ? WHERE user_id = ?")
+            .bind(google_oauth)
+            .bind(UuidRow(id.into()))
+            .execute(&self.pool)
+            .await?;
 
-    //     Ok(())
-    // }
+        Ok(())
+    }
 
     async fn verify_user_google_oauth(&self, id: UserId) -> anyhow::Result<bool> {
         let google_oauth = sqlx::query_scalar::<_, Option<String>>(
@@ -242,6 +242,16 @@ impl AuthRepository for AuthRepositoryImpl {
         sqlx::query("INSERT INTO user_authentications (user_id, github_oauth) VALUES (?, ?)")
             .bind(UuidRow(id.into()))
             .bind(github_oauth)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn update_user_github_oauth(&self, id: UserId, github_oauth: &str) -> anyhow::Result<()> {
+        sqlx::query("UPDATE user_authentications SET github_oauth = ? WHERE user_id = ?")
+            .bind(github_oauth)
+            .bind(UuidRow(id.into()))
             .execute(&self.pool)
             .await?;
 

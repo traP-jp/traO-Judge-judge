@@ -23,6 +23,7 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace.dependencies]
+aes-gcm = "0.10.3"
 again = "0.1.2"
 anyhow = "1.0"
 async-channel = "2.3.1"

@@ -115,6 +115,9 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let google_oauth = AuthToken::get_google_oauth(&data.token, &encode_key, &encrypt_key)
             .map_err(|_| AuthError::Unauthorized)?;
 
+        let github_oauth = AuthToken::get_github_oauth(&data.token, &encode_key, &encrypt_key)
+            .map_err(|_| AuthError::Unauthorized)?;
+
         if let Some(email) = email {
             if let Ok(true) = self.user_repository.is_exist_email(&email).await {
                 return Ok(());
@@ -153,7 +156,28 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .map_err(|_| AuthError::InternalServerError)?;
 
             Ok(())
-        } else {
+        }  else if let Some(github_oauth) = github_oauth {
+            if let Ok(Some(_)) = self
+                .auth_repository
+                .get_user_id_by_github_oauth(&github_oauth)
+                .await
+            {
+                return Ok(());
+            }
+
+            let user_id = self
+                .user_repository
+                .create_user_without_email(&data.user_name)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            self.auth_repository
+                .save_user_github_oauth(user_id, &github_oauth)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            Ok(())
+        }else {
             return Err(AuthError::InternalServerError);
         }
     }

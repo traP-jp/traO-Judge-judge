@@ -16,7 +16,7 @@ pub trait AuthRepository {
         oauth_action: &str,
     ) -> anyhow::Result<String>;
     async fn save_user_google_oauth(&self, id: UserId, google_oauth: &str) -> anyhow::Result<()>;
-    // async fn update_user_google_oauth(&self, id: UserId, google_oauth: &str) -> anyhow::Result<()>;
+    async fn update_user_google_oauth(&self, id: UserId, google_oauth: &str) -> anyhow::Result<()>;
     async fn verify_user_google_oauth(&self, id: UserId) -> anyhow::Result<bool>;
     async fn delete_user_google_oauth(&self, id: UserId) -> anyhow::Result<bool>;
     async fn get_user_id_by_google_oauth(
@@ -30,6 +30,7 @@ pub trait AuthRepository {
         oauth_action: &str,
     ) -> anyhow::Result<String>;
     async fn save_user_github_oauth(&self, id: UserId, github_oauth: &str) -> anyhow::Result<()>;
+    async fn update_user_github_oauth(&self, id: UserId, github_oauth: &str) -> anyhow::Result<()>;
     async fn verify_user_github_oauth(&self, id: UserId) -> anyhow::Result<bool>;
     async fn delete_user_github_oauth(&self, id: UserId) -> anyhow::Result<bool>;
     async fn get_user_id_by_github_oauth(

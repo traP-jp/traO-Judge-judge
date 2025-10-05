@@ -107,7 +107,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     .map_err(|_| GoogleOAuth2Error::InternalServerError)?
                     .ok_or(GoogleOAuth2Error::Unauthorized)?;
                 self.auth_repository
-                    .save_user_google_oauth(user_id, &google_oauth)
+                    .update_user_google_oauth(user_id, &google_oauth)
                     .await
                     .map_err(|_| GoogleOAuth2Error::InternalServerError)?;
                 Ok(GoogleOAuth2AuthorizeDto {
