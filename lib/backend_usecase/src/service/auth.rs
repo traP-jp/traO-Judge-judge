@@ -290,7 +290,10 @@ mod signup_request_tests {
     fn setup_env() -> () {
         unsafe {
             std::env::set_var("JWT_SECRET_KEY", "secret_test");
-            std::env::set_var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY", "payload_secret_key_has_length_32");
+            std::env::set_var(
+                "JWT_PAYLOAD_ENCRYPT_SECRET_KEY",
+                "payload_secret_key_has_length_32",
+            );
         }
     }
 
@@ -362,7 +365,10 @@ mod signup_tests {
     fn setup_env() -> () {
         unsafe {
             std::env::set_var("JWT_SECRET_KEY", "secret_test");
-            std::env::set_var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY", "payload_secret_key_has_length_32");
+            std::env::set_var(
+                "JWT_PAYLOAD_ENCRYPT_SECRET_KEY",
+                "payload_secret_key_has_length_32",
+            );
         }
     }
 
@@ -641,7 +647,10 @@ mod reset_password_request_tests {
     fn setup_env() -> () {
         unsafe {
             std::env::set_var("JWT_SECRET_KEY", "secret_test");
-            std::env::set_var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY", "payload_secret_key_has_length_32");
+            std::env::set_var(
+                "JWT_PAYLOAD_ENCRYPT_SECRET_KEY",
+                "payload_secret_key_has_length_32",
+            );
         }
     }
 
@@ -713,7 +722,10 @@ mod reset_password_tests {
     fn setup_env() -> () {
         unsafe {
             std::env::set_var("JWT_SECRET_KEY", "secret_test");
-            std::env::set_var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY", "payload_secret_key_has_length_32");
+            std::env::set_var(
+                "JWT_PAYLOAD_ENCRYPT_SECRET_KEY",
+                "payload_secret_key_has_length_32",
+            );
         }
     }
 
