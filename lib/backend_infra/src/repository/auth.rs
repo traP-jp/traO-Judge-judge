@@ -192,7 +192,7 @@ impl AuthRepository for AuthRepositoryImpl {
         let client_id = std::env::var("GITHUB_OAUTH2_CLIENT_ID")?;
         let client_secret = std::env::var("GITHUB_OAUTH2_CLIENT_SECRET")?;
         let redirect_uri =
-            std::env::var("FRONTEND_URL")? + &format!("/auth/google/{}/callback", oauth_action);
+            std::env::var("FRONTEND_URL")? + &format!("/auth/github/{}/callback", oauth_action);
 
         let url = format!(
             "https://github.com/login/oauth/access_token?client_id={}&client_secret={}&code={}&redirect_uri={}",

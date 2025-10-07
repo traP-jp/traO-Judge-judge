@@ -132,7 +132,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
         } else {
             return Err(GitHubOAuth2Error::Unauthorized);
         };
-        if self
+        if !self
             .auth_repository
             .verify_user_github_oauth(user_id)
             .await
