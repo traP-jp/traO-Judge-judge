@@ -55,7 +55,10 @@ impl Default for AuthRepositoryMock {
 
 #[async_trait]
 impl AuthRepository for AuthRepositoryMock {
-    async fn get_authentication_by_user_id(&self, id: UserId) -> anyhow::Result<UserAuthentication> {
+    async fn get_authentication_by_user_id(
+        &self,
+        id: UserId,
+    ) -> anyhow::Result<UserAuthentication> {
         let users = self.users.lock().await;
         if let Some(auth) = users.get(&id) {
             Ok(UserAuthentication {
@@ -492,7 +495,9 @@ mod tests {
         assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 0);
 
         // Add password
-        mock.save_user_email_and_password(user_id, "test@example.com", "pass").await.unwrap();
+        mock.save_user_email_and_password(user_id, "test@example.com", "pass")
+            .await
+            .unwrap();
         assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 1);
 
         // Add Google OAuth
