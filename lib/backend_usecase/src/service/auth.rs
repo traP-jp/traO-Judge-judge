@@ -100,7 +100,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         Ok(())
     }
 
-    pub async fn signup(&self, data: SignUpData) -> anyhow::Result<(), AuthError> {
+    pub async fn signup(&self, data: SignUpData) -> anyhow::Result<String, AuthError> {
         data.validate().map_err(|_| AuthError::ValidateError)?;
 
         let encode_key =
@@ -119,8 +119,20 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .map_err(|_| AuthError::Unauthorized)?;
 
         if let Some(email) = email {
-            if let Ok(true) = self.auth_repository.is_exist_email(&email).await {
-                return Ok(());
+            if let Ok(Some(user_id)) = self.auth_repository.get_user_id_by_email(&email).await {
+                let user = self
+                    .user_repository
+                    .get_user_by_user_id(user_id)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?
+                    .ok_or(AuthError::Unauthorized)?;
+
+                let session_id = self
+                    .session_repository
+                    .create_session(user)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?;
+                return Ok(session_id);
             }
 
             let user_id = self
@@ -134,14 +146,37 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .await
                 .map_err(|_| AuthError::InternalServerError)?;
 
-            Ok(())
+            let user = self
+                .user_repository
+                .get_user_by_user_id(user_id)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?
+                .ok_or(AuthError::Unauthorized)?;
+            let session_id = self
+                .session_repository
+                .create_session(user)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            Ok(session_id)
         } else if let Some(google_oauth) = google_oauth {
-            if let Ok(Some(_)) = self
+            if let Ok(Some(user_id)) = self
                 .auth_repository
                 .get_user_id_by_google_oauth(&google_oauth)
                 .await
             {
-                return Ok(());
+                let user = self
+                    .user_repository
+                    .get_user_by_user_id(user_id)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?
+                    .ok_or(AuthError::Unauthorized)?;
+                let session_id = self
+                    .session_repository
+                    .create_session(user)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?;
+                return Ok(session_id);
             }
 
             let user_id = self
@@ -155,14 +190,37 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .await
                 .map_err(|_| AuthError::InternalServerError)?;
 
-            Ok(())
+            let user = self
+                .user_repository
+                .get_user_by_user_id(user_id)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?
+                .ok_or(AuthError::Unauthorized)?;
+            let session_id = self
+                .session_repository
+                .create_session(user)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            Ok(session_id)
         } else if let Some(github_oauth) = github_oauth {
-            if let Ok(Some(_)) = self
+            if let Ok(Some(user_id)) = self
                 .auth_repository
                 .get_user_id_by_github_oauth(&github_oauth)
                 .await
             {
-                return Ok(());
+                let user = self
+                    .user_repository
+                    .get_user_by_user_id(user_id)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?
+                    .ok_or(AuthError::Unauthorized)?;
+                let session_id = self
+                    .session_repository
+                    .create_session(user)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?;
+                return Ok(session_id);
             }
 
             let user_id = self
@@ -176,7 +234,19 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .await
                 .map_err(|_| AuthError::InternalServerError)?;
 
-            Ok(())
+            let user = self
+                .user_repository
+                .get_user_by_user_id(user_id)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?
+                .ok_or(AuthError::Unauthorized)?;
+            let session_id = self
+                .session_repository
+                .create_session(user)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            Ok(session_id)
         } else {
             return Err(AuthError::InternalServerError);
         }
@@ -361,12 +431,16 @@ mod signup_tests {
     use super::*;
     use domain::{
         external::mail::MockMailClient,
-        model::{jwt::AuthToken, user::UserId},
+        model::{
+            jwt::AuthToken,
+            user::{User, UserId, UserRole},
+        },
         repository::{
             auth::MockAuthRepository, session::MockSessionRepository, user::MockUserRepository,
         },
     };
     use rstest::*;
+    use sqlx::types::chrono;
     use uuid::Uuid;
     #[fixture]
     fn setup_env() -> () {
@@ -391,10 +465,26 @@ mod signup_tests {
         }
     }
 
+    fn get_user() -> User {
+        User {
+            id: UserId(Uuid::now_v7()),
+            display_id: 0,
+            name: "name".to_string(),
+            traq_id: None,
+            github_id: None,
+            icon_id: None,
+            x_id: None,
+            self_introduction: "".to_string(),
+            role: UserRole::CommonUser,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+        }
+    }
+
     // email は signup_request でvalidか判定されたのちjwtになり変更不能なのでテストしない
     #[rstest]
-    #[case::valid_data(("test", "Passw0rd", "test@example.com"), Ok(()))]
-    #[case::valid_data(("1234567890", "Aa0@$!%*?&", "test@gmail.com"), Ok(()))]
+    #[case::valid_data(("test", "Passw0rd", "test@example.com"), Ok("dummy_session_id".to_string()))]
+    #[case::valid_data(("1234567890", "Aa0@$!%*?&", "test@gmail.com"), Ok("dummy_session_id".to_string()))]
     #[case::invalid_password(("test", "Aa12345", "test@example.com"), Err(AuthError::ValidateError))]
     #[case::invalid_password(("test", "@$!%*?&@$", "test@example.com"), Err(AuthError::ValidateError))]
     #[case::invalid_username(("_Alice", "Aa123456", "test@example.com"), Err(AuthError::ValidateError))]
@@ -402,22 +492,30 @@ mod signup_tests {
     async fn signup(
         _setup_env: (),
         #[case] data: (&str, &str, &str),
-        #[case] result: Result<(), AuthError>,
+        #[case] result: Result<String, AuthError>,
     ) -> anyhow::Result<()> {
         let signup_data = create_signup_data(data.0, data.1, data.2);
 
         let mut auth_mock = MockAuthRepository::new();
         let mut user_mock = MockUserRepository::new();
-        let session_mock = MockSessionRepository::new();
+        let mut session_mock = MockSessionRepository::new();
         let mail_mock = MockMailClient::new();
 
-        auth_mock.expect_is_exist_email().returning(|_| Ok(false));
+        auth_mock
+            .expect_get_user_id_by_email()
+            .returning(|_| Ok(Some(get_user().id)));
         user_mock
             .expect_create_user()
             .returning(|_| Ok(UserId::new(Uuid::now_v7())));
         auth_mock
             .expect_save_user_email_and_password()
             .returning(|_, _, _| Ok(()));
+        user_mock
+            .expect_get_user_by_user_id()
+            .returning(|_| Ok(Some(get_user())));
+        session_mock
+            .expect_create_session()
+            .returning(|_| Ok("dummy_session_id".to_string()));
 
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.signup(signup_data).await;
@@ -428,8 +526,8 @@ mod signup_tests {
     }
 
     #[rstest]
-    #[case::valid_data(("test", "Passw0rd", "test@example.com"), Ok(()))]
-    #[case::valid_data(("1234567890", "Aa0@$!%*?&", "test@gmail.com"), Ok(()))]
+    #[case::valid_data(("test", "Passw0rd", "test@example.com"), Ok("dummy_session_id".to_string()))]
+    #[case::valid_data(("1234567890", "Aa0@$!%*?&", "test@gmail.com"), Ok("dummy_session_id".to_string()))]
     #[case::invalid_password(("test", "Aa12345", "test@example.com"), Err(AuthError::ValidateError))]
     #[case::invalid_password(("test", "@$!%*?&@$", "test@example.com"), Err(AuthError::ValidateError))]
     #[case::invalid_username(("_Alice", "Aa123456", "test@example.com"), Err(AuthError::ValidateError))]
@@ -437,16 +535,24 @@ mod signup_tests {
     async fn signup_exist_user(
         _setup_env: (),
         #[case] data: (&str, &str, &str),
-        #[case] result: Result<(), AuthError>,
+        #[case] result: Result<String, AuthError>,
     ) -> anyhow::Result<()> {
         let signup_data = create_signup_data(data.0, data.1, data.2);
 
         let mut auth_mock = MockAuthRepository::new();
-        let user_mock = MockUserRepository::new();
-        let session_mock = MockSessionRepository::new();
+        let mut user_mock = MockUserRepository::new();
+        let mut session_mock = MockSessionRepository::new();
         let mail_mock = MockMailClient::new();
 
-        auth_mock.expect_is_exist_email().returning(|_| Ok(true));
+        auth_mock
+            .expect_get_user_id_by_email()
+            .returning(|_| Ok(Some(get_user().id)));
+        user_mock
+            .expect_get_user_by_user_id()
+            .returning(|_| Ok(Some(get_user())));
+        session_mock
+            .expect_create_session()
+            .returning(|_| Ok("dummy_session_id".to_string()));
 
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.signup(signup_data).await;
