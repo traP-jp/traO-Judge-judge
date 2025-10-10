@@ -100,7 +100,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         Ok(())
     }
 
-    pub async fn signup(&self, data: SignUpData) -> anyhow::Result<(), AuthError> {
+    pub async fn signup(&self, data: SignUpData) -> anyhow::Result<Option<String>, AuthError> {
         data.validate().map_err(|_| AuthError::ValidateError)?;
 
         let encode_key =
@@ -120,7 +120,9 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
 
         if let Some(email) = email {
             if let Ok(true) = self.user_repository.is_exist_email(&email).await {
-                return Ok(());
+                let user = self.user_repository.get_user_by_email(&email).await.map_err(|_| AuthError::InternalServerError)?.ok_or(AuthError::Unauthorized)?;
+                let session_id = self.session_repository.create_session(user).await.map_err(|_| AuthError::InternalServerError)?;
+                return Ok(Some(session_id));
             }
 
             let user_id = self
@@ -134,14 +136,16 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .await
                 .map_err(|_| AuthError::InternalServerError)?;
 
-            Ok(())
+            Ok(None)
         } else if let Some(google_oauth) = google_oauth {
-            if let Ok(Some(_)) = self
+            if let Ok(Some(user_id)) = self
                 .auth_repository
                 .get_user_id_by_google_oauth(&google_oauth)
                 .await
             {
-                return Ok(());
+                let user = self.user_repository.get_user_by_user_id(user_id).await.map_err(|_| AuthError::InternalServerError)?.ok_or(AuthError::Unauthorized)?;
+                let session_id = self.session_repository.create_session(user).await.map_err(|_| AuthError::InternalServerError)?;
+                return Ok(Some(session_id));
             }
 
             let user_id = self
@@ -155,14 +159,16 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .await
                 .map_err(|_| AuthError::InternalServerError)?;
 
-            Ok(())
+            Ok(None)
         } else if let Some(github_oauth) = github_oauth {
-            if let Ok(Some(_)) = self
+            if let Ok(Some(user_id)) = self
                 .auth_repository
                 .get_user_id_by_github_oauth(&github_oauth)
                 .await
             {
-                return Ok(());
+                let user = self.user_repository.get_user_by_user_id(user_id).await.map_err(|_| AuthError::InternalServerError)?.ok_or(AuthError::Unauthorized)?;
+                let session_id = self.session_repository.create_session(user).await.map_err(|_| AuthError::InternalServerError)?;
+                return Ok(Some(session_id));
             }
 
             let user_id = self
@@ -176,7 +182,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .await
                 .map_err(|_| AuthError::InternalServerError)?;
 
-            Ok(())
+            Ok(None)
         } else {
             return Err(AuthError::InternalServerError);
         }
@@ -386,8 +392,8 @@ mod signup_tests {
 
     // email は signup_request でvalidか判定されたのちjwtになり変更不能なのでテストしない
     #[rstest]
-    #[case::valid_data(("test", "Passw0rd", "test@example.com"), Ok(()))]
-    #[case::valid_data(("1234567890", "Aa0@$!%*?&", "test@gmail.com"), Ok(()))]
+    #[case::valid_data(("test", "Passw0rd", "test@example.com"), Ok(None))]
+    #[case::valid_data(("1234567890", "Aa0@$!%*?&", "test@gmail.com"), Ok(None))]
     #[case::invalid_password(("test", "Aa12345", "test@example.com"), Err(AuthError::ValidateError))]
     #[case::invalid_password(("test", "@$!%*?&@$", "test@example.com"), Err(AuthError::ValidateError))]
     #[case::invalid_username(("_Alice", "Aa123456", "test@example.com"), Err(AuthError::ValidateError))]
@@ -395,7 +401,7 @@ mod signup_tests {
     async fn signup(
         _setup_env: (),
         #[case] data: (&str, &str, &str),
-        #[case] result: Result<(), AuthError>,
+        #[case] result: Result<Option<String>, AuthError>,
     ) -> anyhow::Result<()> {
         let signup_data = create_signup_data(data.0, data.1, data.2);
 
@@ -421,8 +427,8 @@ mod signup_tests {
     }
 
     #[rstest]
-    #[case::valid_data(("test", "Passw0rd", "test@example.com"), Ok(()))]
-    #[case::valid_data(("1234567890", "Aa0@$!%*?&", "test@gmail.com"), Ok(()))]
+    #[case::valid_data(("test", "Passw0rd", "test@example.com"), Ok(Some("dummy_session_id".to_string())))]
+    #[case::valid_data(("1234567890", "Aa0@$!%*?&", "test@gmail.com"), Ok(Some("dummy_session_id".to_string())))]
     #[case::invalid_password(("test", "Aa12345", "test@example.com"), Err(AuthError::ValidateError))]
     #[case::invalid_password(("test", "@$!%*?&@$", "test@example.com"), Err(AuthError::ValidateError))]
     #[case::invalid_username(("_Alice", "Aa123456", "test@example.com"), Err(AuthError::ValidateError))]
@@ -430,7 +436,7 @@ mod signup_tests {
     async fn signup_exist_user(
         _setup_env: (),
         #[case] data: (&str, &str, &str),
-        #[case] result: Result<(), AuthError>,
+        #[case] result: Result<Option<String>, AuthError>,
     ) -> anyhow::Result<()> {
         let signup_data = create_signup_data(data.0, data.1, data.2);
 
