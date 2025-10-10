@@ -83,7 +83,6 @@ pub fn users_check_by_id(id: i64, resp_json: &mut Value) -> anyhow::Result<()> {
     Ok(())
 }
 
-
 pub fn users_me_check_by_id(id: i64, resp_json: &mut Value) -> anyhow::Result<()> {
     let users_json = match id {
         1 => json!({
