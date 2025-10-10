@@ -923,6 +923,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "backend_infra_mock"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "domain",
+ "lettre",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "backtrace"
 version = "0.3.76"
 source = "registry+https://github.com/rust-lang/crates.io-index"
