@@ -312,3 +312,142 @@ impl AuthRepository for AuthRepositoryMock {
         Ok(traq_oauth_to_user.get(traq_oauth).copied())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use uuid::Uuid;
+
+    fn create_test_user_id() -> UserId {
+        UserId(Uuid::new_v4())
+    }
+
+    #[tokio::test]
+    async fn test_password_operations() {
+        let mock = AuthRepositoryMock::new();
+        let user_id = create_test_user_id();
+        
+        // Save password
+        mock.save_user_password(user_id, "password123").await.unwrap();
+        
+        // Verify password
+        assert!(mock.verify_user_password(user_id, "password123").await.unwrap());
+        assert!(!mock.verify_user_password(user_id, "wrong").await.unwrap());
+        
+        // Update password
+        mock.update_user_password(user_id, "newpass456").await.unwrap();
+        assert!(mock.verify_user_password(user_id, "newpass456").await.unwrap());
+        assert!(!mock.verify_user_password(user_id, "password123").await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_google_oauth_operations() {
+        let mock = AuthRepositoryMock::new();
+        let user_id = create_test_user_id();
+        
+        // Get OAuth URL
+        let url = mock.get_google_oauth2_url("login").await.unwrap();
+        assert!(url.contains("mock-google-oauth"));
+        
+        // Get OAuth by code
+        let oauth_id = mock.get_google_oauth_by_authorize_code("testcode", "login").await.unwrap();
+        assert_eq!(oauth_id, "google_oauth_testcode");
+        
+        // Save OAuth
+        mock.save_user_google_oauth(user_id, &oauth_id).await.unwrap();
+        
+        // Verify OAuth exists
+        assert!(mock.verify_user_google_oauth(user_id).await.unwrap());
+        
+        // Get user by OAuth
+        let found_user = mock.get_user_id_by_google_oauth(&oauth_id).await.unwrap();
+        assert_eq!(found_user, Some(user_id));
+        
+        // Delete OAuth
+        assert!(mock.delete_user_google_oauth(user_id).await.unwrap());
+        assert!(!mock.verify_user_google_oauth(user_id).await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_github_oauth_operations() {
+        let mock = AuthRepositoryMock::new();
+        let user_id = create_test_user_id();
+        
+        let oauth_id = mock.get_github_oauth_by_authorize_code("testcode", "signup").await.unwrap();
+        mock.save_user_github_oauth(user_id, &oauth_id).await.unwrap();
+        
+        assert!(mock.verify_user_github_oauth(user_id).await.unwrap());
+        
+        let found_user = mock.get_user_id_by_github_oauth(&oauth_id).await.unwrap();
+        assert_eq!(found_user, Some(user_id));
+    }
+
+    #[tokio::test]
+    async fn test_traq_oauth_operations() {
+        let mock = AuthRepositoryMock::new();
+        let user_id = create_test_user_id();
+        
+        mock.save_user_traq_oauth(user_id, "traq_oauth_123").await.unwrap();
+        
+        assert!(mock.verify_user_traq_oauth(user_id).await.unwrap());
+        
+        let found_user = mock.get_user_id_by_traq_oauth("traq_oauth_123").await.unwrap();
+        assert_eq!(found_user, Some(user_id));
+        
+        assert!(mock.delete_user_traq_oauth(user_id).await.unwrap());
+        assert!(!mock.verify_user_traq_oauth(user_id).await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_count_authentication_methods() {
+        let mock = AuthRepositoryMock::new();
+        let user_id = create_test_user_id();
+        
+        // Initially 0
+        assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 0);
+        
+        // Add password
+        mock.save_user_password(user_id, "pass").await.unwrap();
+        assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 1);
+        
+        // Add Google OAuth
+        mock.save_user_google_oauth(user_id, "google_oauth").await.unwrap();
+        assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 2);
+        
+        // Add GitHub OAuth
+        mock.save_user_github_oauth(user_id, "github_oauth").await.unwrap();
+        assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 3);
+        
+        // Add traQ OAuth
+        mock.save_user_traq_oauth(user_id, "traq_oauth").await.unwrap();
+        assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 4);
+    }
+
+    #[tokio::test]
+    async fn test_update_oauth_changes_mapping() {
+        let mock = AuthRepositoryMock::new();
+        let user_id = create_test_user_id();
+        
+        // Save initial OAuth
+        mock.save_user_google_oauth(user_id, "oauth_1").await.unwrap();
+        assert_eq!(
+            mock.get_user_id_by_google_oauth("oauth_1").await.unwrap(),
+            Some(user_id)
+        );
+        
+        // Update to new OAuth
+        mock.update_user_google_oauth(user_id, "oauth_2").await.unwrap();
+        
+        // Old OAuth should not work
+        assert_eq!(
+            mock.get_user_id_by_google_oauth("oauth_1").await.unwrap(),
+            None
+        );
+        
+        // New OAuth should work
+        assert_eq!(
+            mock.get_user_id_by_google_oauth("oauth_2").await.unwrap(),
+            Some(user_id)
+        );
+    }
+}
