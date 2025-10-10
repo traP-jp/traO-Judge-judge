@@ -1,7 +1,6 @@
 use crate::di::DiContainer;
 use crate::model::language::LanguageResponse;
-use axum::{Json, extract::State, response::IntoResponse};
-use reqwest::StatusCode;
+use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 
 pub async fn get_languages(
     State(di_container): State<DiContainer>,

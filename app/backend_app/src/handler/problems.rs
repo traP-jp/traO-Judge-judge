@@ -6,10 +6,10 @@ use crate::model::problems::{
 use axum::{
     Json,
     extract::{Path, Query, State},
+    http::StatusCode,
     response::IntoResponse,
 };
 use axum_extra::{TypedHeader, headers::Cookie};
-use reqwest::StatusCode;
 use usecase::model::problem::{
     CreateNormalProblemData, ProblemGetQueryData, ProblemOrderByData, UpdateNormalProblemData,
 };
