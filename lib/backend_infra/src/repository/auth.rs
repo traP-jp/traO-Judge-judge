@@ -1,5 +1,5 @@
 use axum::async_trait;
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
+use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use domain::{model::user::UserId, repository::auth::AuthRepository};
 use sqlx::MySqlPool;
 
@@ -98,7 +98,8 @@ impl AuthRepository for AuthRepositoryImpl {
         let url = "https://oauth2.googleapis.com/token";
 
         let client = reqwest::Client::new();
-        let response = client.post(url)
+        let response = client
+            .post(url)
             .header("Accept", "application/json")
             .form(&[
                 ("client_id", client_id),
@@ -107,7 +108,8 @@ impl AuthRepository for AuthRepositoryImpl {
                 ("grant_type", grant_type.to_string()),
                 ("redirect_uri", redirect_uri),
             ])
-        .send().await?;
+            .send()
+            .await?;
 
         if !response.status().is_success() {
             return Err(anyhow::anyhow!("Failed to exchange authorization code"));
