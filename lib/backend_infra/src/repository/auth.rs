@@ -242,6 +242,7 @@ impl AuthRepository for AuthRepositoryImpl {
             .bearer_auth(access_token)
             .header("Accept", "application/vnd.github+json")
             .header("X-GitHub-Api-Version", "2022-11-28")
+            .header("User-Agent", "traO-Judge")
             .send()
             .await?;
 
