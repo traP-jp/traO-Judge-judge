@@ -77,7 +77,12 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .parse::<Address>()
             .map_err(|_| AuthError::ValidateError)?;
 
-        if self.user_repository.is_exist_email(&email).await.map_err(|_| AuthError::InternalServerError)? {
+        if self
+            .user_repository
+            .is_exist_email(&email)
+            .await
+            .map_err(|_| AuthError::InternalServerError)?
+        {
             return Ok(());
         }
 
