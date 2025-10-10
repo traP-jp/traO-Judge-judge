@@ -1,4 +1,5 @@
 use axum::async_trait;
+use domain::model::auth::UserAuthentication;
 use domain::{model::user::UserId, repository::auth::AuthRepository};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -7,6 +8,7 @@ use tokio::sync::Mutex;
 #[derive(Clone, Debug)]
 struct UserAuth {
     password: Option<String>,
+    email: Option<String>,
     google_oauth: Option<String>,
     github_oauth: Option<String>,
     traq_oauth: Option<String>,
@@ -17,6 +19,7 @@ struct UserAuth {
 #[derive(Clone)]
 pub struct AuthRepositoryMock {
     users: Arc<Mutex<HashMap<UserId, UserAuth>>>,
+    email_to_user: Arc<Mutex<HashMap<String, UserId>>>,
     google_oauth_to_user: Arc<Mutex<HashMap<String, UserId>>>,
     github_oauth_to_user: Arc<Mutex<HashMap<String, UserId>>>,
     traq_oauth_to_user: Arc<Mutex<HashMap<String, UserId>>>,
@@ -26,6 +29,7 @@ impl AuthRepositoryMock {
     pub fn new() -> Self {
         Self {
             users: Arc::new(Mutex::new(HashMap::new())),
+            email_to_user: Arc::new(Mutex::new(HashMap::new())),
             google_oauth_to_user: Arc::new(Mutex::new(HashMap::new())),
             github_oauth_to_user: Arc::new(Mutex::new(HashMap::new())),
             traq_oauth_to_user: Arc::new(Mutex::new(HashMap::new())),
@@ -35,6 +39,7 @@ impl AuthRepositoryMock {
     fn ensure_user_exists(&self, users: &mut HashMap<UserId, UserAuth>, id: UserId) {
         users.entry(id).or_insert_with(|| UserAuth {
             password: None,
+            email: None,
             google_oauth: None,
             github_oauth: None,
             traq_oauth: None,
@@ -50,6 +55,20 @@ impl Default for AuthRepositoryMock {
 
 #[async_trait]
 impl AuthRepository for AuthRepositoryMock {
+    async fn get_authentication_by_user_id(&self, id: UserId) -> anyhow::Result<UserAuthentication> {
+        let users = self.users.lock().await;
+        if let Some(auth) = users.get(&id) {
+            Ok(UserAuthentication {
+                email: auth.email.clone(),
+                google_oauth: auth.google_oauth.clone(),
+                github_oauth: auth.github_oauth.clone(),
+                traq_oauth: auth.traq_oauth.clone(),
+            })
+        } else {
+            Err(anyhow::anyhow!("User not found"))
+        }
+    }
+
     async fn count_authentication_methods(&self, id: UserId) -> anyhow::Result<i64> {
         let users = self.users.lock().await;
         if let Some(auth) = users.get(&id) {
@@ -63,11 +82,37 @@ impl AuthRepository for AuthRepositoryMock {
         }
     }
 
-    async fn save_user_password(&self, id: UserId, password: &str) -> anyhow::Result<()> {
+    async fn save_user_email_and_password(
+        &self,
+        id: UserId,
+        email: &str,
+        password: &str,
+    ) -> anyhow::Result<()> {
         let mut users = self.users.lock().await;
         self.ensure_user_exists(&mut users, id);
+        users.get_mut(&id).unwrap().email = Some(email.to_string());
         users.get_mut(&id).unwrap().password = Some(password.to_string());
         Ok(())
+    }
+
+    async fn is_exist_email(&self, email: &str) -> anyhow::Result<bool> {
+        let email_to_user = self.email_to_user.lock().await;
+        Ok(email_to_user.contains_key(email))
+    }
+
+    async fn get_user_id_by_email(&self, email: &str) -> anyhow::Result<Option<UserId>> {
+        let email_to_user = self.email_to_user.lock().await;
+        Ok(email_to_user.get(email).copied())
+    }
+
+    async fn update_user_email(&self, id: UserId, email: &str) -> anyhow::Result<()> {
+        let mut users = self.users.lock().await;
+        if let Some(auth) = users.get_mut(&id) {
+            auth.email = Some(email.to_string());
+            Ok(())
+        } else {
+            Err(anyhow::anyhow!("User not found"))
+        }
     }
 
     async fn update_user_password(&self, id: UserId, password: &str) -> anyhow::Result<()> {
@@ -335,8 +380,8 @@ mod tests {
         let mock = AuthRepositoryMock::new();
         let user_id = create_test_user_id();
 
-        // Save password
-        mock.save_user_password(user_id, "password123")
+        // Save email and password
+        mock.save_user_email_and_password(user_id, "test@example.com", "password123")
             .await
             .unwrap();
 
@@ -447,7 +492,7 @@ mod tests {
         assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 0);
 
         // Add password
-        mock.save_user_password(user_id, "pass").await.unwrap();
+        mock.save_user_email_and_password(user_id, "test@example.com", "pass").await.unwrap();
         assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 1);
 
         // Add Google OAuth
