@@ -1,9 +1,8 @@
 use axum::{
     extract::{Path, State},
-    http::HeaderMap,
+    http::{HeaderMap, StatusCode},
     response::IntoResponse,
 };
-use reqwest::StatusCode;
 use usecase::service::icon::IconServiceError;
 
 use crate::di::DiContainer;
