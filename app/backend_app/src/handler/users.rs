@@ -3,10 +3,10 @@ use crate::model::users::{UpdateEmail, UpdateMe, UpdatePassword, UserResponse};
 use axum::{
     Json,
     extract::{Path, State},
+    http::StatusCode,
     response::IntoResponse,
 };
 use axum_extra::{TypedHeader, headers::Cookie};
-use reqwest::StatusCode;
 use usecase::{
     model::user::{UpdatePasswordData, UpdateUserData},
     service::user::UserError,

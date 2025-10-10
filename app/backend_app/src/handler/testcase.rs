@@ -1,10 +1,10 @@
 use axum::{
     Json,
     extract::{Path, State},
+    http::StatusCode,
     response::IntoResponse,
 };
 use axum_extra::{TypedHeader, headers::Cookie};
-use reqwest::StatusCode;
 use usecase::service::testcase::TestcaseError;
 
 use crate::{
