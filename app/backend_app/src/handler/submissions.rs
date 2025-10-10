@@ -6,10 +6,10 @@ use axum::extract::Query;
 use axum::{
     Json,
     extract::{Path, State},
+    http::StatusCode,
     response::IntoResponse,
 };
 use axum_extra::{TypedHeader, headers::Cookie};
-use reqwest::StatusCode;
 use usecase::model::submission::{
     CreateSubmissionData, SubmissionGetQueryData, SubmissionOrderByData,
 };
