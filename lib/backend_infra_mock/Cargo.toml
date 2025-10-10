@@ -1,0 +1,13 @@
+[package]
+name = "backend_infra_mock"
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+axum = { workspace = true }
+domain = { path = "../backend_domain" }
+lettre = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
