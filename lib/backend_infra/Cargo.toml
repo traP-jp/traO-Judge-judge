@@ -8,6 +8,7 @@ anyhow = { workspace = true }
 async-session = { workspace = true }
 axum = { workspace = true }
 axum-extra = { workspace = true }
+base64 = { workspace = true }
 bcrypt = { workspace = true }
 domain = { path = "../backend_domain" }
 fancy-regex = { workspace = true }
@@ -16,7 +17,7 @@ jsonwebtoken = { workspace = true }
 judge_core = { path = "../judge_core" }
 judge_infra_mock = { path = "../../lib/judge_infra_mock" }
 lettre = { workspace = true }
-reqwest = { workspace = true }
+reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true }

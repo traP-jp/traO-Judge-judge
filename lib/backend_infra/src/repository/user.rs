@@ -38,6 +38,15 @@ impl UserRepository for UserRepositoryImpl {
         Ok(user.map(|user| user.into()))
     }
 
+    async fn get_user_by_user_id(&self, id: UserId) -> anyhow::Result<Option<User>> {
+        let user = sqlx::query_as::<_, UserRow>("SELECT * FROM users WHERE id = ?")
+            .bind(UuidRow(id.into()))
+            .fetch_optional(&self.pool)
+            .await?;
+
+        Ok(user.map(|user| user.into()))
+    }
+
     async fn create_user_by_email(&self, name: &str, email: &str) -> anyhow::Result<UserId> {
         let id = UuidRow::new(Uuid::now_v7());
 
@@ -45,6 +54,18 @@ impl UserRepository for UserRepositoryImpl {
             .bind(id)
             .bind(name)
             .bind(email)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(UserId(id.0))
+    }
+
+    async fn create_user_without_email(&self, name: &str) -> anyhow::Result<UserId> {
+        let id = UuidRow::new(Uuid::now_v7());
+
+        sqlx::query("INSERT INTO users (id, name) VALUES (?, ?)")
+            .bind(id)
+            .bind(name)
             .execute(&self.pool)
             .await?;
 

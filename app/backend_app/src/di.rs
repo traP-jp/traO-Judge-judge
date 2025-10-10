@@ -16,9 +16,10 @@ use judge_infra_mock::multi_proc_problem_registry::{
     registry_client::RegistryClient, registry_server::RegistryServer,
 };
 use usecase::service::{
-    auth::AuthenticationService, editorial::EditorialService, icon::IconService,
-    language::LanguageService, problem::ProblemService, submission::SubmissionService,
-    testcase::TestcaseService, user::UserService,
+    auth::AuthenticationService, editorial::EditorialService, github_oauth2::GitHubOAuth2Service,
+    google_oauth2::GoogleOAuth2Service, icon::IconService, language::LanguageService,
+    problem::ProblemService, submission::SubmissionService, testcase::TestcaseService,
+    user::UserService,
 };
 
 #[derive(Clone)]
@@ -75,6 +76,10 @@ pub struct DiContainer {
         DepNameRepositoryImpl,
     >,
     language_service: LanguageService<LanguageRepositoryImpl>,
+    google_oauth2_service:
+        GoogleOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl>,
+    github_oauth2_service:
+        GitHubOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl>,
 }
 
 impl DiContainer {
@@ -129,6 +134,16 @@ impl DiContainer {
                 provider.provide_dep_name_repository(),
             ),
             language_service: LanguageService::new(provider.provide_language_repository()),
+            google_oauth2_service: GoogleOAuth2Service::new(
+                provider.provide_auth_repository(),
+                provider.provide_session_repository(),
+                provider.provide_user_repository(),
+            ),
+            github_oauth2_service: GitHubOAuth2Service::new(
+                provider.provide_auth_repository(),
+                provider.provide_session_repository(),
+                provider.provide_user_repository(),
+            ),
         }
     }
 
@@ -218,5 +233,17 @@ impl DiContainer {
 
     pub fn language_service(&self) -> &LanguageService<LanguageRepositoryImpl> {
         &self.language_service
+    }
+
+    pub fn google_oauth2_service(
+        &self,
+    ) -> &GoogleOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl> {
+        &self.google_oauth2_service
+    }
+
+    pub fn github_oauth2_service(
+        &self,
+    ) -> &GitHubOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl> {
+        &self.github_oauth2_service
     }
 }

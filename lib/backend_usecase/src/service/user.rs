@@ -9,7 +9,7 @@ use crate::model::{
 use domain::{
     external::mail::MailClient,
     model::{
-        jwt::EmailToken, problem::ProblemGetQuery, submission::SubmissionGetQuery, user::UpdateUser,
+        jwt::AuthToken, problem::ProblemGetQuery, submission::SubmissionGetQuery, user::UpdateUser,
     },
     repository::{
         auth::AuthRepository, icon::IconRepository, problem::ProblemRepository,
@@ -399,7 +399,9 @@ impl<
         }
 
         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
-        let jwt = EmailToken::encode_email_update_jwt(display_id, &email, encode_key)
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY").unwrap();
+
+        let jwt = AuthToken::encode_email_update_jwt(display_id, &email, &encode_key, &encrypt_key)
             .map_err(|_| UserError::InternalServerError)?;
 
         // todo

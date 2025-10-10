@@ -6,7 +6,7 @@ use crate::model::auth::ResetPasswordData;
 use crate::model::auth::{LoginData, SignUpData};
 use domain::{
     external::mail::MailClient,
-    model::jwt::EmailToken,
+    model::jwt::AuthToken,
     repository::session::SessionRepository,
     repository::{auth::AuthRepository, user::UserRepository},
 };
@@ -84,7 +84,10 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
 
-        let jwt = EmailToken::encode_email_signup_jwt(&email, encode_key)
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
+            .map_err(|_| AuthError::InternalServerError)?;
+
+        let jwt = AuthToken::encode_signup_jwt(Some(&email), None, None, &encode_key, &encrypt_key)
             .map_err(|_| AuthError::InternalServerError)?;
 
         let mail = self.mail_template_provider.signup_request(&jwt);
@@ -103,25 +106,80 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
 
-        let email =
-            EmailToken::get_email(&data.token, encode_key).map_err(|_| AuthError::Unauthorized)?;
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
+            .map_err(|_| AuthError::InternalServerError)?;
 
-        if let Ok(true) = self.user_repository.is_exist_email(&email).await {
-            return Ok(());
+        let email = AuthToken::get_email(&data.token, &encode_key, &encrypt_key)
+            .map_err(|_| AuthError::Unauthorized)?;
+
+        let google_oauth = AuthToken::get_google_oauth(&data.token, &encode_key, &encrypt_key)
+            .map_err(|_| AuthError::Unauthorized)?;
+
+        let github_oauth = AuthToken::get_github_oauth(&data.token, &encode_key, &encrypt_key)
+            .map_err(|_| AuthError::Unauthorized)?;
+
+        if let Some(email) = email {
+            if let Ok(true) = self.user_repository.is_exist_email(&email).await {
+                return Ok(());
+            }
+
+            let user_id = self
+                .user_repository
+                .create_user_by_email(&data.user_name, &email)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            self.auth_repository
+                .save_user_password(user_id, &data.password)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            Ok(())
+        } else if let Some(google_oauth) = google_oauth {
+            if let Ok(Some(_)) = self
+                .auth_repository
+                .get_user_id_by_google_oauth(&google_oauth)
+                .await
+            {
+                return Ok(());
+            }
+
+            let user_id = self
+                .user_repository
+                .create_user_without_email(&data.user_name)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            self.auth_repository
+                .save_user_google_oauth(user_id, &google_oauth)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            Ok(())
+        } else if let Some(github_oauth) = github_oauth {
+            if let Ok(Some(_)) = self
+                .auth_repository
+                .get_user_id_by_github_oauth(&github_oauth)
+                .await
+            {
+                return Ok(());
+            }
+
+            let user_id = self
+                .user_repository
+                .create_user_without_email(&data.user_name)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            self.auth_repository
+                .save_user_github_oauth(user_id, &github_oauth)
+                .await
+                .map_err(|_| AuthError::InternalServerError)?;
+
+            Ok(())
+        } else {
+            return Err(AuthError::InternalServerError);
         }
-
-        let user_id = self
-            .user_repository
-            .create_user_by_email(&data.user_name, &email)
-            .await
-            .map_err(|_| AuthError::InternalServerError)?;
-
-        self.auth_repository
-            .save_user_password(user_id, &data.password)
-            .await
-            .map_err(|_| AuthError::InternalServerError)?;
-
-        Ok(())
     }
 
     pub async fn login(&self, data: LoginData) -> anyhow::Result<String, AuthError> {
@@ -173,7 +231,10 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
 
-        let jwt = EmailToken::encode_email_reset_password_jwt(&email, encode_key)
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
+            .map_err(|_| AuthError::InternalServerError)?;
+
+        let jwt = AuthToken::encode_email_reset_password_jwt(&email, &encode_key, &encrypt_key)
             .map_err(|_| AuthError::InternalServerError)?;
 
         let mail = self.mail_template_provider.reset_password_request(&jwt);
@@ -192,8 +253,12 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
 
-        let email =
-            EmailToken::get_email(&data.token, encode_key).map_err(|_| AuthError::Unauthorized)?;
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
+            .map_err(|_| AuthError::InternalServerError)?;
+
+        let email = AuthToken::get_email(&data.token, &encode_key, &encrypt_key)
+            .map_err(|_| AuthError::Unauthorized)?
+            .ok_or(AuthError::InternalServerError)?;
 
         let user = self
             .user_repository
@@ -225,6 +290,10 @@ mod signup_request_tests {
     fn setup_env() -> () {
         unsafe {
             std::env::set_var("JWT_SECRET_KEY", "secret_test");
+            std::env::set_var(
+                "JWT_PAYLOAD_ENCRYPT_SECRET_KEY",
+                "payload_secret_key_has_length_32",
+            );
         }
     }
 
@@ -285,7 +354,7 @@ mod signup_tests {
     use super::*;
     use domain::{
         external::mail::MockMailClient,
-        model::{jwt::EmailToken, user::UserId},
+        model::{jwt::AuthToken, user::UserId},
         repository::{
             auth::MockAuthRepository, session::MockSessionRepository, user::MockUserRepository,
         },
@@ -296,15 +365,22 @@ mod signup_tests {
     fn setup_env() -> () {
         unsafe {
             std::env::set_var("JWT_SECRET_KEY", "secret_test");
+            std::env::set_var(
+                "JWT_PAYLOAD_ENCRYPT_SECRET_KEY",
+                "payload_secret_key_has_length_32",
+            );
         }
     }
 
     fn create_signup_data(user_name: &str, password: &str, email: &str) -> SignUpData {
         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY").unwrap();
+
         SignUpData {
             user_name: user_name.to_string(),
             password: password.to_string(),
-            token: EmailToken::encode_email_signup_jwt(email, encode_key).unwrap(),
+            token: AuthToken::encode_signup_jwt(Some(email), None, None, &encode_key, &encrypt_key)
+                .unwrap(),
         }
     }
 
@@ -571,6 +647,10 @@ mod reset_password_request_tests {
     fn setup_env() -> () {
         unsafe {
             std::env::set_var("JWT_SECRET_KEY", "secret_test");
+            std::env::set_var(
+                "JWT_PAYLOAD_ENCRYPT_SECRET_KEY",
+                "payload_secret_key_has_length_32",
+            );
         }
     }
 
@@ -642,14 +722,20 @@ mod reset_password_tests {
     fn setup_env() -> () {
         unsafe {
             std::env::set_var("JWT_SECRET_KEY", "secret_test");
+            std::env::set_var(
+                "JWT_PAYLOAD_ENCRYPT_SECRET_KEY",
+                "payload_secret_key_has_length_32",
+            );
         }
     }
 
     fn create_reset_password_data(email: &str, password: &str) -> ResetPasswordData {
         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY").unwrap();
+
         ResetPasswordData {
             password: password.to_string(),
-            token: EmailToken::encode_email_reset_password_jwt(email, encode_key.to_string())
+            token: AuthToken::encode_email_reset_password_jwt(email, &encode_key, &encrypt_key)
                 .unwrap(),
         }
     }

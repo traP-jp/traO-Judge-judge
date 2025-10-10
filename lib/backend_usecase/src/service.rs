@@ -1,6 +1,8 @@
 pub mod auth;
 mod auth_mail_template;
 pub mod editorial;
+pub mod github_oauth2;
+pub mod google_oauth2;
 pub mod icon;
 pub mod language;
 pub mod problem;

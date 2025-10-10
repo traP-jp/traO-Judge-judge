@@ -4,10 +4,12 @@ version = { workspace = true }
 edition = { workspace = true }
 
 [dependencies]
+aes-gcm = { workspace = true }
 anyhow = { workspace = true }
 async-session = { workspace = true }
 axum = { workspace = true }
 axum-extra = { workspace = true }
+base64 = { workspace = true }
 bcrypt = { workspace = true }
 fancy-regex = { workspace = true }
 http-body-util = { workspace = true }
