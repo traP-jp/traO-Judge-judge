@@ -11,7 +11,10 @@ use domain::{
 };
 use judge_core::{
     logic::registered_procedure_remover::remove,
-    model::{dep_name_repository::DepNameRepository, problem_registry::ProblemRegistryServer, procedure::registered::Procedure},
+    model::{
+        dep_name_repository::DepNameRepository, problem_registry::ProblemRegistryServer,
+        procedure::registered::Procedure,
+    },
 };
 use validator::Validate;
 
