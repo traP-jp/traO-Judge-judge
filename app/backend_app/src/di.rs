@@ -36,6 +36,8 @@ pub struct DiContainer {
         SessionRepositoryImpl,
         TestcaseRepositoryImpl,
         ProcedureRepositoryImpl,
+        RegistryServer,
+        DepNameRepositoryImpl,
     >,
     user_service: UserService<
         UserRepositoryImpl,
@@ -99,6 +101,8 @@ impl DiContainer {
                 provider.provide_session_repository(),
                 provider.provide_testcase_repository(),
                 provider.provide_procedure_repository(),
+                provider.provide_problem_registry_server(),
+                provider.provide_dep_name_repository(),
             ),
             user_service: UserService::new(
                 provider.provide_user_repository(),
@@ -213,6 +217,8 @@ impl DiContainer {
         SessionRepositoryImpl,
         TestcaseRepositoryImpl,
         ProcedureRepositoryImpl,
+        RegistryServer,
+        DepNameRepositoryImpl,
     > {
         &self.problem_service
     }
