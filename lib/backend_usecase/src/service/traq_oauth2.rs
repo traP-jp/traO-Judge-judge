@@ -1,5 +1,5 @@
 use crate::model::traq_oauth2::TraqOAuth2AuthorizeDto;
-use domain::repository::{auth::AuthRepository, session::SessionRepository, user::UserRepository};
+use domain::{model::user::UserRole, repository::{auth::AuthRepository, session::SessionRepository, user::UserRepository}};
 
 #[derive(Clone)]
 pub struct TraqOAuth2Service<AR: AuthRepository, SR: SessionRepository, UR: UserRepository> {
@@ -37,8 +37,9 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
         x_forwarded_user: Option<&str>,
     ) -> anyhow::Result<TraqOAuth2AuthorizeDto, TraqOAuth2Error> {
         let traq_oauth = x_forwarded_user.ok_or(TraqOAuth2Error::BadRequest)?;
-
-        tracing::debug!("X-Forwarded-User: {:?}", traq_oauth);
+        if traq_oauth.is_empty() {
+            return Err(TraqOAuth2Error::BadRequest);
+        }
         
         match oauth_action {
             "login" => {
@@ -88,6 +89,11 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     .await
                     .map_err(|_| TraqOAuth2Error::InternalServerError)?;
 
+                self.user_repository
+                    .change_user_role(new_user_id, UserRole::TrapUser)
+                    .await
+                    .map_err(|_| TraqOAuth2Error::InternalServerError)?;
+
                 let user = self
                     .user_repository
                     .get_user_by_user_id(new_user_id)
@@ -114,10 +120,17 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     .await
                     .map_err(|_| TraqOAuth2Error::InternalServerError)?
                     .ok_or(TraqOAuth2Error::Unauthorized)?;
+                
                 self.auth_repository
                     .update_user_traq_oauth(user_id, traq_oauth)
                     .await
                     .map_err(|_| TraqOAuth2Error::InternalServerError)?;
+
+                self.user_repository
+                    .change_user_role(user_id, UserRole::TrapUser)
+                    .await
+                    .map_err(|_| TraqOAuth2Error::InternalServerError)?;
+
                 Ok(TraqOAuth2AuthorizeDto {
                     session_id: None
                 })
@@ -158,6 +171,12 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
         {
             return Err(TraqOAuth2Error::BadRequest);
         }
+
+        self.user_repository
+            .change_user_role(user_id, UserRole::CommonUser)
+            .await
+            .map_err(|_| TraqOAuth2Error::InternalServerError)?;
+
         self.auth_repository
             .delete_user_traq_oauth(user_id)
             .await

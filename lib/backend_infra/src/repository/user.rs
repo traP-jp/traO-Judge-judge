@@ -1,7 +1,7 @@
 use crate::model::{user::UserRow, uuid::UuidRow};
 use axum::async_trait;
 use domain::{
-    model::user::{UpdateUser, User, UserId},
+    model::user::{UpdateUser, User, UserId, UserRole},
     repository::user::UserRepository,
 };
 use sqlx::MySqlPool;
@@ -91,5 +91,15 @@ impl UserRepository for UserRepositoryImpl {
             .await?;
 
         Ok(count > 0)
+    }
+
+    async fn change_user_role(&self, user_id: UserId, role: UserRole) -> anyhow::Result<()> {
+        sqlx::query("UPDATE users SET role = ? WHERE id = ?")
+            .bind(role as i32)
+            .bind(UuidRow(user_id.into()))
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
     }
 }
