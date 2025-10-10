@@ -156,8 +156,8 @@ impl<
             submitted_at: submission.submitted_at,
             language_id: submission.language_id.to_string(),
             total_score: submission.total_score,
-            max_time: submission.max_time,
-            max_memory: submission.max_memory,
+            max_time_ms: submission.max_time_ms,
+            max_memory_mib: submission.max_memory_mib,
             code_length: submission.source.len() as i32,
             overall_judge_status: submission.overall_judge_status,
             judge_results: judge_results
@@ -167,8 +167,8 @@ impl<
                     testcase_name: testcase.testcase_name,
                     judge_status: testcase.judge_status,
                     score: testcase.score,
-                    time: testcase.time,
-                    memory: testcase.memory,
+                    time_ms: testcase.time_ms,
+                    memory_mib: testcase.memory_mib,
                 })
                 .collect(),
         })
@@ -321,8 +321,8 @@ impl<
             source: body.source.clone(),
             judge_status: "WJ".to_string(),
             total_score: 0,
-            max_time: 0,
-            max_memory: 0,
+            max_time_ms: 0,
+            max_memory_mib: 0,
         };
 
         let submission_id = self
@@ -339,11 +339,11 @@ impl<
         runtime_texts.insert(single_judge::LANGUAGE_TAG.to_string(), language.clone());
         runtime_texts.insert(
             single_judge::TIME_LIMIT_MS.to_string(),
-            problem.time_limit.to_string(),
+            problem.time_limit_ms.to_string(),
         );
         runtime_texts.insert(
             single_judge::MEMORY_LIMIT_KIB.to_string(),
-            (problem.memory_limit as i64 * 1024).to_string(),
+            (problem.memory_limit_mib as i64 * 1024).to_string(),
         );
 
         let self_clone = std::sync::Arc::clone(self);
@@ -393,8 +393,8 @@ impl<
             .collect::<HashMap<_, _>>();
 
         let mut total_score: i64 = 0;
-        let mut max_time: i32 = 0;
-        let mut max_memory: i32 = 0;
+        let mut max_time_ms: i32 = 0;
+        let mut max_memory_mib: i32 = 0;
         let mut overall_status = JudgeStatus::AC;
         let mut early_exited = false;
         let mut testcase_results: Vec<CreateJudgeResult> = Vec::new();
@@ -404,8 +404,8 @@ impl<
                 ExecutionJobResult::ExecutionResult(exec) => match exec {
                     ExecutionResult::Displayable(res) => {
                         total_score += res.score;
-                        max_time = max_time.max(res.time as i32);
-                        max_memory = max_memory.max((res.memory / 1024.) as i32);
+                        max_time_ms = max_time_ms.max(res.time as i32);
+                        max_memory_mib = max_memory_mib.max((res.memory / 1024.) as i32);
                         overall_status = overall_status.max(res.status.clone());
 
                         let testcase_name = testcase_names
@@ -423,8 +423,8 @@ impl<
                             testcase_name,
                             judge_status: format!("{:?}", res.status),
                             score: res.score,
-                            time: res.time as i32,
-                            memory: (res.memory / 1024.) as i32,
+                            time_ms: res.time as i32,
+                            memory_mib: (res.memory / 1024.) as i32,
                         });
                     }
                     ExecutionResult::Hidden(_res) => {
@@ -446,8 +446,8 @@ impl<
                 submission_id,
                 UpdateSubmission {
                     total_score,
-                    max_time,
-                    max_memory,
+                    max_time_ms,
+                    max_memory_mib,
                     judge_status: overall_status,
                 },
             )

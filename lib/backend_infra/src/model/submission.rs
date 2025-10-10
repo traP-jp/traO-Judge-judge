@@ -15,8 +15,8 @@ pub struct SubmissionRow {
     pub source: String,
     pub judge_status: String,
     pub total_score: i64,
-    pub max_time: i32,
-    pub max_memory: i32,
+    pub max_time_ms: i32,
+    pub max_memory_mib: i32,
     pub submitted_at: chrono::DateTime<chrono::Utc>,
 }
 
@@ -32,8 +32,8 @@ impl From<SubmissionRow> for Submission {
             source: val.source,
             overall_judge_status: val.judge_status,
             total_score: val.total_score,
-            max_time: val.max_time,
-            max_memory: val.max_memory,
+            max_time_ms: val.max_time_ms,
+            max_memory_mib: val.max_memory_mib,
             submitted_at: val.submitted_at,
         }
     }
@@ -46,8 +46,8 @@ pub struct JudgeResultRow {
     pub testcase_name: String,
     pub judge_status: String,
     pub score: i64,
-    pub time: i32,
-    pub memory: i32,
+    pub time_ms: i32,
+    pub memory_mib: i32,
 }
 
 impl From<JudgeResultRow> for JudgeResult {
@@ -57,8 +57,8 @@ impl From<JudgeResultRow> for JudgeResult {
             testcase_name: val.testcase_name,
             judge_status: val.judge_status,
             score: val.score,
-            time: val.time,
-            memory: val.memory,
+            time_ms: val.time_ms,
+            memory_mib: val.memory_mib,
         }
     }
 }
