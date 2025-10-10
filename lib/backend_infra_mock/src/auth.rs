@@ -1,8 +1,5 @@
 use axum::async_trait;
-use domain::{
-    model::user::UserId,
-    repository::auth::AuthRepository,
-};
+use domain::{model::user::UserId, repository::auth::AuthRepository};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -98,9 +95,10 @@ impl AuthRepository for AuthRepositoryMock {
 
     async fn get_google_oauth2_url(&self, oauth_action: &str) -> anyhow::Result<String> {
         match oauth_action {
-            "login" | "signup" | "bind" => {
-                Ok(format!("http://mock-google-oauth.example.com/auth?action={}", oauth_action))
-            }
+            "login" | "signup" | "bind" => Ok(format!(
+                "http://mock-google-oauth.example.com/auth?action={}",
+                oauth_action
+            )),
             _ => Err(anyhow::anyhow!("Invalid OAuth action")),
         }
     }
@@ -121,10 +119,10 @@ impl AuthRepository for AuthRepositoryMock {
         let mut users = self.users.lock().await;
         self.ensure_user_exists(&mut users, id);
         users.get_mut(&id).unwrap().google_oauth = Some(google_oauth.to_string());
-        
+
         let mut google_oauth_to_user = self.google_oauth_to_user.lock().await;
         google_oauth_to_user.insert(google_oauth.to_string(), id);
-        
+
         Ok(())
     }
 
@@ -136,12 +134,12 @@ impl AuthRepository for AuthRepositoryMock {
                 let mut google_oauth_to_user = self.google_oauth_to_user.lock().await;
                 google_oauth_to_user.remove(old_oauth);
             }
-            
+
             auth.google_oauth = Some(google_oauth.to_string());
-            
+
             let mut google_oauth_to_user = self.google_oauth_to_user.lock().await;
             google_oauth_to_user.insert(google_oauth.to_string(), id);
-            
+
             Ok(())
         } else {
             Err(anyhow::anyhow!("User not found"))
@@ -150,7 +148,10 @@ impl AuthRepository for AuthRepositoryMock {
 
     async fn verify_user_google_oauth(&self, id: UserId) -> anyhow::Result<bool> {
         let users = self.users.lock().await;
-        Ok(users.get(&id).and_then(|auth| auth.google_oauth.as_ref()).is_some())
+        Ok(users
+            .get(&id)
+            .and_then(|auth| auth.google_oauth.as_ref())
+            .is_some())
     }
 
     async fn delete_user_google_oauth(&self, id: UserId) -> anyhow::Result<bool> {
@@ -178,9 +179,10 @@ impl AuthRepository for AuthRepositoryMock {
 
     async fn get_github_oauth2_url(&self, oauth_action: &str) -> anyhow::Result<String> {
         match oauth_action {
-            "login" | "signup" | "bind" => {
-                Ok(format!("http://mock-github-oauth.example.com/auth?action={}", oauth_action))
-            }
+            "login" | "signup" | "bind" => Ok(format!(
+                "http://mock-github-oauth.example.com/auth?action={}",
+                oauth_action
+            )),
             _ => Err(anyhow::anyhow!("Invalid OAuth action")),
         }
     }
@@ -201,10 +203,10 @@ impl AuthRepository for AuthRepositoryMock {
         let mut users = self.users.lock().await;
         self.ensure_user_exists(&mut users, id);
         users.get_mut(&id).unwrap().github_oauth = Some(github_oauth.to_string());
-        
+
         let mut github_oauth_to_user = self.github_oauth_to_user.lock().await;
         github_oauth_to_user.insert(github_oauth.to_string(), id);
-        
+
         Ok(())
     }
 
@@ -216,12 +218,12 @@ impl AuthRepository for AuthRepositoryMock {
                 let mut github_oauth_to_user = self.github_oauth_to_user.lock().await;
                 github_oauth_to_user.remove(old_oauth);
             }
-            
+
             auth.github_oauth = Some(github_oauth.to_string());
-            
+
             let mut github_oauth_to_user = self.github_oauth_to_user.lock().await;
             github_oauth_to_user.insert(github_oauth.to_string(), id);
-            
+
             Ok(())
         } else {
             Err(anyhow::anyhow!("User not found"))
@@ -230,7 +232,10 @@ impl AuthRepository for AuthRepositoryMock {
 
     async fn verify_user_github_oauth(&self, id: UserId) -> anyhow::Result<bool> {
         let users = self.users.lock().await;
-        Ok(users.get(&id).and_then(|auth| auth.github_oauth.as_ref()).is_some())
+        Ok(users
+            .get(&id)
+            .and_then(|auth| auth.github_oauth.as_ref())
+            .is_some())
     }
 
     async fn delete_user_github_oauth(&self, id: UserId) -> anyhow::Result<bool> {
@@ -260,10 +265,10 @@ impl AuthRepository for AuthRepositoryMock {
         let mut users = self.users.lock().await;
         self.ensure_user_exists(&mut users, id);
         users.get_mut(&id).unwrap().traq_oauth = Some(traq_oauth.to_string());
-        
+
         let mut traq_oauth_to_user = self.traq_oauth_to_user.lock().await;
         traq_oauth_to_user.insert(traq_oauth.to_string(), id);
-        
+
         Ok(())
     }
 
@@ -275,12 +280,12 @@ impl AuthRepository for AuthRepositoryMock {
                 let mut traq_oauth_to_user = self.traq_oauth_to_user.lock().await;
                 traq_oauth_to_user.remove(old_oauth);
             }
-            
+
             auth.traq_oauth = Some(traq_oauth.to_string());
-            
+
             let mut traq_oauth_to_user = self.traq_oauth_to_user.lock().await;
             traq_oauth_to_user.insert(traq_oauth.to_string(), id);
-            
+
             Ok(())
         } else {
             Err(anyhow::anyhow!("User not found"))
@@ -289,7 +294,10 @@ impl AuthRepository for AuthRepositoryMock {
 
     async fn verify_user_traq_oauth(&self, id: UserId) -> anyhow::Result<bool> {
         let users = self.users.lock().await;
-        Ok(users.get(&id).and_then(|auth| auth.traq_oauth.as_ref()).is_some())
+        Ok(users
+            .get(&id)
+            .and_then(|auth| auth.traq_oauth.as_ref())
+            .is_some())
     }
 
     async fn delete_user_traq_oauth(&self, id: UserId) -> anyhow::Result<bool> {
@@ -326,43 +334,65 @@ mod tests {
     async fn test_password_operations() {
         let mock = AuthRepositoryMock::new();
         let user_id = create_test_user_id();
-        
+
         // Save password
-        mock.save_user_password(user_id, "password123").await.unwrap();
-        
+        mock.save_user_password(user_id, "password123")
+            .await
+            .unwrap();
+
         // Verify password
-        assert!(mock.verify_user_password(user_id, "password123").await.unwrap());
+        assert!(
+            mock.verify_user_password(user_id, "password123")
+                .await
+                .unwrap()
+        );
         assert!(!mock.verify_user_password(user_id, "wrong").await.unwrap());
-        
+
         // Update password
-        mock.update_user_password(user_id, "newpass456").await.unwrap();
-        assert!(mock.verify_user_password(user_id, "newpass456").await.unwrap());
-        assert!(!mock.verify_user_password(user_id, "password123").await.unwrap());
+        mock.update_user_password(user_id, "newpass456")
+            .await
+            .unwrap();
+        assert!(
+            mock.verify_user_password(user_id, "newpass456")
+                .await
+                .unwrap()
+        );
+        assert!(
+            !mock
+                .verify_user_password(user_id, "password123")
+                .await
+                .unwrap()
+        );
     }
 
     #[tokio::test]
     async fn test_google_oauth_operations() {
         let mock = AuthRepositoryMock::new();
         let user_id = create_test_user_id();
-        
+
         // Get OAuth URL
         let url = mock.get_google_oauth2_url("login").await.unwrap();
         assert!(url.contains("mock-google-oauth"));
-        
+
         // Get OAuth by code
-        let oauth_id = mock.get_google_oauth_by_authorize_code("testcode", "login").await.unwrap();
+        let oauth_id = mock
+            .get_google_oauth_by_authorize_code("testcode", "login")
+            .await
+            .unwrap();
         assert_eq!(oauth_id, "google_oauth_testcode");
-        
+
         // Save OAuth
-        mock.save_user_google_oauth(user_id, &oauth_id).await.unwrap();
-        
+        mock.save_user_google_oauth(user_id, &oauth_id)
+            .await
+            .unwrap();
+
         // Verify OAuth exists
         assert!(mock.verify_user_google_oauth(user_id).await.unwrap());
-        
+
         // Get user by OAuth
         let found_user = mock.get_user_id_by_google_oauth(&oauth_id).await.unwrap();
         assert_eq!(found_user, Some(user_id));
-        
+
         // Delete OAuth
         assert!(mock.delete_user_google_oauth(user_id).await.unwrap());
         assert!(!mock.verify_user_google_oauth(user_id).await.unwrap());
@@ -372,12 +402,17 @@ mod tests {
     async fn test_github_oauth_operations() {
         let mock = AuthRepositoryMock::new();
         let user_id = create_test_user_id();
-        
-        let oauth_id = mock.get_github_oauth_by_authorize_code("testcode", "signup").await.unwrap();
-        mock.save_user_github_oauth(user_id, &oauth_id).await.unwrap();
-        
+
+        let oauth_id = mock
+            .get_github_oauth_by_authorize_code("testcode", "signup")
+            .await
+            .unwrap();
+        mock.save_user_github_oauth(user_id, &oauth_id)
+            .await
+            .unwrap();
+
         assert!(mock.verify_user_github_oauth(user_id).await.unwrap());
-        
+
         let found_user = mock.get_user_id_by_github_oauth(&oauth_id).await.unwrap();
         assert_eq!(found_user, Some(user_id));
     }
@@ -386,14 +421,19 @@ mod tests {
     async fn test_traq_oauth_operations() {
         let mock = AuthRepositoryMock::new();
         let user_id = create_test_user_id();
-        
-        mock.save_user_traq_oauth(user_id, "traq_oauth_123").await.unwrap();
-        
+
+        mock.save_user_traq_oauth(user_id, "traq_oauth_123")
+            .await
+            .unwrap();
+
         assert!(mock.verify_user_traq_oauth(user_id).await.unwrap());
-        
-        let found_user = mock.get_user_id_by_traq_oauth("traq_oauth_123").await.unwrap();
+
+        let found_user = mock
+            .get_user_id_by_traq_oauth("traq_oauth_123")
+            .await
+            .unwrap();
         assert_eq!(found_user, Some(user_id));
-        
+
         assert!(mock.delete_user_traq_oauth(user_id).await.unwrap());
         assert!(!mock.verify_user_traq_oauth(user_id).await.unwrap());
     }
@@ -402,24 +442,30 @@ mod tests {
     async fn test_count_authentication_methods() {
         let mock = AuthRepositoryMock::new();
         let user_id = create_test_user_id();
-        
+
         // Initially 0
         assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 0);
-        
+
         // Add password
         mock.save_user_password(user_id, "pass").await.unwrap();
         assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 1);
-        
+
         // Add Google OAuth
-        mock.save_user_google_oauth(user_id, "google_oauth").await.unwrap();
+        mock.save_user_google_oauth(user_id, "google_oauth")
+            .await
+            .unwrap();
         assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 2);
-        
+
         // Add GitHub OAuth
-        mock.save_user_github_oauth(user_id, "github_oauth").await.unwrap();
+        mock.save_user_github_oauth(user_id, "github_oauth")
+            .await
+            .unwrap();
         assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 3);
-        
+
         // Add traQ OAuth
-        mock.save_user_traq_oauth(user_id, "traq_oauth").await.unwrap();
+        mock.save_user_traq_oauth(user_id, "traq_oauth")
+            .await
+            .unwrap();
         assert_eq!(mock.count_authentication_methods(user_id).await.unwrap(), 4);
     }
 
@@ -427,23 +473,27 @@ mod tests {
     async fn test_update_oauth_changes_mapping() {
         let mock = AuthRepositoryMock::new();
         let user_id = create_test_user_id();
-        
+
         // Save initial OAuth
-        mock.save_user_google_oauth(user_id, "oauth_1").await.unwrap();
+        mock.save_user_google_oauth(user_id, "oauth_1")
+            .await
+            .unwrap();
         assert_eq!(
             mock.get_user_id_by_google_oauth("oauth_1").await.unwrap(),
             Some(user_id)
         );
-        
+
         // Update to new OAuth
-        mock.update_user_google_oauth(user_id, "oauth_2").await.unwrap();
-        
+        mock.update_user_google_oauth(user_id, "oauth_2")
+            .await
+            .unwrap();
+
         // Old OAuth should not work
         assert_eq!(
             mock.get_user_id_by_google_oauth("oauth_1").await.unwrap(),
             None
         );
-        
+
         // New OAuth should work
         assert_eq!(
             mock.get_user_id_by_google_oauth("oauth_2").await.unwrap(),

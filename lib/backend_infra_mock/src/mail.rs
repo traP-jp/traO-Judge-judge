@@ -50,9 +50,9 @@ impl MailClient for MailClientMock {
             subject: subject.to_string(),
             body: body.to_string(),
         };
-        
+
         tracing::debug!("Mock email sent to {}: {}", mail.to, mail.subject);
-        
+
         self.sent_emails.lock().await.push(mail);
         Ok(())
     }
@@ -66,11 +66,11 @@ mod tests {
     async fn test_mail_mock_stores_sent_emails() {
         let mock = MailClientMock::new();
         let addr = "test@example.com".parse::<Address>().unwrap();
-        
+
         mock.send_mail(addr.clone(), "Test Subject", "Test Body")
             .await
             .unwrap();
-        
+
         let emails = mock.get_sent_emails().await;
         assert_eq!(emails.len(), 1);
         assert_eq!(emails[0].to, "test@example.com");
@@ -81,14 +81,14 @@ mod tests {
     #[tokio::test]
     async fn test_mail_mock_stores_multiple_emails() {
         let mock = MailClientMock::new();
-        
+
         for i in 0..3 {
             let addr = format!("test{}@example.com", i).parse::<Address>().unwrap();
             mock.send_mail(addr, &format!("Subject {}", i), &format!("Body {}", i))
                 .await
                 .unwrap();
         }
-        
+
         let emails = mock.get_sent_emails().await;
         assert_eq!(emails.len(), 3);
     }
@@ -97,10 +97,10 @@ mod tests {
     async fn test_mail_mock_clear() {
         let mock = MailClientMock::new();
         let addr = "test@example.com".parse::<Address>().unwrap();
-        
+
         mock.send_mail(addr, "Test", "Test").await.unwrap();
         assert_eq!(mock.get_sent_emails().await.len(), 1);
-        
+
         mock.clear().await;
         assert_eq!(mock.get_sent_emails().await.len(), 0);
     }
