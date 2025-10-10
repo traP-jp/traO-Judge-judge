@@ -119,13 +119,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .map_err(|_| AuthError::Unauthorized)?;
 
         if let Some(email) = email {
-            if let Ok(true) = self.user_repository.is_exist_email(&email).await {
-                let user = self
-                    .user_repository
-                    .get_user_by_email(&email)
-                    .await
-                    .map_err(|_| AuthError::InternalServerError)?
-                    .ok_or(AuthError::Unauthorized)?;
+            if let Ok(Some(user)) = self.user_repository.get_user_by_email(&email).await {
                 let session_id = self
                     .session_repository
                     .create_session(user)
