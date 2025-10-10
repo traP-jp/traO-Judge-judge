@@ -8,6 +8,7 @@ pub mod auth;
 pub mod editorial;
 pub mod github_oauth2;
 pub mod google_oauth2;
+pub mod traq_oauth2;
 pub mod icon;
 pub mod language;
 pub mod problems;

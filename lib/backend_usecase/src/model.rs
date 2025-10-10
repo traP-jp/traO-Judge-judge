@@ -7,3 +7,4 @@ pub mod problem;
 pub mod submission;
 pub mod testcase;
 pub mod user;
+pub mod traq_oauth2;
