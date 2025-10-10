@@ -28,8 +28,8 @@ impl DefaultAuthMailTemplateProvider {
 
 impl Default for DefaultAuthMailTemplateProvider {
     fn default() -> Self {
-        let base_url = std::env::var("FRONTEND_URL")
-            .unwrap_or_else(|_| "http://localhost:3000".to_string());
+        let base_url =
+            std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
         Self::new(base_url)
     }
 }
