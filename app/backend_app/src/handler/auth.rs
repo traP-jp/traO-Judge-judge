@@ -35,7 +35,17 @@ pub async fn signup(
         })
         .await
     {
-        Ok(_) => Ok(StatusCode::CREATED),
+        Ok(session_id) => {
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                SET_COOKIE,
+                format!("session_id={session_id}; Path=/; HttpOnly; SameSite=Lax")
+                    .parse()
+                    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+            );
+
+            return Ok((StatusCode::NO_CONTENT, headers));
+        }
         Err(e) => match e {
             AuthError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
             AuthError::Unauthorized => Err(StatusCode::UNAUTHORIZED),
