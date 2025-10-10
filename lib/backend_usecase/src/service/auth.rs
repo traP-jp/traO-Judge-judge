@@ -120,8 +120,17 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
 
         if let Some(email) = email {
             if let Ok(true) = self.user_repository.is_exist_email(&email).await {
-                let user = self.user_repository.get_user_by_email(&email).await.map_err(|_| AuthError::InternalServerError)?.ok_or(AuthError::Unauthorized)?;
-                let session_id = self.session_repository.create_session(user).await.map_err(|_| AuthError::InternalServerError)?;
+                let user = self
+                    .user_repository
+                    .get_user_by_email(&email)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?
+                    .ok_or(AuthError::Unauthorized)?;
+                let session_id = self
+                    .session_repository
+                    .create_session(user)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?;
                 return Ok(Some(session_id));
             }
 
@@ -143,8 +152,17 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .get_user_id_by_google_oauth(&google_oauth)
                 .await
             {
-                let user = self.user_repository.get_user_by_user_id(user_id).await.map_err(|_| AuthError::InternalServerError)?.ok_or(AuthError::Unauthorized)?;
-                let session_id = self.session_repository.create_session(user).await.map_err(|_| AuthError::InternalServerError)?;
+                let user = self
+                    .user_repository
+                    .get_user_by_user_id(user_id)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?
+                    .ok_or(AuthError::Unauthorized)?;
+                let session_id = self
+                    .session_repository
+                    .create_session(user)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?;
                 return Ok(Some(session_id));
             }
 
@@ -166,8 +184,17 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .get_user_id_by_github_oauth(&github_oauth)
                 .await
             {
-                let user = self.user_repository.get_user_by_user_id(user_id).await.map_err(|_| AuthError::InternalServerError)?.ok_or(AuthError::Unauthorized)?;
-                let session_id = self.session_repository.create_session(user).await.map_err(|_| AuthError::InternalServerError)?;
+                let user = self
+                    .user_repository
+                    .get_user_by_user_id(user_id)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?
+                    .ok_or(AuthError::Unauthorized)?;
+                let session_id = self
+                    .session_repository
+                    .create_session(user)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?;
                 return Ok(Some(session_id));
             }
 
