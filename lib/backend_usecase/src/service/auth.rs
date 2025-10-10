@@ -487,7 +487,9 @@ mod signup_tests {
         let mut session_mock = MockSessionRepository::new();
         let mail_mock = MockMailClient::new();
 
-        user_mock.expect_is_exist_email().returning(|_| Ok(false));
+        user_mock
+            .expect_get_user_by_email()
+            .returning(|_| Ok(Some(get_user())));
         user_mock
             .expect_create_user_by_email()
             .returning(|_, _| Ok(UserId::new(Uuid::now_v7())));
