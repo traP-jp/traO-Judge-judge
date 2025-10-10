@@ -1,5 +1,7 @@
 use domain::model::{
-    auth::UserAuthentication, rules::RuleType, user::{User, UserRole}
+    auth::UserAuthentication,
+    rules::RuleType,
+    user::{User, UserRole},
 };
 use sqlx::types::chrono;
 use uuid::Uuid;
@@ -112,7 +114,12 @@ pub struct UserMeDto {
 }
 
 impl UserMeDto {
-    pub fn new(user: User, problems: NormalProblemsDto, submissions: SubmissionsDto, authentication: UserAuthentication) -> Self {
+    pub fn new(
+        user: User,
+        problems: NormalProblemsDto,
+        submissions: SubmissionsDto,
+        authentication: UserAuthentication,
+    ) -> Self {
         UserMeDto {
             id: user.id.0,
             display_id: user.display_id,

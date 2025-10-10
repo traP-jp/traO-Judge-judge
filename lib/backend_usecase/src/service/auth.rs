@@ -261,7 +261,6 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .map_err(|_| AuthError::InternalServerError)?
             .ok_or(AuthError::Unauthorized)?;
 
-
         if !self
             .auth_repository
             .verify_user_password(user_id, &data.password)
@@ -647,7 +646,7 @@ mod login_tests {
         #[case] result: Result<String, AuthError>,
     ) -> anyhow::Result<()> {
         let login_data = create_login_data(data.0, data.1);
- 
+
         let mut auth_mock = MockAuthRepository::new();
         let user_mock = MockUserRepository::new();
         let session_mock = MockSessionRepository::new();

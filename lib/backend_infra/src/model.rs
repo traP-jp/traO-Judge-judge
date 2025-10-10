@@ -1,3 +1,4 @@
+pub mod auth;
 pub mod dep_name;
 pub mod editorial;
 pub mod icon;
@@ -8,4 +9,3 @@ pub mod submission;
 pub mod testcase;
 pub mod user;
 pub mod uuid;
-pub mod auth;

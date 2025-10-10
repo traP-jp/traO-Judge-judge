@@ -1,3 +1,4 @@
+pub mod auth;
 pub mod editorial;
 pub mod icon;
 pub mod jwt;
@@ -7,7 +8,6 @@ pub mod rules;
 pub mod submission;
 pub mod testcase;
 pub mod user;
-pub mod auth;
 
 #[cfg(test)]
 mod rules_test;

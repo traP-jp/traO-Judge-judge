@@ -66,8 +66,6 @@ impl From<UserDto> for UserResponse {
     }
 }
 
-
-
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserMeResponse {

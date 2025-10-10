@@ -1,6 +1,5 @@
 use domain::model::auth::UserAuthentication;
 
-
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct UserAuthenticationRow {
     pub email: Option<String>,

@@ -225,7 +225,11 @@ impl<
             .await
             .map_err(|_| UserError::InternalServerError)?;
 
-        let authentication = self.auth_repository.get_authentication_by_user_id(user.id).await.map_err(|_| UserError::InternalServerError)?;
+        let authentication = self
+            .auth_repository
+            .get_authentication_by_user_id(user.id)
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
 
         Ok(UserMeDto::new(
             user,
