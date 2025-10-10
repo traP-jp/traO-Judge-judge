@@ -79,7 +79,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository> TraqOAuth2Se
 
                 let new_user_id = self
                     .user_repository
-                    .create_user_without_email(traq_oauth)
+                    .create_user(traq_oauth)
                     .await
                     .map_err(|_| TraqOAuth2Error::InternalServerError)?;
 

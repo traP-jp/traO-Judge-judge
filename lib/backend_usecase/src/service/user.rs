@@ -393,7 +393,7 @@ impl<
             .ok_or(UserError::Unauthorized)?;
 
         if self
-            .user_repository
+            .auth_repository
             .is_exist_email(&email)
             .await
             .map_err(|_| UserError::InternalServerError)?
