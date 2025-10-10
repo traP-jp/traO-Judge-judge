@@ -387,12 +387,13 @@ mod signup_tests {
     use super::*;
     use domain::{
         external::mail::MockMailClient,
-        model::{jwt::AuthToken, user::UserId},
+        model::{jwt::AuthToken, user::{User, UserId, UserRole}},
         repository::{
             auth::MockAuthRepository, session::MockSessionRepository, user::MockUserRepository,
         },
     };
     use rstest::*;
+    use sqlx::types::chrono;
     use uuid::Uuid;
     #[fixture]
     fn setup_env() -> () {
@@ -414,6 +415,22 @@ mod signup_tests {
             password: password.to_string(),
             token: AuthToken::encode_signup_jwt(Some(email), None, None, &encode_key, &encrypt_key)
                 .unwrap(),
+        }
+    }
+
+    fn get_user() -> User {
+        User {
+            id: UserId(Uuid::now_v7()),
+            display_id: 0,
+            name: "name".to_string(),
+            traq_id: None,
+            github_id: None,
+            icon_id: None,
+            x_id: None,
+            self_introduction: "".to_string(),
+            role: UserRole::CommonUser,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
         }
     }
 
@@ -469,10 +486,16 @@ mod signup_tests {
 
         let auth_mock = MockAuthRepository::new();
         let mut user_mock = MockUserRepository::new();
-        let session_mock = MockSessionRepository::new();
+        let mut session_mock = MockSessionRepository::new();
         let mail_mock = MockMailClient::new();
 
         user_mock.expect_is_exist_email().returning(|_| Ok(true));
+        user_mock
+            .expect_get_user_by_email()
+            .returning(|_| Ok(Some(get_user())));
+        session_mock
+            .expect_create_session()
+            .returning(|_| Ok("dummy_session_id".to_string()));
 
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.signup(signup_data).await;
