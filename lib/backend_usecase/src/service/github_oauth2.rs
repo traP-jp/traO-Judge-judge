@@ -85,8 +85,8 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
 
                         let sign_up_token = AuthToken::encode_signup_jwt(
                             None,
-                            Some(&github_oauth),
                             None,
+                            Some(&github_oauth),
                             &encode_key,
                             &encrypt_key,
                         )

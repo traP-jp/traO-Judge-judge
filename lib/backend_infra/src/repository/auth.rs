@@ -1,4 +1,5 @@
 use axum::async_trait;
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use domain::{model::user::UserId, repository::auth::AuthRepository};
 use sqlx::MySqlPool;
 
@@ -85,19 +86,28 @@ impl AuthRepository for AuthRepositoryImpl {
         code: &str,
         oauth_action: &str,
     ) -> anyhow::Result<String> {
+        if oauth_action != "login" && oauth_action != "signup" && oauth_action != "bind" {
+            return Err(anyhow::anyhow!("Invalid OAuth action"));
+        }
+
         let client_id = std::env::var("GOOGLE_OAUTH2_CLIENT_ID")?;
         let client_secret = std::env::var("GOOGLE_OAUTH2_CLIENT_SECRET")?;
         let grant_type = "authorization_code";
         let redirect_uri =
-            std::env::var("FRONTEND_URL")? + &format!("/auth/google/{}/callback", oauth_action);
-
-        let url = format!(
-            "https://oauth2.googleapis.com/token?client_id={}&client_secret={}&code={}&grant_type={}&redirect_uri={}",
-            client_id, client_secret, code, grant_type, redirect_uri
-        );
+            std::env::var("FRONTEND_URL")? + &format!("/auth/google/{oauth_action}/callback");
+        let url = "https://oauth2.googleapis.com/token";
 
         let client = reqwest::Client::new();
-        let response = client.post(&url).send().await?;
+        let response = client.post(url)
+            .header("Accept", "application/json")
+            .form(&[
+                ("client_id", client_id),
+                ("client_secret", client_secret),
+                ("code", code.to_string()),
+                ("grant_type", grant_type.to_string()),
+                ("redirect_uri", redirect_uri),
+            ])
+        .send().await?;
 
         if !response.status().is_success() {
             return Err(anyhow::anyhow!("Failed to exchange authorization code"));
@@ -107,14 +117,19 @@ impl AuthRepository for AuthRepositoryImpl {
 
         let google_oauth = response_json
             .get("id_token")
-            .and_then(|id_token| id_token.get("sub"))
-            .and_then(|v| v.as_str())
+            .and_then(|id_token| {
+                let segments: Vec<&str> = id_token.as_str()?.split('.').collect();
+                if segments.len() != 3 {
+                    return None;
+                }
+                let payload = segments[1];
+                let decoded = URL_SAFE_NO_PAD.decode(payload).ok()?;
+                let v: serde_json::Value = serde_json::from_slice(&decoded).ok()?;
+                v.get("sub").and_then(|v| v.as_str()).map(|s| s.to_owned())
+            })
             .ok_or_else(|| anyhow::anyhow!("Failed to retrieve Google OAuth"))?;
 
-        match oauth_action {
-            "login" | "signup" | "bind" => Ok(google_oauth.to_string()),
-            _ => Err(anyhow::anyhow!("Invalid OAuth action")),
-        }
+        Ok(google_oauth.to_string())
     }
 
     async fn save_user_google_oauth(&self, id: UserId, google_oauth: &str) -> anyhow::Result<()> {
@@ -189,18 +204,29 @@ impl AuthRepository for AuthRepositoryImpl {
         code: &str,
         oauth_action: &str,
     ) -> anyhow::Result<String> {
+        if oauth_action != "login" && oauth_action != "signup" && oauth_action != "bind" {
+            return Err(anyhow::anyhow!("Invalid OAuth action"));
+        }
+
         let client_id = std::env::var("GITHUB_OAUTH2_CLIENT_ID")?;
         let client_secret = std::env::var("GITHUB_OAUTH2_CLIENT_SECRET")?;
         let redirect_uri =
-            std::env::var("FRONTEND_URL")? + &format!("/auth/github/{}/callback", oauth_action);
+            std::env::var("FRONTEND_URL")? + &format!("/auth/github/{oauth_action}/callback");
 
-        let url = format!(
-            "https://github.com/login/oauth/access_token?client_id={}&client_secret={}&code={}&redirect_uri={}",
-            client_id, client_secret, code, redirect_uri
-        );
+        let url = "https://github.com/login/oauth/access_token";
 
         let client = reqwest::Client::new();
-        let response = client.post(&url).send().await?;
+        let response = client
+            .post(url)
+            .header("Accept", "application/json")
+            .form(&[
+                ("client_id", client_id),
+                ("client_secret", client_secret),
+                ("code", code.to_string()),
+                ("redirect_uri", redirect_uri),
+            ])
+            .send()
+            .await?;
 
         if !response.status().is_success() {
             return Err(anyhow::anyhow!("Failed to exchange authorization code"));
@@ -216,8 +242,9 @@ impl AuthRepository for AuthRepositoryImpl {
         let response = client
             .get("https://api.github.com/user")
             .bearer_auth(access_token)
-            .header("Accept", "application/vnd.github+json")
+            .header("Accept", "application/json")
             .header("X-GitHub-Api-Version", "2022-11-28")
+            .header("User-Agent", "traO-Judge")
             .send()
             .await?;
 
@@ -229,13 +256,10 @@ impl AuthRepository for AuthRepositoryImpl {
 
         let github_oauth = response_json
             .get("id")
-            .and_then(|v| v.as_str())
+            .and_then(|v| v.as_i64())
             .ok_or_else(|| anyhow::anyhow!("Failed to retrieve GitHub OAuth"))?;
 
-        match oauth_action {
-            "login" | "signup" | "bind" => Ok(github_oauth.to_string()),
-            _ => Err(anyhow::anyhow!("Invalid OAuth action")),
-        }
+        Ok(github_oauth.to_string())
     }
 
     async fn save_user_github_oauth(&self, id: UserId, github_oauth: &str) -> anyhow::Result<()> {

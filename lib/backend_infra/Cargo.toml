@@ -8,6 +8,7 @@ anyhow = { workspace = true }
 async-session = { workspace = true }
 axum = { workspace = true }
 axum-extra = { workspace = true }
+base64 = { workspace = true }
 bcrypt = { workspace = true }
 domain = { path = "../backend_domain" }
 fancy-regex = { workspace = true }
