@@ -8,9 +8,9 @@ pub struct UpdateNormalProblemData {
     pub title: Option<String>,
     pub statement: Option<String>,
     #[validate(range(min = 1, max = 65535))]
-    pub time_limit: Option<i32>,
+    pub time_limit_ms: Option<i32>,
     #[validate(range(min = 1, max = 65535))]
-    pub memory_limit: Option<i32>,
+    pub memory_limit_mib: Option<i32>,
     #[validate(range(min = 1, max = 10))]
     pub difficulty: Option<i32>,
     pub is_public: Option<bool>,
@@ -22,9 +22,9 @@ pub struct CreateNormalProblemData {
     pub title: String,
     pub statement: String,
     #[validate(range(min = 1, max = 65535))]
-    pub time_limit: i32,
+    pub time_limit_ms: i32,
     #[validate(range(min = 1, max = 65535))]
-    pub memory_limit: i32,
+    pub memory_limit_mib: i32,
     #[validate(range(min = 1, max = 10))]
     pub difficulty: i32,
 }
@@ -51,8 +51,8 @@ pub struct NormalProblemDto {
     pub author_id: String,
     pub title: String,
     pub statement: String,
-    pub time_limit: i32,
-    pub memory_limit: i32,
+    pub time_limit_ms: i32,
+    pub memory_limit_mib: i32,
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
@@ -68,8 +68,8 @@ impl From<NormalProblem> for NormalProblemDto {
             author_id: problem.author_id.to_string(),
             title: problem.title,
             statement: problem.statement,
-            time_limit: problem.time_limit,
-            memory_limit: problem.memory_limit,
+            time_limit_ms: problem.time_limit_ms,
+            memory_limit_mib: problem.memory_limit_mib,
             difficulty: problem.difficulty,
             is_public: problem.is_public,
             solved_count: problem.solved_count,
@@ -84,8 +84,8 @@ pub struct NormalProblemSummaryDto {
     pub id: String,
     pub author_id: String,
     pub title: String,
-    pub time_limit: i32,
-    pub memory_limit: i32,
+    pub time_limit_ms: i32,
+    pub memory_limit_mib: i32,
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
@@ -104,8 +104,8 @@ impl From<NormalProblem> for NormalProblemSummaryDto {
             id: problem.id.to_string(),
             author_id: problem.author_id.to_string(),
             title: problem.title,
-            time_limit: problem.time_limit,
-            memory_limit: problem.memory_limit,
+            time_limit_ms: problem.time_limit_ms,
+            memory_limit_mib: problem.memory_limit_mib,
             difficulty: problem.difficulty,
             is_public: problem.is_public,
             solved_count: problem.solved_count,
