@@ -103,7 +103,7 @@ pub async fn put_me(
         .await
     {
         Ok(user) => {
-            let resp = UserResponse::from(user);
+            let resp = UserMeResponse::from(user);
             Ok((StatusCode::OK, Json(resp)))
         }
         Err(e) => match e {

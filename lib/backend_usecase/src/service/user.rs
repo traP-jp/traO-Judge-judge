@@ -249,7 +249,7 @@ impl<
         &self,
         session_id: &str,
         body: UpdateUserData,
-    ) -> anyhow::Result<UserDto, UserError> {
+    ) -> anyhow::Result<UserMeDto, UserError> {
         body.validate().map_err(|_| UserError::ValidateError)?;
 
         let user_id = self
@@ -370,7 +370,13 @@ impl<
             .await
             .map_err(|_| UserError::InternalServerError)?;
 
-        Ok(UserDto::new(
+        let authentication = self
+            .auth_repository
+            .get_authentication_by_user_id(new_user.id)
+            .await
+            .map_err(|_| UserError::InternalServerError)?;
+
+        Ok(UserMeDto::new(
             new_user,
             NormalProblemsDto {
                 total: problem_count,
@@ -380,6 +386,7 @@ impl<
                 total: submission_count,
                 submissions: submissions.into_iter().map(|s| s.into()).collect(),
             },
+            authentication,
         ))
     }
 
