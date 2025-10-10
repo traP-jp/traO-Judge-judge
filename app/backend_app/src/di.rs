@@ -19,7 +19,7 @@ use usecase::service::{
     auth::AuthenticationService, editorial::EditorialService, github_oauth2::GitHubOAuth2Service,
     google_oauth2::GoogleOAuth2Service, icon::IconService, language::LanguageService,
     problem::ProblemService, submission::SubmissionService, testcase::TestcaseService,
-    user::UserService,
+    traq_oauth2::TraqOAuth2Service, user::UserService,
 };
 
 #[derive(Clone)]
@@ -80,6 +80,8 @@ pub struct DiContainer {
         GoogleOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl>,
     github_oauth2_service:
         GitHubOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl>,
+    traq_oauth2_service:
+        TraqOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl>,
 }
 
 impl DiContainer {
@@ -140,6 +142,11 @@ impl DiContainer {
                 provider.provide_user_repository(),
             ),
             github_oauth2_service: GitHubOAuth2Service::new(
+                provider.provide_auth_repository(),
+                provider.provide_session_repository(),
+                provider.provide_user_repository(),
+            ),
+            traq_oauth2_service: TraqOAuth2Service::new(
                 provider.provide_auth_repository(),
                 provider.provide_session_repository(),
                 provider.provide_user_repository(),
@@ -245,5 +252,11 @@ impl DiContainer {
         &self,
     ) -> &GitHubOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl> {
         &self.github_oauth2_service
+    }
+
+    pub fn traq_oauth2_service(
+        &self,
+    ) -> &TraqOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl> {
+        &self.traq_oauth2_service
     }
 }

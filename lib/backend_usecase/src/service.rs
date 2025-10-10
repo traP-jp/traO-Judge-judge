@@ -8,4 +8,5 @@ pub mod language;
 pub mod problem;
 pub mod submission;
 pub mod testcase;
+pub mod traq_oauth2;
 pub mod user;

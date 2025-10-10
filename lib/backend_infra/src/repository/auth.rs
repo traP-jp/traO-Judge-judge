@@ -317,4 +317,55 @@ impl AuthRepository for AuthRepositoryImpl {
 
         Ok(user_id.map(|id| UserId(id.0)))
     }
+
+    async fn save_user_traq_oauth(&self, id: UserId, traq_oauth: &str) -> anyhow::Result<()> {
+        sqlx::query("INSERT INTO user_authentications (user_id, traq_oauth) VALUES (?, ?)")
+            .bind(UuidRow(id.into()))
+            .bind(traq_oauth)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn update_user_traq_oauth(&self, id: UserId, traq_oauth: &str) -> anyhow::Result<()> {
+        sqlx::query("UPDATE user_authentications SET traq_oauth = ? WHERE user_id = ?")
+            .bind(traq_oauth)
+            .bind(UuidRow(id.into()))
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn verify_user_traq_oauth(&self, id: UserId) -> anyhow::Result<bool> {
+        let traq_oauth = sqlx::query_scalar::<_, Option<String>>(
+            "SELECT traq_oauth FROM user_authentications WHERE user_id = ?",
+        )
+        .bind(UuidRow(id.into()))
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(traq_oauth.is_some())
+    }
+
+    async fn delete_user_traq_oauth(&self, id: UserId) -> anyhow::Result<bool> {
+        sqlx::query("UPDATE user_authentications SET traq_oauth = NULL WHERE user_id = ?")
+            .bind(UuidRow(id.into()))
+            .execute(&self.pool)
+            .await?;
+
+        Ok(true)
+    }
+
+    async fn get_user_id_by_traq_oauth(&self, traq_oauth: &str) -> anyhow::Result<Option<UserId>> {
+        let user_id = sqlx::query_scalar::<_, UuidRow>(
+            "SELECT user_id FROM user_authentications WHERE traq_oauth = ?",
+        )
+        .bind(traq_oauth)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(user_id.map(|id| UserId(id.0)))
+    }
 }

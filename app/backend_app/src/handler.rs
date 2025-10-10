@@ -13,6 +13,7 @@ pub mod language;
 pub mod problems;
 pub mod submissions;
 pub mod testcase;
+pub mod traq_oauth2;
 pub mod users;
 
 pub fn make_router(di_container: DiContainer) -> Router {
@@ -101,6 +102,13 @@ pub fn make_router(di_container: DiContainer) -> Router {
         )
         .route("/revoke", post(github_oauth2::post_github_oauth2_revoke));
 
+    let traq_oauth2_router = Router::new()
+        .route(
+            "/:oauthAction/authorize",
+            post(traq_oauth2::post_traq_oauth2_authorize),
+        )
+        .route("/revoke", post(traq_oauth2::post_traq_oauth2_revoke));
+
     Router::new()
         .nest("/", auth_router)
         .nest("/users", user_router)
@@ -112,5 +120,6 @@ pub fn make_router(di_container: DiContainer) -> Router {
         .nest("/languages", language_router)
         .nest("/google-oauth2", google_oauth2_router)
         .nest("/github-oauth2", github_oauth2_router)
+        .nest("/traq-oauth2", traq_oauth2_router)
         .with_state(di_container)
 }
