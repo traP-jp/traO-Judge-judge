@@ -14,6 +14,9 @@ pub async fn post_traq_oauth2_authorize(
     TypedHeader(cookie): TypedHeader<Cookie>,
     headers: HeaderMap,
 ) -> Result<Response, StatusCode> {
+    tracing::info!("POST /oauth2/traq/authorize/{}", oauth_action);
+    tracing::info!("Headers: {headers:?}");
+
     let session_id = cookie.get("session_id");
     let forwarded_user = headers
         .get("X-Forwarded-User")
