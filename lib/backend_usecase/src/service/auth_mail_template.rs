@@ -39,7 +39,23 @@ impl AuthMailTemplateProvider for DefaultAuthMailTemplateProvider {
         AuthMailContent {
             subject: "Verification mail".to_string(),
             body: format!(
-                "Please click the link below to verify your email address.\n\n{}/verify?jwt={jwt}",
+                "traO Judgeへのご登録ありがとうございます。
+以下のリンクをクリックして、メールアドレスの確認を完了してください。
+
+🔗 認証リンク：
+{}/signup/register?token={jwt}
+
+このリンクは、60分間有効です。
+期限を過ぎた場合は、お手数ですが再度登録手続きをお願いいたします。
+
+もし本メールにお心当たりがない場合は、このメールを破棄していただいて構いません。
+
+
+――――――――――――  
+traO Judge 
+{}
+※このメールは送信専用です。返信いただいても対応できません。",
+                self.base_url(),
                 self.base_url()
             ),
         }
@@ -49,7 +65,22 @@ impl AuthMailTemplateProvider for DefaultAuthMailTemplateProvider {
         AuthMailContent {
             subject: "Reset Password Email".to_string(),
             body: format!(
-                "Please click the link below to reset your password.\n\n{}/reset?jwt={jwt}",
+                "traO Judge にて、パスワード変更のリクエストを受け付けました。
+以下のリンクをクリックして、パスワード変更を完了してください。
+
+🔗 認証リンク：
+{}/reset-password/form?token={jwt}
+
+このリンクは、60分間有効です。
+期限を過ぎた場合は、お手数ですが再度パスワード変更手続きをお願いいたします。
+
+もし本メールにお心当たりがない場合は、このメールを破棄していただいて構いません。
+
+
+――――――――――――
+traO Judge
+{}",
+                self.base_url(),
                 self.base_url()
             ),
         }
