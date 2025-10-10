@@ -6,8 +6,8 @@ pub struct NormalProblem {
     pub author_id: i64,
     pub title: String,
     pub statement: String,
-    pub time_limit: i32,
-    pub memory_limit: i32,
+    pub time_limit_ms: i32,
+    pub memory_limit_mib: i32,
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
@@ -20,16 +20,16 @@ pub struct UpdateNormalProblem {
     pub is_public: bool,
     pub difficulty: i32,
     pub statement: String,
-    pub time_limit: i32,
-    pub memory_limit: i32,
+    pub time_limit_ms: i32,
+    pub memory_limit_mib: i32,
 }
 
 pub struct CreateNormalProblem {
     pub author_id: i64,
     pub title: String,
     pub statement: String,
-    pub time_limit: i32,
-    pub memory_limit: i32,
+    pub time_limit_ms: i32,
+    pub memory_limit_mib: i32,
     pub difficulty: i32,
 }
 

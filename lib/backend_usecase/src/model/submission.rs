@@ -11,8 +11,8 @@ pub struct SubmissionDto {
     pub submitted_at: chrono::DateTime<chrono::Utc>,
     pub language_id: String,
     pub total_score: i64,
-    pub max_time: i32,
-    pub max_memory: i32,
+    pub max_time_ms: i32,
+    pub max_memory_mib: i32,
     pub code_length: i32,
     pub overall_judge_status: String,
     pub judge_results: Vec<JudgeResultDto>,
@@ -24,8 +24,8 @@ pub struct JudgeResultDto {
     pub testcase_name: String,
     pub judge_status: String,
     pub score: i64,
-    pub time: i32,
-    pub memory: i32,
+    pub time_ms: i32,
+    pub memory_mib: i32,
 }
 
 #[derive(Debug, Clone)]
@@ -38,8 +38,8 @@ pub struct SubmissionSummaryDto {
     pub submitted_at: chrono::DateTime<chrono::Utc>,
     pub language_id: String,
     pub total_score: i64,
-    pub max_time: i32,
-    pub max_memory: i32,
+    pub max_time_ms: i32,
+    pub max_memory_mib: i32,
     pub code_length: i32,
     pub judge_status: String,
 }
@@ -55,8 +55,8 @@ impl From<Submission> for SubmissionSummaryDto {
             submitted_at: submission.submitted_at,
             language_id: submission.language_id.to_string(),
             total_score: submission.total_score,
-            max_time: submission.max_time,
-            max_memory: submission.max_memory,
+            max_time_ms: submission.max_time_ms,
+            max_memory_mib: submission.max_memory_mib,
             code_length: submission.source.len() as i32,
             judge_status: submission.overall_judge_status,
         }
