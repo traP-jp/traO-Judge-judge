@@ -387,7 +387,10 @@ mod signup_tests {
     use super::*;
     use domain::{
         external::mail::MockMailClient,
-        model::{jwt::AuthToken, user::{User, UserId, UserRole}},
+        model::{
+            jwt::AuthToken,
+            user::{User, UserId, UserRole},
+        },
         repository::{
             auth::MockAuthRepository, session::MockSessionRepository, user::MockUserRepository,
         },
