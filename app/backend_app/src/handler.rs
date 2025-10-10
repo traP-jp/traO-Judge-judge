@@ -8,12 +8,12 @@ pub mod auth;
 pub mod editorial;
 pub mod github_oauth2;
 pub mod google_oauth2;
-pub mod traq_oauth2;
 pub mod icon;
 pub mod language;
 pub mod problems;
 pub mod submissions;
 pub mod testcase;
+pub mod traq_oauth2;
 pub mod users;
 
 pub fn make_router(di_container: DiContainer) -> Router {

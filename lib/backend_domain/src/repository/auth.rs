@@ -44,7 +44,5 @@ pub trait AuthRepository {
     async fn update_user_traq_oauth(&self, id: UserId, traq_oauth: &str) -> anyhow::Result<()>;
     async fn verify_user_traq_oauth(&self, id: UserId) -> anyhow::Result<bool>;
     async fn delete_user_traq_oauth(&self, id: UserId) -> anyhow::Result<bool>;
-    async fn get_user_id_by_traq_oauth(
-        &self, traq_oauth: &str,
-    ) -> anyhow::Result<Option<UserId>>;
+    async fn get_user_id_by_traq_oauth(&self, traq_oauth: &str) -> anyhow::Result<Option<UserId>>;
 }

@@ -1,5 +1,8 @@
 use crate::model::traq_oauth2::TraqOAuth2AuthorizeDto;
-use domain::{model::user::UserRole, repository::{auth::AuthRepository, session::SessionRepository, user::UserRepository}};
+use domain::{
+    model::user::UserRole,
+    repository::{auth::AuthRepository, session::SessionRepository, user::UserRepository},
+};
 
 #[derive(Clone)]
 pub struct TraqOAuth2Service<AR: AuthRepository, SR: SessionRepository, UR: UserRepository> {
@@ -8,9 +11,7 @@ pub struct TraqOAuth2Service<AR: AuthRepository, SR: SessionRepository, UR: User
     user_repository: UR,
 }
 
-impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
-    TraqOAuth2Service<AR, SR, UR>
-{
+impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository> TraqOAuth2Service<AR, SR, UR> {
     pub fn new(auth_repository: AR, session_repository: SR, user_repository: UR) -> Self {
         Self {
             auth_repository,
@@ -27,9 +28,7 @@ pub enum TraqOAuth2Error {
     InternalServerError,
 }
 
-impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
-    TraqOAuth2Service<AR, SR, UR>
-{
+impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository> TraqOAuth2Service<AR, SR, UR> {
     pub async fn post_traq_oauth2_authorize(
         &self,
         session_id: Option<&str>,
@@ -40,7 +39,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
         if traq_oauth.is_empty() {
             return Err(TraqOAuth2Error::BadRequest);
         }
-        
+
         match oauth_action {
             "login" => {
                 let user_id = self
@@ -57,17 +56,17 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     .map_err(|_| TraqOAuth2Error::InternalServerError)?
                     .ok_or(TraqOAuth2Error::InternalServerError)?;
 
-                let login_session_id =
-                    self.session_repository
-                        .create_session(user)
-                        .await
-                        .map_err(|_| TraqOAuth2Error::InternalServerError)?;
+                let login_session_id = self
+                    .session_repository
+                    .create_session(user)
+                    .await
+                    .map_err(|_| TraqOAuth2Error::InternalServerError)?;
 
                 Ok(TraqOAuth2AuthorizeDto {
-                    session_id: Some(login_session_id)
+                    session_id: Some(login_session_id),
                 })
             }
-            
+
             "signup" => {
                 let user_id = self
                     .auth_repository
@@ -101,14 +100,14 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     .map_err(|_| TraqOAuth2Error::InternalServerError)?
                     .ok_or(TraqOAuth2Error::InternalServerError)?;
 
-                let login_session_id =
-                    self.session_repository
-                        .create_session(user)
-                        .await
-                        .map_err(|_| TraqOAuth2Error::InternalServerError)?;
+                let login_session_id = self
+                    .session_repository
+                    .create_session(user)
+                    .await
+                    .map_err(|_| TraqOAuth2Error::InternalServerError)?;
 
                 Ok(TraqOAuth2AuthorizeDto {
-                    session_id: Some(login_session_id)
+                    session_id: Some(login_session_id),
                 })
             }
 
@@ -120,7 +119,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     .await
                     .map_err(|_| TraqOAuth2Error::InternalServerError)?
                     .ok_or(TraqOAuth2Error::Unauthorized)?;
-                
+
                 self.auth_repository
                     .update_user_traq_oauth(user_id, traq_oauth)
                     .await
@@ -131,9 +130,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     .await
                     .map_err(|_| TraqOAuth2Error::InternalServerError)?;
 
-                Ok(TraqOAuth2AuthorizeDto {
-                    session_id: None
-                })
+                Ok(TraqOAuth2AuthorizeDto { session_id: None })
             }
             _ => Err(TraqOAuth2Error::InternalServerError),
         }

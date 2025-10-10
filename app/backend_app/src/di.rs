@@ -16,7 +16,10 @@ use judge_infra_mock::multi_proc_problem_registry::{
     registry_client::RegistryClient, registry_server::RegistryServer,
 };
 use usecase::service::{
-    auth::AuthenticationService, editorial::EditorialService, github_oauth2::GitHubOAuth2Service, google_oauth2::GoogleOAuth2Service, icon::IconService, language::LanguageService, problem::ProblemService, submission::SubmissionService, testcase::TestcaseService, traq_oauth2::TraqOAuth2Service, user::UserService
+    auth::AuthenticationService, editorial::EditorialService, github_oauth2::GitHubOAuth2Service,
+    google_oauth2::GoogleOAuth2Service, icon::IconService, language::LanguageService,
+    problem::ProblemService, submission::SubmissionService, testcase::TestcaseService,
+    traq_oauth2::TraqOAuth2Service, user::UserService,
 };
 
 #[derive(Clone)]

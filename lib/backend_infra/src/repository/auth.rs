@@ -358,9 +358,7 @@ impl AuthRepository for AuthRepositoryImpl {
         Ok(true)
     }
 
-    async fn get_user_id_by_traq_oauth(
-        &self, traq_oauth: &str,
-    ) -> anyhow::Result<Option<UserId>> {
+    async fn get_user_id_by_traq_oauth(&self, traq_oauth: &str) -> anyhow::Result<Option<UserId>> {
         let user_id = sqlx::query_scalar::<_, UuidRow>(
             "SELECT user_id FROM user_authentications WHERE traq_oauth = ?",
         )
