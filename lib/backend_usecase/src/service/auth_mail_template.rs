@@ -117,6 +117,6 @@ mod tests {
         let mail = provider.signup_request("token");
 
         assert_eq!(mail.subject, "Verification mail");
-        assert!(mail.body.contains("http://example.com/verify?jwt=token"));
+        assert!(mail.body.contains("http://example.com/signup/register?token=token"));
     }
 }
