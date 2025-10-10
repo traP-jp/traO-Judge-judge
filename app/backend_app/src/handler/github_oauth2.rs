@@ -50,7 +50,7 @@ pub async fn post_github_oauth2_authorize(
                 let mut headers = HeaderMap::new();
                 headers.insert(
                     SET_COOKIE,
-                    format!("session_id={}; HttpOnly; SameSite=Lax", login_session_id)
+                    format!("session_id={}; HttpOnly; Path=/; SameSite=Lax", login_session_id)
                         .parse()
                         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
                 );
