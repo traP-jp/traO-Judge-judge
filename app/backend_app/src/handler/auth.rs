@@ -1,8 +1,12 @@
 use crate::di::DiContainer;
 use crate::model::auth::{LogIn, ResetPassword, ResetPasswordRequest, SignUp, SignUpRequest};
-use axum::{Json, extract::State, http::HeaderMap, response::IntoResponse};
+use axum::{
+    Json,
+    extract::State,
+    http::{HeaderMap, StatusCode, header::SET_COOKIE},
+    response::IntoResponse,
+};
 use axum_extra::{TypedHeader, headers::Cookie};
-use reqwest::{StatusCode, header::SET_COOKIE};
 use usecase::{
     model::auth::{LoginData, ResetPasswordData, SignUpData},
     service::auth::AuthError,
