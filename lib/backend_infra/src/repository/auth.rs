@@ -229,7 +229,7 @@ impl AuthRepository for AuthRepositoryImpl {
 
         let github_oauth = response_json
             .get("id")
-            .and_then(|v| v.as_str())
+            .and_then(|v| v.as_i64())
             .ok_or_else(|| anyhow::anyhow!("Failed to retrieve GitHub OAuth"))?;
 
         match oauth_action {
