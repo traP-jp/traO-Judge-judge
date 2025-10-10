@@ -1,11 +1,12 @@
 use axum::async_trait;
 
-use crate::model::user::UserId;
+use crate::model::{auth::UserAuthentication, user::UserId};
 
 #[cfg_attr(feature = "mockall", mockall::automock)]
 #[async_trait]
 pub trait AuthRepository {
     async fn count_authentication_methods(&self, id: UserId) -> anyhow::Result<i64>;
+    async fn get_authentication_by_user_id(&self, id: UserId) -> anyhow::Result<UserAuthentication>;
 
     async fn save_user_email_and_password(&self, id: UserId, email: &str, password: &str) -> anyhow::Result<()>;
     async fn update_user_password(&self, id: UserId, password: &str) -> anyhow::Result<()>;

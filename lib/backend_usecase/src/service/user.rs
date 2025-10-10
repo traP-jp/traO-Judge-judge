@@ -4,7 +4,7 @@ use lettre::Address;
 use crate::model::{
     problem::NormalProblemsDto,
     submission::SubmissionsDto,
-    user::{UpdatePasswordData, UpdateUserData, UserDto},
+    user::{UpdatePasswordData, UpdateUserData, UserDto, UserMeDto},
 };
 use domain::{
     external::mail::MailClient,
@@ -166,7 +166,7 @@ impl<
         ))
     }
 
-    pub async fn get_me(&self, session_id: &str) -> anyhow::Result<UserDto, UserError> {
+    pub async fn get_me(&self, session_id: &str) -> anyhow::Result<UserMeDto, UserError> {
         let user_id = self
             .session_repository
             .get_display_id_by_session_id(session_id)
@@ -225,7 +225,9 @@ impl<
             .await
             .map_err(|_| UserError::InternalServerError)?;
 
-        Ok(UserDto::new(
+        let authentication = self.auth_repository.get_authentication_by_user_id(user.id).await.map_err(|_| UserError::InternalServerError)?;
+
+        Ok(UserMeDto::new(
             user,
             NormalProblemsDto {
                 total: problem_count,
@@ -235,6 +237,7 @@ impl<
                 total: submission_count,
                 submissions: submissions.into_iter().map(|s| s.into()).collect(),
             },
+            authentication,
         ))
     }
 

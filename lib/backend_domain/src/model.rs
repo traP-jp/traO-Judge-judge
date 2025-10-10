@@ -7,6 +7,7 @@ pub mod rules;
 pub mod submission;
 pub mod testcase;
 pub mod user;
+pub mod auth;
 
 #[cfg(test)]
 mod rules_test;

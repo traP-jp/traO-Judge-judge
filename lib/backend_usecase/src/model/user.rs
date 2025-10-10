@@ -1,6 +1,5 @@
 use domain::model::{
-    rules::RuleType,
-    user::{User, UserRole},
+    auth::UserAuthentication, rules::RuleType, user::{User, UserRole}
 };
 use sqlx::types::chrono;
 use uuid::Uuid;
@@ -91,6 +90,44 @@ impl UserDto {
             role: user.role.into(),
             created_at: user.created_at,
             updated_at: user.updated_at,
+        }
+    }
+}
+
+pub struct UserMeDto {
+    pub id: Uuid,
+    pub display_id: i64,
+    pub name: String,
+    pub traq_id: Option<String>,
+    pub github_id: Option<String>,
+    pub icon_id: Option<Uuid>,
+    pub post_problems: NormalProblemsDto,
+    pub submit_problems: SubmissionsDto,
+    pub x_id: Option<String>,
+    pub self_introduction: String,
+    pub role: UserRoleDto,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+    pub authentication: UserAuthentication,
+}
+
+impl UserMeDto {
+    pub fn new(user: User, problems: NormalProblemsDto, submissions: SubmissionsDto, authentication: UserAuthentication) -> Self {
+        UserMeDto {
+            id: user.id.0,
+            display_id: user.display_id,
+            name: user.name,
+            traq_id: user.traq_id,
+            github_id: user.github_id,
+            icon_id: user.icon_id,
+            post_problems: problems,
+            submit_problems: submissions,
+            x_id: user.x_id,
+            self_introduction: user.self_introduction,
+            role: user.role.into(),
+            created_at: user.created_at,
+            updated_at: user.updated_at,
+            authentication,
         }
     }
 }
