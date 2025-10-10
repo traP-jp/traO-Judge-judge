@@ -1,4 +1,5 @@
 use axum::async_trait;
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use domain::{model::user::UserId, repository::auth::AuthRepository};
 use sqlx::MySqlPool;
 
@@ -115,8 +116,16 @@ impl AuthRepository for AuthRepositoryImpl {
 
         let google_oauth = response_json
             .get("id_token")
-            .and_then(|id_token| id_token.get("sub"))
-            .and_then(|v| v.as_str())
+            .and_then(|id_token| {
+                let segments: Vec<&str> = id_token.as_str()?.split('.').collect();
+                if segments.len() != 3 {
+                    return None;
+                }
+                let payload = segments[1];
+                let decoded = URL_SAFE_NO_PAD.decode(payload).ok()?;
+                let v: serde_json::Value = serde_json::from_slice(&decoded).ok()?;
+                v.get("sub").and_then(|v| v.as_str()).map(|s| s.to_owned())
+            })
             .ok_or_else(|| anyhow::anyhow!("Failed to retrieve Google OAuth"))?;
 
         Ok(google_oauth.to_string())
