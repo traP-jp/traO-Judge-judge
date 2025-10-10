@@ -9,7 +9,10 @@ use domain::{
         testcase::TestcaseRepository, user::UserRepository,
     },
 };
-use judge_core::model::procedure::registered::Procedure;
+use judge_core::{
+    logic::registered_procedure_remover::remove,
+    model::{dep_name_repository::DepNameRepository, problem_registry::ProblemRegistryServer, procedure::registered::Procedure},
+};
 use validator::Validate;
 
 #[derive(Clone)]
@@ -19,12 +22,16 @@ pub struct ProblemService<
     SR: SessionRepository,
     TR: TestcaseRepository,
     PRC: ProcedureRepository,
+    PRS: ProblemRegistryServer,
+    DNR: DepNameRepository<i64>,
 > {
     problem_repository: PR,
     user_repository: UR,
     session_repository: SR,
     testcase_repository: TR,
     procedure_repository: PRC,
+    problem_registry_server: PRS,
+    dep_name_repository: DNR,
 }
 
 impl<
@@ -33,7 +40,9 @@ impl<
     SR: SessionRepository,
     TR: TestcaseRepository,
     PRC: ProcedureRepository,
-> ProblemService<PR, UR, SR, TR, PRC>
+    PRS: ProblemRegistryServer,
+    DNR: DepNameRepository<i64>,
+> ProblemService<PR, UR, SR, TR, PRC, PRS, DNR>
 {
     pub fn new(
         problem_repository: PR,
@@ -41,6 +50,8 @@ impl<
         session_repository: SR,
         testcase_repository: TR,
         procedure_repository: PRC,
+        problem_registry_server: PRS,
+        dep_name_repository: DNR,
     ) -> Self {
         Self {
             problem_repository,
@@ -48,6 +59,8 @@ impl<
             session_repository,
             testcase_repository,
             procedure_repository,
+            problem_registry_server,
+            dep_name_repository,
         }
     }
 }
@@ -67,7 +80,9 @@ impl<
     SR: SessionRepository,
     TR: TestcaseRepository,
     PRC: ProcedureRepository,
-> ProblemService<PR, UR, SR, TR, PRC>
+    PRS: ProblemRegistryServer,
+    DNR: DepNameRepository<i64>,
+> ProblemService<PR, UR, SR, TR, PRC, PRS, DNR>
 {
     pub async fn get_problem(
         &self,
@@ -337,6 +352,36 @@ impl<
             }
         }
 
+        // Delete testcases
+        self.testcase_repository
+            .delete_testcases(problem_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?;
+
+        // Delete procedure resources from problem registry (S3) and procedure from database
+        if let Some(procedure) = self
+            .procedure_repository
+            .get_procedure(problem_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?
+        {
+            remove(procedure, self.problem_registry_server.clone())
+                .await
+                .map_err(|_| ProblemError::InternalServerError)?;
+        }
+
+        self.procedure_repository
+            .delete_procedure(problem_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?;
+
+        // Delete dep_names
+        self.dep_name_repository
+            .remove_many(problem_id)
+            .await
+            .map_err(|_| ProblemError::InternalServerError)?;
+
+        // Finally, delete the problem itself
         self.problem_repository
             .delete_problem(problem_id)
             .await
