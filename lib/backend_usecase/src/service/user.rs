@@ -116,6 +116,7 @@ impl<
             offset: 0,
             order_by: domain::model::problem::ProblemOrderBy::CreatedAtDesc,
             user_query: Some(display_id),
+            user_name: None,
         };
 
         let problem_count = self
@@ -186,6 +187,7 @@ impl<
             offset: 0,
             order_by: domain::model::problem::ProblemOrderBy::CreatedAtDesc,
             user_query: Some(user_id),
+            user_name: None,
         };
 
         let problem_count = self
@@ -326,6 +328,7 @@ impl<
             offset: 0,
             order_by: domain::model::problem::ProblemOrderBy::CreatedAtDesc,
             user_query: Some(user_id),
+            user_name: None,
         };
         let problem_count = self
             .problem_repository

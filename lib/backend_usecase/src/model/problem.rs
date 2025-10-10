@@ -42,6 +42,7 @@ pub struct ProblemGetQueryData {
     pub limit: Option<i64>,
     pub offset: Option<i64>,
     pub order_by: ProblemOrderByData,
+    pub user_name: Option<String>,
     pub user_query: Option<String>,
 }
 

@@ -145,6 +145,7 @@ impl<
 
         let query = ProblemGetQuery {
             user_id: display_id,
+            user_name: query.user_name,
             user_query: user_query,
             limit: query.limit.unwrap_or(50),
             offset: query.offset.unwrap_or(0),
