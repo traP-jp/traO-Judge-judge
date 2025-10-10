@@ -35,40 +35,50 @@ impl ProblemRepository for ProblemRepositoryImpl {
         &self,
         query: ProblemGetQuery,
     ) -> anyhow::Result<Vec<NormalProblem>> {
-        let mut query_builder = QueryBuilder::new("SELECT * FROM normal_problems WHERE");
+        let mut query_builder = QueryBuilder::new(
+            "SELECT normal_problems.*, users.name, users.display_id FROM normal_problems LEFT JOIN users ON normal_problems.author_id = users.display_id WHERE",
+        );
 
-        query_builder.push(" (is_public = TRUE");
+        query_builder.push(" (normal_problems.is_public = TRUE");
         if let Some(user_id) = query.user_id {
-            query_builder.push(" OR author_id = ").push_bind(user_id);
+            query_builder
+                .push(" OR normal_problems.author_id = ")
+                .push_bind(user_id);
         }
         query_builder.push(")");
 
         if let Some(user_query) = query.user_query {
             query_builder
-                .push(" AND author_id = ")
+                .push(" AND normal_problems.author_id = ")
                 .push_bind(user_query);
+        }
+
+        if let Some(user_name) = query.user_name {
+            query_builder
+                .push(" AND users.name = ")
+                .push_bind(user_name);
         }
 
         query_builder.push(" ORDER BY ");
 
         match query.order_by {
             ProblemOrderBy::CreatedAtAsc => {
-                query_builder.push("created_at ASC");
+                query_builder.push("normal_problems.created_at ASC");
             }
             ProblemOrderBy::CreatedAtDesc => {
-                query_builder.push("created_at DESC");
+                query_builder.push("normal_problems.created_at DESC");
             }
             ProblemOrderBy::UpdatedAtAsc => {
-                query_builder.push("updated_at ASC");
+                query_builder.push("normal_problems.updated_at ASC");
             }
             ProblemOrderBy::UpdatedAtDesc => {
-                query_builder.push("updated_at DESC");
+                query_builder.push("normal_problems.updated_at DESC");
             }
             ProblemOrderBy::DifficultyAsc => {
-                query_builder.push("difficulty ASC");
+                query_builder.push("normal_problems.difficulty ASC");
             }
             ProblemOrderBy::DifficultyDesc => {
-                query_builder.push("difficulty DESC");
+                query_builder.push("normal_problems.difficulty DESC");
             }
         }
 
@@ -84,18 +94,28 @@ impl ProblemRepository for ProblemRepositoryImpl {
     }
 
     async fn get_problems_by_query_count(&self, query: ProblemGetQuery) -> anyhow::Result<i64> {
-        let mut query_builder = QueryBuilder::new("SELECT COUNT(1) FROM normal_problems WHERE");
+        let mut query_builder = QueryBuilder::new(
+            "SELECT COUNT(1) FROM normal_problems LEFT JOIN users ON normal_problems.author_id = users.display_id WHERE",
+        );
 
-        query_builder.push(" (is_public = TRUE");
+        query_builder.push(" (normal_problems.is_public = TRUE");
         if let Some(user_id) = query.user_id {
-            query_builder.push(" OR author_id = ").push_bind(user_id);
+            query_builder
+                .push(" OR normal_problems.author_id = ")
+                .push_bind(user_id);
         }
         query_builder.push(")");
 
         if let Some(user_query) = query.user_query {
             query_builder
-                .push(" AND author_id = ")
+                .push(" AND normal_problems.author_id = ")
                 .push_bind(user_query);
+        }
+
+        if let Some(user_name) = query.user_name {
+            query_builder
+                .push(" AND users.name = ")
+                .push_bind(user_name);
         }
 
         let count = query_builder

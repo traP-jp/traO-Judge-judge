@@ -66,6 +66,7 @@ pub async fn get_problems(
                     },
                     None => ProblemOrderByData::CreatedAtDesc,
                 },
+                user_name: query.user_name,
                 user_query: query.user_id,
             },
         )
