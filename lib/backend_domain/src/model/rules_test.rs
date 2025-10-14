@@ -73,8 +73,14 @@ fn test_github_id_validate() {
     assert!(rule.validate("-Def").is_err());
     assert!(rule.validate("D--ef").is_err());
 
-    assert!(rule.validate("012345678901234567890123456789012345678").is_ok());
-    assert!(rule.validate("0123456789012345678901234567890123456789").is_err());
+    assert!(
+        rule.validate("012345678901234567890123456789012345678")
+            .is_ok()
+    );
+    assert!(
+        rule.validate("0123456789012345678901234567890123456789")
+            .is_err()
+    );
 }
 
 #[test]
