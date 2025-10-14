@@ -59,6 +59,25 @@ fn test_password_validate() {
 }
 
 #[test]
+fn test_github_id_validate() {
+    let rule = RuleType::GitHubId;
+    assert!(rule.validate("abc").is_ok());
+    assert!(rule.validate("Abc").is_ok());
+    assert!(rule.validate("ABC").is_ok());
+    assert!(rule.validate("abc-def").is_ok());
+    assert!(rule.validate("").is_err());
+    assert!(rule.validate("abc.def").is_err());
+    assert!(rule.validate("abc/def").is_err());
+
+    assert!(rule.validate("-D-e-f-").is_err());
+    assert!(rule.validate("-Def").is_err());
+    assert!(rule.validate("D--ef").is_err());
+
+    assert!(rule.validate("012345678901234567890123456789012345678").is_ok());
+    assert!(rule.validate("0123456789012345678901234567890123456789").is_err());
+}
+
+#[test]
 fn test_x_id_validate() {
     let rule = RuleType::XId;
     assert!(rule.validate("abc").is_ok());

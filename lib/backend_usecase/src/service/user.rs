@@ -308,6 +308,7 @@ impl<
                 UpdateUser {
                     user_name: body.user_name.unwrap_or(user.name),
                     icon_id: icon_id.or(user.icon_id),
+                    github_id: body.github_id.or(user.github_id),
                     x_id: body.x_id.or(user.x_id),
                     self_introduction: body.self_introduction.unwrap_or(user.self_introduction),
                 },
