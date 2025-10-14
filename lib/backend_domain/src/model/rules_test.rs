@@ -71,6 +71,7 @@ fn test_github_id_validate() {
 
     assert!(rule.validate("-D-e-f-").is_err());
     assert!(rule.validate("-Def").is_err());
+    assert!(rule.validate("Def-").is_err());
     assert!(rule.validate("D--ef").is_err());
 
     assert!(
