@@ -76,6 +76,7 @@ pub struct User {
 pub struct UpdateUser {
     pub user_name: String,
     pub icon_id: Option<Uuid>,
+    pub github_id: Option<String>,
     pub x_id: Option<String>,
     pub self_introduction: String,
 }

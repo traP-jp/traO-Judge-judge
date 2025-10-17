@@ -78,7 +78,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .map_err(|_| AuthError::ValidateError)?;
 
         if self
-            .user_repository
+            .auth_repository
             .is_exist_email(&email)
             .await
             .map_err(|_| AuthError::InternalServerError)?
@@ -124,7 +124,14 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .map_err(|_| AuthError::Unauthorized)?;
 
         if let Some(email) = email {
-            if let Ok(Some(user)) = self.user_repository.get_user_by_email(&email).await {
+            if let Ok(Some(user_id)) = self.auth_repository.get_user_id_by_email(&email).await {
+                let user = self
+                    .user_repository
+                    .get_user_by_user_id(user_id)
+                    .await
+                    .map_err(|_| AuthError::InternalServerError)?
+                    .ok_or(AuthError::Unauthorized)?;
+
                 let session_id = self
                     .session_repository
                     .create_session(user)
@@ -135,12 +142,12 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
 
             let user_id = self
                 .user_repository
-                .create_user_by_email(&data.user_name, &email)
+                .create_user(&data.user_name)
                 .await
                 .map_err(|_| AuthError::InternalServerError)?;
 
             self.auth_repository
-                .save_user_password(user_id, &data.password)
+                .save_user_email_and_password(user_id, &email, &data.password)
                 .await
                 .map_err(|_| AuthError::InternalServerError)?;
 
@@ -179,7 +186,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
 
             let user_id = self
                 .user_repository
-                .create_user_without_email(&data.user_name)
+                .create_user(&data.user_name)
                 .await
                 .map_err(|_| AuthError::InternalServerError)?;
 
@@ -223,7 +230,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
 
             let user_id = self
                 .user_repository
-                .create_user_without_email(&data.user_name)
+                .create_user(&data.user_name)
                 .await
                 .map_err(|_| AuthError::InternalServerError)?;
 
@@ -252,22 +259,28 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
 
     pub async fn login(&self, data: LoginData) -> anyhow::Result<String, AuthError> {
         data.validate().map_err(|_| AuthError::ValidateError)?;
-
-        let user = self
-            .user_repository
-            .get_user_by_email(&data.email)
+        let user_id = self
+            .auth_repository
+            .get_user_id_by_email(&data.email)
             .await
             .map_err(|_| AuthError::InternalServerError)?
             .ok_or(AuthError::Unauthorized)?;
 
         if !self
             .auth_repository
-            .verify_user_password(user.id, &data.password)
+            .verify_user_password(user_id, &data.password)
             .await
             .map_err(|_| AuthError::InternalServerError)?
         {
             return Err(AuthError::Unauthorized);
         }
+
+        let user = self
+            .user_repository
+            .get_user_by_user_id(user_id)
+            .await
+            .map_err(|_| AuthError::InternalServerError)?
+            .ok_or(AuthError::Unauthorized)?;
 
         let session_id = self
             .session_repository
@@ -292,7 +305,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .parse::<Address>()
             .map_err(|_| AuthError::ValidateError)?;
 
-        if let Ok(false) = self.user_repository.is_exist_email(&email).await {
+        if let Ok(false) = self.auth_repository.is_exist_email(&email).await {
             return Ok(());
         }
 
@@ -328,15 +341,15 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .map_err(|_| AuthError::Unauthorized)?
             .ok_or(AuthError::InternalServerError)?;
 
-        let user = self
-            .user_repository
-            .get_user_by_email(&email)
+        let user_id = self
+            .auth_repository
+            .get_user_id_by_email(&email)
             .await
             .map_err(|_| AuthError::InternalServerError)?
             .ok_or(AuthError::Unauthorized)?;
 
         self.auth_repository
-            .update_user_password(user.id, &data.password)
+            .update_user_password(user_id, &data.password)
             .await
             .map_err(|_| AuthError::InternalServerError)?;
 
@@ -376,13 +389,13 @@ mod signup_request_tests {
         #[case] email: String,
         #[case] result: Result<(), AuthError>,
     ) -> anyhow::Result<()> {
-        let auth_mock = MockAuthRepository::new();
-        let mut user_mock = MockUserRepository::new();
+        let mut auth_mock = MockAuthRepository::new();
+        let user_mock = MockUserRepository::new();
         let session_mock = MockSessionRepository::new();
         let mut mail_mock = MockMailClient::new();
 
         mail_mock.expect_send_mail().returning(|_, _, _| Ok(()));
-        user_mock.expect_is_exist_email().returning(|_| Ok(false));
+        auth_mock.expect_is_exist_email().returning(|_| Ok(false));
 
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.signup_request(email).await;
@@ -401,12 +414,12 @@ mod signup_request_tests {
         #[case] email: String,
         #[case] result: Result<(), AuthError>,
     ) -> anyhow::Result<()> {
-        let auth_mock = MockAuthRepository::new();
-        let mut user_mock = MockUserRepository::new();
+        let mut auth_mock = MockAuthRepository::new();
+        let user_mock = MockUserRepository::new();
         let session_mock = MockSessionRepository::new();
         let mail_mock = MockMailClient::new();
 
-        user_mock.expect_is_exist_email().returning(|_| Ok(true));
+        auth_mock.expect_is_exist_email().returning(|_| Ok(true));
 
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.signup_request(email).await;
@@ -492,15 +505,15 @@ mod signup_tests {
         let mut session_mock = MockSessionRepository::new();
         let mail_mock = MockMailClient::new();
 
-        user_mock
-            .expect_get_user_by_email()
-            .returning(|_| Ok(Some(get_user())));
-        user_mock
-            .expect_create_user_by_email()
-            .returning(|_, _| Ok(UserId::new(Uuid::now_v7())));
         auth_mock
-            .expect_save_user_password()
-            .returning(|_, _| Ok(()));
+            .expect_get_user_id_by_email()
+            .returning(|_| Ok(Some(get_user().id)));
+        user_mock
+            .expect_create_user()
+            .returning(|_| Ok(UserId::new(Uuid::now_v7())));
+        auth_mock
+            .expect_save_user_email_and_password()
+            .returning(|_, _, _| Ok(()));
         user_mock
             .expect_get_user_by_user_id()
             .returning(|_| Ok(Some(get_user())));
@@ -530,13 +543,16 @@ mod signup_tests {
     ) -> anyhow::Result<()> {
         let signup_data = create_signup_data(data.0, data.1, data.2);
 
-        let auth_mock = MockAuthRepository::new();
+        let mut auth_mock = MockAuthRepository::new();
         let mut user_mock = MockUserRepository::new();
         let mut session_mock = MockSessionRepository::new();
         let mail_mock = MockMailClient::new();
 
+        auth_mock
+            .expect_get_user_id_by_email()
+            .returning(|_| Ok(Some(get_user().id)));
         user_mock
-            .expect_get_user_by_email()
+            .expect_get_user_by_user_id()
             .returning(|_| Ok(Some(get_user())));
         session_mock
             .expect_create_session()
@@ -604,12 +620,15 @@ mod login_tests {
         let mut session_mock = MockSessionRepository::new();
         let mail_mock = MockMailClient::new();
 
-        user_mock
-            .expect_get_user_by_email()
-            .returning(|_| Ok(Some(get_user())));
+        auth_mock
+            .expect_get_user_id_by_email()
+            .returning(|_| Ok(Some(get_user().id)));
         auth_mock
             .expect_verify_user_password()
             .returning(|_, _| Ok(true));
+        user_mock
+            .expect_get_user_by_user_id()
+            .returning(|_| Ok(Some(get_user())));
         session_mock
             .expect_create_session()
             .returning(|_| Ok("session_id".to_string()));
@@ -633,12 +652,14 @@ mod login_tests {
     ) -> anyhow::Result<()> {
         let login_data = create_login_data(data.0, data.1);
 
-        let auth_mock = MockAuthRepository::new();
-        let mut user_mock = MockUserRepository::new();
+        let mut auth_mock = MockAuthRepository::new();
+        let user_mock = MockUserRepository::new();
         let session_mock = MockSessionRepository::new();
         let mail_mock = MockMailClient::new();
 
-        user_mock.expect_get_user_by_email().returning(|_| Ok(None));
+        auth_mock
+            .expect_get_user_id_by_email()
+            .returning(|_| Ok(None));
 
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.login(login_data).await;
@@ -658,13 +679,13 @@ mod login_tests {
         let login_data = create_login_data(data.0, data.1);
 
         let mut auth_mock = MockAuthRepository::new();
-        let mut user_mock = MockUserRepository::new();
+        let user_mock = MockUserRepository::new();
         let session_mock = MockSessionRepository::new();
         let mail_mock = MockMailClient::new();
 
-        user_mock
-            .expect_get_user_by_email()
-            .returning(|_| Ok(Some(get_user())));
+        auth_mock
+            .expect_get_user_id_by_email()
+            .returning(|_| Ok(Some(get_user().id)));
         auth_mock
             .expect_verify_user_password()
             .returning(|_, _| Ok(false));
@@ -765,13 +786,13 @@ mod reset_password_request_tests {
         #[case] email: &str,
         #[case] result: Result<(), AuthError>,
     ) -> anyhow::Result<()> {
-        let auth_mock = MockAuthRepository::new();
-        let mut user_mock = MockUserRepository::new();
+        let mut auth_mock = MockAuthRepository::new();
+        let user_mock = MockUserRepository::new();
         let session_mock = MockSessionRepository::new();
         let mut mail_mock = MockMailClient::new();
 
         mail_mock.expect_send_mail().returning(|_, _, _| Ok(()));
-        user_mock.expect_is_exist_email().returning(|_| Ok(true));
+        auth_mock.expect_is_exist_email().returning(|_| Ok(true));
 
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.reset_password_request(email.to_string()).await;
@@ -788,13 +809,13 @@ mod reset_password_request_tests {
         #[case] email: &str,
         #[case] result: Result<(), AuthError>,
     ) -> anyhow::Result<()> {
-        let auth_mock = MockAuthRepository::new();
-        let mut user_mock = MockUserRepository::new();
+        let mut auth_mock = MockAuthRepository::new();
+        let user_mock = MockUserRepository::new();
         let session_mock = MockSessionRepository::new();
         let mut mail_mock = MockMailClient::new();
 
         mail_mock.expect_send_mail().returning(|_, _, _| Ok(()));
-        user_mock.expect_is_exist_email().returning(|_| Ok(false));
+        auth_mock.expect_is_exist_email().returning(|_| Ok(false));
 
         let service = AuthenticationService::new(auth_mock, user_mock, session_mock, mail_mock);
         let resp = service.reset_password_request(email.to_string()).await;
@@ -870,13 +891,13 @@ mod reset_password_tests {
         let reset_data = create_reset_password_data(data.0, data.1);
 
         let mut auth_mock = MockAuthRepository::new();
-        let mut user_mock = MockUserRepository::new();
+        let user_mock = MockUserRepository::new();
         let session_mock = MockSessionRepository::new();
         let mail_mock = MockMailClient::new();
 
-        user_mock
-            .expect_get_user_by_email()
-            .returning(|_| Ok(Some(get_user())));
+        auth_mock
+            .expect_get_user_id_by_email()
+            .returning(|_| Ok(Some(UserId(Uuid::now_v7()))));
         auth_mock
             .expect_update_user_password()
             .returning(|_, _| Ok(()));

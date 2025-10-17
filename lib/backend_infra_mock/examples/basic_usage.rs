@@ -50,7 +50,7 @@ async fn main() -> anyhow::Result<()> {
     // Password authentication
     println!("\n1. Password Authentication:");
     auth_repo
-        .save_user_password(user_id, "secure_password")
+        .save_user_email_and_password(user_id, "user@example.com", "secure_password")
         .await?;
     println!("✓ Password saved");
 
