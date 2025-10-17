@@ -1,9 +1,12 @@
 use axum::async_trait;
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
-use domain::{model::user::UserId, repository::auth::AuthRepository};
+use domain::{
+    model::{auth::UserAuthentication, user::UserId},
+    repository::auth::AuthRepository,
+};
 use sqlx::MySqlPool;
 
-use crate::model::uuid::UuidRow;
+use crate::model::{auth::UserAuthenticationRow, uuid::UuidRow};
 
 #[derive(Clone)]
 pub struct AuthRepositoryImpl {
@@ -19,6 +22,20 @@ impl AuthRepositoryImpl {
 
 #[async_trait]
 impl AuthRepository for AuthRepositoryImpl {
+    async fn get_authentication_by_user_id(
+        &self,
+        id: UserId,
+    ) -> anyhow::Result<UserAuthentication> {
+        let record = sqlx::query_as::<_, UserAuthenticationRow>(
+            "SELECT email, google_oauth, github_oauth, traq_oauth FROM user_authentications WHERE user_id = ?",
+        )
+        .bind(UuidRow(id.into()))
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(record.into())
+    }
+
     async fn count_authentication_methods(&self, id: UserId) -> anyhow::Result<i64> {
         let count = sqlx::query_scalar::<_, i64>(
             "SELECT (IF(password IS NOT NULL, 1, 0) + IF(github_oauth IS NOT NULL, 1, 0) + IF(google_oauth IS NOT NULL, 1, 0) + IF(traq_oauth IS NOT NULL, 1, 0)) AS authentication_count FROM user_authentications WHERE user_id = ?",
@@ -30,11 +47,17 @@ impl AuthRepository for AuthRepositoryImpl {
         Ok(count)
     }
 
-    async fn save_user_password(&self, id: UserId, password: &str) -> anyhow::Result<()> {
+    async fn save_user_email_and_password(
+        &self,
+        id: UserId,
+        email: &str,
+        password: &str,
+    ) -> anyhow::Result<()> {
         let hash = bcrypt::hash(password, self.bcrypt_cost)?;
 
-        sqlx::query("INSERT INTO user_authentications (user_id, password) VALUES (?, ?)")
+        sqlx::query("INSERT INTO user_authentications (user_id, email, password) VALUES (?, ?, ?)")
             .bind(UuidRow(id.into()))
+            .bind(email)
             .bind(&hash)
             .execute(&self.pool)
             .await?;
@@ -63,6 +86,38 @@ impl AuthRepository for AuthRepositoryImpl {
         .await?;
 
         Ok(bcrypt::verify(password, &hash)?)
+    }
+
+    async fn update_user_email(&self, id: UserId, email: &str) -> anyhow::Result<()> {
+        sqlx::query("UPDATE user_authentications SET email = ? WHERE user_id = ?")
+            .bind(email)
+            .bind(UuidRow(id.into()))
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn get_user_id_by_email(&self, email: &str) -> anyhow::Result<Option<UserId>> {
+        let user_id = sqlx::query_scalar::<_, UuidRow>(
+            "SELECT user_id FROM user_authentications WHERE email = ?",
+        )
+        .bind(email)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(user_id.map(|id| UserId(id.0)))
+    }
+
+    async fn is_exist_email(&self, email: &str) -> anyhow::Result<bool> {
+        let exists = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM user_authentications WHERE email = ?",
+        )
+        .bind(email)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(exists > 0)
     }
 
     async fn get_google_oauth2_url(&self, oauth_action: &str) -> anyhow::Result<String> {

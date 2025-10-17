@@ -29,15 +29,6 @@ impl UserRepository for UserRepositoryImpl {
         Ok(user.map(|user| user.into()))
     }
 
-    async fn get_user_by_email(&self, email: &str) -> anyhow::Result<Option<User>> {
-        let user = sqlx::query_as::<_, UserRow>("SELECT * FROM users WHERE email = ?")
-            .bind(email)
-            .fetch_optional(&self.pool)
-            .await?;
-
-        Ok(user.map(|user| user.into()))
-    }
-
     async fn get_user_by_user_id(&self, id: UserId) -> anyhow::Result<Option<User>> {
         let user = sqlx::query_as::<_, UserRow>("SELECT * FROM users WHERE id = ?")
             .bind(UuidRow(id.into()))
@@ -47,20 +38,7 @@ impl UserRepository for UserRepositoryImpl {
         Ok(user.map(|user| user.into()))
     }
 
-    async fn create_user_by_email(&self, name: &str, email: &str) -> anyhow::Result<UserId> {
-        let id = UuidRow::new(Uuid::now_v7());
-
-        sqlx::query("INSERT INTO users (id, name, email) VALUES (?, ?, ?)")
-            .bind(id)
-            .bind(name)
-            .bind(email)
-            .execute(&self.pool)
-            .await?;
-
-        Ok(UserId(id.0))
-    }
-
-    async fn create_user_without_email(&self, name: &str) -> anyhow::Result<UserId> {
+    async fn create_user(&self, name: &str) -> anyhow::Result<UserId> {
         let id = UuidRow::new(Uuid::now_v7());
 
         sqlx::query("INSERT INTO users (id, name) VALUES (?, ?)")
@@ -82,15 +60,6 @@ impl UserRepository for UserRepositoryImpl {
             .execute(&self.pool).await?;
 
         Ok(())
-    }
-
-    async fn is_exist_email(&self, email: &str) -> anyhow::Result<bool> {
-        let count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users WHERE email = ?")
-            .bind(email)
-            .fetch_one(&self.pool)
-            .await?;
-
-        Ok(count > 0)
     }
 
     async fn change_user_role(&self, user_id: UserId, role: UserRole) -> anyhow::Result<()> {

@@ -1,5 +1,7 @@
 use std::borrow::BorrowMut;
 
+use crate::users::common::check::users_me_check_by_id;
+
 use super::common::check::users_check_by_id;
 use axum::{
     body::Body,
@@ -106,7 +108,7 @@ async fn get_user_me_backend(pool: sqlx::MySqlPool) -> anyhow::Result<()> {
         let mut resp_json: Value =
             serde_json::from_slice(&response.into_body().collect().await?.to_bytes())?;
 
-        users_check_by_id(id, &mut resp_json)?;
+        users_me_check_by_id(id, &mut resp_json)?;
     }
 
     Ok(())

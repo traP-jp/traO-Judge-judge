@@ -1,5 +1,5 @@
 use crate::di::DiContainer;
-use crate::model::users::{UpdateEmail, UpdateMe, UpdatePassword, UserResponse};
+use crate::model::users::{UpdateEmail, UpdateMe, UpdatePassword, UserMeResponse, UserResponse};
 use axum::{
     Json,
     extract::{Path, State},
@@ -20,7 +20,7 @@ pub async fn get_me(
 
     match di_container.user_service().get_me(session_id).await {
         Ok(user) => {
-            let resp = UserResponse::from(user);
+            let resp = UserMeResponse::from(user);
             Ok((StatusCode::OK, Json(resp)))
         }
         Err(e) => match e {
@@ -103,7 +103,7 @@ pub async fn put_me(
         .await
     {
         Ok(user) => {
-            let resp = UserResponse::from(user);
+            let resp = UserMeResponse::from(user);
             Ok((StatusCode::OK, Json(resp)))
         }
         Err(e) => match e {
