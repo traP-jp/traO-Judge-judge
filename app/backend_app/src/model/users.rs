@@ -140,6 +140,7 @@ pub struct UpdatePassword {
 pub struct UpdateMe {
     pub user_name: Option<String>,
     pub icon: Option<String>,
+    pub github_id: Option<String>,
     pub x_id: Option<String>,
     pub self_introduction: Option<String>,
 }

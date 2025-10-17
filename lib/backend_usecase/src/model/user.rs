@@ -11,6 +11,7 @@ use super::{problem::NormalProblemsDto, submission::SubmissionsDto};
 pub struct UpdateUserData {
     pub user_name: Option<String>,
     pub icon: Option<String>,
+    pub github_id: Option<String>,
     pub x_id: Option<String>,
     pub self_introduction: Option<String>,
 }
@@ -19,6 +20,7 @@ impl UpdateUserData {
     pub fn validate(&self) -> anyhow::Result<()> {
         let rules = vec![
             (&self.user_name, RuleType::UserName),
+            (&self.github_id, RuleType::GitHubId),
             (&self.x_id, RuleType::XId),
             (&self.self_introduction, RuleType::SelfIntroduction),
         ];

@@ -51,9 +51,10 @@ impl UserRepository for UserRepositoryImpl {
     }
 
     async fn update_user(&self, display_id: i64, body: UpdateUser) -> anyhow::Result<()> {
-        sqlx::query("UPDATE users SET name = ?, icon_id = ?, x_id = ?, self_introduction = ? WHERE display_id = ?")
+        sqlx::query("UPDATE users SET name = ?, icon_id = ?, github_id = ?, x_id = ?, self_introduction = ? WHERE display_id = ?")
             .bind(body.user_name)
             .bind(body.icon_id.map(UuidRow))
+            .bind(body.github_id)
             .bind(body.x_id)
             .bind(body.self_introduction)
             .bind(display_id)
