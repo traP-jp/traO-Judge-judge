@@ -1,3 +1,9 @@
+#[cfg(all(feature = "dev", feature = "prod"))]
+compile_error!("Cannot enable both 'dev' and 'prod' features");
+
+#[cfg(not(any(feature = "dev", feature = "prod")))]
+compile_error!("Either 'dev' or 'prod' feature must be enabled");
+
 use infra::{
     external::mail::MailClientImpl,
     provider::Provider,
