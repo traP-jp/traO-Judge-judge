@@ -8,11 +8,9 @@ pub struct SignUpData {
 
 impl SignUpData {
     pub fn validate(&self) -> anyhow::Result<()> {
-        let mut rules = vec![
-            (&self.user_name, RuleType::UserName),
-        ];
+        let mut rules = vec![(&self.user_name, RuleType::UserName)];
 
-        if let Some (password) = &self.password {
+        if let Some(password) = &self.password {
             rules.push((password, RuleType::Password));
         }
 
