@@ -17,6 +17,12 @@ use infra::{
     },
 };
 use judge_core::logic::judge_service_impl::JudgeServiceImpl;
+use usecase::service::{
+    auth::AuthenticationService, editorial::EditorialService, github_oauth2::GitHubOAuth2Service,
+    google_oauth2::GoogleOAuth2Service, icon::IconService, language::LanguageService,
+    problem::ProblemService, submission::SubmissionService, testcase::TestcaseService,
+    traq_oauth2::TraqOAuth2Service, user::UserService,
+};
 
 #[cfg(feature = "dev")]
 use judge_infra_mock::job_service::{job_service as mock_job_service, tokens as mock_tokens};
@@ -27,7 +33,7 @@ use judge_infra_mock::multi_proc_problem_registry::{
 };
 
 #[cfg(feature = "prod")]
-use job_service::{aws::AwsClient, grpc::GrpcClient, job_service::JobService as RealJobService};
+use back_judge_grpc::client::RemoteJudgeServiceClient;
 #[cfg(feature = "prod")]
 use problem_registry::{client::ProblemRegistryClient, server::ProblemRegistryServer};
 
@@ -41,12 +47,6 @@ type RegistryServerImpl = ProblemRegistryServer;
 #[cfg(feature = "prod")]
 type RegistryClientImpl = ProblemRegistryClient;
 
-use usecase::service::{
-    auth::AuthenticationService, editorial::EditorialService, github_oauth2::GitHubOAuth2Service,
-    google_oauth2::GoogleOAuth2Service, icon::IconService, language::LanguageService,
-    problem::ProblemService, submission::SubmissionService, testcase::TestcaseService,
-    traq_oauth2::TraqOAuth2Service, user::UserService,
-};
 
 #[cfg(feature = "dev")]
 type JudgeSvcImpl = JudgeServiceImpl<
@@ -55,11 +55,7 @@ type JudgeSvcImpl = JudgeServiceImpl<
     mock_job_service::JobService<MockRegistryClient>,
 >;
 #[cfg(feature = "prod")]
-type JudgeSvcImpl = JudgeServiceImpl<
-    job_service::job_service::ReservationToken,
-    job_service::job_service::OutcomeToken,
-    RealJobService,
->;
+type JudgeSvcImpl = RemoteJudgeServiceClient;
 
 #[derive(Clone)]
 pub struct DiContainer {
@@ -136,11 +132,9 @@ impl DiContainer {
         let judge_service: JudgeSvcImpl = provider.provide_judge_service();
         #[cfg(feature = "prod")]
         let judge_service: JudgeSvcImpl = {
-            let aws_factory = || async move { AwsClient::new().await };
-            let grpc_factory = |ip| async move { GrpcClient::new(ip).await };
-            let pr_factory = || async move { ProblemRegistryClient::new().await };
-            let job_service = RealJobService::new(aws_factory, grpc_factory, pr_factory);
-            JudgeServiceImpl::new(job_service)
+            let uri = std::env::var("JUDGE_SERVICE_GRPC_URI")
+                .unwrap_or_else(|_| "http://localhost:50051".to_string());
+            RemoteJudgeServiceClient::new(&uri).await.expect("Failed to create RemoteJudgeServiceClient")
         };
 
         Self {
