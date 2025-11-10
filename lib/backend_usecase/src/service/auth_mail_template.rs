@@ -170,7 +170,7 @@ mod tests {
         assert_eq!(mail.subject, "Change Email Verification");
         assert!(
             mail.body
-                .contains("http://example.com/change-email/verify?token=token")
+                .contains("http://example.com/change-email?token=token")
         );
     }
 }
