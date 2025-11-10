@@ -11,5 +11,6 @@ RUN apt-get -y update \
     && update-ca-certificates --fresh
 WORKDIR /app
 COPY --from=builder /app/target/debug/backend_app ./backend_app
+COPY --from=builder /app/pylib/example/languages.json /app/languages.json
 
 CMD ["./backend_app"]
