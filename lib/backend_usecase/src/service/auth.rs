@@ -124,6 +124,8 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .map_err(|_| AuthError::Unauthorized)?;
 
         if let Some(email) = email {
+            let password = data.password.ok_or(AuthError::ValidateError)?;
+
             if let Ok(Some(user_id)) = self.auth_repository.get_user_id_by_email(&email).await {
                 let user = self
                     .user_repository
@@ -147,7 +149,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .map_err(|_| AuthError::InternalServerError)?;
 
             self.auth_repository
-                .save_user_email_and_password(user_id, &email, &data.password)
+                .save_user_email_and_password(user_id, &email, &password)
                 .await
                 .map_err(|_| AuthError::InternalServerError)?;
 
@@ -463,7 +465,7 @@ mod signup_tests {
 
         SignUpData {
             user_name: user_name.to_string(),
-            password: password.to_string(),
+            password: Some(password.to_string()),
             token: AuthToken::encode_signup_jwt(Some(email), None, None, &encode_key, &encrypt_key)
                 .unwrap(),
         }
