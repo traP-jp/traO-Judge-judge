@@ -1,15 +1,15 @@
 use std::sync::Arc;
 
-use lettre::Address;
-
 use crate::model::auth::ResetPasswordData;
 use crate::model::auth::{LoginData, SignUpData};
+use domain::model::jwt::Action;
 use domain::{
     external::mail::MailClient,
     model::jwt::AuthToken,
     repository::session::SessionRepository,
     repository::{auth::AuthRepository, user::UserRepository},
 };
+use lettre::Address;
 
 use super::auth_mail_template::{AuthMailTemplateProvider, DefaultAuthMailTemplateProvider};
 
@@ -350,6 +350,42 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
 
         self.auth_repository
             .update_user_password(user_id, &data.password)
+            .await
+            .map_err(|_| AuthError::InternalServerError)?;
+
+        Ok(())
+    }
+
+    pub async fn activate_email(&self, token: &str) -> anyhow::Result<(), AuthError> {
+        let encode_key =
+            std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
+        let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
+            .map_err(|_| AuthError::InternalServerError)?;
+
+        if AuthToken::get_action(token, &encode_key, &encrypt_key)
+            .map_err(|_| AuthError::ValidateError)?
+            != Action::change_email
+        {
+            return Err(AuthError::ValidateError);
+        }
+
+        let (email, user_id) =
+            AuthToken::get_email_and_display_id(token, &encode_key, &encrypt_key)
+                .map_err(|_| AuthError::ValidateError)?;
+
+        let email = email.ok_or(AuthError::ValidateError)?;
+        let display_id = user_id.ok_or(AuthError::ValidateError)?;
+
+        let user_id = self
+            .user_repository
+            .get_user_by_display_id(display_id)
+            .await
+            .map_err(|_| AuthError::InternalServerError)?
+            .ok_or(AuthError::ValidateError)?
+            .id;
+
+        self.auth_repository
+            .update_user_email(user_id, &email)
             .await
             .map_err(|_| AuthError::InternalServerError)?;
 

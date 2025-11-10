@@ -8,8 +8,8 @@ use base64::{Engine as _, engine::general_purpose};
 use serde::{Deserialize, Serialize};
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-enum Action {
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum Action {
     reset_password,
     change_email,
     register,
@@ -74,6 +74,34 @@ impl AuthToken {
         )?;
 
         Ok(())
+    }
+
+    pub fn get_action(jwt: &str, encode_key: &str, encrypt_key: &str) -> anyhow::Result<Action> {
+        let token = jsonwebtoken::decode::<Self>(
+            jwt,
+            &jsonwebtoken::DecodingKey::from_secret(encode_key.as_ref()),
+            &jsonwebtoken::Validation::default(),
+        )?;
+
+        let auth_info = AuthInfo::decrypt(&token.claims.payload, encrypt_key)?;
+
+        Ok(auth_info.action)
+    }
+
+    pub fn get_email_and_display_id(
+        jwt: &str,
+        encode_key: &str,
+        encrypt_key: &str,
+    ) -> anyhow::Result<(Option<String>, Option<i64>)> {
+        let token = jsonwebtoken::decode::<Self>(
+            jwt,
+            &jsonwebtoken::DecodingKey::from_secret(encode_key.as_ref()),
+            &jsonwebtoken::Validation::default(),
+        )?;
+
+        let auth_info = AuthInfo::decrypt(&token.claims.payload, encrypt_key)?;
+
+        Ok((auth_info.email, auth_info.user_id))
     }
 
     pub fn get_email(
