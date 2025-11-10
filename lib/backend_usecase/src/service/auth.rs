@@ -110,18 +110,24 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
 
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
-
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
             .map_err(|_| AuthError::InternalServerError)?;
 
+        if AuthToken::get_action(&data.token, &encode_key, &encrypt_key)
+            .map_err(|_| AuthError::ValidateError)?
+            != Action::register
+        {
+            return Err(AuthError::ValidateError);
+        }
+
         let email = AuthToken::get_email(&data.token, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::Unauthorized)?;
+            .map_err(|_| AuthError::ValidateError)?;
 
         let google_oauth = AuthToken::get_google_oauth(&data.token, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::Unauthorized)?;
+            .map_err(|_| AuthError::ValidateError)?;
 
         let github_oauth = AuthToken::get_github_oauth(&data.token, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::Unauthorized)?;
+            .map_err(|_| AuthError::ValidateError)?;
 
         if let Some(email) = email {
             if let Ok(Some(user_id)) = self.auth_repository.get_user_id_by_email(&email).await {
@@ -333,12 +339,18 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
 
         let encode_key =
             std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
-
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
             .map_err(|_| AuthError::InternalServerError)?;
 
+        if AuthToken::get_action(&data.token, &encode_key, &encrypt_key)
+            .map_err(|_| AuthError::ValidateError)?
+            != Action::reset_password
+        {
+            return Err(AuthError::ValidateError);
+        }
+
         let email = AuthToken::get_email(&data.token, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::Unauthorized)?
+            .map_err(|_| AuthError::ValidateError)?
             .ok_or(AuthError::InternalServerError)?;
 
         let user_id = self
@@ -346,7 +358,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .get_user_id_by_email(&email)
             .await
             .map_err(|_| AuthError::InternalServerError)?
-            .ok_or(AuthError::Unauthorized)?;
+            .ok_or(AuthError::ValidateError)?;
 
         self.auth_repository
             .update_user_password(user_id, &data.password)
