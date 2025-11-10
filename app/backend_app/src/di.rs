@@ -56,7 +56,6 @@ pub struct DiContainer {
             ProblemRepositoryImpl,
             ProcedureRepositoryImpl,
             TestcaseRepositoryImpl,
-            UserRepositoryImpl,
             LanguageRepositoryImpl,
             DepNameRepositoryImpl,
             JudgeServiceImpl<
@@ -120,7 +119,6 @@ impl DiContainer {
                 provider.provide_problem_repository(),
                 provider.provide_procedure_repository(),
                 provider.provide_testcase_repository(),
-                provider.provide_user_repository(),
                 provider.provide_language_repository(),
                 provider.provide_dep_name_repository(),
                 provider.provide_judge_service(),
@@ -196,7 +194,6 @@ impl DiContainer {
             ProblemRepositoryImpl,
             ProcedureRepositoryImpl,
             TestcaseRepositoryImpl,
-            UserRepositoryImpl,
             LanguageRepositoryImpl,
             DepNameRepositoryImpl,
             JudgeServiceImpl<
