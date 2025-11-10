@@ -47,7 +47,6 @@ type RegistryServerImpl = ProblemRegistryServer;
 #[cfg(feature = "prod")]
 type RegistryClientImpl = ProblemRegistryClient;
 
-
 #[cfg(feature = "dev")]
 type JudgeSvcImpl = JudgeServiceImpl<
     mock_tokens::RegistrationToken,
@@ -134,7 +133,9 @@ impl DiContainer {
         let judge_service: JudgeSvcImpl = {
             let uri = std::env::var("JUDGE_SERVICE_GRPC_URI")
                 .unwrap_or_else(|_| "http://localhost:50051".to_string());
-            RemoteJudgeServiceClient::new(&uri).await.expect("Failed to create RemoteJudgeServiceClient")
+            RemoteJudgeServiceClient::new(&uri)
+                .await
+                .expect("Failed to create RemoteJudgeServiceClient")
         };
 
         Self {
