@@ -28,7 +28,6 @@ pub struct JudgeResult {
 pub struct CreateSubmission {
     pub problem_id: i64,
     pub user_id: i64,
-    pub user_name: String,
     pub language_id: i32,
     pub source: String,
     pub judge_status: String,

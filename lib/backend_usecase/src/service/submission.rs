@@ -10,7 +10,6 @@ use domain::{
     repository::{
         language::LanguageRepository, problem::ProblemRepository, procedure::ProcedureRepository,
         session::SessionRepository, submission::SubmissionRepository, testcase::TestcaseRepository,
-        user::UserRepository,
     },
 };
 use judge_core::{
@@ -31,7 +30,6 @@ pub struct SubmissionService<
     PR: ProblemRepository + Send + Sync + 'static,
     PcR: ProcedureRepository + Send + Sync + 'static,
     TR: TestcaseRepository + Send + Sync + 'static,
-    UR: UserRepository + Send + Sync + 'static,
     LR: LanguageRepository + Send + Sync + 'static,
     DNR: DepNameRepository<i64> + Send + Sync + 'static,
     JS: JudgeService + Send + Sync + 'static,
@@ -41,7 +39,6 @@ pub struct SubmissionService<
     problem_repository: PR,
     procedure_repository: PcR,
     testcase_repository: TR,
-    user_repository: UR,
     language_repository: LR,
     dep_name_repository: DNR,
     judge_service: JS,
@@ -53,11 +50,10 @@ impl<
     PR: ProblemRepository + Send + Sync + 'static,
     PcR: ProcedureRepository + Send + Sync + 'static,
     TR: TestcaseRepository + Send + Sync + 'static,
-    UR: UserRepository + Send + Sync + 'static,
     LR: LanguageRepository + Send + Sync + 'static,
     DNR: DepNameRepository<i64> + Send + Sync + 'static,
     JS: JudgeService + Send + Sync + 'static,
-> SubmissionService<SeR, SuR, PR, PcR, TR, UR, LR, DNR, JS>
+> SubmissionService<SeR, SuR, PR, PcR, TR, LR, DNR, JS>
 {
     pub fn new(
         session_repository: SeR,
@@ -65,7 +61,6 @@ impl<
         problem_repository: PR,
         procedure_repository: PcR,
         testcase_repository: TR,
-        user_repository: UR,
         language_repository: LR,
         dep_name_repository: DNR,
         judge_service: JS,
@@ -76,7 +71,6 @@ impl<
             problem_repository,
             procedure_repository,
             testcase_repository,
-            user_repository,
             language_repository,
             dep_name_repository,
             judge_service,
@@ -98,11 +92,10 @@ impl<
     PR: ProblemRepository + Send + Sync + 'static,
     PcR: ProcedureRepository + Send + Sync + 'static,
     TR: TestcaseRepository + Send + Sync + 'static,
-    UR: UserRepository + Send + Sync + 'static,
     LR: LanguageRepository + Send + Sync + 'static,
     DNR: DepNameRepository<i64> + Send + Sync + 'static,
     JS: JudgeService + Send + Sync + 'static,
-> SubmissionService<SeR, SuR, PR, PcR, TR, UR, LR, DNR, JS>
+> SubmissionService<SeR, SuR, PR, PcR, TR, LR, DNR, JS>
 {
     pub async fn get_submission(
         &self,
@@ -276,13 +269,6 @@ impl<
             None => return Err(SubmissionError::Forbidden),
         };
 
-        let user = self
-            .user_repository
-            .get_user_by_display_id(display_id)
-            .await
-            .map_err(|_| SubmissionError::InternalServerError)?
-            .ok_or(SubmissionError::Forbidden)?;
-
         let problem = self
             .problem_repository
             .get_problem(problem_id)
@@ -316,7 +302,6 @@ impl<
         let submission = CreateSubmission {
             problem_id,
             user_id: display_id,
-            user_name: user.name.clone(),
             language_id: language_id,
             source: body.source.clone(),
             judge_status: "WJ".to_string(),
