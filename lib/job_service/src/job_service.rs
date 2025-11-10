@@ -134,6 +134,7 @@ impl job::JobService<ReservationToken, OutcomeToken> for JobService {
         &self,
         count: usize,
     ) -> Result<Vec<ReservationToken>, job::ReservationError> {
+        tracing::debug!("[JobService::reserve_execution] BEGIN");
         let (tx, rx) = oneshot::channel();
         let _ = self
             .inner
@@ -142,10 +143,12 @@ impl job::JobService<ReservationToken, OutcomeToken> for JobService {
                 count,
                 respond_to: tx,
             }); // if this send fails, so does the recv.await below
-        rx.await.map_err(|e| {
+        let res = rx.await.map_err(|e| {
             tracing::error!("InstancePool task has been killed: {e}");
             job::ReservationError::ReserveFailed(format!("InstancePool task has been killed: {e}"))
-        })?
+        })?;
+        tracing::debug!("[JobService::reserve_execution] END");
+        res
     }
 
     async fn execute(
@@ -153,6 +156,7 @@ impl job::JobService<ReservationToken, OutcomeToken> for JobService {
         reservation: ReservationToken,
         mut dependencies: Vec<job::Dependency<OutcomeToken>>,
     ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError> {
+        tracing::debug!("[JobService::execute] BEGIN");
         let outcome_for_res = self
             .place_file(job::FileConf::EmptyDirectory)
             .await
@@ -174,16 +178,19 @@ impl job::JobService<ReservationToken, OutcomeToken> for JobService {
                 dependencies,
                 respond_to: tx,
             }); // if this send fails, so does the recv.await below
-        rx.await.map_err(|e| {
+        let res = rx.await.map_err(|e| {
             tracing::error!("InstancePool task has been killed: {e}");
             job::ExecutionError::InternalError(format!("InstancePool task has been killed: {e}"))
-        })?
+        })?;
+        tracing::debug!("[JobService::execute] END");
+        res
     }
 
     async fn place_file(
         &self,
         file_conf: job::FileConf,
     ) -> Result<OutcomeToken, job::FilePlacementError> {
+        tracing::debug!("[JobService::place_file] BEGIN");
         let (tx, rx) = oneshot::channel();
         let _ = self
             .inner
@@ -192,9 +199,11 @@ impl job::JobService<ReservationToken, OutcomeToken> for JobService {
                 file_conf,
                 respond_to: tx,
             }); // if this send fails, so does the recv.await below
-        rx.await.map_err(|e| {
+        let res = rx.await.map_err(|e| {
             tracing::error!("FileFactory task has been killed: {e}");
             job::FilePlacementError::PlaceFailed(format!("FileFactory task has been killed: {e}"))
-        })?
+        })?;
+        tracing::debug!("[JobService::place_file] END");
+        res
     }
 }
