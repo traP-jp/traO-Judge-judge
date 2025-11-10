@@ -96,6 +96,7 @@ where
         &mut self,
         count: usize,
     ) -> Result<Vec<ReservationToken>, job::ReservationError> {
+        tracing::debug!("[InstancePool::handle_reservation] BEGIN");
         let result = (0..count)
             .map(|_| {
                 self.reservation_count += 1;
@@ -114,6 +115,7 @@ where
                     .await;
             });
         }
+        tracing::debug!("[InstancePool::handle_reservation] END");
         Ok(result)
     }
     async fn handle_execution(
@@ -122,6 +124,7 @@ where
         outcome_id_for_res: Uuid,
         dependencies: Vec<job::Dependency<OutcomeToken>>,
     ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError> {
+        tracing::debug!("[InstancePool::handle_execution] BEGIN");
         let (tx, rx) = oneshot::channel();
         let _ = self
             .instance_tx
@@ -157,6 +160,7 @@ where
                     job::ExecutionError::InternalError(format!("AWSError: {e}"))
                 })?;
         }
+        tracing::debug!("[InstancePool::handle_execution] END");
         result
     }
     fn desired_instance_count(&self) -> usize {
