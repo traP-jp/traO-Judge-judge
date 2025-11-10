@@ -1,15 +1,12 @@
-use std::sync::Arc;
-
-use crate::model::auth::ResetPasswordData;
-use crate::model::auth::{LoginData, SignUpData};
-use domain::model::jwt::Action;
+use crate::model::auth::{LoginData, ResetPasswordData, SignUpData};
 use domain::{
     external::mail::MailClient,
-    model::jwt::AuthToken,
+    model::jwt::{Action, AuthToken},
     repository::session::SessionRepository,
     repository::{auth::AuthRepository, user::UserRepository},
 };
 use lettre::Address;
+use std::sync::Arc;
 
 use super::auth_mail_template::{AuthMailTemplateProvider, DefaultAuthMailTemplateProvider};
 
