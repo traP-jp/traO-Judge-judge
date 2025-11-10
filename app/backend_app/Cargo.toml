@@ -34,6 +34,6 @@ uuid = { workspace = true }
 domain = { path = "../../lib/backend_domain" }
 
 [features]
-default = ["prod"]
+default = ["dev"]
 dev = ["judge_infra_mock"]
 prod = ["problem_registry", "back_judge_grpc"]
