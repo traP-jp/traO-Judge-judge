@@ -14,7 +14,9 @@ http-body-util = { workspace = true }
 infra = { path = "../../lib/backend_infra" }
 jsonwebtoken = { workspace = true }
 judge_core = { version = "0.1.0", path = "../../lib/judge_core" }
-judge_infra_mock = { path = "../../lib/judge_infra_mock" }
+judge_infra_mock = { path = "../../lib/judge_infra_mock", optional = true }
+problem_registry = { path = "../../lib/problem_registry", optional = true }
+job_service = { path = "../../lib/job_service", optional = true }
 lettre = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -30,3 +32,8 @@ uuid = { workspace = true }
 
 [dev-dependencies]
 domain = { path = "../../lib/backend_domain" }
+
+[features]
+default = ["dev"]
+dev = ["judge_infra_mock"]
+prod = ["problem_registry", "job_service"]

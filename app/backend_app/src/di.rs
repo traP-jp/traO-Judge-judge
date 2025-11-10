@@ -11,16 +11,49 @@ use infra::{
     },
 };
 use judge_core::logic::judge_service_impl::JudgeServiceImpl;
+
+#[cfg(feature = "dev")]
 use judge_infra_mock::job_service::{job_service as mock_job_service, tokens as mock_tokens};
+#[cfg(feature = "dev")]
 use judge_infra_mock::multi_proc_problem_registry::{
-    registry_client::RegistryClient, registry_server::RegistryServer,
+    registry_client::RegistryClient as MockRegistryClient,
+    registry_server::RegistryServer as MockRegistryServer,
 };
+
+#[cfg(feature = "prod")]
+use job_service::{aws::AwsClient, grpc::GrpcClient, job_service::JobService as RealJobService};
+#[cfg(feature = "prod")]
+use problem_registry::{client::ProblemRegistryClient, server::ProblemRegistryServer};
+
+#[cfg(feature = "dev")]
+type RegistryServerImpl = MockRegistryServer;
+#[cfg(feature = "dev")]
+type RegistryClientImpl = MockRegistryClient;
+
+#[cfg(feature = "prod")]
+type RegistryServerImpl = ProblemRegistryServer;
+#[cfg(feature = "prod")]
+type RegistryClientImpl = ProblemRegistryClient;
+
 use usecase::service::{
     auth::AuthenticationService, editorial::EditorialService, github_oauth2::GitHubOAuth2Service,
     google_oauth2::GoogleOAuth2Service, icon::IconService, language::LanguageService,
     problem::ProblemService, submission::SubmissionService, testcase::TestcaseService,
     traq_oauth2::TraqOAuth2Service, user::UserService,
 };
+
+#[cfg(feature = "dev")]
+type JudgeSvcImpl = JudgeServiceImpl<
+    mock_tokens::RegistrationToken,
+    mock_tokens::OutcomeToken,
+    mock_job_service::JobService<MockRegistryClient>,
+>;
+#[cfg(feature = "prod")]
+type JudgeSvcImpl = JudgeServiceImpl<
+    job_service::job_service::ReservationToken,
+    job_service::job_service::OutcomeToken,
+    RealJobService,
+>;
 
 #[derive(Clone)]
 pub struct DiContainer {
@@ -36,7 +69,7 @@ pub struct DiContainer {
         SessionRepositoryImpl,
         TestcaseRepositoryImpl,
         ProcedureRepositoryImpl,
-        RegistryServer,
+        RegistryServerImpl,
         DepNameRepositoryImpl,
     >,
     user_service: UserService<
@@ -59,11 +92,7 @@ pub struct DiContainer {
             UserRepositoryImpl,
             LanguageRepositoryImpl,
             DepNameRepositoryImpl,
-            JudgeServiceImpl<
-                mock_tokens::RegistrationToken,
-                mock_tokens::OutcomeToken,
-                mock_job_service::JobService<RegistryClient>,
-            >,
+            JudgeSvcImpl,
         >,
     >,
     editorial_service:
@@ -73,8 +102,8 @@ pub struct DiContainer {
         SessionRepositoryImpl,
         TestcaseRepositoryImpl,
         ProcedureRepositoryImpl,
-        RegistryClient, // mock
-        RegistryServer, // mock
+        RegistryClientImpl,
+        RegistryServerImpl,
         DepNameRepositoryImpl,
     >,
     language_service: LanguageService<LanguageRepositoryImpl>,
@@ -88,6 +117,27 @@ pub struct DiContainer {
 
 impl DiContainer {
     pub async fn new(provider: Provider) -> Self {
+        #[cfg(feature = "dev")]
+        let pr_server: RegistryServerImpl = provider.provide_problem_registry_server();
+        #[cfg(feature = "dev")]
+        let pr_client: RegistryClientImpl = provider.provide_problem_registry_client();
+
+        #[cfg(feature = "prod")]
+        let pr_server: RegistryServerImpl = ProblemRegistryServer::new().await;
+        #[cfg(feature = "prod")]
+        let pr_client: RegistryClientImpl = ProblemRegistryClient::new().await;
+
+        #[cfg(feature = "dev")]
+        let judge_service: JudgeSvcImpl = provider.provide_judge_service();
+        #[cfg(feature = "prod")]
+        let judge_service: JudgeSvcImpl = {
+            let aws_factory = || async move { AwsClient::new().await };
+            let grpc_factory = |ip| async move { GrpcClient::new(ip).await };
+            let pr_factory = || async move { ProblemRegistryClient::new().await };
+            let job_service = RealJobService::new(aws_factory, grpc_factory, pr_factory);
+            JudgeServiceImpl::new(job_service)
+        };
+
         Self {
             auth_service: AuthenticationService::new(
                 provider.provide_auth_repository(),
@@ -101,7 +151,7 @@ impl DiContainer {
                 provider.provide_session_repository(),
                 provider.provide_testcase_repository(),
                 provider.provide_procedure_repository(),
-                provider.provide_problem_registry_server(),
+                pr_server.clone(),
                 provider.provide_dep_name_repository(),
             ),
             user_service: UserService::new(
@@ -123,7 +173,7 @@ impl DiContainer {
                 provider.provide_user_repository(),
                 provider.provide_language_repository(),
                 provider.provide_dep_name_repository(),
-                provider.provide_judge_service(),
+                judge_service,
             )),
             editorial_service: EditorialService::new(
                 provider.provide_session_repository(),
@@ -135,8 +185,8 @@ impl DiContainer {
                 provider.provide_session_repository(),
                 provider.provide_testcase_repository(),
                 provider.provide_procedure_repository(),
-                provider.provide_problem_registry_client(),
-                provider.provide_problem_registry_server(),
+                pr_client.clone(),
+                pr_server,
                 provider.provide_dep_name_repository(),
             ),
             language_service: LanguageService::new(provider.provide_language_repository()),
@@ -199,11 +249,7 @@ impl DiContainer {
             UserRepositoryImpl,
             LanguageRepositoryImpl,
             DepNameRepositoryImpl,
-            JudgeServiceImpl<
-                mock_tokens::RegistrationToken,
-                mock_tokens::OutcomeToken,
-                mock_job_service::JobService<RegistryClient>,
-            >,
+            JudgeSvcImpl,
         >,
     > {
         &self.submission_service
@@ -217,7 +263,7 @@ impl DiContainer {
         SessionRepositoryImpl,
         TestcaseRepositoryImpl,
         ProcedureRepositoryImpl,
-        RegistryServer,
+        RegistryServerImpl,
         DepNameRepositoryImpl,
     > {
         &self.problem_service
@@ -237,8 +283,8 @@ impl DiContainer {
         SessionRepositoryImpl,
         TestcaseRepositoryImpl,
         ProcedureRepositoryImpl,
-        RegistryClient, // mock
-        RegistryServer, // mock
+        RegistryClientImpl,
+        RegistryServerImpl,
         DepNameRepositoryImpl,
     > {
         &self.testcase_service

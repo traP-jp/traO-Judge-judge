@@ -2,7 +2,7 @@ FROM rust:bullseye AS builder
 
 WORKDIR /app
 COPY . .
-RUN cargo build --manifest-path app/backend_app/Cargo.toml --bin backend_app 
+RUN cargo build --manifest-path app/backend_app/Cargo.toml --bin backend_app --no-default-features --features prod
 
 FROM debian:bullseye
 
