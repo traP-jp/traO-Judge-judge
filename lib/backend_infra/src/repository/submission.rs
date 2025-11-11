@@ -28,7 +28,7 @@ impl SubmissionRepositoryImpl {
 impl SubmissionRepository for SubmissionRepositoryImpl {
     async fn get_submission(&self, id: Uuid) -> anyhow::Result<Option<Submission>> {
         let submission = sqlx::query_as::<_, SubmissionRow>(
-            "SELECT submissions.*, normal_problems.title as problem_title FROM submissions LEFT JOIN normal_problems ON normal_problems.id = submissions.problem_id WHERE submissions.id = ?"
+            "SELECT submissions.*, normal_problems.title as problem_title, users.name as user_name FROM submissions INNER JOIN normal_problems ON normal_problems.id = submissions.problem_id LEFT JOIN users ON users.display_id = submissions.user_id WHERE submissions.id = ?"
         )
         .bind(UuidRow(id))
         .fetch_optional(&self.pool)
@@ -53,7 +53,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         query: SubmissionGetQuery,
     ) -> anyhow::Result<Vec<Submission>> {
         let mut query_builder = QueryBuilder::new(
-            "SELECT submissions.*, normal_problems.title as problem_title FROM submissions LEFT JOIN normal_problems ON normal_problems.id = submissions.problem_id WHERE",
+            "SELECT submissions.*, normal_problems.title as problem_title, users.name as user_name FROM submissions INNER JOIN normal_problems ON normal_problems.id = submissions.problem_id LEFT JOIN users ON users.display_id = submissions.user_id WHERE",
         );
 
         query_builder.push(" (normal_problems.is_public = TRUE");
@@ -71,7 +71,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         }
         if let Some(user_name) = query.user_name {
             query_builder
-                .push(" AND submissions.user_name = ")
+                .push(" AND users.name = ")
                 .push_bind(user_name);
         }
         if let Some(language_id) = query.language_id {
@@ -144,7 +144,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         query: SubmissionGetQuery,
     ) -> anyhow::Result<i64> {
         let mut query_builder = QueryBuilder::new(
-            "SELECT COUNT(*) FROM submissions LEFT JOIN normal_problems ON normal_problems.id = submissions.problem_id \nWHERE",
+            "SELECT COUNT(*) FROM submissions INNER JOIN normal_problems ON normal_problems.id = submissions.problem_id LEFT JOIN users ON users.display_id = submissions.user_id \nWHERE",
         );
 
         query_builder.push(" (normal_problems.is_public = TRUE");
@@ -162,7 +162,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         }
         if let Some(user_name) = query.user_name {
             query_builder
-                .push(" AND submissions.user_name = ")
+                .push(" AND users.name = ")
                 .push_bind(user_name);
         }
         if let Some(language_id) = query.language_id {
@@ -193,12 +193,11 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         let submission_id = Uuid::now_v7();
 
         sqlx::query(
-            "INSERT INTO submissions (id, problem_id, user_id, user_name, language_id, source, judge_status, total_score, max_time_ms, max_memory_mib) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO submissions (id, problem_id, user_id, language_id, source, judge_status, total_score, max_time_ms, max_memory_mib) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
         .bind(UuidRow(submission_id))
         .bind(submission.problem_id)
         .bind(submission.user_id)
-        .bind(submission.user_name)
         .bind(submission.language_id)
         .bind(submission.source)
         .bind(submission.judge_status)
