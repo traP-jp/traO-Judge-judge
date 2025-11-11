@@ -140,6 +140,10 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 return Ok(session_id);
             }
 
+            let password = data.password.as_ref().ok_or_else(|| {
+                AuthError::ValidateError
+            })?;
+
             let user_id = self
                 .user_repository
                 .create_user(&data.user_name)
@@ -147,7 +151,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .map_err(|_| AuthError::InternalServerError)?;
 
             self.auth_repository
-                .save_user_email_and_password(user_id, &email, &data.password)
+                .save_user_email_and_password(user_id, &email, password)
                 .await
                 .map_err(|_| AuthError::InternalServerError)?;
 

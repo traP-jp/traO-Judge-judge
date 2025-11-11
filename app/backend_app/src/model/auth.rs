@@ -9,7 +9,7 @@ pub struct SignUpRequest {
 #[serde(rename_all = "camelCase")]
 pub struct SignUp {
     pub user_name: String,
-    pub password: String,
+    pub password: Option<String>,
     pub token: String,
 }
 
