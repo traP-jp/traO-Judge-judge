@@ -2,16 +2,18 @@ use domain::model::rules::RuleType;
 
 pub struct SignUpData {
     pub user_name: String,
-    pub password: String,
+    pub password: Option<String>,
     pub token: String,
 }
 
 impl SignUpData {
     pub fn validate(&self) -> anyhow::Result<()> {
-        let rules = vec![
-            (&self.user_name, RuleType::UserName),
-            (&self.password, RuleType::Password),
-        ];
+        let mut rules = vec![(&self.user_name, RuleType::UserName)];
+
+        if let Some(password) = &self.password {
+            rules.push((password, RuleType::Password));
+        }
+
         for (field, rule) in rules {
             rule.validate(field)?;
         }
