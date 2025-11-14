@@ -3,10 +3,10 @@ use crate::model::submission::{
     SubmissionOrderByData, SubmissionSummaryDto, SubmissionsDto,
 };
 use domain::{
-    model::{submission::{
+    model::submission::{
         CreateJudgeResult, CreateSubmission, SubmissionGetQuery, SubmissionOrderBy,
         UpdateSubmission,
-    }, testcase},
+    },
     repository::{
         language::LanguageRepository, problem::ProblemRepository, procedure::ProcedureRepository,
         session::SessionRepository, submission::SubmissionRepository, testcase::TestcaseRepository,
@@ -17,7 +17,7 @@ use judge_core::{
     model::{
         dep_name_repository::DepNameRepository,
         judge::{JudgeRequest, JudgeService},
-        judge_output::{ExecutionJobResult, ExecutionResult, JudgeStatus},
+        judge_output::{ExecutionJobResult, ExecutionResult},
     },
 };
 use std::collections::HashMap;
@@ -383,10 +383,10 @@ impl<
         let mut overall_status = "IE".to_string(); // summary phase から -> compile phase から取る
         let mut testcase_results: Vec<CreateJudgeResult> = Vec::new();
 
-
         judge_response.iter().for_each(|(dep_id, result)| {
             if let Some(testcase_name) = testcase_names.get(dep_id)
-                && testcase_name.as_deref() == Some(judge_core::constant::job_name::SUMMARY_PHASE) {
+                && testcase_name.as_deref() == Some(judge_core::constant::job_name::SUMMARY_PHASE)
+            {
                 match result {
                     ExecutionJobResult::ExecutionResult(exec) => match exec {
                         ExecutionResult::Displayable(res) => {
@@ -400,23 +400,21 @@ impl<
                     ExecutionJobResult::EarlyExit => {}
                 }
             }
-        });
-        if overall_status == "IE" {
-            judge_response.iter().for_each(|(dep_id, result)| {
-                if let Some(testcase_name) = testcase_names.get(dep_id)
-                    && testcase_name.as_deref() == Some(judge_core::constant::job_name::COMPILE_PHASE) {
-                    match result {
-                        ExecutionJobResult::ExecutionResult(exec) => match exec {
-                            ExecutionResult::Displayable(res) => {
-                                overall_status = format!("{:?}", res.status);
-                            }
-                            ExecutionResult::Hidden(_res) => {}
-                        },
-                        ExecutionJobResult::EarlyExit => {}
-                    }
+            if overall_status == "IE"
+                && let Some(testcase_name) = testcase_names.get(dep_id)
+                && testcase_name.as_deref() == Some(judge_core::constant::job_name::COMPILE_PHASE)
+            {
+                match result {
+                    ExecutionJobResult::ExecutionResult(exec) => match exec {
+                        ExecutionResult::Displayable(res) => {
+                            overall_status = format!("{:?}", res.status);
+                        }
+                        ExecutionResult::Hidden(_res) => {}
+                    },
+                    ExecutionJobResult::EarlyExit => {}
                 }
-            });
-        }
+            }
+        });
 
         for (dep_id, result) in judge_response.into_iter() {
             match result {
@@ -427,14 +425,18 @@ impl<
                             .cloned()
                             .flatten()
                             .unwrap_or_default();
-                        
+
                         // test phase のみ処理
                         if !testcase_name
-                            .starts_with(judge_core::constant::job_name::TEST_PHASE_PREFIX) {
+                            .starts_with(judge_core::constant::job_name::TEST_PHASE_PREFIX)
+                        {
                             continue;
                         }
 
-                        let testcase_name = testcase_name.strip_prefix(judge_core::constant::job_name::TEST_PHASE_PREFIX).unwrap_or(testcase_name.as_str()).to_string();
+                        let testcase_name = testcase_name
+                            .strip_prefix(judge_core::constant::job_name::TEST_PHASE_PREFIX)
+                            .unwrap_or(testcase_name.as_str())
+                            .to_string();
 
                         let testcase_id =
                             name_to_id.get(&testcase_name).cloned().unwrap_or_default();
@@ -456,7 +458,6 @@ impl<
                 ExecutionJobResult::EarlyExit => {}
             }
         }
-
 
         self.submission_repository
             .update_submission(
