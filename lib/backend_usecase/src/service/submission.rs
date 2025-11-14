@@ -383,39 +383,6 @@ impl<
         let mut overall_status = "IE".to_string(); // summary phase から -> compile phase から取る
         let mut testcase_results: Vec<CreateJudgeResult> = Vec::new();
 
-        judge_response.iter().for_each(|(dep_id, result)| {
-            if let Some(testcase_name) = testcase_names.get(dep_id)
-                && testcase_name.as_deref() == Some(judge_core::constant::job_name::SUMMARY_PHASE)
-            {
-                match result {
-                    ExecutionJobResult::ExecutionResult(exec) => match exec {
-                        ExecutionResult::Displayable(res) => {
-                            total_score = res.score;
-                            max_time_ms = res.time as i32;
-                            max_memory_mib = (res.memory / 1024.) as i32;
-                            overall_status = format!("{:?}", res.status);
-                        }
-                        ExecutionResult::Hidden(_res) => {}
-                    },
-                    ExecutionJobResult::EarlyExit => {}
-                }
-            }
-            if overall_status == "IE"
-                && let Some(testcase_name) = testcase_names.get(dep_id)
-                && testcase_name.as_deref() == Some(judge_core::constant::job_name::COMPILE_PHASE)
-            {
-                match result {
-                    ExecutionJobResult::ExecutionResult(exec) => match exec {
-                        ExecutionResult::Displayable(res) => {
-                            overall_status = format!("{:?}", res.status);
-                        }
-                        ExecutionResult::Hidden(_res) => {}
-                    },
-                    ExecutionJobResult::EarlyExit => {}
-                }
-            }
-        });
-
         for (dep_id, result) in judge_response.into_iter() {
             match result {
                 ExecutionJobResult::ExecutionResult(exec) => match exec {
@@ -426,30 +393,38 @@ impl<
                             .flatten()
                             .unwrap_or_default();
 
-                        // test phase のみ処理
-                        if !testcase_name
+                        if testcase_name
                             .starts_with(judge_core::constant::job_name::TEST_PHASE_PREFIX)
                         {
-                            continue;
+                            let testcase_name = testcase_name
+                                .strip_prefix(judge_core::constant::job_name::TEST_PHASE_PREFIX)
+                                .unwrap_or(testcase_name.as_str())
+                                .to_string();
+
+                            let testcase_id =
+                                name_to_id.get(&testcase_name).cloned().unwrap_or_default();
+
+                            testcase_results.push(CreateJudgeResult {
+                                submission_id,
+                                testcase_id,
+                                testcase_name,
+                                judge_status: format!("{:?}", res.status),
+                                score: res.score,
+                                time_ms: res.time as i32,
+                                memory_mib: (res.memory / 1024.) as i32,
+                            });
                         }
-
-                        let testcase_name = testcase_name
-                            .strip_prefix(judge_core::constant::job_name::TEST_PHASE_PREFIX)
-                            .unwrap_or(testcase_name.as_str())
-                            .to_string();
-
-                        let testcase_id =
-                            name_to_id.get(&testcase_name).cloned().unwrap_or_default();
-
-                        testcase_results.push(CreateJudgeResult {
-                            submission_id,
-                            testcase_id,
-                            testcase_name,
-                            judge_status: format!("{:?}", res.status),
-                            score: res.score,
-                            time_ms: res.time as i32,
-                            memory_mib: (res.memory / 1024.) as i32,
-                        });
+                        if testcase_name == judge_core::constant::job_name::SUMMARY_PHASE {
+                            total_score = res.score;
+                            max_time_ms = res.time as i32;
+                            max_memory_mib = (res.memory / 1024.) as i32;
+                            overall_status = format!("{:?}", res.status);
+                        }
+                        if testcase_name == judge_core::constant::job_name::COMPILE_PHASE
+                            && overall_status == "IE"
+                        {
+                            overall_status = format!("{:?}", res.status);
+                        }
                     }
                     ExecutionResult::Hidden(_res) => {
                         // todo
