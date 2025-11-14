@@ -47,7 +47,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository> TraqOAuth2Se
                     .get_user_by_user_id(user_id)
                     .await
                     .map_err(UsecaseError::internal_server_error)?
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("user not found by user_id during traQ OAuth2 login"))?;
 
                 let login_session_id = self
                     .session_repository
@@ -91,7 +91,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository> TraqOAuth2Se
                     .get_user_by_user_id(new_user_id)
                     .await
                     .map_err(UsecaseError::internal_server_error)?
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("user not found by user_id after creating user during traQ OAuth2 signup"))?;
 
                 let login_session_id = self
                     .session_repository
@@ -125,7 +125,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository> TraqOAuth2Se
 
                 Ok(TraqOAuth2AuthorizeDto { session_id: None })
             }
-            _ => Err(UsecaseError::InternalServerError),
+            _ => Err(UsecaseError::internal_server_error_msg("invalid oauth_action for traQ OAuth2 authorize")),
         }
     }
 

@@ -300,7 +300,7 @@ impl<
             .is_err()
         {
             let _ = self.problem_repository.delete_problem(problem_id).await;
-            return Err(UsecaseError::InternalServerError);
+            return Err(UsecaseError::internal_server_error_msg("failed to create initial procedure for problem"));
         }
 
         let problem = self

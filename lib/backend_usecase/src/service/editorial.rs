@@ -169,7 +169,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .get_editorial(editorial_id)
             .await
             .map_err(UsecaseError::internal_server_error)?
-            .ok_or(UsecaseError::InternalServerError)?;
+            .ok_or_else(|| UsecaseError::internal_server_error_msg("failed to retrieve editorial after creation"))?;
 
         Ok(editorial.into())
     }

@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-#[derive(Debug, PartialEq, Eq ,Error)]
+#[derive(Debug, PartialEq, Eq, Error)]
 pub enum UsecaseError {
     #[error("validation error")]
     ValidateError,
@@ -13,7 +13,12 @@ pub enum UsecaseError {
     #[error("Bad Request")]
     BadRequest,
     #[error("Internal Server Error")]
-    InternalServerError,
+    InternalServerError {
+        message: String,
+        file: &'static str,
+        line: u32,
+        column: u32,
+    },
 }
 
 impl UsecaseError {
@@ -22,7 +27,24 @@ impl UsecaseError {
     where
         E: Into<anyhow::Error>,
     {
-        tracing::error!("Internal error at {}: {}", std::panic::Location::caller(), err.into());
-        UsecaseError::InternalServerError
+        let e = err.into();
+        let loc = std::panic::Location::caller();
+        UsecaseError::InternalServerError {
+            message: e.to_string(),
+            file: loc.file(),
+            line: loc.line(),
+            column: loc.column(),
+        }
+    }
+
+    #[track_caller]
+    pub fn internal_server_error_msg<S: Into<String>>(msg: S) -> Self {
+        let loc = std::panic::Location::caller();
+        UsecaseError::InternalServerError {
+            message: msg.into(),
+            file: loc.file(),
+            line: loc.line(),
+            column: loc.column(),
+        }
     }
 }

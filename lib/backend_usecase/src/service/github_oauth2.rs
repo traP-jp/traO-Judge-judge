@@ -62,7 +62,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                             .get_user_by_user_id(user_id)
                             .await
                             .map_err(UsecaseError::internal_server_error)?
-                            .ok_or(UsecaseError::InternalServerError)?;
+                            .ok_or_else(|| UsecaseError::internal_server_error_msg("user not found by user_id during GitHub OAuth2 authorize"))?;
                         let login_session_id =
                             self.session_repository
                                 .create_session(user)
@@ -109,7 +109,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     token: None,
                 })
             }
-            _ => Err(UsecaseError::InternalServerError),
+            _ => Err(UsecaseError::internal_server_error_msg("invalid oauth_action for GitHub OAuth2 authorize")),
         }
     }
 

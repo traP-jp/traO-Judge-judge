@@ -316,17 +316,17 @@ impl<
         for testcase in now_testcases.iter() {
             let input_id = name_to_id
                 .get(testcase_input_name(&testcase.name).as_str())
-                .ok_or(UsecaseError::InternalServerError)?;
+                .ok_or_else(|| UsecaseError::internal_server_error_msg("missing dep name for testcase input"))?;
             let input_id = dep_id_to_resource_id
                 .get(input_id)
-                .ok_or(UsecaseError::InternalServerError)?;
+                .ok_or_else(|| UsecaseError::internal_server_error_msg("missing resource id for testcase input dep"))?;
 
             let output_id = name_to_id
                 .get(testcase_expected_name(&testcase.name).as_str())
-                .ok_or(UsecaseError::InternalServerError)?;
+                .ok_or_else(|| UsecaseError::internal_server_error_msg("missing dep name for testcase expected output"))?;
             let output_id = dep_id_to_resource_id
                 .get(output_id)
-                .ok_or(UsecaseError::InternalServerError)?;
+                .ok_or_else(|| UsecaseError::internal_server_error_msg("missing resource id for testcase expected output dep"))?;
 
             new_testcases.push(CreateTestcase {
                 id: testcase.id,
@@ -339,16 +339,16 @@ impl<
         for testcase in testcases {
             let input_id = name_to_id
                 .get(testcase_input_name(&testcase.name).as_str())
-                .ok_or(UsecaseError::InternalServerError)?;
+                .ok_or_else(|| UsecaseError::internal_server_error_msg("missing dep name for testcase input (new)"))?;
             let input_id = dep_id_to_resource_id
                 .get(input_id)
-                .ok_or(UsecaseError::InternalServerError)?;
+                .ok_or_else(|| UsecaseError::internal_server_error_msg("missing resource id for testcase input dep (new)"))?;
             let output_id = name_to_id
                 .get(testcase_expected_name(&testcase.name).as_str())
-                .ok_or(UsecaseError::InternalServerError)?;
+                .ok_or_else(|| UsecaseError::internal_server_error_msg("missing dep name for testcase expected output (new)"))?;
             let output_id = dep_id_to_resource_id
                 .get(output_id)
-                .ok_or(UsecaseError::InternalServerError)?;
+                .ok_or_else(|| UsecaseError::internal_server_error_msg("missing resource id for testcase expected output dep (new)"))?;
 
             new_testcases.push(CreateTestcase {
                 id: Uuid::now_v7(),
@@ -487,17 +487,17 @@ impl<
             if testcase.id != testcase_id {
                 let input_id = name_to_id
                     .get(testcase_input_name(&testcase.name).as_str())
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("missing dep name for testcase input (existing)"))?;
                 let input_id = dep_id_to_resource_id
                     .get(input_id)
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("missing resource id for testcase input dep (existing)"))?;
 
                 let output_id = name_to_id
                     .get(testcase_expected_name(&testcase.name).as_str())
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("missing dep name for testcase expected output (existing)"))?;
                 let output_id = dep_id_to_resource_id
                     .get(output_id)
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("missing resource id for testcase expected output dep (existing)"))?;
 
                 new_testcases.push(CreateTestcase {
                     id: testcase.id,
@@ -652,17 +652,17 @@ impl<
             if testcase.id != testcase_id {
                 let input_id = name_to_id
                     .get(testcase_input_name(&testcase.name).as_str())
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("missing dep name for testcase input (edit existing)"))?;
                 let input_id = dep_id_to_resource_id
                     .get(input_id)
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("missing resource id for testcase input dep (edit existing)"))?;
 
                 let output_id = name_to_id
                     .get(testcase_expected_name(&testcase.name).as_str())
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("missing dep name for testcase expected output (edit existing)"))?;
                 let output_id = dep_id_to_resource_id
                     .get(output_id)
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("missing resource id for testcase expected output dep (edit existing)"))?;
 
                 new_testcases.push(CreateTestcase {
                     id: testcase.id,
@@ -674,17 +674,17 @@ impl<
             } else {
                 let input_id = name_to_id
                     .get(testcase_input_name(&put_testcase.name).as_str())
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("missing dep name for testcase input (put)"))?;
                 let input_id = dep_id_to_resource_id
                     .get(input_id)
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("missing resource id for testcase input dep (put)"))?;
 
                 let output_id = name_to_id
                     .get(testcase_expected_name(&put_testcase.name).as_str())
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("missing dep name for testcase expected output (put)"))?;
                 let output_id = dep_id_to_resource_id
                     .get(output_id)
-                    .ok_or(UsecaseError::InternalServerError)?;
+                    .ok_or_else(|| UsecaseError::internal_server_error_msg("missing resource id for testcase expected output dep (put)"))?;
 
                 new_testcases.push(CreateTestcase {
                     id: testcase.id,

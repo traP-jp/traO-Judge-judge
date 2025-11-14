@@ -289,7 +289,7 @@ impl<
             .get_procedure(problem_id)
             .await
             .map_err(UsecaseError::internal_server_error)?
-            .ok_or(UsecaseError::InternalServerError)?;
+            .ok_or_else(|| UsecaseError::internal_server_error_msg("procedure not found for problem when creating submission"))?;
 
         let submission = CreateSubmission {
             problem_id,
@@ -325,16 +325,50 @@ impl<
 
         let self_clone = std::sync::Arc::clone(self);
 
+        tracing::info!(
+            %submission_id,
+            problem_id,
+            user_id = display_id,
+            language = %language,
+            "spawning judge task"
+        );
+
         tokio::spawn(async move {
-            let _ = self_clone
+            // Spawned task logs its own lifecycle so users can trace progress.
+            tracing::info!(%submission_id, problem_id, "judge task started");
+            if let Err(e) = self_clone
                 .async_judge_submission(submission_id, problem_id, procedure, runtime_texts)
-                .await;
+                .await
+            {
+                match e {
+                    UsecaseError::InternalServerError { message, file, line, column } => {
+                        tracing::warn!(
+                            %submission_id,
+                            problem_id,
+                            %message,
+                            file,
+                            line,
+                            column,
+                            "judge task failed"
+                        );
+                    }
+                    other => {
+                        tracing::warn!(
+                            %submission_id,
+                            problem_id,
+                            error = ?other,
+                            "judge task failed"
+                        );
+                    }
+                }
+            }
         });
 
         self.get_submission(session_id, submission_id.to_string())
             .await
     }
 
+    #[tracing::instrument(skip(self, procedure, runtime_texts), fields(%submission_id, problem_id))]
     async fn async_judge_submission(
         &self,
         submission_id: Uuid,
@@ -342,6 +376,8 @@ impl<
         procedure: judge_core::model::procedure::registered::Procedure,
         runtime_texts: HashMap<String, String>,
     ) -> anyhow::Result<(), UsecaseError> {
+        tracing::info!("judge started");
+
         let judge_response = self
             .judge_service
             .judge(JudgeRequest {
@@ -418,6 +454,10 @@ impl<
             format!("{:?}", overall_status)
         };
 
+        let testcase_count = testcase_results.len();
+        let overall_status_str = overall_status.clone();
+
+
         self.submission_repository
             .update_submission(
                 submission_id,
@@ -435,6 +475,18 @@ impl<
             .create_judge_results(testcase_results)
             .await
             .map_err(UsecaseError::internal_server_error)?;
+
+        tracing::info!(
+            %submission_id,
+            problem_id,
+            testcase_count,
+            total_score,
+            max_time_ms,
+            max_memory_mib,
+            early_exited,
+            overall_status = %overall_status_str,
+            "judge finished"
+        );
 
         Ok(())
     }

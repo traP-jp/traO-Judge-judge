@@ -261,7 +261,7 @@ impl<
             .get_user_by_display_id(user_id)
             .await
             .map_err(UsecaseError::internal_server_error)?
-            .ok_or(UsecaseError::InternalServerError)?;
+            .ok_or_else(|| UsecaseError::internal_server_error_msg("user not found by display_id in update_me"))?;
 
         let icon_id = match body.icon {
             Some(icon) => {
@@ -325,7 +325,7 @@ impl<
             .get_user_by_display_id(user_id)
             .await
             .map_err(UsecaseError::internal_server_error)?
-            .ok_or(UsecaseError::InternalServerError)?;
+            .ok_or_else(|| UsecaseError::internal_server_error_msg("user not found by display_id after update in update_me"))?;
 
         let problem_query = ProblemGetQuery {
             user_id: Some(user_id),
@@ -456,7 +456,7 @@ impl<
                 Ok(())
             }
             Ok(false) => Err(UsecaseError::Unauthorized),
-            Err(_) => Err(UsecaseError::InternalServerError),
+            Err(_) => Err(UsecaseError::internal_server_error_msg("verify_user_password failed unexpectedly")),
         }
     }
 }
