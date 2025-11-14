@@ -334,7 +334,6 @@ impl<
         );
 
         tokio::spawn(async move {
-            // Spawned task logs its own lifecycle so users can trace progress.
             tracing::info!(%submission_id, problem_id, "judge task started");
             if let Err(e) = self_clone
                 .async_judge_submission(submission_id, problem_id, procedure, runtime_texts)
