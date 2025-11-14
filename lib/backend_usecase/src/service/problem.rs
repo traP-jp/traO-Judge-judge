@@ -1,7 +1,7 @@
-use crate::model::problem::{
+use crate::model::{error::UsecaseError, problem::{
     CreateNormalProblemData, NormalProblemDto, NormalProblemsDto, ProblemGetQueryData,
     ProblemOrderByData, UpdateNormalProblemData,
-};
+}};
 use domain::{
     model::problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem},
     repository::{
@@ -68,15 +68,6 @@ impl<
     }
 }
 
-#[derive(Debug)]
-pub enum ProblemError {
-    ValidateError,
-    Unauthorized,
-    Forbidden,
-    NotFound,
-    InternalServerError,
-}
-
 impl<
     PR: ProblemRepository,
     UR: UserRepository,
@@ -91,30 +82,30 @@ impl<
         &self,
         session_id: Option<&str>,
         problem_id: String,
-    ) -> anyhow::Result<NormalProblemDto, ProblemError> {
+    ) -> anyhow::Result<NormalProblemDto, UsecaseError> {
         let problem_id: i64 = problem_id
             .parse()
-            .map_err(|_| ProblemError::ValidateError)?;
+            .map_err(|_| UsecaseError::ValidateError)?;
 
         let problem = self
             .problem_repository
             .get_problem(problem_id)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?
-            .ok_or(ProblemError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error)?
+            .ok_or(UsecaseError::NotFound)?;
 
         if !problem.is_public {
-            let session_id = session_id.ok_or(ProblemError::NotFound)?;
+            let session_id = session_id.ok_or(UsecaseError::NotFound)?;
 
             let display_id: i64 = self
                 .session_repository
                 .get_display_id_by_session_id(&session_id)
                 .await
-                .map_err(|_| ProblemError::InternalServerError)?
-                .ok_or(ProblemError::NotFound)?;
+                .map_err(UsecaseError::internal_server_error)?
+                .ok_or(UsecaseError::NotFound)?;
 
             if display_id != problem.author_id {
-                return Err(ProblemError::NotFound);
+                return Err(UsecaseError::NotFound);
             }
         }
 
@@ -122,7 +113,7 @@ impl<
             .testcase_repository
             .get_testcases(problem_id)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error)?;
 
         Ok(NormalProblemDto {
             id: problem.id.to_string(),
@@ -144,20 +135,20 @@ impl<
         &self,
         session_id: Option<&str>,
         query: ProblemGetQueryData,
-    ) -> anyhow::Result<NormalProblemsDto, ProblemError> {
+    ) -> anyhow::Result<NormalProblemsDto, UsecaseError> {
         let display_id = match session_id {
             Some(session_id) => self
                 .session_repository
                 .get_display_id_by_session_id(&session_id)
                 .await
-                .map_err(|_| ProblemError::InternalServerError)?,
+                .map_err(UsecaseError::internal_server_error)?,
             None => None,
         };
 
         let user_query = query.user_query.map_or(Ok(None), |user_id_str| {
             let user_id: i64 = user_id_str
                 .parse()
-                .map_err(|_| ProblemError::ValidateError)?;
+                .map_err(|_| UsecaseError::ValidateError)?;
             Ok(Some(user_id))
         })?;
 
@@ -181,13 +172,13 @@ impl<
             .problem_repository
             .get_problems_by_query_count(query.clone())
             .await
-            .map_err(|_| ProblemError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error)?;
 
         let problems = self
             .problem_repository
             .get_problems_by_query(query)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error)?;
 
         Ok(NormalProblemsDto {
             total: total,
@@ -200,34 +191,34 @@ impl<
         session_id: Option<&str>,
         problem_id: String,
         body: UpdateNormalProblemData,
-    ) -> anyhow::Result<NormalProblemDto, ProblemError> {
-        body.validate().map_err(|_| ProblemError::ValidateError)?;
+    ) -> anyhow::Result<NormalProblemDto, UsecaseError> {
+        body.validate().map_err(|_| UsecaseError::ValidateError)?;
 
         let problem_id: i64 = problem_id
             .parse()
-            .map_err(|_| ProblemError::ValidateError)?;
+            .map_err(|_| UsecaseError::ValidateError)?;
 
         let problem = self
             .problem_repository
             .get_problem(problem_id)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?
-            .ok_or(ProblemError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error)?
+            .ok_or(UsecaseError::NotFound)?;
 
         let display_id = match session_id {
             Some(session_id) => self
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(|_| ProblemError::InternalServerError)?,
+                .map_err(UsecaseError::internal_server_error)?,
             None => None,
         };
 
         if display_id.is_none_or(|id| id != problem.author_id) {
             if problem.is_public {
-                return Err(ProblemError::Forbidden);
+                return Err(UsecaseError::Forbidden);
             } else {
-                return Err(ProblemError::NotFound);
+                return Err(UsecaseError::NotFound);
             }
         }
 
@@ -244,14 +235,14 @@ impl<
                 },
             )
             .await
-            .map_err(|_| ProblemError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error)?;
 
         let problem = self
             .problem_repository
             .get_problem(problem_id)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?
-            .ok_or(ProblemError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error)?
+            .ok_or(UsecaseError::NotFound)?;
 
         Ok(problem.into())
     }
@@ -260,30 +251,30 @@ impl<
         &self,
         session_id: Option<&str>,
         body: CreateNormalProblemData,
-    ) -> anyhow::Result<NormalProblemDto, ProblemError> {
-        body.validate().map_err(|_| ProblemError::ValidateError)?;
+    ) -> anyhow::Result<NormalProblemDto, UsecaseError> {
+        body.validate().map_err(|_| UsecaseError::ValidateError)?;
 
         let display_id = match session_id {
             Some(session_id) => self
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(|_| ProblemError::InternalServerError)?
-                .ok_or(ProblemError::Forbidden)?,
-            None => return Err(ProblemError::Forbidden),
+                .map_err(UsecaseError::internal_server_error)?
+                .ok_or(UsecaseError::Forbidden)?,
+            None => return Err(UsecaseError::Forbidden),
         };
 
         let user = self
             .user_repository
             .get_user_by_display_id(display_id)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?
-            .ok_or(ProblemError::Forbidden)?;
+            .map_err(UsecaseError::internal_server_error)?
+            .ok_or(UsecaseError::Forbidden)?;
 
         match user.role {
             domain::model::user::UserRole::Admin | domain::model::user::UserRole::TrapUser => {}
             _ => {
-                return Err(ProblemError::Forbidden);
+                return Err(UsecaseError::Forbidden);
             }
         }
 
@@ -298,7 +289,7 @@ impl<
                 difficulty: body.difficulty,
             })
             .await
-            .map_err(|_| ProblemError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error)?;
 
         let procedure = Procedure::default();
 
@@ -309,15 +300,15 @@ impl<
             .is_err()
         {
             let _ = self.problem_repository.delete_problem(problem_id).await;
-            return Err(ProblemError::InternalServerError);
+            return Err(UsecaseError::InternalServerError);
         }
 
         let problem = self
             .problem_repository
             .get_problem(problem_id)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?
-            .ok_or(ProblemError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error)?
+            .ok_or(UsecaseError::NotFound)?;
 
         Ok(problem.into())
     }
@@ -326,17 +317,17 @@ impl<
         &self,
         session_id: Option<&str>,
         problem_id: String,
-    ) -> anyhow::Result<(), ProblemError> {
+    ) -> anyhow::Result<(), UsecaseError> {
         let problem_id: i64 = problem_id
             .parse()
-            .map_err(|_| ProblemError::ValidateError)?;
+            .map_err(|_| UsecaseError::ValidateError)?;
 
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(|_| ProblemError::InternalServerError)?,
+                .map_err(UsecaseError::internal_server_error)?,
             None => None,
         };
 
@@ -344,14 +335,14 @@ impl<
             .problem_repository
             .get_problem(problem_id)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?
-            .ok_or(ProblemError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error)?
+            .ok_or(UsecaseError::NotFound)?;
 
         if user_id.is_none_or(|id| id != problem.author_id) {
             if problem.is_public {
-                return Err(ProblemError::Forbidden);
+                return Err(UsecaseError::Forbidden);
             } else {
-                return Err(ProblemError::NotFound);
+                return Err(UsecaseError::NotFound);
             }
         }
 
@@ -359,36 +350,36 @@ impl<
         self.testcase_repository
             .delete_testcases(problem_id)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error)?;
 
         // Delete procedure resources from problem registry (S3) and procedure from database
         if let Some(procedure) = self
             .procedure_repository
             .get_procedure(problem_id)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?
+            .map_err(UsecaseError::internal_server_error)?
         {
             remove(procedure, self.problem_registry_server.clone())
                 .await
-                .map_err(|_| ProblemError::InternalServerError)?;
+                .map_err(UsecaseError::internal_server_error)?;
         }
 
         self.procedure_repository
             .delete_procedure(problem_id)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error)?;
 
         // Delete dep_names
         self.dep_name_repository
             .remove_many(problem_id)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error)?;
 
         // Finally, delete the problem itself
         self.problem_repository
             .delete_problem(problem_id)
             .await
-            .map_err(|_| ProblemError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error)?;
 
         Ok(())
     }

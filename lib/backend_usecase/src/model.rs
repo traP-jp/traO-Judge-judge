@@ -8,3 +8,4 @@ pub mod submission;
 pub mod testcase;
 pub mod traq_oauth2;
 pub mod user;
+pub mod error;
