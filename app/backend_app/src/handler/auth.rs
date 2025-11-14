@@ -8,9 +8,7 @@ use axum::{
     response::IntoResponse,
 };
 use axum_extra::{TypedHeader, headers::Cookie};
-use usecase::{
-    model::auth::{LoginData, ResetPasswordData, SignUpData},
-};
+use usecase::model::auth::{LoginData, ResetPasswordData, SignUpData};
 
 pub async fn signup_request(
     State(di_container): State<DiContainer>,

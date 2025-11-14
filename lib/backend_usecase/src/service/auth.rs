@@ -1,4 +1,7 @@
-use crate::model::{auth::{LoginData, ResetPasswordData, SignUpData}, error::UsecaseError};
+use crate::model::{
+    auth::{LoginData, ResetPasswordData, SignUpData},
+    error::UsecaseError,
+};
 use domain::{
     external::mail::MailClient,
     model::jwt::{Action, AuthToken},
@@ -251,7 +254,9 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
 
             Ok(session_id)
         } else {
-            return Err(UsecaseError::internal_server_error_msg("signup token contained no email/google/github info"));
+            return Err(UsecaseError::internal_server_error_msg(
+                "signup token contained no email/google/github info",
+            ));
         }
     }
 
@@ -326,7 +331,10 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         Ok(())
     }
 
-    pub async fn reset_password(&self, data: ResetPasswordData) -> anyhow::Result<(), UsecaseError> {
+    pub async fn reset_password(
+        &self,
+        data: ResetPasswordData,
+    ) -> anyhow::Result<(), UsecaseError> {
         data.validate().map_err(|_| UsecaseError::ValidateError)?;
 
         let encode_key =
@@ -343,7 +351,9 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
 
         let email = AuthToken::get_email(&data.token, &encode_key, &encrypt_key)
             .map_err(|_| UsecaseError::ValidateError)?
-            .ok_or_else(|| UsecaseError::internal_server_error_msg("reset_password token missing email"))?;
+            .ok_or_else(|| {
+                UsecaseError::internal_server_error_msg("reset_password token missing email")
+            })?;
 
         let user_id = self
             .auth_repository

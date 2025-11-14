@@ -62,12 +62,16 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                             .get_user_by_user_id(user_id)
                             .await
                             .map_err(UsecaseError::internal_server_error)?
-                            .ok_or_else(|| UsecaseError::internal_server_error_msg("user not found by user_id during Google OAuth2 authorize"))?;
-                        let login_session_id =
-                            self.session_repository
-                                .create_session(user)
-                                .await
-                                .map_err(UsecaseError::internal_server_error)?;
+                            .ok_or_else(|| {
+                                UsecaseError::internal_server_error_msg(
+                                    "user not found by user_id during Google OAuth2 authorize",
+                                )
+                            })?;
+                        let login_session_id = self
+                            .session_repository
+                            .create_session(user)
+                            .await
+                            .map_err(UsecaseError::internal_server_error)?;
                         Ok(GoogleOAuth2AuthorizeDto {
                             session_id: Some(login_session_id),
                             token: None,
@@ -109,7 +113,9 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     token: None,
                 })
             }
-            _ => Err(UsecaseError::internal_server_error_msg("invalid oauth_action for Google OAuth2 authorize")),
+            _ => Err(UsecaseError::internal_server_error_msg(
+                "invalid oauth_action for Google OAuth2 authorize",
+            )),
         }
     }
 

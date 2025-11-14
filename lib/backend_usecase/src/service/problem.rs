@@ -1,7 +1,10 @@
-use crate::model::{error::UsecaseError, problem::{
-    CreateNormalProblemData, NormalProblemDto, NormalProblemsDto, ProblemGetQueryData,
-    ProblemOrderByData, UpdateNormalProblemData,
-}};
+use crate::model::{
+    error::UsecaseError,
+    problem::{
+        CreateNormalProblemData, NormalProblemDto, NormalProblemsDto, ProblemGetQueryData,
+        ProblemOrderByData, UpdateNormalProblemData,
+    },
+};
 use domain::{
     model::problem::{CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem},
     repository::{
@@ -300,7 +303,9 @@ impl<
             .is_err()
         {
             let _ = self.problem_repository.delete_problem(problem_id).await;
-            return Err(UsecaseError::internal_server_error_msg("failed to create initial procedure for problem"));
+            return Err(UsecaseError::internal_server_error_msg(
+                "failed to create initial procedure for problem",
+            ));
         }
 
         let problem = self

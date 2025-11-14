@@ -1,6 +1,7 @@
-use crate::model::{editorial::{
-    CreateEditorialData, EditorialDto, EditorialSummaryDto, UpdateEditorialData,
-}, error::UsecaseError};
+use crate::model::{
+    editorial::{CreateEditorialData, EditorialDto, EditorialSummaryDto, UpdateEditorialData},
+    error::UsecaseError,
+};
 use domain::{
     model::editorial::{CreateEditorial, EditorialGetQuery, UpdateEditorial},
     repository::{
@@ -169,7 +170,11 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .get_editorial(editorial_id)
             .await
             .map_err(UsecaseError::internal_server_error)?
-            .ok_or_else(|| UsecaseError::internal_server_error_msg("failed to retrieve editorial after creation"))?;
+            .ok_or_else(|| {
+                UsecaseError::internal_server_error_msg(
+                    "failed to retrieve editorial after creation",
+                )
+            })?;
 
         Ok(editorial.into())
     }

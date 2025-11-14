@@ -12,7 +12,12 @@ impl Into<StatusCode> for AppError {
             UsecaseError::Forbidden => StatusCode::FORBIDDEN,
             UsecaseError::NotFound => StatusCode::NOT_FOUND,
             UsecaseError::BadRequest => StatusCode::BAD_REQUEST,
-            UsecaseError::InternalServerError { message, file, line, column } => {
+            UsecaseError::InternalServerError {
+                message,
+                file,
+                line,
+                column,
+            } => {
                 tracing::error!(
                     "Internal Server Error at {}:{}:{} - {}",
                     file,

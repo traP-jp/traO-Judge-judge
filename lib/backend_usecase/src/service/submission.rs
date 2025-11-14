@@ -1,7 +1,10 @@
-use crate::model::{error::UsecaseError, submission::{
-    CreateSubmissionData, JudgeResultDto, SubmissionDto, SubmissionGetQueryData,
-    SubmissionOrderByData, SubmissionSummaryDto, SubmissionsDto,
-}};
+use crate::model::{
+    error::UsecaseError,
+    submission::{
+        CreateSubmissionData, JudgeResultDto, SubmissionDto, SubmissionGetQueryData,
+        SubmissionOrderByData, SubmissionSummaryDto, SubmissionsDto,
+    },
+};
 use domain::{
     model::submission::{
         CreateJudgeResult, CreateSubmission, SubmissionGetQuery, SubmissionOrderBy,
@@ -289,7 +292,11 @@ impl<
             .get_procedure(problem_id)
             .await
             .map_err(UsecaseError::internal_server_error)?
-            .ok_or_else(|| UsecaseError::internal_server_error_msg("procedure not found for problem when creating submission"))?;
+            .ok_or_else(|| {
+                UsecaseError::internal_server_error_msg(
+                    "procedure not found for problem when creating submission",
+                )
+            })?;
 
         let submission = CreateSubmission {
             problem_id,
@@ -340,7 +347,12 @@ impl<
                 .await
             {
                 match e {
-                    UsecaseError::InternalServerError { message, file, line, column } => {
+                    UsecaseError::InternalServerError {
+                        message,
+                        file,
+                        line,
+                        column,
+                    } => {
                         tracing::warn!(
                             %submission_id,
                             problem_id,
@@ -375,8 +387,6 @@ impl<
         procedure: judge_core::model::procedure::registered::Procedure,
         runtime_texts: HashMap<String, String>,
     ) -> anyhow::Result<(), UsecaseError> {
-        tracing::info!("judge started");
-
         let judge_response = self
             .judge_service
             .judge(JudgeRequest {
@@ -455,7 +465,6 @@ impl<
 
         let testcase_count = testcase_results.len();
         let overall_status_str = overall_status.clone();
-
 
         self.submission_repository
             .update_submission(

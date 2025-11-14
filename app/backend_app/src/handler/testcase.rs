@@ -8,9 +8,12 @@ use axum_extra::{TypedHeader, headers::Cookie};
 
 use crate::{
     di::DiContainer,
-    model::{error::AppError, testcase::{
-        CreateTestcaseRequest, TestcaseResponse, TestcaseSummaryResponse, UpdateTestcaseRequest,
-    }},
+    model::{
+        error::AppError,
+        testcase::{
+            CreateTestcaseRequest, TestcaseResponse, TestcaseSummaryResponse, UpdateTestcaseRequest,
+        },
+    },
 };
 
 pub async fn get_testcase(
