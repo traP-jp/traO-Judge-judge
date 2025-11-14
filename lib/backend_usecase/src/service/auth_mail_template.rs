@@ -7,6 +7,7 @@ pub struct AuthMailContent {
 pub trait AuthMailTemplateProvider: Send + Sync {
     fn signup_request(&self, jwt: &str) -> AuthMailContent;
     fn reset_password_request(&self, jwt: &str) -> AuthMailContent;
+    fn change_email_request(&self, jwt: &str) -> AuthMailContent;
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -85,6 +86,32 @@ traO Judge
             ),
         }
     }
+
+    fn change_email_request(&self, jwt: &str) -> AuthMailContent {
+        AuthMailContent {
+            subject: "Change Email Verification".to_string(),
+            body: format!(
+                "traO Judge にて、メールアドレス変更のリクエストを受け付けました。
+以下のリンクをクリックして、新しいメールアドレスの確認を完了してください。
+
+🔗 認証リンク：
+{}/change-email?token={jwt}
+
+このリンクは、60分間有効です。
+期限を過ぎた場合は、お手数ですが再度メールアドレス変更手続きをお願いいたします。
+
+もし本メールにお心当たりがない場合は、このメールを破棄していただいて構いません。
+
+
+――――――――――――
+traO Judge
+{}
+※このメールは送信専用です。返信いただいても対応できません。",
+                self.base_url(),
+                self.base_url()
+            ),
+        }
+    }
 }
 
 fn sanitize_base_url(url: String) -> String {
@@ -120,6 +147,30 @@ mod tests {
         assert!(
             mail.body
                 .contains("http://example.com/signup/register?token=token")
+        );
+    }
+
+    #[test]
+    fn default_reset_password_template_contains_base_url() {
+        let provider = DefaultAuthMailTemplateProvider::new("http://example.com");
+        let mail = provider.reset_password_request("token");
+
+        assert_eq!(mail.subject, "Reset Password Email");
+        assert!(
+            mail.body
+                .contains("http://example.com/reset-password/form?token=token")
+        );
+    }
+
+    #[test]
+    fn default_change_email_template_contains_base_url() {
+        let provider = DefaultAuthMailTemplateProvider::new("http://example.com");
+        let mail = provider.change_email_request("token");
+
+        assert_eq!(mail.subject, "Change Email Verification");
+        assert!(
+            mail.body
+                .contains("http://example.com/change-email?token=token")
         );
     }
 }

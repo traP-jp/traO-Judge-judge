@@ -1,10 +1,15 @@
+use std::sync::Arc;
+
 use base64::{Engine, prelude::BASE64_STANDARD};
 use lettre::Address;
 
-use crate::model::{
-    problem::NormalProblemsDto,
-    submission::SubmissionsDto,
-    user::{UpdatePasswordData, UpdateUserData, UserDto, UserMeDto},
+use crate::{
+    model::{
+        problem::NormalProblemsDto,
+        submission::SubmissionsDto,
+        user::{UpdatePasswordData, UpdateUserData, UserDto, UserMeDto},
+    },
+    service::auth_mail_template::{AuthMailTemplateProvider, DefaultAuthMailTemplateProvider},
 };
 use domain::{
     external::mail::MailClient,
@@ -34,6 +39,7 @@ pub struct UserService<
     problem_repository: PR,
     submission_repository: SubR,
     mail_client: C,
+    mail_template_provider: Arc<dyn AuthMailTemplateProvider>,
 }
 
 impl<
@@ -63,6 +69,7 @@ impl<
             problem_repository,
             submission_repository,
             mail_client,
+            mail_template_provider: Arc::new(DefaultAuthMailTemplateProvider::default()),
         }
     }
 }
@@ -422,15 +429,10 @@ impl<
         let jwt = AuthToken::encode_email_update_jwt(display_id, &email, &encode_key, &encrypt_key)
             .map_err(|_| UserError::InternalServerError)?;
 
-        // todo
-        let subject = "メールアドレス変更の確認";
-        let message = format!(
-            "以下のリンクをクリックして、メールアドレスの変更を確認してください。
-    https://link/{jwt}"
-        );
+        let mail_content = self.mail_template_provider.change_email_request(&jwt);
 
         self.mail_client
-            .send_mail(user_address, subject, &message)
+            .send_mail(user_address, &mail_content.subject, &mail_content.body)
             .await
             .map_err(|_| UserError::InternalServerError)?;
 

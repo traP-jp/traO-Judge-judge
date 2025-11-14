@@ -1,3 +1,9 @@
+#[cfg(all(feature = "dev", feature = "prod"))]
+compile_error!("Cannot enable both 'dev' and 'prod' features");
+
+#[cfg(not(any(feature = "dev", feature = "prod")))]
+compile_error!("Either 'dev' or 'prod' feature must be enabled");
+
 use infra::{
     external::mail::MailClientImpl,
     provider::Provider,
@@ -11,16 +17,44 @@ use infra::{
     },
 };
 use judge_core::logic::judge_service_impl::JudgeServiceImpl;
-use judge_infra_mock::job_service::{job_service as mock_job_service, tokens as mock_tokens};
-use judge_infra_mock::multi_proc_problem_registry::{
-    registry_client::RegistryClient, registry_server::RegistryServer,
-};
 use usecase::service::{
     auth::AuthenticationService, editorial::EditorialService, github_oauth2::GitHubOAuth2Service,
     google_oauth2::GoogleOAuth2Service, icon::IconService, language::LanguageService,
     problem::ProblemService, submission::SubmissionService, testcase::TestcaseService,
     traq_oauth2::TraqOAuth2Service, user::UserService,
 };
+
+#[cfg(feature = "dev")]
+use judge_infra_mock::job_service::{job_service as mock_job_service, tokens as mock_tokens};
+#[cfg(feature = "dev")]
+use judge_infra_mock::multi_proc_problem_registry::{
+    registry_client::RegistryClient as MockRegistryClient,
+    registry_server::RegistryServer as MockRegistryServer,
+};
+
+#[cfg(feature = "prod")]
+use back_judge_grpc::client::RemoteJudgeServiceClient;
+#[cfg(feature = "prod")]
+use problem_registry::{client::ProblemRegistryClient, server::ProblemRegistryServer};
+
+#[cfg(feature = "dev")]
+type RegistryServerImpl = MockRegistryServer;
+#[cfg(feature = "dev")]
+type RegistryClientImpl = MockRegistryClient;
+
+#[cfg(feature = "prod")]
+type RegistryServerImpl = ProblemRegistryServer;
+#[cfg(feature = "prod")]
+type RegistryClientImpl = ProblemRegistryClient;
+
+#[cfg(feature = "dev")]
+type JudgeSvcImpl = JudgeServiceImpl<
+    mock_tokens::RegistrationToken,
+    mock_tokens::OutcomeToken,
+    mock_job_service::JobService<MockRegistryClient>,
+>;
+#[cfg(feature = "prod")]
+type JudgeSvcImpl = RemoteJudgeServiceClient;
 
 #[derive(Clone)]
 pub struct DiContainer {
@@ -36,7 +70,7 @@ pub struct DiContainer {
         SessionRepositoryImpl,
         TestcaseRepositoryImpl,
         ProcedureRepositoryImpl,
-        RegistryServer,
+        RegistryServerImpl,
         DepNameRepositoryImpl,
     >,
     user_service: UserService<
@@ -58,11 +92,7 @@ pub struct DiContainer {
             TestcaseRepositoryImpl,
             LanguageRepositoryImpl,
             DepNameRepositoryImpl,
-            JudgeServiceImpl<
-                mock_tokens::RegistrationToken,
-                mock_tokens::OutcomeToken,
-                mock_job_service::JobService<RegistryClient>,
-            >,
+            JudgeSvcImpl,
         >,
     >,
     editorial_service:
@@ -72,8 +102,8 @@ pub struct DiContainer {
         SessionRepositoryImpl,
         TestcaseRepositoryImpl,
         ProcedureRepositoryImpl,
-        RegistryClient, // mock
-        RegistryServer, // mock
+        RegistryClientImpl,
+        RegistryServerImpl,
         DepNameRepositoryImpl,
     >,
     language_service: LanguageService<LanguageRepositoryImpl>,
@@ -87,6 +117,27 @@ pub struct DiContainer {
 
 impl DiContainer {
     pub async fn new(provider: Provider) -> Self {
+        #[cfg(feature = "dev")]
+        let pr_server: RegistryServerImpl = provider.provide_problem_registry_server();
+        #[cfg(feature = "dev")]
+        let pr_client: RegistryClientImpl = provider.provide_problem_registry_client();
+
+        #[cfg(feature = "prod")]
+        let pr_server: RegistryServerImpl = ProblemRegistryServer::new().await;
+        #[cfg(feature = "prod")]
+        let pr_client: RegistryClientImpl = ProblemRegistryClient::new().await;
+
+        #[cfg(feature = "dev")]
+        let judge_service: JudgeSvcImpl = provider.provide_judge_service();
+        #[cfg(feature = "prod")]
+        let judge_service: JudgeSvcImpl = {
+            let uri = std::env::var("JUDGE_SERVICE_GRPC_URI")
+                .unwrap_or_else(|_| "http://localhost:50051".to_string());
+            RemoteJudgeServiceClient::new(&uri)
+                .await
+                .expect("Failed to create RemoteJudgeServiceClient")
+        };
+
         Self {
             auth_service: AuthenticationService::new(
                 provider.provide_auth_repository(),
@@ -100,7 +151,7 @@ impl DiContainer {
                 provider.provide_session_repository(),
                 provider.provide_testcase_repository(),
                 provider.provide_procedure_repository(),
-                provider.provide_problem_registry_server(),
+                pr_server.clone(),
                 provider.provide_dep_name_repository(),
             ),
             user_service: UserService::new(
@@ -121,7 +172,7 @@ impl DiContainer {
                 provider.provide_testcase_repository(),
                 provider.provide_language_repository(),
                 provider.provide_dep_name_repository(),
-                provider.provide_judge_service(),
+                judge_service,
             )),
             editorial_service: EditorialService::new(
                 provider.provide_session_repository(),
@@ -133,8 +184,8 @@ impl DiContainer {
                 provider.provide_session_repository(),
                 provider.provide_testcase_repository(),
                 provider.provide_procedure_repository(),
-                provider.provide_problem_registry_client(),
-                provider.provide_problem_registry_server(),
+                pr_client.clone(),
+                pr_server,
                 provider.provide_dep_name_repository(),
             ),
             language_service: LanguageService::new(provider.provide_language_repository()),
@@ -196,11 +247,7 @@ impl DiContainer {
             TestcaseRepositoryImpl,
             LanguageRepositoryImpl,
             DepNameRepositoryImpl,
-            JudgeServiceImpl<
-                mock_tokens::RegistrationToken,
-                mock_tokens::OutcomeToken,
-                mock_job_service::JobService<RegistryClient>,
-            >,
+            JudgeSvcImpl,
         >,
     > {
         &self.submission_service
@@ -214,7 +261,7 @@ impl DiContainer {
         SessionRepositoryImpl,
         TestcaseRepositoryImpl,
         ProcedureRepositoryImpl,
-        RegistryServer,
+        RegistryServerImpl,
         DepNameRepositoryImpl,
     > {
         &self.problem_service
@@ -234,8 +281,8 @@ impl DiContainer {
         SessionRepositoryImpl,
         TestcaseRepositoryImpl,
         ProcedureRepositoryImpl,
-        RegistryClient, // mock
-        RegistryServer, // mock
+        RegistryClientImpl,
+        RegistryServerImpl,
         DepNameRepositoryImpl,
     > {
         &self.testcase_service
