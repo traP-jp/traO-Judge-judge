@@ -23,11 +23,11 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-exec-app
       - uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-region: 'us-west-2'
-          role-to-assume: 'arn:aws:iam::222634386193:role/GitHub_OIDC_traO-infra'
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::529088289120:role/role-for-s3-practice
       - name: Build
         run: cd app/exec_app; cargo build --release
       - name: Rename binary
         run: cp target/release/exec_app target/release/exec-app
       - name: Upload to S3
-        run: aws s3 cp target/release/exec-app s3://trao-infra-resources/exec-app/
+        run: aws s3 cp target/release/exec-app s3://hayatroid/exec-app/
