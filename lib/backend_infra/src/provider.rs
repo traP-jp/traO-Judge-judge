@@ -48,7 +48,7 @@ impl Provider {
         migrate!("./migrations").run(&pool).await?;
         session_store.migrate().await?;
 
-        let temp_dir = PathBuf::from("./tempdir");
+        let temp_dir = PathBuf::from("/tmp/traojudge");
         if !temp_dir.exists() {
             std::fs::create_dir_all(&temp_dir)?;
         }
@@ -68,7 +68,7 @@ impl Provider {
         migrate!("./migrations").run(&pool).await?;
         session_store.migrate().await?;
 
-        let temp_dir = PathBuf::from("./tempdir");
+        let temp_dir = PathBuf::from("/tmp/traojudge");
         if !temp_dir.exists() {
             std::fs::create_dir_all(&temp_dir)?;
         }
