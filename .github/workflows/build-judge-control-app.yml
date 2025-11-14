@@ -28,6 +28,6 @@ jobs:
       - name: Build
         run: cd app/judge_control_app; cargo build --release
       - name: Rename binary
-        run: cp target/release/judge-control-app target/release/judge-control-app
+        run: cp target/release/judge_control_app target/release/judge-control-app
       - name: Upload to S3
         run: aws s3 cp target/release/judge-control-app s3://trao-infra-resources/judge-control-app/
