@@ -3,10 +3,10 @@ use crate::model::submission::{
     SubmissionOrderByData, SubmissionSummaryDto, SubmissionsDto,
 };
 use domain::{
-    model::submission::{
+    model::{submission::{
         CreateJudgeResult, CreateSubmission, SubmissionGetQuery, SubmissionOrderBy,
         UpdateSubmission,
-    },
+    }, testcase},
     repository::{
         language::LanguageRepository, problem::ProblemRepository, procedure::ProcedureRepository,
         session::SessionRepository, submission::SubmissionRepository, testcase::TestcaseRepository,
@@ -377,27 +377,64 @@ impl<
             .map(|tc| (tc.name, tc.id))
             .collect::<HashMap<_, _>>();
 
-        let mut total_score: i64 = 0;
-        let mut max_time_ms: i32 = 0;
-        let mut max_memory_mib: i32 = 0;
-        let mut overall_status = JudgeStatus::AC;
-        let mut early_exited = false;
+        let mut total_score: i64 = 0; // summary phase から取ってくる
+        let mut max_time_ms: i32 = 0; // summary phase から取ってくる
+        let mut max_memory_mib: i32 = 0; // summary phase から取ってくる
+        let mut overall_status = "IE".to_string(); // summary phase から -> compile phase から取る
         let mut testcase_results: Vec<CreateJudgeResult> = Vec::new();
+
+
+        judge_response.iter().for_each(|(dep_id, result)| {
+            if let Some(testcase_name) = testcase_names.get(dep_id)
+                && testcase_name.as_deref() == Some(judge_core::constant::job_name::SUMMARY_PHASE) {
+                match result {
+                    ExecutionJobResult::ExecutionResult(exec) => match exec {
+                        ExecutionResult::Displayable(res) => {
+                            total_score = res.score;
+                            max_time_ms = res.time as i32;
+                            max_memory_mib = (res.memory / 1024.) as i32;
+                            overall_status = format!("{:?}", res.status);
+                        }
+                        ExecutionResult::Hidden(_res) => {}
+                    },
+                    ExecutionJobResult::EarlyExit => {}
+                }
+            }
+        });
+        if overall_status == "IE" {
+            judge_response.iter().for_each(|(dep_id, result)| {
+                if let Some(testcase_name) = testcase_names.get(dep_id)
+                    && testcase_name.as_deref() == Some(judge_core::constant::job_name::COMPILE_PHASE) {
+                    match result {
+                        ExecutionJobResult::ExecutionResult(exec) => match exec {
+                            ExecutionResult::Displayable(res) => {
+                                overall_status = format!("{:?}", res.status);
+                            }
+                            ExecutionResult::Hidden(_res) => {}
+                        },
+                        ExecutionJobResult::EarlyExit => {}
+                    }
+                }
+            });
+        }
 
         for (dep_id, result) in judge_response.into_iter() {
             match result {
                 ExecutionJobResult::ExecutionResult(exec) => match exec {
                     ExecutionResult::Displayable(res) => {
-                        total_score += res.score;
-                        max_time_ms = max_time_ms.max(res.time as i32);
-                        max_memory_mib = max_memory_mib.max((res.memory / 1024.) as i32);
-                        overall_status = overall_status.max(res.status.clone());
-
                         let testcase_name = testcase_names
                             .get(&dep_id)
                             .cloned()
                             .flatten()
                             .unwrap_or_default();
+                        
+                        // test phase のみ処理
+                        if !testcase_name
+                            .starts_with(judge_core::constant::job_name::TEST_PHASE_PREFIX) {
+                            continue;
+                        }
+
+                        let testcase_name = testcase_name.strip_prefix(judge_core::constant::job_name::TEST_PHASE_PREFIX).unwrap_or(testcase_name.as_str()).to_string();
 
                         let testcase_id =
                             name_to_id.get(&testcase_name).cloned().unwrap_or_default();
@@ -416,15 +453,10 @@ impl<
                         // todo
                     }
                 },
-                ExecutionJobResult::EarlyExit => early_exited = true,
+                ExecutionJobResult::EarlyExit => {}
             }
         }
 
-        let overall_status = if early_exited {
-            "IE".to_string()
-        } else {
-            format!("{:?}", overall_status)
-        };
 
         self.submission_repository
             .update_submission(
