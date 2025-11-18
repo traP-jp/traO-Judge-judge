@@ -24,7 +24,7 @@ impl<IR: IconRepository> IconService<IR> {
             .icon_repository
             .get_icon(id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         Ok(icon)

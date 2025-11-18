@@ -45,7 +45,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -53,7 +53,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .editorial_repository
             .get_editorial(editorial_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         if !editorial.is_public && user_id.is_none_or(|x| x != editorial.author_id) {
@@ -64,7 +64,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .problem_repository
             .get_problem(editorial.problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
@@ -88,7 +88,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -96,7 +96,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .problem_repository
             .get_problem(problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
@@ -114,7 +114,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .editorial_repository
             .get_editorials_by_problem_id(query)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(editorials.into_iter().map(|x| x.into()).collect())
     }
@@ -133,7 +133,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .problem_repository
             .get_problem(problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         let user_id = match session_id {
@@ -141,7 +141,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -163,13 +163,13 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .editorial_repository
             .create_editorial(editorial)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let editorial = self
             .editorial_repository
             .get_editorial(editorial_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or_else(|| {
                 UsecaseError::internal_server_error_msg(
                     "failed to retrieve editorial after creation",
@@ -193,7 +193,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -201,7 +201,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .editorial_repository
             .get_editorial(editorial_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         if !editorial.is_public && user_id.is_none_or(|x| x != editorial.author_id) {
@@ -212,7 +212,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .problem_repository
             .get_problem(editorial.problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
@@ -235,7 +235,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         self.editorial_repository
             .update_editorial(editorial)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }
@@ -253,7 +253,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -261,7 +261,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .editorial_repository
             .get_editorial(editorial_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         if !editorial.is_public && user_id.is_none_or(|x| x != editorial.author_id) {
@@ -272,7 +272,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .problem_repository
             .get_problem(editorial.problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
         if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
             return Err(UsecaseError::NotFound);
@@ -287,7 +287,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         self.editorial_repository
             .delete_editorial(editorial_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }

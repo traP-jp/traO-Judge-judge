@@ -38,6 +38,23 @@ impl UsecaseError {
     }
 
     #[track_caller]
+    pub fn internal_server_error_map<E>() -> impl FnOnce(E) -> Self
+    where
+        E: Into<anyhow::Error>,
+    {
+        let loc = std::panic::Location::caller();
+        move |err: E| {
+            let e = err.into();
+            UsecaseError::InternalServerError {
+                message: e.to_string(),
+                file: loc.file(),
+                line: loc.line(),
+                column: loc.column(),
+            }
+        }
+    }
+
+    #[track_caller]
     pub fn internal_server_error_msg<S: Into<String>>(msg: S) -> Self {
         let loc = std::panic::Location::caller();
         UsecaseError::InternalServerError {

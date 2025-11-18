@@ -96,7 +96,7 @@ impl<
             .problem_repository
             .get_problem(problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         match problem {
             Some(problem) => {
@@ -107,7 +107,7 @@ impl<
                         .session_repository
                         .get_display_id_by_session_id(session_id)
                         .await
-                        .map_err(UsecaseError::internal_server_error)?
+                        .map_err(UsecaseError::internal_server_error_map())?
                         .ok_or(UsecaseError::NotFound)?;
 
                     if problem.author_id != user_id {
@@ -122,7 +122,7 @@ impl<
             .testcase_repository
             .get_testcases(problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(testcases.into_iter().map(|x| x.into()).collect())
     }
@@ -138,14 +138,14 @@ impl<
             .testcase_repository
             .get_testcase(testcase_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         let problem = self
             .problem_repository
             .get_problem(testcase.problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         if !problem.is_public {
@@ -155,7 +155,7 @@ impl<
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?
+                .map_err(UsecaseError::internal_server_error_map())?
                 .ok_or(UsecaseError::NotFound)?;
 
             if problem.author_id != user_id {
@@ -167,12 +167,12 @@ impl<
             .problem_registry_client
             .fetch(testcase.input_id.into())
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         let output = self
             .problem_registry_client
             .fetch(testcase.output_id.into())
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let testcase = TestcaseDto {
             id: testcase.id,
@@ -200,7 +200,7 @@ impl<
             .problem_repository
             .get_problem(problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         let user_id = match session_id {
@@ -208,7 +208,7 @@ impl<
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -224,7 +224,7 @@ impl<
             .testcase_repository
             .get_testcases(problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         // now_testcasesとtestcasesの和集合で名前被りがないか確認(now_testcasesの名前は重複しない)
         {
@@ -247,13 +247,13 @@ impl<
                 .problem_registry_client
                 .fetch(testcase.input_id.into())
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             let output = self
                 .problem_registry_client
                 .fetch(testcase.output_id.into())
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             new_testcases.push(NormalJudgeTestcase {
                 name: testcase.name.clone(),
@@ -270,12 +270,12 @@ impl<
         }
 
         let procedure = create_normal_judge_procedure(new_testcases)
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         self.dep_name_repository
             .remove_many(problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         let registered_procedure = register(
             procedure,
             self.problem_registry_server.clone(),
@@ -283,7 +283,7 @@ impl<
             problem_id,
         )
         .await
-        .map_err(UsecaseError::internal_server_error)?;
+        .map_err(UsecaseError::internal_server_error_map())?;
 
         let dep_id_to_resource_id = {
             let mut dep_id_to_resource_id = std::collections::HashMap::new();
@@ -296,7 +296,7 @@ impl<
         self.procedure_repository
             .update_procedure(problem_id, registered_procedure)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         // データベースに保存するためのtestcasesを作成
         let name_to_id = {
@@ -304,7 +304,7 @@ impl<
                 .dep_name_repository
                 .get_many_by_problem_id(problem_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
             let mut name_to_id = std::collections::HashMap::new();
             for (id, name) in id_to_name {
                 name_to_id.insert(name, id);
@@ -385,11 +385,11 @@ impl<
         self.testcase_repository
             .delete_testcases(problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         self.testcase_repository
             .create_testcases(new_testcases)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }
@@ -405,14 +405,14 @@ impl<
             .testcase_repository
             .get_testcase(testcase_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         let problem = self
             .problem_repository
             .get_problem(testcase.problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         let user_id = match session_id {
@@ -420,7 +420,7 @@ impl<
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -436,7 +436,7 @@ impl<
             .testcase_repository
             .get_testcases(problem.id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let mut new_testcases = Vec::new();
         for testcase in now_testcases.iter() {
@@ -445,13 +445,13 @@ impl<
                     .problem_registry_client
                     .fetch(testcase.input_id.into())
                     .await
-                    .map_err(UsecaseError::internal_server_error)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
 
                 let output = self
                     .problem_registry_client
                     .fetch(testcase.output_id.into())
                     .await
-                    .map_err(UsecaseError::internal_server_error)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
 
                 new_testcases.push(NormalJudgeTestcase {
                     name: testcase.name.clone(),
@@ -462,12 +462,12 @@ impl<
         }
 
         let procedure = create_normal_judge_procedure(new_testcases)
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         self.dep_name_repository
             .remove_many(problem.id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         let registered_procedure = register(
             procedure,
             self.problem_registry_server.clone(),
@@ -475,7 +475,7 @@ impl<
             problem.id,
         )
         .await
-        .map_err(UsecaseError::internal_server_error)?;
+        .map_err(UsecaseError::internal_server_error_map())?;
 
         let dep_id_to_resource_id = {
             let mut dep_id_to_resource_id = std::collections::HashMap::new();
@@ -488,7 +488,7 @@ impl<
         self.procedure_repository
             .update_procedure(problem.id, registered_procedure)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         // データベースに保存するためのtestcasesを作成
         let name_to_id = {
@@ -496,7 +496,7 @@ impl<
                 .dep_name_repository
                 .get_many_by_problem_id(problem.id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
             let mut name_to_id = std::collections::HashMap::new();
             for (id, name) in id_to_name {
                 name_to_id.insert(name, id);
@@ -546,11 +546,11 @@ impl<
         self.testcase_repository
             .delete_testcases(problem.id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         self.testcase_repository
             .create_testcases(new_testcases)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }
@@ -567,14 +567,14 @@ impl<
             .testcase_repository
             .get_testcase(testcase_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         let problem = self
             .problem_repository
             .get_problem(testcase.problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         let user_id = match session_id {
@@ -582,7 +582,7 @@ impl<
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -598,7 +598,7 @@ impl<
             .testcase_repository
             .get_testcases(problem.id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         // 自身を除いたtestcasesの名前が一致するか判定
         for testcase in now_testcases.iter() {
@@ -615,13 +615,13 @@ impl<
                     .problem_registry_client
                     .fetch(testcase.input_id.into())
                     .await
-                    .map_err(UsecaseError::internal_server_error)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
 
                 let output = self
                     .problem_registry_client
                     .fetch(testcase.output_id.into())
                     .await
-                    .map_err(UsecaseError::internal_server_error)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
 
                 new_testcases.push(NormalJudgeTestcase {
                     name: testcase.name.clone(),
@@ -638,12 +638,12 @@ impl<
         }
 
         let procedure = create_normal_judge_procedure(new_testcases)
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         self.dep_name_repository
             .remove_many(problem.id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         let registered_procedure = register(
             procedure,
             self.problem_registry_server.clone(),
@@ -651,7 +651,7 @@ impl<
             problem.id,
         )
         .await
-        .map_err(UsecaseError::internal_server_error)?;
+        .map_err(UsecaseError::internal_server_error_map())?;
 
         let dep_id_to_resource_id = {
             let mut dep_id_to_resource_id = std::collections::HashMap::new();
@@ -664,7 +664,7 @@ impl<
         self.procedure_repository
             .update_procedure(problem.id, registered_procedure)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         // データベースに保存するためのtestcasesを作成
         let name_to_id = {
@@ -672,7 +672,7 @@ impl<
                 .dep_name_repository
                 .get_many_by_problem_id(problem.id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
             let mut name_to_id = std::collections::HashMap::new();
             for (id, name) in id_to_name {
                 name_to_id.insert(name, id);
@@ -756,11 +756,11 @@ impl<
         self.testcase_repository
             .delete_testcases(problem.id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         self.testcase_repository
             .create_testcases(new_testcases)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }

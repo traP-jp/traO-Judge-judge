@@ -104,14 +104,14 @@ impl<
             .submission_repository
             .get_submission(submission_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         let problem = self
             .problem_repository
             .get_problem(submission.problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         if !problem.is_public {
@@ -121,7 +121,7 @@ impl<
                 .session_repository
                 .get_display_id_by_session_id(&session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?
+                .map_err(UsecaseError::internal_server_error_map())?
                 .ok_or(UsecaseError::NotFound)?;
 
             if display_id != problem.author_id {
@@ -133,7 +133,7 @@ impl<
             .submission_repository
             .get_submission_results(submission_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(SubmissionDto {
             id: submission.id.to_string(),
@@ -172,7 +172,7 @@ impl<
                 .session_repository
                 .get_display_id_by_session_id(&session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -230,13 +230,13 @@ impl<
             .submission_repository
             .get_submissions_count_by_query(query.clone())
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let submissions = self
             .submission_repository
             .get_submissions_by_query(query)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(SubmissionsDto {
             total: total,
@@ -259,7 +259,7 @@ impl<
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?
+                .map_err(UsecaseError::internal_server_error_map())?
                 .ok_or(UsecaseError::Forbidden)?,
             None => return Err(UsecaseError::Forbidden),
         };
@@ -268,7 +268,7 @@ impl<
             .problem_repository
             .get_problem(problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         if !problem.is_public && problem.author_id != display_id {
@@ -284,14 +284,14 @@ impl<
             .language_repository
             .id_to_language(language_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::ValidateError)?;
 
         let procedure = self
             .procedure_repository
             .get_procedure(problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or_else(|| {
                 UsecaseError::internal_server_error_msg(
                     "procedure not found for problem when creating submission",
@@ -313,7 +313,7 @@ impl<
             .submission_repository
             .create_submission(submission)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let mut runtime_texts = HashMap::new();
         runtime_texts.insert(
@@ -394,20 +394,20 @@ impl<
                 runtime_texts,
             })
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let keys = judge_response.keys().cloned().collect::<Vec<_>>();
         let testcase_names = self
             .dep_name_repository
             .get_many(keys)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let testcases = self
             .testcase_repository
             .get_testcases(problem_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let name_to_id = testcases
             .into_iter()
@@ -477,12 +477,12 @@ impl<
                 },
             )
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         self.submission_repository
             .create_judge_results(testcase_results)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         tracing::info!(
             %submission_id,

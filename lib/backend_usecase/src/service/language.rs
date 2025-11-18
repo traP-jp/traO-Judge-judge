@@ -20,7 +20,7 @@ impl<LR: LanguageRepository> LanguageService<LR> {
             .language_repository
             .get_languages()
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(languages.into_iter().map(|l| l.into()).collect())
     }

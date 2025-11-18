@@ -74,26 +74,26 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .auth_repository
             .is_exist_email(&email)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
         {
             return Ok(());
         }
 
         let encode_key =
-            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error)?;
+            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error_map())?;
 
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let jwt = AuthToken::encode_signup_jwt(Some(&email), None, None, &encode_key, &encrypt_key)
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let mail = self.mail_template_provider.signup_request(&jwt);
 
         self.mail_client
             .send_mail(user_address, mail.subject.as_str(), mail.body.as_str())
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }
@@ -102,9 +102,9 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         data.validate().map_err(|_| UsecaseError::ValidateError)?;
 
         let encode_key =
-            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error)?;
+            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error_map())?;
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         if AuthToken::get_action(&data.token, &encode_key, &encrypt_key)
             .map_err(|_| UsecaseError::ValidateError)?
@@ -130,14 +130,14 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                     .user_repository
                     .get_user_by_user_id(user_id)
                     .await
-                    .map_err(UsecaseError::internal_server_error)?
+                    .map_err(UsecaseError::internal_server_error_map())?
                     .ok_or(UsecaseError::Unauthorized)?;
 
                 let session_id = self
                     .session_repository
                     .create_session(user)
                     .await
-                    .map_err(UsecaseError::internal_server_error)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
                 return Ok(session_id);
             }
 
@@ -145,24 +145,24 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .user_repository
                 .create_user(&data.user_name)
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             self.auth_repository
                 .save_user_email_and_password(user_id, &email, &password)
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             let user = self
                 .user_repository
                 .get_user_by_user_id(user_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?
+                .map_err(UsecaseError::internal_server_error_map())?
                 .ok_or(UsecaseError::Unauthorized)?;
             let session_id = self
                 .session_repository
                 .create_session(user)
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             Ok(session_id)
         } else if let Some(google_oauth) = google_oauth {
@@ -175,13 +175,13 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                     .user_repository
                     .get_user_by_user_id(user_id)
                     .await
-                    .map_err(UsecaseError::internal_server_error)?
+                    .map_err(UsecaseError::internal_server_error_map())?
                     .ok_or(UsecaseError::Unauthorized)?;
                 let session_id = self
                     .session_repository
                     .create_session(user)
                     .await
-                    .map_err(UsecaseError::internal_server_error)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
                 return Ok(session_id);
             }
 
@@ -189,24 +189,24 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .user_repository
                 .create_user(&data.user_name)
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             self.auth_repository
                 .save_user_google_oauth(user_id, &google_oauth)
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             let user = self
                 .user_repository
                 .get_user_by_user_id(user_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?
+                .map_err(UsecaseError::internal_server_error_map())?
                 .ok_or(UsecaseError::Unauthorized)?;
             let session_id = self
                 .session_repository
                 .create_session(user)
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             Ok(session_id)
         } else if let Some(github_oauth) = github_oauth {
@@ -219,13 +219,13 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                     .user_repository
                     .get_user_by_user_id(user_id)
                     .await
-                    .map_err(UsecaseError::internal_server_error)?
+                    .map_err(UsecaseError::internal_server_error_map())?
                     .ok_or(UsecaseError::Unauthorized)?;
                 let session_id = self
                     .session_repository
                     .create_session(user)
                     .await
-                    .map_err(UsecaseError::internal_server_error)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
                 return Ok(session_id);
             }
 
@@ -233,24 +233,24 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .user_repository
                 .create_user(&data.user_name)
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             self.auth_repository
                 .save_user_github_oauth(user_id, &github_oauth)
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             let user = self
                 .user_repository
                 .get_user_by_user_id(user_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?
+                .map_err(UsecaseError::internal_server_error_map())?
                 .ok_or(UsecaseError::Unauthorized)?;
             let session_id = self
                 .session_repository
                 .create_session(user)
                 .await
-                .map_err(UsecaseError::internal_server_error)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             Ok(session_id)
         } else {
@@ -266,14 +266,14 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .auth_repository
             .get_user_id_by_email(&data.email)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::Unauthorized)?;
 
         if !self
             .auth_repository
             .verify_user_password(user_id, &data.password)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
         {
             return Err(UsecaseError::Unauthorized);
         }
@@ -282,14 +282,14 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .user_repository
             .get_user_by_user_id(user_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::Unauthorized)?;
 
         let session_id = self
             .session_repository
             .create_session(user)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(session_id)
     }
@@ -298,7 +298,7 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         self.session_repository
             .delete_session(session_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::Unauthorized)?;
         Ok(())
     }
@@ -313,20 +313,20 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         }
 
         let encode_key =
-            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error)?;
+            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error_map())?;
 
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let jwt = AuthToken::encode_email_reset_password_jwt(&email, &encode_key, &encrypt_key)
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let mail = self.mail_template_provider.reset_password_request(&jwt);
 
         self.mail_client
             .send_mail(user_address, mail.subject.as_str(), mail.body.as_str())
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }
@@ -338,9 +338,9 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
         data.validate().map_err(|_| UsecaseError::ValidateError)?;
 
         let encode_key =
-            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error)?;
+            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error_map())?;
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         if AuthToken::get_action(&data.token, &encode_key, &encrypt_key)
             .map_err(|_| UsecaseError::ValidateError)?
@@ -359,22 +359,22 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .auth_repository
             .get_user_id_by_email(&email)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::ValidateError)?;
 
         self.auth_repository
             .update_user_password(user_id, &data.password)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }
 
     pub async fn activate_email(&self, token: &str) -> anyhow::Result<(), UsecaseError> {
         let encode_key =
-            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error)?;
+            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error_map())?;
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         if AuthToken::get_action(token, &encode_key, &encrypt_key)
             .map_err(|_| UsecaseError::ValidateError)?
@@ -394,14 +394,14 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
             .user_repository
             .get_user_by_display_id(display_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::ValidateError)?
             .id;
 
         self.auth_repository
             .update_user_email(user_id, &email)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }

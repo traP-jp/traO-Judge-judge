@@ -33,7 +33,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
             .auth_repository
             .get_github_oauth2_url(oauth_action)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         Ok(url)
     }
 
@@ -54,14 +54,14 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     .auth_repository
                     .get_user_id_by_github_oauth(&github_oauth)
                     .await
-                    .map_err(UsecaseError::internal_server_error)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
                 match user_id {
                     Some(user_id) => {
                         let user = self
                             .user_repository
                             .get_user_by_user_id(user_id)
                             .await
-                            .map_err(UsecaseError::internal_server_error)?
+                            .map_err(UsecaseError::internal_server_error_map())?
                             .ok_or_else(|| {
                                 UsecaseError::internal_server_error_msg(
                                     "user not found by user_id during GitHub OAuth2 authorize",
@@ -71,7 +71,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                             .session_repository
                             .create_session(user)
                             .await
-                            .map_err(UsecaseError::internal_server_error)?;
+                            .map_err(UsecaseError::internal_server_error_map())?;
                         Ok(GitHubOAuth2AuthorizeDto {
                             session_id: Some(login_session_id),
                             token: None,
@@ -88,7 +88,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                             &encode_key,
                             &encrypt_key,
                         )
-                        .map_err(UsecaseError::internal_server_error)?;
+                        .map_err(UsecaseError::internal_server_error_map())?;
                         Ok(GitHubOAuth2AuthorizeDto {
                             session_id: None,
                             token: Some(sign_up_token),
@@ -102,12 +102,12 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                     .session_repository
                     .get_user_id_by_session_id(session_id)
                     .await
-                    .map_err(UsecaseError::internal_server_error)?
+                    .map_err(UsecaseError::internal_server_error_map())?
                     .ok_or(UsecaseError::Unauthorized)?;
                 self.auth_repository
                     .update_user_github_oauth(user_id, &github_oauth)
                     .await
-                    .map_err(UsecaseError::internal_server_error)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
                 Ok(GitHubOAuth2AuthorizeDto {
                     session_id: None,
                     token: None,
@@ -127,7 +127,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
             self.session_repository
                 .get_user_id_by_session_id(session_id)
                 .await
-                .map_err(UsecaseError::internal_server_error)?
+                .map_err(UsecaseError::internal_server_error_map())?
                 .ok_or(UsecaseError::BadRequest)?
         } else {
             return Err(UsecaseError::BadRequest);
@@ -145,7 +145,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
             .auth_repository
             .count_authentication_methods(user_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?
+            .map_err(UsecaseError::internal_server_error_map())?
             <= 1
         {
             return Err(UsecaseError::BadRequest);
@@ -153,7 +153,7 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
         self.auth_repository
             .delete_user_github_oauth(user_id)
             .await
-            .map_err(UsecaseError::internal_server_error)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         Ok(())
     }
 }
