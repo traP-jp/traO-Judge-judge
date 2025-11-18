@@ -254,9 +254,9 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
 
             Ok(session_id)
         } else {
-            return Err(UsecaseError::internal_server_error_msg(
+            Err(UsecaseError::internal_server_error_msg(
                 "signup token contained no email/google/github info",
-            ));
+            ))
         }
     }
 
