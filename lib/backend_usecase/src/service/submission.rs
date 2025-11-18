@@ -353,7 +353,7 @@ impl<
                         line,
                         column,
                     } => {
-                        tracing::warn!(
+                        tracing::error!(
                             %submission_id,
                             problem_id,
                             %message,
