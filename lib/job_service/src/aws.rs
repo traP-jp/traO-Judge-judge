@@ -39,7 +39,7 @@ impl AwsClient {
             }
         }
 
-        let region_provider = RegionProviderChain::default_provider().or_else("us-west-2");
+        let region_provider = RegionProviderChain::default_provider().or_else("us-east-1");
         let config = aws_config::from_env().region(region_provider).load().await;
         Self {
             ec2_client: Ec2Client::new(&config),
@@ -80,7 +80,7 @@ impl aws::AwsClient for AwsClient {
             .min_count(1)
             .max_count(1)
             .set_placement(Some(
-                Placement::builder().availability_zone("us-west-2a").build(),
+                Placement::builder().availability_zone("us-east-1a").build(),
             ))
             .set_iam_instance_profile(Some(
                 IamInstanceProfileSpecification::builder()

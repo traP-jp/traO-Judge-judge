@@ -11,7 +11,7 @@ pub struct ProblemRegistryServer {
 impl ProblemRegistryServer {
     pub async fn new() -> Self {
         // FIXME: do not hard code!
-        let region_provider = RegionProviderChain::default_provider().or_else("us-west-2");
+        let region_provider = RegionProviderChain::default_provider().or_else("us-east-1");
         let config = aws_config::from_env().region(region_provider).load().await;
         Self {
             s3_client: S3Client::new(&config),
