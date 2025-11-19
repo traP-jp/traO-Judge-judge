@@ -19,4 +19,4 @@ ENV TRAOJUDGE_LANGUAGES_JSON=/trao/languages.json
 COPY --from=venv-builder /app/pylib/traopy_util /app/pylib/traopy_util
 COPY --from=venv-builder /root/.rye/py /root/.rye/py
 ENV PATH="/app/pylib/traopy_util/.venv/bin:${PATH}"
-RUN ln -sf /app/pylib/traopy_util/.venv/bin/python3 /bin/python3-traopy
+RUN ln -sf /app/pylib/traopy_util/.venv/bin/python3 /app/pylib/traopy_util/.venv/bin/python3-traopy
