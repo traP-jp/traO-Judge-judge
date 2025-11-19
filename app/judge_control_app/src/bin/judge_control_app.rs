@@ -20,12 +20,8 @@ async fn main() {
         .expect("Failed to parse grpc service address");
     let aws_client = AwsClient::new().await;
     let grpc_client_factory = |ip_addr| async move { GrpcClient::new(ip_addr).await };
-    let problem_registry_client_factory = || async move { ProblemRegistryClient::new().await };
-    let job_service = JobService::new(
-        aws_client,
-        grpc_client_factory,
-        problem_registry_client_factory,
-    );
+    let problem_registry_client = ProblemRegistryClient::new().await;
+    let job_service = JobService::new(aws_client, grpc_client_factory, problem_registry_client);
     tracing::info!("JobService created");
     let inner_judge_service = JudgeServiceImpl::new(job_service);
     tracing::info!("JudgeServiceImpl created");
