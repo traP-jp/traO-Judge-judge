@@ -1,7 +1,11 @@
 use crate::di::DiContainer;
 use axum::http;
 use infra::provider::Provider;
-use tower_http::{LatencyUnit, cors::CorsLayer, trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer}};
+use tower_http::{
+    LatencyUnit,
+    cors::CorsLayer,
+    trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer},
+};
 use tracing::Level;
 
 pub mod di;
