@@ -100,6 +100,7 @@ impl<
             .reserve_execution(procedure.executions.len())
             .await
             .context("Failed to reserve executions")?;
+        tracing::info!("Reserved {} reservations", reservations_vec.len());
         let mut reservations = HashMap::new();
         for execution in procedure.executions.iter() {
             let reservation = reservations_vec
@@ -131,6 +132,7 @@ impl<
             .place_file(file_conf)
             .await
             .context(format!("Failed to place file for runtime {}", runtime_id))?;
+        tracing::info!("File placed for {}", runtime_id);
         let outcomes = self.new_outcome(runtime_id, outcome_token).await;
         tracing::info!("File job for {} completed", runtime_id);
         self.run_next(&outcomes).await?;
@@ -151,10 +153,11 @@ impl<
             .execute(reservation, dependencies)
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+        tracing::info!("Execution completed for {}", runtime_id);
         let result = super::output_parser::parse(&output)
             .map_err(|e| anyhow::anyhow!(e.to_string()))
             .context("Failed to parse output")?;
-        tracing::info!("Execution job for {} completed", runtime_id);
+        tracing::info!("Output parsed for {}", runtime_id);
         if match &result {
             judge_output::ExecutionResult::Displayable(result_inner) => {
                 result_inner.continue_status.clone()
@@ -186,6 +189,7 @@ impl<
         runtime_id: RuntimeId,
         outcome_token: OutcomeToken,
     ) -> HashMap<RuntimeId, OutcomeToken> {
+        tracing::info!("Creating new outcome for {}", runtime_id);
         let outcomes = {
             let mut outcomes = self.outcomes.lock().await;
             outcomes.insert(runtime_id, outcome_token);
@@ -193,6 +197,7 @@ impl<
             std::mem::drop(outcomes);
             cloned
         };
+        tracing::info!("New outcome created for {}", runtime_id);
         outcomes
     }
 
