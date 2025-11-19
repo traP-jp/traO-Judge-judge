@@ -27,6 +27,8 @@ async fn put_user_me_backend(pool: sqlx::MySqlPool) -> anyhow::Result<()> {
             json!({
                 "userName": "tt",
                 "selfIntroduction": "hello",
+                "xId": "",
+                "githubId": "",
             }),
             vec![("name", "tt"), ("selfIntroduction", "hello")],
         ),
@@ -34,7 +36,9 @@ async fn put_user_me_backend(pool: sqlx::MySqlPool) -> anyhow::Result<()> {
             2,
             json!({
                 "userName": "t-t",
+                "selfIntroduction": "hello",
                 "xId": "test",
+                "githubId": "",
             }),
             vec![("name", "t-t"), ("xId", "test")],
         ),
@@ -44,6 +48,7 @@ async fn put_user_me_backend(pool: sqlx::MySqlPool) -> anyhow::Result<()> {
                 "userName": "t-t",
                 "xId": "tester",
                 "selfIntroduction": "hello",
+                "githubId": "",
             }),
             vec![
                 ("name", "t-t"),
@@ -123,6 +128,7 @@ async fn put_user_me_invalid_backend(pool: sqlx::MySqlPool) -> anyhow::Result<()
                     "userName": "test",
                     "xId": "tester",
                     "selfIntroduction": "hello",
+                    "githubId": "",
                 })),
         )
         .await?;
@@ -143,16 +149,15 @@ async fn put_user_me_invalid_backend(pool: sqlx::MySqlPool) -> anyhow::Result<()
     let tests = vec![
         json!({
             "userName": "t-",
-            "xId": "tester",
             "selfIntroduction": "hello",
-        }),
-        json!({
-            "userName": "t-t",
-            "xId": "",
+            "xId": "tester",
+            "githubId": "",
         }),
         json!({
             "userName": "Test/Test",
             "selfIntroduction": "hello",
+            "githubId": "",
+            "xId": "",
         }),
     ];
 

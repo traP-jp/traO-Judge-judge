@@ -18,13 +18,6 @@ pub async fn post_traq_oauth2_authorize(
         .get("X-Forwarded-User")
         .and_then(|v| v.to_str().ok());
 
-    // header
-    tracing::info!(
-        "X-Forwarded-User: {:?}, session_id: {:?}",
-        forwarded_user,
-        session_id
-    );
-
     match di_container
         .traq_oauth2_service()
         .post_traq_oauth2_authorize(session_id, &oauth_action, forwarded_user)
