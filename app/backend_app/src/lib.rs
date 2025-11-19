@@ -1,7 +1,8 @@
 use crate::di::DiContainer;
 use axum::http;
 use infra::provider::Provider;
-use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use tower_http::{LatencyUnit, cors::CorsLayer, trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer}};
+use tracing::Level;
 
 pub mod di;
 pub mod handler;
@@ -35,7 +36,16 @@ pub async fn run() -> anyhow::Result<()> {
         .allow_headers(tower_http::cors::Any);
 
     let app = handler::make_router(di_container)
-        .layer(TraceLayer::new_for_http())
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
+                .on_request(DefaultOnRequest::new().level(Level::INFO))
+                .on_response(
+                    DefaultOnResponse::new()
+                        .level(Level::INFO)
+                        .latency_unit(LatencyUnit::Millis),
+                ),
+        )
         .layer(cors);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
