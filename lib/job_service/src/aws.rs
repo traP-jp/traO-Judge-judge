@@ -5,22 +5,13 @@ use aws_sdk_ec2::{
     Client as Ec2Client,
     types::{IamInstanceProfileSpecification, InstanceType, Placement},
 };
-use aws_sdk_s3::Client as S3Client;
 use base64::{Engine, prelude::BASE64_STANDARD};
-use std::{collections::HashMap, env, net::Ipv4Addr, str::FromStr};
-use uuid::Uuid;
+use std::{env, net::Ipv4Addr, str::FromStr};
 
-use crate::model::aws;
-
-struct AwsInstanceInfo {
-    aws_id: String,
-    ip_addr: Ipv4Addr,
-}
+use crate::model::aws::{self, AwsInstanceInfo};
 
 pub struct AwsClient {
     ec2_client: Ec2Client,
-    aws_instance_table: HashMap<Uuid, AwsInstanceInfo>,
-    s3_client: S3Client,
 }
 
 impl AwsClient {
@@ -43,20 +34,13 @@ impl AwsClient {
         let config = aws_config::from_env().region(region_provider).load().await;
         Self {
             ec2_client: Ec2Client::new(&config),
-            aws_instance_table: HashMap::new(),
-            s3_client: S3Client::new(&config),
         }
     }
 }
 
 #[axum::async_trait]
 impl aws::AwsClient for AwsClient {
-    async fn create_instance(&mut self, instance_id: Uuid) -> Result<Ipv4Addr, anyhow::Error> {
-        ensure!(
-            !self.aws_instance_table.contains_key(&instance_id),
-            "Instance already exists"
-        );
-
+    async fn create_instance(&self) -> Result<AwsInstanceInfo, anyhow::Error> {
         let security_group_id = env::var("SECURITY_GROUP_ID")?;
         let subnet_id = env::var("SUBNET_ID")?;
         let ami_id = env::var("EXEC_INSTANCE_AMI")?;
@@ -109,32 +93,19 @@ impl aws::AwsClient for AwsClient {
 
         let aws_id = created_instance.instances()[0]
             .instance_id()
-            .context("Failed to get instance ID")?;
+            .context("Failed to get instance ID")?
+            .to_string();
         let ip_addr_str = created_instance.instances()[0]
             .private_ip_address()
             .context("Failed to get private ip address")?;
         let ip_addr = Ipv4Addr::from_str(ip_addr_str).context("Failed to parse IP address")?;
 
-        self.aws_instance_table.insert(
-            instance_id,
-            AwsInstanceInfo {
-                aws_id: aws_id.to_string(),
-                ip_addr,
-            },
-        );
-
         tracing::info!("Instance created: {aws_id}, {ip_addr}");
 
-        Ok(ip_addr)
+        Ok(AwsInstanceInfo { aws_id, ip_addr })
     }
 
-    async fn terminate_instance(&mut self, instance_id: Uuid) -> Result<(), anyhow::Error> {
-        let aws_id = self
-            .aws_instance_table
-            .get(&instance_id)
-            .context("Failed to get instance ID from instance ID")?
-            .aws_id
-            .clone();
+    async fn terminate_instance(&self, aws_id: String) -> Result<(), anyhow::Error> {
         let response = self
             .ec2_client
             .terminate_instances()
@@ -147,8 +118,6 @@ impl aws::AwsClient for AwsClient {
             !response.terminating_instances().is_empty(),
             "Failed to terminate instance: no value was sent"
         );
-
-        self.aws_instance_table.remove(&instance_id);
 
         tracing::info!("Instance terminated: {aws_id}");
 
@@ -168,8 +137,8 @@ mod tests {
     async fn test_create_instance() -> Result<(), anyhow::Error> {
         // lib/job_service/.env を読み込む
         dotenv().ok();
-        let mut client = AwsClient::new().await;
-        client.create_instance(Uuid::now_v7()).await?;
+        let client = AwsClient::new().await;
+        client.create_instance().await?;
         Ok(())
     }
 
@@ -178,16 +147,10 @@ mod tests {
     async fn test_terminate_instance() -> Result<(), anyhow::Error> {
         // lib/job_service/.env を読み込む
         dotenv().ok();
-        let mut client = AwsClient::new().await;
-        let instance_id = Uuid::now_v7();
-        client.aws_instance_table.insert(
-            instance_id,
-            AwsInstanceInfo {
-                aws_id: "i-*****************".to_string(),
-                ip_addr: Ipv4Addr::from_str("***.***.***.***")?,
-            },
-        );
-        client.terminate_instance(instance_id).await?;
+        let client = AwsClient::new().await;
+        client
+            .terminate_instance("i-*****************".to_string())
+            .await?;
         Ok(())
     }
 }

@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::actor::Running;
 use crate::job_service::OutcomeToken;
-use crate::model::aws::AwsClient;
+use crate::model::aws::{AwsClient, AwsInstanceInfo};
 use crate::model::grpc::GrpcClient;
 
 pub enum InstanceMessage {
@@ -23,7 +23,7 @@ pub enum InstanceMessage {
 }
 
 pub struct Instance<A, G> {
-    instance_id: Uuid,
+    aws_id: String,
     receiver: async_channel::Receiver<InstanceMessage>, // multi-consumer
     aws_client: A,
     grpc_client: G,
@@ -41,22 +41,22 @@ impl<A: AwsClient, G: GrpcClient> Instance<A, G> {
         AF: Fn() -> AFut,
         GF: Fn(Ipv4Addr) -> GFut,
     {
-        let instance_id = Uuid::now_v7();
-        tracing::debug!("[Instance::new] BEGIN instance_id={}", instance_id);
+        let aws_id = Uuid::now_v7();
+        tracing::debug!("[Instance::new] BEGIN aws_id={}", aws_id);
         // warm-up AWS & gRPC client
-        tracing::debug!("[Instance::new] gen aws BEGIN instance_id={}", instance_id);
-        let mut aws_client = aws_client_factory().await;
-        tracing::debug!("[Instance::new] gen aws END instance_id={}", instance_id);
+        tracing::debug!("[Instance::new] gen aws BEGIN aws_id={}", aws_id);
+        let aws_client = aws_client_factory().await;
+        tracing::debug!("[Instance::new] gen aws END aws_id={}", aws_id);
 
-        let instance_ip = aws_client.create_instance(instance_id).await.unwrap();
+        let AwsInstanceInfo { aws_id, ip_addr } = aws_client.create_instance().await.unwrap();
 
-        tracing::debug!("[Instance::new] gen grpc BEGIN instance_id={}", instance_id);
-        let grpc_client = grpc_client_factory(instance_ip).await;
-        tracing::debug!("[Instance::new] gen grpc END instance_id={}", instance_id);
+        tracing::debug!("[Instance::new] gen grpc BEGIN aws_id={}", aws_id);
+        let grpc_client = grpc_client_factory(ip_addr).await;
+        tracing::debug!("[Instance::new] gen grpc END aws_id={}", aws_id);
 
-        tracing::debug!("[Instance::new] END instance_id={}", instance_id);
+        tracing::debug!("[Instance::new] END aws_id={}", aws_id);
         Self {
-            instance_id,
+            aws_id,
             receiver,
             aws_client,
             grpc_client,
@@ -78,31 +78,22 @@ impl<A: AwsClient, G: GrpcClient> Instance<A, G> {
                 dependencies,
                 respond_to,
             } => {
-                tracing::debug!(
-                    "[Instance::handle_execution] BEGIN instance_id={}",
-                    self.instance_id
-                );
+                tracing::debug!("[Instance::handle_execution] BEGIN aws_id={}", self.aws_id);
                 let result = self
                     .grpc_client
                     .execute(outcome_id_for_res, dependencies)
                     .await;
-                tracing::debug!(
-                    "[Instance::handle_execution] END instance_id={}",
-                    self.instance_id
-                );
+                tracing::debug!("[Instance::handle_execution] END aws_id={}", self.aws_id);
                 let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Continue
             }
             InstanceMessage::Terminate { respond_to } => {
-                tracing::debug!(
-                    "[Instance::handle_terminate] BEGIN instance_id={}",
-                    self.instance_id
-                );
-                let result = self.aws_client.terminate_instance(self.instance_id).await;
-                tracing::debug!(
-                    "[Instance::handle_terminate] END instance_id={}",
-                    self.instance_id
-                );
+                tracing::debug!("[Instance::handle_terminate] BEGIN aws_id={}", self.aws_id);
+                let result = self
+                    .aws_client
+                    .terminate_instance(self.aws_id.clone())
+                    .await;
+                tracing::debug!("[Instance::handle_terminate] END aws_id={}", self.aws_id);
                 let _ = respond_to.send(result); // if this send fails, so does the recv.await after
                 Running::Stop
             }
