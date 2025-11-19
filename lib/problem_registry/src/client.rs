@@ -6,6 +6,7 @@ use std::env;
 
 #[derive(Clone)]
 pub struct ProblemRegistryClient {
+    // Cheap to clone since S3Client internally uses Arc.
     s3_client: S3Client,
 }
 
