@@ -138,9 +138,9 @@ pub struct UpdatePassword {
 #[derive(serde::Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateMe {
-    pub user_name: Option<String>,
+    pub user_name: String,
     pub icon: Option<String>,
-    pub github_id: Option<String>,
-    pub x_id: Option<String>,
-    pub self_introduction: Option<String>,
+    pub github_id: String,
+    pub x_id: String,
+    pub self_introduction: String,
 }
