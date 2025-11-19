@@ -27,28 +27,26 @@ pub enum InstancePoolMessage {
     },
 }
 
-pub struct InstancePool<AF, GF> {
+pub struct InstancePool<A, GF> {
     receiver: mpsc::UnboundedReceiver<InstancePoolMessage>,
     instance_tx: async_channel::Sender<InstanceMessage>,
     instance_rx: async_channel::Receiver<InstanceMessage>,
     reservation_count: usize,
     actual_instance_count: usize,
-    aws_client_factory: AF,
+    aws_client: A,
     grpc_client_factory: GF,
 }
 
-impl<A, G, AFut, GFut, AF, GF> InstancePool<AF, GF>
+impl<A, G, GFut, GF> InstancePool<A, GF>
 where
-    A: AwsClient + Send,
+    A: AwsClient + Send + Clone + 'static,
     G: GrpcClient + Send,
-    AFut: Future<Output = A> + Send,
     GFut: Future<Output = G> + Send,
-    AF: Fn() -> AFut + Send + Clone + 'static,
     GF: Fn(Ipv4Addr) -> GFut + Send + Clone + 'static,
 {
     pub async fn new(
         receiver: mpsc::UnboundedReceiver<InstancePoolMessage>,
-        aws_client_factory: AF,
+        aws_client: A,
         grpc_client_factory: GF,
     ) -> Self {
         let (instance_tx, instance_rx) = async_channel::unbounded();
@@ -58,7 +56,7 @@ where
             instance_rx,
             reservation_count: 0,
             actual_instance_count: 0,
-            aws_client_factory,
+            aws_client,
             grpc_client_factory,
         }
     }
@@ -106,10 +104,10 @@ where
         while self.actual_instance_count < self.desired_instance_count() {
             self.actual_instance_count += 1;
             let instance_rx = self.instance_rx.clone();
-            let aws_client_factory = self.aws_client_factory.clone();
+            let aws_client = self.aws_client.clone();
             let grpc_client_factory = self.grpc_client_factory.clone();
             tokio::spawn(async move {
-                Instance::new(instance_rx, aws_client_factory, grpc_client_factory)
+                Instance::new(instance_rx, aws_client, grpc_client_factory)
                     .await
                     .run()
                     .await;

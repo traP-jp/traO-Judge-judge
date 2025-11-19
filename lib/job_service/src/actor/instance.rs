@@ -30,24 +30,21 @@ pub struct Instance<A, G> {
 }
 
 impl<A: AwsClient, G: GrpcClient> Instance<A, G> {
-    pub async fn new<AFut, GFut, AF, GF>(
+    pub async fn new<GFut, GF>(
         receiver: async_channel::Receiver<InstanceMessage>,
-        aws_client_factory: AF,
+        aws_client: A,
         grpc_client_factory: GF,
     ) -> Self
     where
-        AFut: Future<Output = A>,
         GFut: Future<Output = G>,
-        AF: Fn() -> AFut,
         GF: Fn(Ipv4Addr) -> GFut,
     {
         tracing::debug!("[Instance::new] BEGIN");
-        // warm-up AWS & gRPC client
-        tracing::debug!("[Instance::new] gen aws BEGIN");
-        let aws_client = aws_client_factory().await;
-        tracing::debug!("[Instance::new] gen aws END");
 
+        // warm-up AWS & gRPC client
+        tracing::debug!("[Instance::new] create instance BEGIN");
         let AwsInstanceInfo { aws_id, ip_addr } = aws_client.create_instance().await.unwrap();
+        tracing::debug!("[Instance::new] create instance END");
 
         tracing::debug!("[Instance::new] gen grpc BEGIN aws_id={}", aws_id);
         let grpc_client = grpc_client_factory(ip_addr).await;
