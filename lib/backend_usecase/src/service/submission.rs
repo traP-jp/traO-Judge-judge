@@ -17,7 +17,7 @@ use judge_core::{
     model::{
         dep_name_repository::DepNameRepository,
         judge::{JudgeRequest, JudgeService},
-        judge_output::{ExecutionJobResult, ExecutionResult, JudgeStatus},
+        judge_output::{ExecutionJobResult, ExecutionResult},
     },
 };
 use std::collections::HashMap;
@@ -377,54 +377,62 @@ impl<
             .map(|tc| (tc.name, tc.id))
             .collect::<HashMap<_, _>>();
 
-        let mut total_score: i64 = 0;
-        let mut max_time_ms: i32 = 0;
-        let mut max_memory_mib: i32 = 0;
-        let mut overall_status = JudgeStatus::AC;
-        let mut early_exited = false;
+        let mut total_score: i64 = 0; // summary phase から取ってくる
+        let mut max_time_ms: i32 = 0; // summary phase から取ってくる
+        let mut max_memory_mib: i32 = 0; // summary phase から取ってくる
+        let mut overall_status = "IE".to_string(); // summary phase から -> compile phase から取る
         let mut testcase_results: Vec<CreateJudgeResult> = Vec::new();
 
         for (dep_id, result) in judge_response.into_iter() {
             match result {
                 ExecutionJobResult::ExecutionResult(exec) => match exec {
                     ExecutionResult::Displayable(res) => {
-                        total_score += res.score;
-                        max_time_ms = max_time_ms.max(res.time as i32);
-                        max_memory_mib = max_memory_mib.max((res.memory / 1024.) as i32);
-                        overall_status = overall_status.max(res.status.clone());
-
                         let testcase_name = testcase_names
                             .get(&dep_id)
                             .cloned()
                             .flatten()
                             .unwrap_or_default();
 
-                        let testcase_id =
-                            name_to_id.get(&testcase_name).cloned().unwrap_or_default();
+                        if testcase_name
+                            .starts_with(judge_core::constant::job_name::TEST_PHASE_PREFIX)
+                        {
+                            let testcase_name = testcase_name
+                                .strip_prefix(judge_core::constant::job_name::TEST_PHASE_PREFIX)
+                                .unwrap_or(testcase_name.as_str())
+                                .to_string();
 
-                        testcase_results.push(CreateJudgeResult {
-                            submission_id,
-                            testcase_id,
-                            testcase_name,
-                            judge_status: format!("{:?}", res.status),
-                            score: res.score,
-                            time_ms: res.time as i32,
-                            memory_mib: (res.memory / 1024.) as i32,
-                        });
+                            let testcase_id =
+                                name_to_id.get(&testcase_name).cloned().unwrap_or_default();
+
+                            testcase_results.push(CreateJudgeResult {
+                                submission_id,
+                                testcase_id,
+                                testcase_name,
+                                judge_status: format!("{:?}", res.status),
+                                score: res.score,
+                                time_ms: res.time as i32,
+                                memory_mib: (res.memory / 1024.) as i32,
+                            });
+                        }
+                        if testcase_name == judge_core::constant::job_name::SUMMARY_PHASE {
+                            total_score = res.score;
+                            max_time_ms = res.time as i32;
+                            max_memory_mib = (res.memory / 1024.) as i32;
+                            overall_status = format!("{:?}", res.status);
+                        }
+                        if testcase_name == judge_core::constant::job_name::COMPILE_PHASE
+                            && overall_status == "IE"
+                        {
+                            overall_status = format!("{:?}", res.status);
+                        }
                     }
                     ExecutionResult::Hidden(_res) => {
                         // todo
                     }
                 },
-                ExecutionJobResult::EarlyExit => early_exited = true,
+                ExecutionJobResult::EarlyExit => {}
             }
         }
-
-        let overall_status = if early_exited {
-            "IE".to_string()
-        } else {
-            format!("{:?}", overall_status)
-        };
 
         self.submission_repository
             .update_submission(
