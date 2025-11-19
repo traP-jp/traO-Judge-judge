@@ -66,13 +66,13 @@ impl aws::AwsClient for AwsClient {
             .ec2_client
             .run_instances()
             .image_id(ami_id)
-            .instance_type(InstanceType::C6iLarge)
+            .instance_type(InstanceType::T2Micro)
             .set_security_group_ids(Some(vec![security_group_id]))
             .set_subnet_id(Some(subnet_id))
             .user_data(
                 BASE64_STANDARD
                     .encode(format!(
-                        "#!/bin/bash\naws s3 cp s3://trao-infra-resources/exec-app/exec-app /root/exec-app >> /log.txt 2>&1\nchmod +x /root/exec-app >> /log.txt 2>&1\nDOCKER_IMAGE_NAME={} RUST_LOG=TRACE /root/exec-app >> /log.txt 2>&1",
+                        "#!/bin/bash\nDOCKER_IMAGE_NAME={} RUST_LOG=DEBUG /root/exec-app >> /log.txt 2>&1",
                         docker_image_name
                     ))
                     .to_string(),
