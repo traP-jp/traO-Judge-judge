@@ -18,11 +18,11 @@ async fn main() {
     let grpc_service_addr = format!("0.0.0.0:{}", grpc_service_port)
         .parse::<std::net::SocketAddr>()
         .expect("Failed to parse grpc service address");
-    let aws_client_factory = || async move { AwsClient::new().await };
+    let aws_client = AwsClient::new().await;
     let grpc_client_factory = |ip_addr| async move { GrpcClient::new(ip_addr).await };
     let problem_registry_client_factory = || async move { ProblemRegistryClient::new().await };
     let job_service = JobService::new(
-        aws_client_factory,
+        aws_client,
         grpc_client_factory,
         problem_registry_client_factory,
     );

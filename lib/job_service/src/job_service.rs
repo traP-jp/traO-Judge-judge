@@ -30,25 +30,23 @@ struct JobServiceInner {
 }
 
 impl JobService {
-    pub fn new<A, G, P, AFut, GFut, PFut, AF, GF, PF>(
-        aws_client_factory: AF,
+    pub fn new<A, G, P, GFut, PFut, GF, PF>(
+        aws_client: A,
         grpc_client_factory: GF,
         problem_registry_client_factory: PF,
     ) -> Self
     where
-        A: AwsClient + Send,
+        A: AwsClient + Send + Clone + 'static,
         G: GrpcClient + Send,
         P: ProblemRegistryClient + Send,
-        AFut: Future<Output = A> + Send,
         GFut: Future<Output = G> + Send,
         PFut: Future<Output = P> + Send,
-        AF: Fn() -> AFut + Send + Sync + Clone + 'static,
         GF: Fn(Ipv4Addr) -> GFut + Send + Sync + Clone + 'static,
         PF: Fn() -> PFut + Send + Sync + Clone + 'static,
     {
         let (instance_pool_tx, instance_pool_rx) = mpsc::unbounded_channel();
         tokio::spawn(async move {
-            InstancePool::new(instance_pool_rx, aws_client_factory, grpc_client_factory)
+            InstancePool::new(instance_pool_rx, aws_client, grpc_client_factory)
                 .await
                 .run()
                 .await;

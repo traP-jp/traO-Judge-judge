@@ -10,7 +10,9 @@ use std::{env, net::Ipv4Addr, str::FromStr};
 
 use crate::model::aws::{self, AwsInstanceInfo};
 
+#[derive(Clone)]
 pub struct AwsClient {
+    // Cheap to clone since Ec2Client internally uses Arc.
     ec2_client: Ec2Client,
 }
 
