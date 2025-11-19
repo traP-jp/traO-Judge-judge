@@ -41,12 +41,11 @@ impl<A: AwsClient, G: GrpcClient> Instance<A, G> {
         AF: Fn() -> AFut,
         GF: Fn(Ipv4Addr) -> GFut,
     {
-        let aws_id = Uuid::now_v7();
-        tracing::debug!("[Instance::new] BEGIN aws_id={}", aws_id);
+        tracing::debug!("[Instance::new] BEGIN");
         // warm-up AWS & gRPC client
-        tracing::debug!("[Instance::new] gen aws BEGIN aws_id={}", aws_id);
+        tracing::debug!("[Instance::new] gen aws BEGIN");
         let aws_client = aws_client_factory().await;
-        tracing::debug!("[Instance::new] gen aws END aws_id={}", aws_id);
+        tracing::debug!("[Instance::new] gen aws END");
 
         let AwsInstanceInfo { aws_id, ip_addr } = aws_client.create_instance().await.unwrap();
 
