@@ -16,14 +16,17 @@ use crate::{
 pub enum InstancePoolMessage {
     Reservation {
         count: usize,
-        respond_to: oneshot::Sender<Result<Vec<ReservationToken>, job::ReservationError>>,
+        respond_to: oneshot::Sender<
+            oneshot::Receiver<Result<Vec<ReservationToken>, job::ReservationError>>,
+        >,
     },
     Execution {
         reservation: ReservationToken,
         outcome_id_for_res: Uuid,
         dependencies: Vec<job::Dependency<OutcomeToken>>,
-        respond_to:
-            oneshot::Sender<Result<(OutcomeToken, std::process::Output), job::ExecutionError>>,
+        respond_to: oneshot::Sender<
+            oneshot::Receiver<Result<(OutcomeToken, std::process::Output), job::ExecutionError>>,
+        >,
     },
 }
 
@@ -74,8 +77,12 @@ where
     async fn handle(&mut self, msg: InstancePoolMessage) -> Running {
         match msg {
             InstancePoolMessage::Reservation { count, respond_to } => {
-                let result = self.handle_reservation(count).await;
-                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
+                let (tx, rx) = oneshot::channel();
+                tokio::spawn(async move {
+                    let result = self.handle_reservation(count).await;
+                    let _ = tx.send(result); // if this send fails, so does the recv.await after
+                });
+                let _ = respond_to.send(rx); // if this send fails, so does the recv.await after
                 Running::Continue
             }
             InstancePoolMessage::Execution {
@@ -84,10 +91,14 @@ where
                 dependencies,
                 respond_to,
             } => {
-                let result = self
-                    .handle_execution(reservation, outcome_id_for_res, dependencies)
-                    .await;
-                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
+                let (tx, rx) = oneshot::channel();
+                tokio::spawn(async move {
+                    let result = self
+                        .handle_execution(reservation, outcome_id_for_res, dependencies)
+                        .await;
+                    let _ = tx.send(result); // if this send fails, so does the recv.await after
+                });
+                let _ = respond_to.send(rx); // if this send fails, so does the recv.await after
                 Running::Continue
             }
         }

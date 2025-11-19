@@ -143,7 +143,11 @@ impl job::JobService<ReservationToken, OutcomeToken> for JobService {
                 count,
                 respond_to: tx,
             }); // if this send fails, so does the recv.await below
-        let res = rx.await.map_err(|e| {
+        let rx_inner = rx.await.map_err(|e| {
+            tracing::error!("InstancePool task has been killed: {e}");
+            job::ReservationError::ReserveFailed(format!("InstancePool task has been killed: {e}"))
+        })?;
+        let res = rx_inner.await.map_err(|e| {
             tracing::error!("InstancePool task has been killed: {e}");
             job::ReservationError::ReserveFailed(format!("InstancePool task has been killed: {e}"))
         })?;
@@ -178,7 +182,11 @@ impl job::JobService<ReservationToken, OutcomeToken> for JobService {
                 dependencies,
                 respond_to: tx,
             }); // if this send fails, so does the recv.await below
-        let res = rx.await.map_err(|e| {
+        let rx_inner = rx.await.map_err(|e| {
+            tracing::error!("InstancePool task has been killed: {e}");
+            job::ExecutionError::InternalError(format!("InstancePool task has been killed: {e}"))
+        })?;
+        let res = rx_inner.await.map_err(|e| {
             tracing::error!("InstancePool task has been killed: {e}");
             job::ExecutionError::InternalError(format!("InstancePool task has been killed: {e}"))
         })?;
