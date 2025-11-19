@@ -1,4 +1,4 @@
-use crate::di::DiContainer;
+use crate::{di::DiContainer, model::error::AppError};
 use axum::{
     extract::{Path, State},
     http::{HeaderMap, StatusCode, header::SET_COOKIE},
@@ -6,7 +6,6 @@ use axum::{
 };
 use axum_extra::TypedHeader;
 use axum_extra::headers::Cookie;
-use usecase::service::traq_oauth2::TraqOAuth2Error;
 
 pub async fn post_traq_oauth2_authorize(
     State(di_container): State<DiContainer>,
@@ -38,11 +37,7 @@ pub async fn post_traq_oauth2_authorize(
                 Ok(StatusCode::NO_CONTENT.into_response())
             }
         }
-        Err(e) => match e {
-            TraqOAuth2Error::BadRequest => Err(StatusCode::BAD_REQUEST),
-            TraqOAuth2Error::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            TraqOAuth2Error::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -58,9 +53,6 @@ pub async fn post_traq_oauth2_revoke(
         .await
     {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(e) => match e {
-            TraqOAuth2Error::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            _ => Err(StatusCode::BAD_REQUEST),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }

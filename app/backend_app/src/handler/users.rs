@@ -1,4 +1,5 @@
 use crate::di::DiContainer;
+use crate::model::error::AppError;
 use crate::model::users::{UpdateEmail, UpdateMe, UpdatePassword, UserMeResponse, UserResponse};
 use axum::{
     Json,
@@ -7,10 +8,7 @@ use axum::{
     response::IntoResponse,
 };
 use axum_extra::{TypedHeader, headers::Cookie};
-use usecase::{
-    model::user::{UpdatePasswordData, UpdateUserData},
-    service::user::UserError,
-};
+use usecase::model::user::{UpdatePasswordData, UpdateUserData};
 
 pub async fn get_me(
     State(di_container): State<DiContainer>,
@@ -23,12 +21,7 @@ pub async fn get_me(
             let resp = UserMeResponse::from(user);
             Ok((StatusCode::OK, Json(resp)))
         }
-        Err(e) => match e {
-            UserError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            UserError::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            UserError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            UserError::NotFound => Err(StatusCode::NOT_FOUND),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -45,12 +38,7 @@ pub async fn put_me_email(
         .await
     {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(e) => match e {
-            UserError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            UserError::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            UserError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            UserError::NotFound => Err(StatusCode::NOT_FOUND),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -73,12 +61,7 @@ pub async fn put_me_password(
         .await
     {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(e) => match e {
-            UserError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            UserError::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            UserError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            UserError::NotFound => Err(StatusCode::NOT_FOUND),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -107,12 +90,7 @@ pub async fn put_me(
             let resp = UserMeResponse::from(user);
             Ok((StatusCode::OK, Json(resp)))
         }
-        Err(e) => match e {
-            UserError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            UserError::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            UserError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            UserError::NotFound => Err(StatusCode::NOT_FOUND),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -132,11 +110,6 @@ pub async fn get_user(
             let resp = UserResponse::from(user);
             Ok((StatusCode::OK, Json(resp)))
         }
-        Err(e) => match e {
-            UserError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            UserError::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            UserError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            UserError::NotFound => Err(StatusCode::NOT_FOUND),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }

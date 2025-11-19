@@ -1,4 +1,5 @@
 use crate::model::editorials::{CreateEditorial, EditorialResponse, UpdateEditorial};
+use crate::model::error::AppError;
 use crate::{di::DiContainer, model::editorials::EditorialSummaryResponse};
 use axum::{
     Json,
@@ -7,7 +8,6 @@ use axum::{
     response::IntoResponse,
 };
 use axum_extra::{TypedHeader, headers::Cookie};
-use usecase::service::editorial::EditorialError;
 
 pub async fn get_editorial(
     State(di_container): State<DiContainer>,
@@ -25,12 +25,7 @@ pub async fn get_editorial(
             let resp = EditorialResponse::from(editorial);
             Ok((StatusCode::OK, Json(resp)))
         }
-        Err(e) => match e {
-            EditorialError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            EditorialError::Forbidden => Err(StatusCode::FORBIDDEN),
-            EditorialError::NotFound => Err(StatusCode::NOT_FOUND),
-            EditorialError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -51,12 +46,7 @@ pub async fn get_editorials(
                 editorials.into_iter().map(|e| e.into()).collect();
             Ok((StatusCode::OK, Json(resp)))
         }
-        Err(e) => match e {
-            EditorialError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            EditorialError::Forbidden => Err(StatusCode::FORBIDDEN),
-            EditorialError::NotFound => Err(StatusCode::NOT_FOUND),
-            EditorialError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -77,12 +67,7 @@ pub async fn post_editorial(
             let resp = EditorialResponse::from(editorial);
             Ok((StatusCode::CREATED, Json(resp)))
         }
-        Err(e) => match e {
-            EditorialError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            EditorialError::Forbidden => Err(StatusCode::FORBIDDEN),
-            EditorialError::NotFound => Err(StatusCode::NOT_FOUND),
-            EditorialError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -100,12 +85,7 @@ pub async fn put_editorial(
         .await
     {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(e) => match e {
-            EditorialError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            EditorialError::Forbidden => Err(StatusCode::FORBIDDEN),
-            EditorialError::NotFound => Err(StatusCode::NOT_FOUND),
-            EditorialError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -122,11 +102,6 @@ pub async fn delete_editorial(
         .await
     {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(e) => match e {
-            EditorialError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            EditorialError::Forbidden => Err(StatusCode::FORBIDDEN),
-            EditorialError::NotFound => Err(StatusCode::NOT_FOUND),
-            EditorialError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }

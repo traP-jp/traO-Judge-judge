@@ -5,12 +5,14 @@ use axum::{
     response::IntoResponse,
 };
 use axum_extra::{TypedHeader, headers::Cookie};
-use usecase::service::testcase::TestcaseError;
 
 use crate::{
     di::DiContainer,
-    model::testcase::{
-        CreateTestcaseRequest, TestcaseResponse, TestcaseSummaryResponse, UpdateTestcaseRequest,
+    model::{
+        error::AppError,
+        testcase::{
+            CreateTestcaseRequest, TestcaseResponse, TestcaseSummaryResponse, UpdateTestcaseRequest,
+        },
     },
 };
 
@@ -30,12 +32,7 @@ pub async fn get_testcase(
             let resp = TestcaseResponse::from(testcase);
             Ok((StatusCode::OK, Json(resp)))
         }
-        Err(e) => match e {
-            TestcaseError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            TestcaseError::Forbidden => Err(StatusCode::FORBIDDEN),
-            TestcaseError::NotFound => Err(StatusCode::NOT_FOUND),
-            TestcaseError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -58,12 +55,7 @@ pub async fn get_testcases(
                 .collect::<Vec<_>>();
             Ok((StatusCode::OK, Json(resp)))
         }
-        Err(e) => match e {
-            TestcaseError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            TestcaseError::Forbidden => Err(StatusCode::FORBIDDEN),
-            TestcaseError::NotFound => Err(StatusCode::NOT_FOUND),
-            TestcaseError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -85,12 +77,7 @@ pub async fn post_testcase(
         .await
     {
         Ok(_) => Ok(StatusCode::CREATED),
-        Err(e) => match e {
-            TestcaseError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            TestcaseError::Forbidden => Err(StatusCode::FORBIDDEN),
-            TestcaseError::NotFound => Err(StatusCode::NOT_FOUND),
-            TestcaseError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -108,12 +95,7 @@ pub async fn put_testcase(
         .await
     {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(e) => match e {
-            TestcaseError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            TestcaseError::Forbidden => Err(StatusCode::FORBIDDEN),
-            TestcaseError::NotFound => Err(StatusCode::NOT_FOUND),
-            TestcaseError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -130,11 +112,6 @@ pub async fn delete_testcase(
         .await
     {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(e) => match e {
-            TestcaseError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            TestcaseError::Forbidden => Err(StatusCode::FORBIDDEN),
-            TestcaseError::NotFound => Err(StatusCode::NOT_FOUND),
-            TestcaseError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }

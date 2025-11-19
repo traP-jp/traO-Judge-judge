@@ -5,6 +5,7 @@ use lettre::Address;
 
 use crate::{
     model::{
+        error::UsecaseError,
         problem::NormalProblemsDto,
         submission::SubmissionsDto,
         user::{UpdatePasswordData, UpdateUserData, UserDto, UserMeDto},
@@ -74,14 +75,6 @@ impl<
     }
 }
 
-#[derive(Debug)]
-pub enum UserError {
-    ValidateError,
-    Unauthorized,
-    NotFound,
-    InternalServerError,
-}
-
 impl<
     UR: UserRepository,
     SR: SessionRepository,
@@ -96,26 +89,26 @@ impl<
         &self,
         display_id: String,
         session_id: Option<&str>,
-    ) -> anyhow::Result<UserDto, UserError> {
+    ) -> anyhow::Result<UserDto, UsecaseError> {
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository
                 .get_display_id_by_session_id(&session_id)
                 .await
-                .map_err(|_| UserError::InternalServerError)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
         let display_id = display_id
             .parse::<i64>()
-            .map_err(|_| UserError::ValidateError)?;
+            .map_err(|_| UsecaseError::ValidateError)?;
 
         let user = self
             .user_repository
             .get_user_by_display_id(display_id)
             .await
-            .map_err(|_| UserError::InternalServerError)?
-            .ok_or(UserError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::NotFound)?;
 
         let problem_query = ProblemGetQuery {
             user_id: user_id,
@@ -130,12 +123,12 @@ impl<
             .problem_repository
             .get_problems_by_query_count(problem_query.clone())
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         let problems = self
             .problem_repository
             .get_problems_by_query(problem_query)
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let submission_query = SubmissionGetQuery {
             user_id: user_id,
@@ -153,12 +146,12 @@ impl<
             .submission_repository
             .get_submissions_count_by_query(submission_query.clone())
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         let submissions = self
             .submission_repository
             .get_submissions_by_query(submission_query)
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(UserDto::new(
             user,
@@ -173,20 +166,20 @@ impl<
         ))
     }
 
-    pub async fn get_me(&self, session_id: &str) -> anyhow::Result<UserMeDto, UserError> {
+    pub async fn get_me(&self, session_id: &str) -> anyhow::Result<UserMeDto, UsecaseError> {
         let user_id = self
             .session_repository
             .get_display_id_by_session_id(session_id)
             .await
-            .map_err(|_| UserError::InternalServerError)?
-            .ok_or(UserError::Unauthorized)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::Unauthorized)?;
 
         let user = self
             .user_repository
             .get_user_by_display_id(user_id)
             .await
-            .map_err(|_| UserError::InternalServerError)?
-            .ok_or(UserError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::NotFound)?;
 
         let problem_query = ProblemGetQuery {
             user_id: Some(user_id),
@@ -201,12 +194,12 @@ impl<
             .problem_repository
             .get_problems_by_query_count(problem_query.clone())
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         let problems = self
             .problem_repository
             .get_problems_by_query(problem_query)
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let submission_query = SubmissionGetQuery {
             user_id: Some(user_id),
@@ -224,19 +217,19 @@ impl<
             .submission_repository
             .get_submissions_count_by_query(submission_query.clone())
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let submissions = self
             .submission_repository
             .get_submissions_by_query(submission_query)
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let authentication = self
             .auth_repository
             .get_authentication_by_user_id(user.id)
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(UserMeDto::new(
             user,
@@ -256,46 +249,48 @@ impl<
         &self,
         session_id: &str,
         body: UpdateUserData,
-    ) -> anyhow::Result<UserMeDto, UserError> {
-        body.validate().map_err(|_| UserError::ValidateError)?;
+    ) -> anyhow::Result<UserMeDto, UsecaseError> {
+        body.validate().map_err(|_| UsecaseError::ValidateError)?;
 
         let user_id = self
             .session_repository
             .get_display_id_by_session_id(session_id)
             .await
-            .map_err(|_| UserError::InternalServerError)?
-            .ok_or(UserError::Unauthorized)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::Unauthorized)?;
 
         let user = self
             .user_repository
             .get_user_by_display_id(user_id)
             .await
-            .map_err(|_| UserError::InternalServerError)?
-            .ok_or(UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or_else(|| {
+                UsecaseError::internal_server_error_msg("user not found by display_id in update_me")
+            })?;
 
         let icon_id = match body.icon {
             Some(icon) => {
                 let binary_data = BASE64_STANDARD
                     .decode(icon)
-                    .map_err(|_| UserError::ValidateError)?;
+                    .map_err(|_| UsecaseError::ValidateError)?;
 
                 let mime_type = infer::get(&binary_data)
-                    .ok_or(UserError::ValidateError)?
+                    .ok_or(UsecaseError::ValidateError)?
                     .mime_type();
 
                 if !mime_type.starts_with("image/") {
-                    return Err(UserError::ValidateError);
+                    return Err(UsecaseError::ValidateError);
                 }
 
                 if binary_data.len() > 256 * 1024 {
-                    return Err(UserError::ValidateError);
+                    return Err(UsecaseError::ValidateError);
                 }
 
                 if let Some(old_icon_id) = &user.icon_id {
                     self.icon_repository
                         .delete_icon(old_icon_id.to_owned())
                         .await
-                        .map_err(|_| UserError::InternalServerError)?;
+                        .map_err(UsecaseError::internal_server_error_map())?;
                 }
 
                 let uuid = uuid::Uuid::now_v7();
@@ -309,7 +304,7 @@ impl<
                 self.icon_repository
                     .create_icon(icon)
                     .await
-                    .map_err(|_| UserError::InternalServerError)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
 
                 Some(uuid)
             }
@@ -328,14 +323,18 @@ impl<
                 },
             )
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let new_user = self
             .user_repository
             .get_user_by_display_id(user_id)
             .await
-            .map_err(|_| UserError::InternalServerError)?
-            .ok_or(UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or_else(|| {
+                UsecaseError::internal_server_error_msg(
+                    "user not found by display_id after update in update_me",
+                )
+            })?;
 
         let problem_query = ProblemGetQuery {
             user_id: Some(user_id),
@@ -349,12 +348,12 @@ impl<
             .problem_repository
             .get_problems_by_query_count(problem_query.clone())
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         let problems = self
             .problem_repository
             .get_problems_by_query(problem_query)
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let submission_query = SubmissionGetQuery {
             user_id: Some(user_id),
@@ -371,18 +370,18 @@ impl<
             .submission_repository
             .get_submissions_count_by_query(submission_query.clone())
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
         let submissions = self
             .submission_repository
             .get_submissions_by_query(submission_query)
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let authentication = self
             .auth_repository
             .get_authentication_by_user_id(new_user.id)
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(UserMeDto::new(
             new_user,
@@ -402,39 +401,39 @@ impl<
         &self,
         session_id: &str,
         email: String,
-    ) -> anyhow::Result<(), UserError> {
+    ) -> anyhow::Result<(), UsecaseError> {
         let user_address = email
             .parse::<Address>()
-            .map_err(|_| UserError::ValidateError)?;
+            .map_err(|_| UsecaseError::ValidateError)?;
 
         let display_id = self
             .session_repository
             .get_display_id_by_session_id(session_id)
             .await
-            .map_err(|_| UserError::InternalServerError)?
-            .ok_or(UserError::Unauthorized)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::Unauthorized)?;
 
         if self
             .auth_repository
             .is_exist_email(&email)
             .await
-            .map_err(|_| UserError::InternalServerError)?
+            .map_err(UsecaseError::internal_server_error_map())?
         {
-            return Err(UserError::ValidateError);
+            return Err(UsecaseError::ValidateError);
         }
 
         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY").unwrap();
 
         let jwt = AuthToken::encode_email_update_jwt(display_id, &email, &encode_key, &encrypt_key)
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let mail_content = self.mail_template_provider.change_email_request(&jwt);
 
         self.mail_client
             .send_mail(user_address, &mail_content.subject, &mail_content.body)
             .await
-            .map_err(|_| UserError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }
@@ -443,15 +442,15 @@ impl<
         &self,
         session_id: &str,
         data: UpdatePasswordData,
-    ) -> anyhow::Result<(), UserError> {
-        data.validate().map_err(|_| UserError::ValidateError)?;
+    ) -> anyhow::Result<(), UsecaseError> {
+        data.validate().map_err(|_| UsecaseError::ValidateError)?;
 
         let user_id = self
             .session_repository
             .get_user_id_by_session_id(session_id)
             .await
-            .map_err(|_| UserError::InternalServerError)?
-            .ok_or(UserError::Unauthorized)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::Unauthorized)?;
 
         match self
             .auth_repository
@@ -462,11 +461,13 @@ impl<
                 self.auth_repository
                     .update_user_password(user_id, &data.new_password)
                     .await
-                    .map_err(|_| UserError::InternalServerError)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
                 Ok(())
             }
-            Ok(false) => Err(UserError::Unauthorized),
-            Err(_) => Err(UserError::InternalServerError),
+            Ok(false) => Err(UsecaseError::Unauthorized),
+            Err(_) => Err(UsecaseError::internal_server_error_msg(
+                "verify_user_password failed unexpectedly",
+            )),
         }
     }
 }

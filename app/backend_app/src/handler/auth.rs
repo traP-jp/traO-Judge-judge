@@ -1,5 +1,6 @@
 use crate::di::DiContainer;
 use crate::model::auth::{LogIn, ResetPassword, ResetPasswordRequest, SignUp, SignUpRequest};
+use crate::model::error::AppError;
 use axum::{
     Json,
     extract::State,
@@ -7,10 +8,7 @@ use axum::{
     response::IntoResponse,
 };
 use axum_extra::{TypedHeader, headers::Cookie};
-use usecase::{
-    model::auth::{LoginData, ResetPasswordData, SignUpData},
-    service::auth::AuthError,
-};
+use usecase::model::auth::{LoginData, ResetPasswordData, SignUpData};
 
 pub async fn signup_request(
     State(di_container): State<DiContainer>,
@@ -18,11 +16,7 @@ pub async fn signup_request(
 ) -> impl IntoResponse {
     match di_container.auth_service().signup_request(body.email).await {
         Ok(_) => StatusCode::CREATED,
-        Err(e) => match e {
-            AuthError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
-            AuthError::Unauthorized => StatusCode::UNAUTHORIZED,
-            AuthError::ValidateError => StatusCode::BAD_REQUEST,
-        },
+        Err(e) => AppError(e).into(),
     }
 }
 
@@ -50,11 +44,7 @@ pub async fn signup(
 
             return Ok((StatusCode::NO_CONTENT, headers));
         }
-        Err(e) => match e {
-            AuthError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            AuthError::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            AuthError::ValidateError => Err(StatusCode::BAD_REQUEST),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -81,11 +71,7 @@ pub async fn login(
 
             Ok((StatusCode::NO_CONTENT, headers))
         }
-        Err(e) => match e {
-            AuthError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            AuthError::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            AuthError::ValidateError => Err(StatusCode::BAD_REQUEST),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -107,11 +93,7 @@ pub async fn logout(
 
             Ok((StatusCode::NO_CONTENT, headers))
         }
-        Err(e) => match e {
-            AuthError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            AuthError::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            AuthError::ValidateError => Err(StatusCode::BAD_REQUEST),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -125,11 +107,7 @@ pub async fn reset_password_request(
         .await
     {
         Ok(_) => Ok(StatusCode::CREATED),
-        Err(e) => match e {
-            AuthError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            AuthError::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            AuthError::ValidateError => Err(StatusCode::BAD_REQUEST),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -146,10 +124,6 @@ pub async fn reset_password(
         .await
     {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(e) => match e {
-            AuthError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            AuthError::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            AuthError::ValidateError => Err(StatusCode::BAD_REQUEST),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }

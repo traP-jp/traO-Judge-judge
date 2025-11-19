@@ -3,9 +3,8 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::IntoResponse,
 };
-use usecase::service::icon::IconServiceError;
 
-use crate::di::DiContainer;
+use crate::{di::DiContainer, model::error::AppError};
 
 pub async fn get_icon(
     State(di_container): State<DiContainer>,
@@ -17,9 +16,6 @@ pub async fn get_icon(
             headers.insert("Content-Type", icon.content_type.parse().unwrap());
             Ok((headers, icon.icon))
         }
-        Err(e) => match e {
-            IconServiceError::NotFound => Err(StatusCode::NOT_FOUND),
-            IconServiceError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }

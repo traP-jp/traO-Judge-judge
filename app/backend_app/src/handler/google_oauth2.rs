@@ -1,4 +1,5 @@
 use crate::di::DiContainer;
+use crate::model::error::AppError;
 use crate::model::google_oauth2::{
     GoogleOAuth2AuthorizeRequest, GoogleOAuth2AuthorizeResponse, GoogleOAuth2ParamsResponse,
 };
@@ -10,7 +11,6 @@ use axum::{
 };
 use axum_extra::TypedHeader;
 use axum_extra::headers::Cookie;
-use usecase::service::google_oauth2::GoogleOAuth2Error;
 
 pub async fn get_google_oauth2_params(
     State(di_container): State<DiContainer>,
@@ -25,11 +25,7 @@ pub async fn get_google_oauth2_params(
             let resp = GoogleOAuth2ParamsResponse::from(params);
             Ok(Json(resp))
         }
-        Err(e) => match e {
-            GoogleOAuth2Error::BadRequest => Err(StatusCode::BAD_REQUEST),
-            GoogleOAuth2Error::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            GoogleOAuth2Error::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -65,11 +61,7 @@ pub async fn post_google_oauth2_authorize(
                 Ok(StatusCode::NO_CONTENT.into_response())
             }
         }
-        Err(e) => match e {
-            GoogleOAuth2Error::BadRequest => Err(StatusCode::BAD_REQUEST),
-            GoogleOAuth2Error::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            GoogleOAuth2Error::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -85,9 +77,6 @@ pub async fn post_google_oauth2_revoke(
         .await
     {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(e) => match e {
-            GoogleOAuth2Error::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            _ => Err(StatusCode::BAD_REQUEST),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }

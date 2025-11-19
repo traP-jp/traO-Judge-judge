@@ -1,3 +1,4 @@
+use crate::model::error::AppError;
 use crate::model::submissions::{
     CreateSubmission, SubmissionOrderBy, SubmissionResponse, SubmissionSummariesResponse,
 };
@@ -13,7 +14,6 @@ use axum_extra::{TypedHeader, headers::Cookie};
 use usecase::model::submission::{
     CreateSubmissionData, SubmissionGetQueryData, SubmissionOrderByData,
 };
-use usecase::service::submission::SubmissionError;
 
 pub async fn get_submission(
     State(di_container): State<DiContainer>,
@@ -31,12 +31,7 @@ pub async fn get_submission(
             let resp = SubmissionResponse::from(user);
             Ok((StatusCode::OK, Json(resp)))
         }
-        Err(e) => match e {
-            SubmissionError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            SubmissionError::Forbidden => Err(StatusCode::FORBIDDEN),
-            SubmissionError::NotFound => Err(StatusCode::NOT_FOUND),
-            SubmissionError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -87,12 +82,7 @@ pub async fn get_submissions(
             let resp = SubmissionSummariesResponse::from(submissions);
             Ok((StatusCode::OK, Json(resp)))
         }
-        Err(e) => match e {
-            SubmissionError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            SubmissionError::Forbidden => Err(StatusCode::FORBIDDEN),
-            SubmissionError::NotFound => Err(StatusCode::NOT_FOUND),
-            SubmissionError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -120,11 +110,6 @@ pub async fn post_submission(
             let resp = SubmissionResponse::from(submission);
             Ok((StatusCode::CREATED, Json(resp)))
         }
-        Err(e) => match e {
-            SubmissionError::ValidateError => Err(StatusCode::BAD_REQUEST),
-            SubmissionError::Forbidden => Err(StatusCode::FORBIDDEN),
-            SubmissionError::NotFound => Err(StatusCode::NOT_FOUND),
-            SubmissionError::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }

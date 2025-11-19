@@ -1,4 +1,7 @@
-use crate::model::auth::{LoginData, ResetPasswordData, SignUpData};
+use crate::model::{
+    auth::{LoginData, ResetPasswordData, SignUpData},
+    error::UsecaseError,
+};
 use domain::{
     external::mail::MailClient,
     model::jwt::{Action, AuthToken},
@@ -59,89 +62,82 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum AuthError {
-    ValidateError,
-    Unauthorized,
-    InternalServerError,
-}
-
 impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClient>
     AuthenticationService<AR, UR, SR, C>
 {
-    pub async fn signup_request(&self, email: String) -> anyhow::Result<(), AuthError> {
+    pub async fn signup_request(&self, email: String) -> anyhow::Result<(), UsecaseError> {
         let user_address = email
             .parse::<Address>()
-            .map_err(|_| AuthError::ValidateError)?;
+            .map_err(|_| UsecaseError::ValidateError)?;
 
         if self
             .auth_repository
             .is_exist_email(&email)
             .await
-            .map_err(|_| AuthError::InternalServerError)?
+            .map_err(UsecaseError::internal_server_error_map())?
         {
             return Ok(());
         }
 
         let encode_key =
-            std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
+            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error_map())?;
 
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
-            .map_err(|_| AuthError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let jwt = AuthToken::encode_signup_jwt(Some(&email), None, None, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let mail = self.mail_template_provider.signup_request(&jwt);
 
         self.mail_client
             .send_mail(user_address, mail.subject.as_str(), mail.body.as_str())
             .await
-            .map_err(|_| AuthError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }
 
-    pub async fn signup(&self, data: SignUpData) -> anyhow::Result<String, AuthError> {
-        data.validate().map_err(|_| AuthError::ValidateError)?;
+    pub async fn signup(&self, data: SignUpData) -> anyhow::Result<String, UsecaseError> {
+        data.validate().map_err(|_| UsecaseError::ValidateError)?;
 
         let encode_key =
-            std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
+            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error_map())?;
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
-            .map_err(|_| AuthError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         if AuthToken::get_action(&data.token, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::ValidateError)?
+            .map_err(|_| UsecaseError::ValidateError)?
             != Action::register
         {
-            return Err(AuthError::ValidateError);
+            return Err(UsecaseError::ValidateError);
         }
 
         let email = AuthToken::get_email(&data.token, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::ValidateError)?;
+            .map_err(|_| UsecaseError::ValidateError)?;
 
         let google_oauth = AuthToken::get_google_oauth(&data.token, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::ValidateError)?;
+            .map_err(|_| UsecaseError::ValidateError)?;
 
         let github_oauth = AuthToken::get_github_oauth(&data.token, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::ValidateError)?;
+            .map_err(|_| UsecaseError::ValidateError)?;
 
         if let Some(email) = email {
-            let password = data.password.ok_or(AuthError::ValidateError)?;
+            let password = data.password.ok_or(UsecaseError::ValidateError)?;
 
             if let Ok(Some(user_id)) = self.auth_repository.get_user_id_by_email(&email).await {
                 let user = self
                     .user_repository
                     .get_user_by_user_id(user_id)
                     .await
-                    .map_err(|_| AuthError::InternalServerError)?
-                    .ok_or(AuthError::Unauthorized)?;
+                    .map_err(UsecaseError::internal_server_error_map())?
+                    .ok_or(UsecaseError::Unauthorized)?;
 
                 let session_id = self
                     .session_repository
                     .create_session(user)
                     .await
-                    .map_err(|_| AuthError::InternalServerError)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
                 return Ok(session_id);
             }
 
@@ -149,24 +145,24 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .user_repository
                 .create_user(&data.user_name)
                 .await
-                .map_err(|_| AuthError::InternalServerError)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             self.auth_repository
                 .save_user_email_and_password(user_id, &email, &password)
                 .await
-                .map_err(|_| AuthError::InternalServerError)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             let user = self
                 .user_repository
                 .get_user_by_user_id(user_id)
                 .await
-                .map_err(|_| AuthError::InternalServerError)?
-                .ok_or(AuthError::Unauthorized)?;
+                .map_err(UsecaseError::internal_server_error_map())?
+                .ok_or(UsecaseError::Unauthorized)?;
             let session_id = self
                 .session_repository
                 .create_session(user)
                 .await
-                .map_err(|_| AuthError::InternalServerError)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             Ok(session_id)
         } else if let Some(google_oauth) = google_oauth {
@@ -179,13 +175,13 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                     .user_repository
                     .get_user_by_user_id(user_id)
                     .await
-                    .map_err(|_| AuthError::InternalServerError)?
-                    .ok_or(AuthError::Unauthorized)?;
+                    .map_err(UsecaseError::internal_server_error_map())?
+                    .ok_or(UsecaseError::Unauthorized)?;
                 let session_id = self
                     .session_repository
                     .create_session(user)
                     .await
-                    .map_err(|_| AuthError::InternalServerError)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
                 return Ok(session_id);
             }
 
@@ -193,24 +189,24 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .user_repository
                 .create_user(&data.user_name)
                 .await
-                .map_err(|_| AuthError::InternalServerError)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             self.auth_repository
                 .save_user_google_oauth(user_id, &google_oauth)
                 .await
-                .map_err(|_| AuthError::InternalServerError)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             let user = self
                 .user_repository
                 .get_user_by_user_id(user_id)
                 .await
-                .map_err(|_| AuthError::InternalServerError)?
-                .ok_or(AuthError::Unauthorized)?;
+                .map_err(UsecaseError::internal_server_error_map())?
+                .ok_or(UsecaseError::Unauthorized)?;
             let session_id = self
                 .session_repository
                 .create_session(user)
                 .await
-                .map_err(|_| AuthError::InternalServerError)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             Ok(session_id)
         } else if let Some(github_oauth) = github_oauth {
@@ -223,13 +219,13 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                     .user_repository
                     .get_user_by_user_id(user_id)
                     .await
-                    .map_err(|_| AuthError::InternalServerError)?
-                    .ok_or(AuthError::Unauthorized)?;
+                    .map_err(UsecaseError::internal_server_error_map())?
+                    .ok_or(UsecaseError::Unauthorized)?;
                 let session_id = self
                     .session_repository
                     .create_session(user)
                     .await
-                    .map_err(|_| AuthError::InternalServerError)?;
+                    .map_err(UsecaseError::internal_server_error_map())?;
                 return Ok(session_id);
             }
 
@@ -237,168 +233,175 @@ impl<AR: AuthRepository, UR: UserRepository, SR: SessionRepository, C: MailClien
                 .user_repository
                 .create_user(&data.user_name)
                 .await
-                .map_err(|_| AuthError::InternalServerError)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             self.auth_repository
                 .save_user_github_oauth(user_id, &github_oauth)
                 .await
-                .map_err(|_| AuthError::InternalServerError)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             let user = self
                 .user_repository
                 .get_user_by_user_id(user_id)
                 .await
-                .map_err(|_| AuthError::InternalServerError)?
-                .ok_or(AuthError::Unauthorized)?;
+                .map_err(UsecaseError::internal_server_error_map())?
+                .ok_or(UsecaseError::Unauthorized)?;
             let session_id = self
                 .session_repository
                 .create_session(user)
                 .await
-                .map_err(|_| AuthError::InternalServerError)?;
+                .map_err(UsecaseError::internal_server_error_map())?;
 
             Ok(session_id)
         } else {
-            return Err(AuthError::InternalServerError);
+            Err(UsecaseError::internal_server_error_msg(
+                "signup token contained no email/google/github info",
+            ))
         }
     }
 
-    pub async fn login(&self, data: LoginData) -> anyhow::Result<String, AuthError> {
-        data.validate().map_err(|_| AuthError::ValidateError)?;
+    pub async fn login(&self, data: LoginData) -> anyhow::Result<String, UsecaseError> {
+        data.validate().map_err(|_| UsecaseError::ValidateError)?;
         let user_id = self
             .auth_repository
             .get_user_id_by_email(&data.email)
             .await
-            .map_err(|_| AuthError::InternalServerError)?
-            .ok_or(AuthError::Unauthorized)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::Unauthorized)?;
 
         if !self
             .auth_repository
             .verify_user_password(user_id, &data.password)
             .await
-            .map_err(|_| AuthError::InternalServerError)?
+            .map_err(UsecaseError::internal_server_error_map())?
         {
-            return Err(AuthError::Unauthorized);
+            return Err(UsecaseError::Unauthorized);
         }
 
         let user = self
             .user_repository
             .get_user_by_user_id(user_id)
             .await
-            .map_err(|_| AuthError::InternalServerError)?
-            .ok_or(AuthError::Unauthorized)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::Unauthorized)?;
 
         let session_id = self
             .session_repository
             .create_session(user)
             .await
-            .map_err(|_| AuthError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(session_id)
     }
 
-    pub async fn logout(&self, session_id: &str) -> anyhow::Result<(), AuthError> {
+    pub async fn logout(&self, session_id: &str) -> anyhow::Result<(), UsecaseError> {
         self.session_repository
             .delete_session(session_id)
             .await
-            .map_err(|_| AuthError::InternalServerError)?
-            .ok_or(AuthError::Unauthorized)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::Unauthorized)?;
         Ok(())
     }
 
-    pub async fn reset_password_request(&self, email: String) -> anyhow::Result<(), AuthError> {
+    pub async fn reset_password_request(&self, email: String) -> anyhow::Result<(), UsecaseError> {
         let user_address = email
             .parse::<Address>()
-            .map_err(|_| AuthError::ValidateError)?;
+            .map_err(|_| UsecaseError::ValidateError)?;
 
         if let Ok(false) = self.auth_repository.is_exist_email(&email).await {
             return Ok(());
         }
 
         let encode_key =
-            std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
+            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error_map())?;
 
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
-            .map_err(|_| AuthError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let jwt = AuthToken::encode_email_reset_password_jwt(&email, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let mail = self.mail_template_provider.reset_password_request(&jwt);
 
         self.mail_client
             .send_mail(user_address, mail.subject.as_str(), mail.body.as_str())
             .await
-            .map_err(|_| AuthError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }
 
-    pub async fn reset_password(&self, data: ResetPasswordData) -> anyhow::Result<(), AuthError> {
-        data.validate().map_err(|_| AuthError::ValidateError)?;
+    pub async fn reset_password(
+        &self,
+        data: ResetPasswordData,
+    ) -> anyhow::Result<(), UsecaseError> {
+        data.validate().map_err(|_| UsecaseError::ValidateError)?;
 
         let encode_key =
-            std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
+            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error_map())?;
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
-            .map_err(|_| AuthError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         if AuthToken::get_action(&data.token, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::ValidateError)?
+            .map_err(|_| UsecaseError::ValidateError)?
             != Action::reset_password
         {
-            return Err(AuthError::ValidateError);
+            return Err(UsecaseError::ValidateError);
         }
 
         let email = AuthToken::get_email(&data.token, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::ValidateError)?
-            .ok_or(AuthError::InternalServerError)?;
+            .map_err(|_| UsecaseError::ValidateError)?
+            .ok_or_else(|| {
+                UsecaseError::internal_server_error_msg("reset_password token missing email")
+            })?;
 
         let user_id = self
             .auth_repository
             .get_user_id_by_email(&email)
             .await
-            .map_err(|_| AuthError::InternalServerError)?
-            .ok_or(AuthError::ValidateError)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::ValidateError)?;
 
         self.auth_repository
             .update_user_password(user_id, &data.password)
             .await
-            .map_err(|_| AuthError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }
 
-    pub async fn activate_email(&self, token: &str) -> anyhow::Result<(), AuthError> {
+    pub async fn activate_email(&self, token: &str) -> anyhow::Result<(), UsecaseError> {
         let encode_key =
-            std::env::var("JWT_SECRET_KEY").map_err(|_| AuthError::InternalServerError)?;
+            std::env::var("JWT_SECRET_KEY").map_err(UsecaseError::internal_server_error_map())?;
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY")
-            .map_err(|_| AuthError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         if AuthToken::get_action(token, &encode_key, &encrypt_key)
-            .map_err(|_| AuthError::ValidateError)?
+            .map_err(|_| UsecaseError::ValidateError)?
             != Action::change_email
         {
-            return Err(AuthError::ValidateError);
+            return Err(UsecaseError::ValidateError);
         }
 
         let (email, user_id) =
             AuthToken::get_email_and_display_id(token, &encode_key, &encrypt_key)
-                .map_err(|_| AuthError::ValidateError)?;
+                .map_err(|_| UsecaseError::ValidateError)?;
 
-        let email = email.ok_or(AuthError::ValidateError)?;
-        let display_id = user_id.ok_or(AuthError::ValidateError)?;
+        let email = email.ok_or(UsecaseError::ValidateError)?;
+        let display_id = user_id.ok_or(UsecaseError::ValidateError)?;
 
         let user_id = self
             .user_repository
             .get_user_by_display_id(display_id)
             .await
-            .map_err(|_| AuthError::InternalServerError)?
-            .ok_or(AuthError::ValidateError)?
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::ValidateError)?
             .id;
 
         self.auth_repository
             .update_user_email(user_id, &email)
             .await
-            .map_err(|_| AuthError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }
@@ -429,12 +432,12 @@ mod signup_request_tests {
     #[case::valid_data("test@example.com", Ok(()))]
     #[case::valid_data("x!&x@example.com", Ok(()))]
     #[case::valid_data("0test++--.__1@example.com", Ok(()))]
-    #[case::invalid_email("test+-.._1@example.com", Err(AuthError::ValidateError))]
-    #[case::invalid_email("test.example.com", Err(AuthError::ValidateError))]
+    #[case::invalid_email("test+-.._1@example.com", Err(UsecaseError::ValidateError))]
+    #[case::invalid_email("test.example.com", Err(UsecaseError::ValidateError))]
     async fn signup_request(
         _setup_env: (),
         #[case] email: String,
-        #[case] result: Result<(), AuthError>,
+        #[case] result: Result<(), UsecaseError>,
     ) -> anyhow::Result<()> {
         let mut auth_mock = MockAuthRepository::new();
         let user_mock = MockUserRepository::new();
@@ -455,11 +458,11 @@ mod signup_request_tests {
     #[rstest]
     #[case::valid_data("test@example.com", Ok(()))]
     #[case::valid_data("x!&x@example.com", Ok(()))]
-    #[case::invalid_email("test+-.._1@example.com", Err(AuthError::ValidateError))]
-    #[case::invalid_email("test.example.com", Err(AuthError::ValidateError))]
+    #[case::invalid_email("test+-.._1@example.com", Err(UsecaseError::ValidateError))]
+    #[case::invalid_email("test.example.com", Err(UsecaseError::ValidateError))]
     async fn signup_request_exist_user(
         #[case] email: String,
-        #[case] result: Result<(), AuthError>,
+        #[case] result: Result<(), UsecaseError>,
     ) -> anyhow::Result<()> {
         let mut auth_mock = MockAuthRepository::new();
         let user_mock = MockUserRepository::new();
@@ -536,14 +539,14 @@ mod signup_tests {
     #[rstest]
     #[case::valid_data(("test", "Passw0rd", "test@example.com"), Ok("dummy_session_id".to_string()))]
     #[case::valid_data(("1234567890", "Aa0@$!%*?&", "test@gmail.com"), Ok("dummy_session_id".to_string()))]
-    #[case::invalid_password(("test", "Aa12345", "test@example.com"), Err(AuthError::ValidateError))]
-    #[case::invalid_password(("test", "@$!%*?&@$", "test@example.com"), Err(AuthError::ValidateError))]
-    #[case::invalid_username(("_Alice", "Aa123456", "test@example.com"), Err(AuthError::ValidateError))]
-    #[case::invalid_username(("test/Test", "Aa123456", "test@example.com"), Err(AuthError::ValidateError))]
+    #[case::invalid_password(("test", "Aa12345", "test@example.com"), Err(UsecaseError::ValidateError))]
+    #[case::invalid_password(("test", "@$!%*?&@$", "test@example.com"), Err(UsecaseError::ValidateError))]
+    #[case::invalid_username(("_Alice", "Aa123456", "test@example.com"), Err(UsecaseError::ValidateError))]
+    #[case::invalid_username(("test/Test", "Aa123456", "test@example.com"), Err(UsecaseError::ValidateError))]
     async fn signup(
         _setup_env: (),
         #[case] data: (&str, &str, &str),
-        #[case] result: Result<String, AuthError>,
+        #[case] result: Result<String, UsecaseError>,
     ) -> anyhow::Result<()> {
         let signup_data = create_signup_data(data.0, data.1, data.2);
 
@@ -579,14 +582,14 @@ mod signup_tests {
     #[rstest]
     #[case::valid_data(("test", "Passw0rd", "test@example.com"), Ok("dummy_session_id".to_string()))]
     #[case::valid_data(("1234567890", "Aa0@$!%*?&", "test@gmail.com"), Ok("dummy_session_id".to_string()))]
-    #[case::invalid_password(("test", "Aa12345", "test@example.com"), Err(AuthError::ValidateError))]
-    #[case::invalid_password(("test", "@$!%*?&@$", "test@example.com"), Err(AuthError::ValidateError))]
-    #[case::invalid_username(("_Alice", "Aa123456", "test@example.com"), Err(AuthError::ValidateError))]
-    #[case::invalid_username(("test/Test", "Aa123456", "test@example.com"), Err(AuthError::ValidateError))]
+    #[case::invalid_password(("test", "Aa12345", "test@example.com"), Err(UsecaseError::ValidateError))]
+    #[case::invalid_password(("test", "@$!%*?&@$", "test@example.com"), Err(UsecaseError::ValidateError))]
+    #[case::invalid_username(("_Alice", "Aa123456", "test@example.com"), Err(UsecaseError::ValidateError))]
+    #[case::invalid_username(("test/Test", "Aa123456", "test@example.com"), Err(UsecaseError::ValidateError))]
     async fn signup_exist_user(
         _setup_env: (),
         #[case] data: (&str, &str, &str),
-        #[case] result: Result<String, AuthError>,
+        #[case] result: Result<String, UsecaseError>,
     ) -> anyhow::Result<()> {
         let signup_data = create_signup_data(data.0, data.1, data.2);
 
@@ -654,11 +657,11 @@ mod login_tests {
     #[rstest]
     #[case::valid_data(("test@sample.com", "Aa123456"), Ok("session_id".to_string()))]
     #[case::valid_data(("t@t", "Aa123456"), Ok("session_id".to_string()))]
-    #[case::invalid_password(("test@sample.com", "Aa12345"), Err(AuthError::ValidateError))]
-    #[case::invalid_password(("t@t", "aa123456"), Err(AuthError::ValidateError))]
+    #[case::invalid_password(("test@sample.com", "Aa12345"), Err(UsecaseError::ValidateError))]
+    #[case::invalid_password(("t@t", "aa123456"), Err(UsecaseError::ValidateError))]
     async fn login(
         #[case] data: (&str, &str),
-        #[case] result: Result<String, AuthError>,
+        #[case] result: Result<String, UsecaseError>,
     ) -> anyhow::Result<()> {
         let login_data = create_login_data(data.0, data.1);
 
@@ -689,13 +692,13 @@ mod login_tests {
     }
 
     #[rstest]
-    #[case::valid_data(("test@sample.com", "Aa123456"), Err(AuthError::Unauthorized))]
-    #[case::valid_data(("t@t", "Aa123456"), Err(AuthError::Unauthorized))]
-    #[case::invalid_password(("test@sample.com", "Aa12345"), Err(AuthError::ValidateError))]
-    #[case::invalid_password(("t@t", "aa123456"), Err(AuthError::ValidateError))]
+    #[case::valid_data(("test@sample.com", "Aa123456"), Err(UsecaseError::Unauthorized))]
+    #[case::valid_data(("t@t", "Aa123456"), Err(UsecaseError::Unauthorized))]
+    #[case::invalid_password(("test@sample.com", "Aa12345"), Err(UsecaseError::ValidateError))]
+    #[case::invalid_password(("t@t", "aa123456"), Err(UsecaseError::ValidateError))]
     async fn login_not_exist_user(
         #[case] data: (&str, &str),
-        #[case] result: Result<String, AuthError>,
+        #[case] result: Result<String, UsecaseError>,
     ) -> anyhow::Result<()> {
         let login_data = create_login_data(data.0, data.1);
 
@@ -717,11 +720,11 @@ mod login_tests {
     }
 
     #[rstest]
-    #[case::valid_data(("test@sample.com", "Aa123456"), Err(AuthError::Unauthorized))]
-    #[case::valid_data(("t@t", "Aa123456"), Err(AuthError::Unauthorized))]
+    #[case::valid_data(("test@sample.com", "Aa123456"), Err(UsecaseError::Unauthorized))]
+    #[case::valid_data(("t@t", "Aa123456"), Err(UsecaseError::Unauthorized))]
     async fn login_wrong_password(
         #[case] data: (&str, &str),
-        #[case] result: Result<String, AuthError>,
+        #[case] result: Result<String, UsecaseError>,
     ) -> anyhow::Result<()> {
         let login_data = create_login_data(data.0, data.1);
 
@@ -761,7 +764,7 @@ mod logout_tests {
     #[case::valid_data("session_id", Ok(()))]
     async fn logout(
         #[case] session_id: &str,
-        #[case] result: Result<(), AuthError>,
+        #[case] result: Result<(), UsecaseError>,
     ) -> anyhow::Result<()> {
         let auth_mock = MockAuthRepository::new();
         let user_mock = MockUserRepository::new();
@@ -781,10 +784,10 @@ mod logout_tests {
     }
 
     #[rstest]
-    #[case::valid_data("session_id", Err(AuthError::Unauthorized))]
+    #[case::valid_data("session_id", Err(UsecaseError::Unauthorized))]
     async fn logout_not_exist_session(
         #[case] session_id: &str,
-        #[case] result: Result<(), AuthError>,
+        #[case] result: Result<(), UsecaseError>,
     ) -> anyhow::Result<()> {
         let auth_mock = MockAuthRepository::new();
         let user_mock = MockUserRepository::new();
@@ -826,12 +829,12 @@ mod reset_password_request_tests {
     #[rstest]
     #[case::valid_data("test@example.com", Ok(()))]
     #[case::valid_data("x!&x@example.com", Ok(()))]
-    #[case::invalid_email("test+-.._1@example.com", Err(AuthError::ValidateError))]
-    #[case::invalid_email("test.example.com", Err(AuthError::ValidateError))]
+    #[case::invalid_email("test+-.._1@example.com", Err(UsecaseError::ValidateError))]
+    #[case::invalid_email("test.example.com", Err(UsecaseError::ValidateError))]
     async fn reset_password_request(
         _setup_env: (),
         #[case] email: &str,
-        #[case] result: Result<(), AuthError>,
+        #[case] result: Result<(), UsecaseError>,
     ) -> anyhow::Result<()> {
         let mut auth_mock = MockAuthRepository::new();
         let user_mock = MockUserRepository::new();
@@ -851,10 +854,10 @@ mod reset_password_request_tests {
 
     #[rstest]
     #[case::valid_data("test@example.com", Ok(()))]
-    #[case::invalid_email("test+-.._1@example.com", Err(AuthError::ValidateError))]
+    #[case::invalid_email("test+-.._1@example.com", Err(UsecaseError::ValidateError))]
     async fn reset_password_request_not_exist_user(
         #[case] email: &str,
-        #[case] result: Result<(), AuthError>,
+        #[case] result: Result<(), UsecaseError>,
     ) -> anyhow::Result<()> {
         let mut auth_mock = MockAuthRepository::new();
         let user_mock = MockUserRepository::new();
@@ -928,12 +931,12 @@ mod reset_password_tests {
     #[rstest]
     #[case::valid_data(("test@sample.com", "Aa123456"), Ok(()))]
     #[case::valid_data(("t@t", "Aa123456"), Ok(()))]
-    #[case::invalid_password(("test@sample.com", "Aa12345"), Err(AuthError::ValidateError))]
-    #[case::invalid_password(("t@t", "aa123456"), Err(AuthError::ValidateError))]
+    #[case::invalid_password(("test@sample.com", "Aa12345"), Err(UsecaseError::ValidateError))]
+    #[case::invalid_password(("t@t", "aa123456"), Err(UsecaseError::ValidateError))]
     async fn reset_password_request(
         _setup_env: (),
         #[case] data: (&str, &str),
-        #[case] result: Result<(), AuthError>,
+        #[case] result: Result<(), UsecaseError>,
     ) -> anyhow::Result<()> {
         let reset_data = create_reset_password_data(data.0, data.1);
 

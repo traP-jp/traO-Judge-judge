@@ -1,5 +1,6 @@
-use crate::model::editorial::{
-    CreateEditorialData, EditorialDto, EditorialSummaryDto, UpdateEditorialData,
+use crate::model::{
+    editorial::{CreateEditorialData, EditorialDto, EditorialSummaryDto, UpdateEditorialData},
+    error::UsecaseError,
 };
 use domain::{
     model::editorial::{CreateEditorial, EditorialGetQuery, UpdateEditorial},
@@ -28,14 +29,6 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
     }
 }
 
-#[derive(Debug)]
-pub enum EditorialError {
-    ValidateError,
-    Forbidden,
-    NotFound,
-    InternalServerError,
-}
-
 impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
     EditorialService<SR, ER, PR>
 {
@@ -43,16 +36,16 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         &self,
         session_id: Option<&str>,
         editorial_id: String,
-    ) -> anyhow::Result<EditorialDto, EditorialError> {
+    ) -> anyhow::Result<EditorialDto, UsecaseError> {
         let editorial_id =
-            Uuid::parse_str(&editorial_id).map_err(|_| EditorialError::ValidateError)?;
+            Uuid::parse_str(&editorial_id).map_err(|_| UsecaseError::ValidateError)?;
 
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(|_| EditorialError::InternalServerError)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -60,22 +53,22 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .editorial_repository
             .get_editorial(editorial_id)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?
-            .ok_or(EditorialError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::NotFound)?;
 
         if !editorial.is_public && user_id.is_none_or(|x| x != editorial.author_id) {
-            return Err(EditorialError::NotFound);
+            return Err(UsecaseError::NotFound);
         }
 
         let problem = self
             .problem_repository
             .get_problem(editorial.problem_id)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?
-            .ok_or(EditorialError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::NotFound)?;
 
         if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
-            return Err(EditorialError::NotFound);
+            return Err(UsecaseError::NotFound);
         }
 
         Ok(editorial.into())
@@ -85,17 +78,17 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         &self,
         session_id: Option<&str>,
         problem_id: String,
-    ) -> anyhow::Result<Vec<EditorialSummaryDto>, EditorialError> {
+    ) -> anyhow::Result<Vec<EditorialSummaryDto>, UsecaseError> {
         let problem_id: i64 = problem_id
             .parse()
-            .map_err(|_| EditorialError::ValidateError)?;
+            .map_err(|_| UsecaseError::ValidateError)?;
 
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(|_| EditorialError::InternalServerError)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -103,11 +96,11 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .problem_repository
             .get_problem(problem_id)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?
-            .ok_or(EditorialError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::NotFound)?;
 
         if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
-            return Err(EditorialError::NotFound);
+            return Err(UsecaseError::NotFound);
         }
 
         let query = EditorialGetQuery {
@@ -121,7 +114,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .editorial_repository
             .get_editorials_by_problem_id(query)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(editorials.into_iter().map(|x| x.into()).collect())
     }
@@ -131,32 +124,32 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         session_id: Option<&str>,
         problem_id: String,
         query: CreateEditorialData,
-    ) -> anyhow::Result<EditorialDto, EditorialError> {
+    ) -> anyhow::Result<EditorialDto, UsecaseError> {
         let problem_id: i64 = problem_id
             .parse()
-            .map_err(|_| EditorialError::ValidateError)?;
+            .map_err(|_| UsecaseError::ValidateError)?;
 
         let problem = self
             .problem_repository
             .get_problem(problem_id)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?
-            .ok_or(EditorialError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::NotFound)?;
 
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(|_| EditorialError::InternalServerError)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
         if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
-            return Err(EditorialError::NotFound);
+            return Err(UsecaseError::NotFound);
         }
 
-        let user_id = user_id.ok_or(EditorialError::Forbidden)?;
+        let user_id = user_id.ok_or(UsecaseError::Forbidden)?;
 
         let editorial = CreateEditorial {
             problem_id,
@@ -170,14 +163,18 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .editorial_repository
             .create_editorial(editorial)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let editorial = self
             .editorial_repository
             .get_editorial(editorial_id)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?
-            .ok_or(EditorialError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or_else(|| {
+                UsecaseError::internal_server_error_msg(
+                    "failed to retrieve editorial after creation",
+                )
+            })?;
 
         Ok(editorial.into())
     }
@@ -187,16 +184,16 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         session_id: Option<&str>,
         editorial_id: String,
         query: UpdateEditorialData,
-    ) -> anyhow::Result<(), EditorialError> {
+    ) -> anyhow::Result<(), UsecaseError> {
         let editorial_id =
-            Uuid::parse_str(&editorial_id).map_err(|_| EditorialError::ValidateError)?;
+            Uuid::parse_str(&editorial_id).map_err(|_| UsecaseError::ValidateError)?;
 
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(|_| EditorialError::InternalServerError)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -204,28 +201,28 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .editorial_repository
             .get_editorial(editorial_id)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?
-            .ok_or(EditorialError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::NotFound)?;
 
         if !editorial.is_public && user_id.is_none_or(|x| x != editorial.author_id) {
-            return Err(EditorialError::NotFound);
+            return Err(UsecaseError::NotFound);
         }
 
         let problem = self
             .problem_repository
             .get_problem(editorial.problem_id)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?
-            .ok_or(EditorialError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::NotFound)?;
 
         if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
-            return Err(EditorialError::NotFound);
+            return Err(UsecaseError::NotFound);
         }
 
-        let user_id = user_id.ok_or(EditorialError::Forbidden)?;
+        let user_id = user_id.ok_or(UsecaseError::Forbidden)?;
 
         if user_id != editorial.author_id {
-            return Err(EditorialError::Forbidden);
+            return Err(UsecaseError::Forbidden);
         }
 
         let editorial = UpdateEditorial {
@@ -238,7 +235,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         self.editorial_repository
             .update_editorial(editorial)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }
@@ -247,16 +244,16 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
         &self,
         session_id: Option<&str>,
         editorial_id: String,
-    ) -> anyhow::Result<(), EditorialError> {
+    ) -> anyhow::Result<(), UsecaseError> {
         let editorial_id =
-            Uuid::parse_str(&editorial_id).map_err(|_| EditorialError::ValidateError)?;
+            Uuid::parse_str(&editorial_id).map_err(|_| UsecaseError::ValidateError)?;
 
         let user_id = match session_id {
             Some(session_id) => self
                 .session_repository
                 .get_display_id_by_session_id(session_id)
                 .await
-                .map_err(|_| EditorialError::InternalServerError)?,
+                .map_err(UsecaseError::internal_server_error_map())?,
             None => None,
         };
 
@@ -264,33 +261,33 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .editorial_repository
             .get_editorial(editorial_id)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?
-            .ok_or(EditorialError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::NotFound)?;
 
         if !editorial.is_public && user_id.is_none_or(|x| x != editorial.author_id) {
-            return Err(EditorialError::NotFound);
+            return Err(UsecaseError::NotFound);
         }
 
         let problem = self
             .problem_repository
             .get_problem(editorial.problem_id)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?
-            .ok_or(EditorialError::NotFound)?;
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::NotFound)?;
         if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
-            return Err(EditorialError::NotFound);
+            return Err(UsecaseError::NotFound);
         }
 
-        let user_id = user_id.ok_or(EditorialError::Forbidden)?;
+        let user_id = user_id.ok_or(UsecaseError::Forbidden)?;
 
         if user_id != editorial.author_id {
-            return Err(EditorialError::Forbidden);
+            return Err(UsecaseError::Forbidden);
         }
 
         self.editorial_repository
             .delete_editorial(editorial_id)
             .await
-            .map_err(|_| EditorialError::InternalServerError)?;
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(())
     }

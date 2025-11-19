@@ -1,4 +1,5 @@
 use crate::di::DiContainer;
+use crate::model::error::AppError;
 use crate::model::github_oauth2::{
     GitHubOAuth2AuthorizeRequest, GitHubOAuth2AuthorizeResponse, GitHubOAuth2ParamsResponse,
 };
@@ -10,7 +11,6 @@ use axum::{
 };
 use axum_extra::TypedHeader;
 use axum_extra::headers::Cookie;
-use usecase::service::github_oauth2::GitHubOAuth2Error;
 
 pub async fn get_github_oauth2_params(
     State(di_container): State<DiContainer>,
@@ -25,11 +25,7 @@ pub async fn get_github_oauth2_params(
             let resp = GitHubOAuth2ParamsResponse::from(params);
             Ok(Json(resp))
         }
-        Err(e) => match e {
-            GitHubOAuth2Error::BadRequest => Err(StatusCode::BAD_REQUEST),
-            GitHubOAuth2Error::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            GitHubOAuth2Error::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -65,11 +61,7 @@ pub async fn post_github_oauth2_authorize(
                 Ok(StatusCode::NO_CONTENT.into_response())
             }
         }
-        Err(e) => match e {
-            GitHubOAuth2Error::BadRequest => Err(StatusCode::BAD_REQUEST),
-            GitHubOAuth2Error::Unauthorized => Err(StatusCode::UNAUTHORIZED),
-            GitHubOAuth2Error::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
 
@@ -85,9 +77,6 @@ pub async fn post_github_oauth2_revoke(
         .await
     {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(e) => match e {
-            GitHubOAuth2Error::InternalServerError => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            _ => Err(StatusCode::BAD_REQUEST),
-        },
+        Err(e) => Err(AppError(e).into()),
     }
 }
