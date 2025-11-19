@@ -123,7 +123,7 @@ impl AuthRepository for AuthRepositoryImpl {
     async fn get_google_oauth2_url(&self, oauth_action: &str) -> anyhow::Result<String> {
         let client_id = std::env::var("GOOGLE_OAUTH2_CLIENT_ID")?;
         let redirect_uri =
-            std::env::var("FRONTEND_URL")? + &format!("/auth/google/{}/callback", oauth_action);
+            std::env::var("FRONTEND_URL")? + &format!("/oauth/google/{}/callback", oauth_action);
         let response_type = "code";
         let scope = "openid";
         let access_type = "online";
@@ -149,7 +149,7 @@ impl AuthRepository for AuthRepositoryImpl {
         let client_secret = std::env::var("GOOGLE_OAUTH2_CLIENT_SECRET")?;
         let grant_type = "authorization_code";
         let redirect_uri =
-            std::env::var("FRONTEND_URL")? + &format!("/auth/google/{oauth_action}/callback");
+            std::env::var("FRONTEND_URL")? + &format!("/oauth/google/{oauth_action}/callback");
         let url = "https://oauth2.googleapis.com/token";
 
         let client = reqwest::Client::new();
@@ -246,7 +246,7 @@ impl AuthRepository for AuthRepositoryImpl {
     async fn get_github_oauth2_url(&self, oauth_action: &str) -> anyhow::Result<String> {
         let client_id = std::env::var("GITHUB_OAUTH2_CLIENT_ID")?;
         let redirect_uri =
-            std::env::var("FRONTEND_URL")? + &format!("/auth/github/{}/callback", oauth_action);
+            std::env::var("FRONTEND_URL")? + &format!("/oauth/github/{}/callback", oauth_action);
         match oauth_action {
             "login" | "signup" | "bind" => Ok(format!(
                 "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}",
@@ -268,7 +268,7 @@ impl AuthRepository for AuthRepositoryImpl {
         let client_id = std::env::var("GITHUB_OAUTH2_CLIENT_ID")?;
         let client_secret = std::env::var("GITHUB_OAUTH2_CLIENT_SECRET")?;
         let redirect_uri =
-            std::env::var("FRONTEND_URL")? + &format!("/auth/github/{oauth_action}/callback");
+            std::env::var("FRONTEND_URL")? + &format!("/oauth/github/{oauth_action}/callback");
 
         let url = "https://github.com/login/oauth/access_token";
 
