@@ -7,7 +7,9 @@ use bollard::container::{
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::models::{HostConfig, Mount, MountTypeEnum};
 use bytes::Bytes;
+use flate2::Compression;
 use flate2::read::GzDecoder;
+use flate2::write::GzEncoder;
 use judge_core::constant::env_var_exec::{OUTPUT_PATH, SCRIPT_PATH};
 use judge_exec_grpc::generated::execute_service_server::{ExecuteService, ExecuteServiceServer};
 use judge_exec_grpc::generated::{Dependency, ExecuteRequest, ExecuteResponse, Output};
@@ -15,6 +17,7 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs::Permissions;
 use std::io::Read;
+use std::io::Write;
 use std::ops::Not;
 use std::os::unix::fs::PermissionsExt;
 use std::{env, fs};
@@ -224,13 +227,29 @@ impl ExecApp {
             output_bytes.extend_from_slice(&chunk);
         }
 
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(&output_bytes)?;
+        let gzipped_bytes = encoder.finish()?;
+
+        tracing::info!("removing container...");
+        self.docker_api
+            .remove_container(
+                ExecApp::DOCKER_CONTAINER_NAME,
+                Some(RemoveContainerOptions {
+                    force: true,
+                    ..Default::default()
+                }),
+            )
+            .await
+            .expect(format!("failed to remove container").as_str());
+
         Ok(ExecuteResponse {
             output: Some(Output {
                 exit_code: info.exit_code.context("failed to parse exit code")? as i32,
                 stdout,
                 stderr,
             }),
-            outcome: output_bytes,
+            outcome: gzipped_bytes,
         })
     }
 }
