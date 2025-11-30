@@ -114,7 +114,7 @@ pub fn users_me_check_by_id(id: i64, resp_json: &mut Value) -> anyhow::Result<()
             },
             "xId": null,
             "selfIntroduction": "test_self_introduction_1",
-            "role": "commonUser",
+            "role": "CommonUser",
             "createdAt": "2023-01-01T09:15:32Z",
             "updatedAt": "2023-01-01T10:20:47Z",
             "authentication": {
@@ -166,7 +166,7 @@ pub fn users_me_check_by_id(id: i64, resp_json: &mut Value) -> anyhow::Result<()
             },
             "xId": null,
             "selfIntroduction": "",
-            "role": "admin",
+            "role": "Admin",
             "createdAt": "2023-03-20T08:00:00Z",
             "updatedAt": "2023-03-20T08:45:00Z",
             "authentication": {
