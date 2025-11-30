@@ -6,11 +6,11 @@ use super::{problems::ProblemSummariesResponses, submissions::SubmissionSummarie
 
 #[derive(Serialize, Deserialize)]
 pub enum UserRoleResponse {
-    #[serde(rename = "commonUser")]
+    #[serde(rename = "CommonUser")]
     CommonUser,
     #[serde(rename = "traPUser")]
     TrapUser,
-    #[serde(rename = "admin")]
+    #[serde(rename = "Admin")]
     Admin,
 }
 
