@@ -86,12 +86,12 @@ pub enum SubmissionOrderBy {
 pub struct SubmissionGetQuery {
     pub limit: Option<i64>,
     pub offset: Option<i64>,
-    pub judge_status: Option<String>,
-    pub language_id: Option<String>,
-    pub user_name: Option<String>,
+    pub status: Option<String>,
+    pub language: Option<String>,
+    pub username: Option<String>,
     pub user_id: Option<String>,
     pub order_by: Option<SubmissionOrderBy>,
-    pub problem_id: Option<String>,
+    pub problem_id_in_query: Option<String>,
 }
 
 #[derive(Deserialize, Serialize)]

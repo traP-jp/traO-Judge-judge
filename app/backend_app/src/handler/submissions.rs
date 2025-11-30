@@ -45,10 +45,10 @@ pub async fn get_submissions(
     let query = SubmissionGetQueryData {
         limit: query.limit,
         offset: query.offset,
-        judge_status: query.judge_status,
-        problem_id: query.problem_id,
-        language_id: query.language_id,
-        user_name: query.user_name,
+        judge_status: query.status,
+        problem_id: query.problem_id_in_query,
+        language: query.language,
+        user_name: query.username,
         user_query: query.user_id,
         order_by: match query.order_by {
             Some(order_by) => match order_by {

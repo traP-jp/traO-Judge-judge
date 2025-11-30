@@ -73,7 +73,7 @@ pub struct SubmissionGetQuery {
     pub limit: i64,
     pub offset: i64,
     pub judge_status: Option<String>,
-    pub language_id: Option<i64>,
+    pub language_id: Option<i32>,
     pub user_name: Option<String>,
     pub user_query: Option<i64>,
     pub order_by: SubmissionOrderBy,
