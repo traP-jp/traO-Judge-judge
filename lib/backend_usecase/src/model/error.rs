@@ -19,6 +19,8 @@ pub enum UsecaseError {
         line: u32,
         column: u32,
     },
+    #[error("Conflict")]
+    ConflictError,
 }
 
 impl UsecaseError {

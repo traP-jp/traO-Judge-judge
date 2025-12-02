@@ -3,10 +3,10 @@ use usecase::model::error::UsecaseError;
 
 pub struct AppError(pub UsecaseError);
 
-impl Into<StatusCode> for AppError {
+impl From<AppError> for StatusCode {
     #[track_caller]
-    fn into(self) -> StatusCode {
-        match self.0 {
+    fn from(val: AppError) -> Self {
+        match val.0 {
             UsecaseError::ValidateError => StatusCode::BAD_REQUEST,
             UsecaseError::Unauthorized => StatusCode::UNAUTHORIZED,
             UsecaseError::Forbidden => StatusCode::FORBIDDEN,
@@ -27,6 +27,7 @@ impl Into<StatusCode> for AppError {
                 );
                 StatusCode::INTERNAL_SERVER_ERROR
             }
+            UsecaseError::ConflictError => StatusCode::CONFLICT,
         }
     }
 }
