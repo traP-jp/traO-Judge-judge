@@ -176,12 +176,17 @@ impl<
             None => None,
         };
 
-        let language_id = query.language_id.map_or(Ok(None), |lang_id_str| {
-            let lang_id: i64 = lang_id_str
-                .parse()
-                .map_err(|_| UsecaseError::ValidateError)?;
-            Ok(Some(lang_id))
-        })?;
+        let language_id = if let Some(lang_str) = query.language {
+            let lang_id = self
+                .language_repository
+                .language_to_id(&lang_str)
+                .await
+                .map_err(UsecaseError::internal_server_error_map())?
+                .ok_or(UsecaseError::ValidateError)?;
+            Some(lang_id)
+        } else {
+            None
+        };
 
         let problem_id = query.problem_id.map_or(Ok(None), |prob_id_str| {
             let prob_id: i64 = prob_id_str
