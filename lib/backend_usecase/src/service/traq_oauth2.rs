@@ -109,7 +109,6 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository> TraqOAuth2Se
             }
 
             "bind" => {
-
                 // 現状mergeはできない
                 let user_id = self
                     .auth_repository
@@ -119,7 +118,6 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository> TraqOAuth2Se
                 if user_id.is_some() {
                     return Err(UsecaseError::ConflictError);
                 }
-                
 
                 let session_id = session_id.ok_or(UsecaseError::Unauthorized)?;
                 let user_id = self
