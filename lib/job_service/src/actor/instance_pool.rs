@@ -161,7 +161,8 @@ where
     }
 
     async fn handle_completion(&mut self) {
-        self.reservation_count -= 1;
+        tracing::debug!("[InstancePool::handle_completion] BEGIN");
+        self.reservation_count = self.reservation_count.saturating_sub(1);
         while self.actual_instance_count > self.desired_instance_count() {
             self.actual_instance_count -= 1;
             let (tx, rx) = oneshot::channel();
