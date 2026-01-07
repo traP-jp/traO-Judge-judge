@@ -12,6 +12,7 @@ pub struct EditorialResponse {
     pub updated_at: chrono::DateTime<chrono::Utc>,
     pub problem_id: String,
     pub author_id: String,
+    pub title: String,
     pub statement: String,
     pub is_public: bool,
 }
@@ -24,6 +25,7 @@ impl From<EditorialDto> for EditorialResponse {
             updated_at: value.updated_at,
             problem_id: value.problem_id.to_string(),
             author_id: value.author_id.to_string(),
+            title: value.title,
             statement: value.statement,
             is_public: value.is_public,
         }
@@ -57,6 +59,7 @@ impl From<EditorialSummaryDto> for EditorialSummaryResponse {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateEditorial {
+    pub title: String,
     pub statement: String,
     pub is_public: bool,
 }
@@ -64,6 +67,7 @@ pub struct UpdateEditorial {
 impl From<UpdateEditorial> for UpdateEditorialData {
     fn from(value: UpdateEditorial) -> Self {
         UpdateEditorialData {
+            title: value.title,
             statement: value.statement,
             is_public: value.is_public,
         }
@@ -73,6 +77,7 @@ impl From<UpdateEditorial> for UpdateEditorialData {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateEditorial {
+    pub title: String,
     pub statement: String,
     pub is_public: bool,
 }
@@ -80,6 +85,7 @@ pub struct CreateEditorial {
 impl From<CreateEditorial> for CreateEditorialData {
     fn from(value: CreateEditorial) -> Self {
         CreateEditorialData {
+            title: value.title,
             statement: value.statement,
             is_public: value.is_public,
         }
