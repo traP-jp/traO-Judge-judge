@@ -8,6 +8,8 @@ use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::models::{HostConfig, Mount, MountTypeEnum};
 use bytes::Bytes;
 use flate2::read::GzDecoder;
+use flate2::write::GzEncoder;
+use flate2::Compression;
 use judge_core::constant::env_var_exec::{OUTPUT_PATH, SCRIPT_PATH};
 use judge_exec_grpc::generated::execute_service_server::{ExecuteService, ExecuteServiceServer};
 use judge_exec_grpc::generated::{Dependency, ExecuteRequest, ExecuteResponse, Output};
@@ -219,10 +221,16 @@ impl ExecApp {
                     .expect(format!("outcome \"{}\" not found", OUTPUT_PATH).as_str()),
             }),
         );
-        let mut output_bytes: Vec<u8> = vec![];
+
+        let mut tar_bytes: Vec<u8> = vec![];
         while let Some(Ok(chunk)) = ouput.next().await {
-            output_bytes.extend_from_slice(&chunk);
+            tar_bytes.extend_from_slice(&chunk);
         }
+
+        let mut gz_bytes = vec![];
+        let mut encoder = GzEncoder::new(&mut gz_bytes, Compression::default());
+        std::io::Write::write_all(&mut encoder, &tar_bytes)?;
+        encoder.finish()?;
 
         Ok(ExecuteResponse {
             output: Some(Output {
@@ -230,7 +238,7 @@ impl ExecApp {
                 stdout,
                 stderr,
             }),
-            outcome: output_bytes,
+            outcome: gz_bytes,
         })
     }
 }
