@@ -25,10 +25,12 @@ pub enum InstancePoolMessage {
         respond_to:
             oneshot::Sender<Result<(OutcomeToken, std::process::Output), job::ExecutionError>>,
     },
+    Completion,
 }
 
 pub struct InstancePool<A, GF> {
     receiver: mpsc::UnboundedReceiver<InstancePoolMessage>,
+    pool_tx: mpsc::UnboundedSender<InstancePoolMessage>,
     instance_tx: async_channel::Sender<InstanceMessage>,
     instance_rx: async_channel::Receiver<InstanceMessage>,
     reservation_count: usize,
@@ -46,12 +48,14 @@ where
 {
     pub async fn new(
         receiver: mpsc::UnboundedReceiver<InstancePoolMessage>,
+        pool_tx: mpsc::UnboundedSender<InstancePoolMessage>,
         aws_client: A,
         grpc_client_factory: GF,
     ) -> Self {
         let (instance_tx, instance_rx) = async_channel::unbounded();
         Self {
             receiver,
+            pool_tx,
             instance_tx,
             instance_rx,
             reservation_count: 0,
@@ -82,10 +86,12 @@ where
                 dependencies,
                 respond_to,
             } => {
-                let result = self
-                    .handle_execution(reservation, outcome_id_for_res, dependencies)
+                self.handle_execution(reservation, outcome_id_for_res, dependencies, respond_to)
                     .await;
-                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
+                Running::Continue
+            }
+            InstancePoolMessage::Completion => {
+                self.handle_completion().await;
                 Running::Continue
             }
         }
@@ -121,23 +127,40 @@ where
         reservation: ReservationToken,
         outcome_id_for_res: Uuid,
         dependencies: Vec<job::Dependency<OutcomeToken>>,
-    ) -> Result<(OutcomeToken, std::process::Output), job::ExecutionError> {
+        respond_to: oneshot::Sender<
+            Result<(OutcomeToken, std::process::Output), job::ExecutionError>,
+        >,
+    ) {
         tracing::debug!("[InstancePool::handle_execution] BEGIN");
-        let (tx, rx) = oneshot::channel();
-        let _ = self
-            .instance_tx
-            .send(InstanceMessage::Execution {
-                outcome_id_for_res,
-                dependencies,
-                respond_to: tx,
-            })
-            .await; // if this send fails, so does the recv.await below
-        let result = rx.await.map_err(|e| {
-            tracing::error!("Instance task has been killed: {e}");
-            job::ExecutionError::InternalError(format!("Instance task has been killed: {e}"))
-        })?;
+        let instance_tx = self.instance_tx.clone();
+        let pool_tx = self.pool_tx.clone();
+        tokio::spawn(async move {
+            let (tx, rx) = oneshot::channel();
+            let _ = instance_tx
+                .send(InstanceMessage::Execution {
+                    outcome_id_for_res,
+                    dependencies,
+                    respond_to: tx,
+                })
+                .await; // if this send fails, so does the recv.await after
 
-        drop(reservation);
+            let result = rx
+                .await
+                .map_err(|e| {
+                    tracing::error!("Instance task has been killed: {e}");
+                    job::ExecutionError::InternalError(format!(
+                        "Instance task has been killed: {e}"
+                    ))
+                })
+                .and_then(|res| res);
+            let _ = respond_to.send(result); // if this send fails, so does the recv.await after
+
+            drop(reservation);
+            let _ = pool_tx.send(InstancePoolMessage::Completion); // if this send fails, so does the recv.await after
+        });
+    }
+
+    async fn handle_completion(&mut self) {
         self.reservation_count -= 1;
         while self.actual_instance_count > self.desired_instance_count() {
             self.actual_instance_count -= 1;
@@ -145,24 +168,20 @@ where
             let _ = self
                 .instance_tx
                 .send(InstanceMessage::Terminate { respond_to: tx })
-                .await; // if this send fails, so does the recv.await below
-            rx.await
-                .map_err(|e| {
-                    tracing::error!("Instance task has been killed: {e}");
-                    job::ExecutionError::InternalError(format!(
-                        "Instance task has been killed: {e}"
-                    ))
-                })?
-                .map_err(|e| {
-                    tracing::error!("Something went wrong on AWS client: {e}");
-                    job::ExecutionError::InternalError(format!("AWSError: {e}"))
-                })?;
+                .await; // if this send fails, so does the recv.await after
+            tokio::spawn(async move {
+                match rx.await {
+                    Ok(Err(e)) => tracing::error!("AWSError during termination: {e}"),
+                    Err(e) => tracing::error!("Instance task killed during termination: {e}"),
+                    _ => (),
+                }
+            });
         }
-        tracing::debug!("[InstancePool::handle_execution] END");
-        result
+        tracing::debug!("[InstancePool::handle_completion] END");
     }
+
     fn desired_instance_count(&self) -> usize {
         // TODO: consider this function
-        self.reservation_count.min(1)
+        self.reservation_count
     }
 }
