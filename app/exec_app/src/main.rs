@@ -298,15 +298,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
     tracing::info!("starting exec app");
-    
+
     let addr = "0.0.0.0:50051".parse().unwrap();
     let exec_app = Arc::new(ExecApp::default());
-    
+
     tracing::info!("cleaning up existing containers");
     exec_app.terminate_container().await;
-    
+
     let exec_app_clone = exec_app.clone();
-    
+
     let exec_app_panic = exec_app.clone();
     let default_panic = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {
@@ -319,7 +319,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
         default_panic(info);
     }));
-    
+
     let shutdown_handler = async move {
         signal::ctrl_c()
             .await
@@ -328,7 +328,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         exec_app_clone.terminate_container().await;
         tracing::info!("container cleanup completed");
     };
-    
+
     tokio::select! {
         result = Server::builder()
             .add_service(ExecuteServiceServer::new(exec_app.as_ref().clone()))
@@ -337,6 +337,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         _ = shutdown_handler => {}
     }
-    
+
     Ok(())
 }
