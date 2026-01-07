@@ -58,7 +58,7 @@ impl aws::AwsClient for AwsClient {
             .user_data(
                 BASE64_STANDARD
                     .encode(format!(
-                        "#!/bin/bash\nsudo yum install -y git gcc docker >> /log.txt 2>&1\nsudo systemctl start docker >> /log.txt 2>&1\naws s3 cp s3://trao-infra-resources/exec-app/exec-app /root/exec-app >> /log.txt 2>&1\nchmod +x /root/exec-app >> /log.txt 2>&1\ndocker pull public.ecr.aws/z7h0m8a7/trao-exec-container:latest >> /log.txt 2>&1\nDOCKER_IMAGE_NAME={} RUST_LOG=TRACE /root/exec-app >> /log.txt 2>&1 & sudo shutdown -h +5",
+                        "#!/bin/bash\nDOCKER_IMAGE_NAME={} RUST_LOG=TRACE /root/exec-app >> /log.txt 2>&1",
                         docker_image_name
                     ))
                     .to_string(),
