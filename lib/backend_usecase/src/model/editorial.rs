@@ -4,12 +4,14 @@ use domain::model::editorial::{Editorial, EditorialSummary};
 
 #[derive(Debug, Clone)]
 pub struct CreateEditorialData {
+    pub title: String,
     pub statement: String,
     pub is_public: bool,
 }
 
 #[derive(Debug, Clone)]
 pub struct UpdateEditorialData {
+    pub title: String,
     pub statement: String,
     pub is_public: bool,
 }
