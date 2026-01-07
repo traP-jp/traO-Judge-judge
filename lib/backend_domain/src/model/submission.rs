@@ -11,7 +11,7 @@ pub struct Submission {
     pub language_id: String,
     pub total_score: i64,
     pub max_time_ms: i32,
-    pub max_memory_mib: i32,
+    pub max_memory_kib: i32,
     pub source: String,
     pub overall_judge_status: String,
 }
@@ -22,7 +22,7 @@ pub struct JudgeResult {
     pub judge_status: String,
     pub score: i64,
     pub time_ms: i32,
-    pub memory_mib: i32,
+    pub memory_kib: i32,
 }
 
 pub struct CreateSubmission {
@@ -33,14 +33,14 @@ pub struct CreateSubmission {
     pub judge_status: String,
     pub total_score: i64,
     pub max_time_ms: i32,
-    pub max_memory_mib: i32,
+    pub max_memory_kib: i32,
 }
 
 pub struct UpdateSubmission {
     pub judge_status: String,
     pub total_score: i64,
     pub max_time_ms: i32,
-    pub max_memory_mib: i32,
+    pub max_memory_kib: i32,
 }
 
 pub struct CreateJudgeResult {
@@ -50,7 +50,7 @@ pub struct CreateJudgeResult {
     pub judge_status: String,
     pub score: i64,
     pub time_ms: i32,
-    pub memory_mib: i32,
+    pub memory_kib: i32,
 }
 
 #[derive(Clone)]

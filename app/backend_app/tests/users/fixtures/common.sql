@@ -72,7 +72,7 @@ ALTER TABLE users MODIFY updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE
 
 ALTER TABLE normal_problems MODIFY updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;
 INSERT INTO normal_problems
-(author_id, title, statement, time_limit_ms, memory_limit_mib, difficulty, is_public, created_at, updated_at)
+(author_id, title, statement, time_limit_ms, memory_limit_kib, difficulty, is_public, created_at, updated_at)
 VALUES
 (
     1,

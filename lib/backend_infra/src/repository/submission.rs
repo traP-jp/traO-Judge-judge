@@ -112,10 +112,10 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
                 query_builder.push("submissions.total_score DESC");
             }
             SubmissionOrderBy::MemoryConsumptionAsc => {
-                query_builder.push("submissions.max_memory_mib ASC");
+                query_builder.push("submissions.max_memory_kib ASC");
             }
             SubmissionOrderBy::MemoryConsumptionDesc => {
-                query_builder.push("submissions.max_memory_mib DESC");
+                query_builder.push("submissions.max_memory_kib DESC");
             }
             SubmissionOrderBy::CodeLengthAsc => {
                 query_builder.push("LENGTH(submissions.source) ASC");
@@ -193,7 +193,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         let submission_id = Uuid::now_v7();
 
         sqlx::query(
-            "INSERT INTO submissions (id, problem_id, user_id, language_id, source, judge_status, total_score, max_time_ms, max_memory_mib) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO submissions (id, problem_id, user_id, language_id, source, judge_status, total_score, max_time_ms, max_memory_kib) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
         .bind(UuidRow(submission_id))
         .bind(submission.problem_id)
@@ -203,7 +203,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         .bind(submission.judge_status)
         .bind(submission.total_score)
         .bind(submission.max_time_ms)
-        .bind(submission.max_memory_mib)
+        .bind(submission.max_memory_kib)
         .execute(&self.pool)
         .await?;
 
@@ -216,12 +216,12 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         submission: UpdateSubmission,
     ) -> anyhow::Result<()> {
         sqlx::query(
-            "UPDATE submissions SET judge_status = ?, total_score = ?, max_time_ms = ?, max_memory_mib = ? WHERE id = ?",
+            "UPDATE submissions SET judge_status = ?, total_score = ?, max_time_ms = ?, max_memory_kib = ? WHERE id = ?",
         )
         .bind(submission.judge_status)
         .bind(submission.total_score)
         .bind(submission.max_time_ms)
-        .bind(submission.max_memory_mib)
+        .bind(submission.max_memory_kib)
         .bind(UuidRow(submission_id))
         .execute(&self.pool)
         .await?;
@@ -234,7 +234,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
             return Ok(());
         }
         let mut query_builder = QueryBuilder::new(
-            "INSERT INTO submission_testcases (submission_id, testcase_id, testcase_name, judge_status, score, time_ms, memory_mib) VALUES ",
+            "INSERT INTO submission_testcases (submission_id, testcase_id, testcase_name, judge_status, score, time_ms, memory_kib) VALUES ",
         );
         let mut separated = query_builder.separated(", ");
         for r in results.into_iter() {
@@ -251,7 +251,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
             separated.push_unseparated(", ");
             separated.push_bind_unseparated(r.time_ms);
             separated.push_unseparated(", ");
-            separated.push_bind_unseparated(r.memory_mib);
+            separated.push_bind_unseparated(r.memory_kib);
             separated.push_unseparated(")");
         }
         query_builder.build().execute(&self.pool).await?;
