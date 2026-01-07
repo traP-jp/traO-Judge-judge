@@ -19,13 +19,16 @@ use std::fs::Permissions;
 use std::io::Read;
 use std::ops::Not;
 use std::os::unix::fs::PermissionsExt;
+use std::sync::Arc;
 use std::{env, fs};
 use tar::Archive;
+use tokio::signal;
 use tokio::time::timeout;
 use tonic::async_trait;
 use tonic::codegen::tokio_stream::StreamExt;
 use tonic::{Request, Response, Status, transport::Server};
 
+#[derive(Clone)]
 pub struct ExecApp {
     docker_api: Docker,
     docker_image_name: String,
@@ -295,11 +298,45 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
     tracing::info!("starting exec app");
+    
     let addr = "0.0.0.0:50051".parse().unwrap();
-    let exec_app = ExecApp::default();
-    Server::builder()
-        .add_service(ExecuteServiceServer::new(exec_app))
-        .serve(addr)
-        .await?;
+    let exec_app = Arc::new(ExecApp::default());
+    
+    tracing::info!("cleaning up existing containers");
+    exec_app.terminate_container().await;
+    
+    let exec_app_clone = exec_app.clone();
+    
+    let exec_app_panic = exec_app.clone();
+    let default_panic = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        tracing::error!("panic occurred, cleaning up container");
+        let exec_app = exec_app_panic.clone();
+        tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(async {
+                exec_app.terminate_container().await;
+            });
+        });
+        default_panic(info);
+    }));
+    
+    let shutdown_handler = async move {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install CTRL+C signal handler");
+        tracing::info!("shutdown signal received, cleaning up container");
+        exec_app_clone.terminate_container().await;
+        tracing::info!("container cleanup completed");
+    };
+    
+    tokio::select! {
+        result = Server::builder()
+            .add_service(ExecuteServiceServer::new(exec_app.as_ref().clone()))
+            .serve(addr) => {
+            result?;
+        }
+        _ = shutdown_handler => {}
+    }
+    
     Ok(())
 }
