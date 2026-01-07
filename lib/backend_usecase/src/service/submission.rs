@@ -327,7 +327,7 @@ impl<
         );
         runtime_texts.insert(
             single_judge::MEMORY_LIMIT_KIB.to_string(),
-            (problem.memory_limit_kib).to_string(),
+            problem.memory_limit_kib.to_string(),
         );
 
         let self_clone = std::sync::Arc::clone(self);
