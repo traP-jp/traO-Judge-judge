@@ -107,6 +107,8 @@ impl ExecApp {
             .map(|dep| format!("{}=/outcomes/{}", &dep.envvar, dep.outcome_uuid))
             .collect();
         tracing::info!("env_vars: {:?}", env_vars);
+        terminate_container(&self).await;
+        tracing::info!("creating container");
         let create_container_response = self
             .docker_api
             .create_container(
