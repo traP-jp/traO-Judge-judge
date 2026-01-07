@@ -124,7 +124,7 @@ impl<
             title: problem.title,
             statement: problem.statement,
             time_limit_ms: problem.time_limit_ms,
-            memory_limit_mib: problem.memory_limit_mib,
+            memory_limit_kib: problem.memory_limit_kib,
             difficulty: problem.difficulty,
             is_public: problem.is_public,
             solved_count: problem.solved_count,
@@ -234,7 +234,7 @@ impl<
                     difficulty: body.difficulty.unwrap_or(problem.difficulty),
                     statement: body.statement.unwrap_or(problem.statement),
                     time_limit_ms: body.time_limit_ms.unwrap_or(problem.time_limit_ms),
-                    memory_limit_mib: body.memory_limit_mib.unwrap_or(problem.memory_limit_mib),
+                    memory_limit_kib: body.memory_limit_kib.unwrap_or(problem.memory_limit_kib),
                 },
             )
             .await
@@ -288,7 +288,7 @@ impl<
                 title: body.title,
                 statement: body.statement,
                 time_limit_ms: body.time_limit_ms,
-                memory_limit_mib: body.memory_limit_mib,
+                memory_limit_kib: body.memory_limit_kib,
                 difficulty: body.difficulty,
             })
             .await

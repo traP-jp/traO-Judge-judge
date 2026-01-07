@@ -145,7 +145,7 @@ impl<
             language_id: submission.language_id.to_string(),
             total_score: submission.total_score,
             max_time_ms: submission.max_time_ms,
-            max_memory_mib: submission.max_memory_mib,
+            max_memory_kib: submission.max_memory_kib,
             code_length: submission.source.len() as i32,
             overall_judge_status: submission.overall_judge_status,
             judge_results: judge_results
@@ -156,7 +156,7 @@ impl<
                     judge_status: testcase.judge_status,
                     score: testcase.score,
                     time_ms: testcase.time_ms,
-                    memory_mib: testcase.memory_mib,
+                    memory_kib: testcase.memory_kib,
                 })
                 .collect(),
         })
@@ -306,7 +306,7 @@ impl<
             judge_status: "WJ".to_string(),
             total_score: 0,
             max_time_ms: 0,
-            max_memory_mib: 0,
+            max_memory_kib: 0,
         };
 
         let submission_id = self
@@ -327,7 +327,7 @@ impl<
         );
         runtime_texts.insert(
             single_judge::MEMORY_LIMIT_KIB.to_string(),
-            (problem.memory_limit_mib as i64 * 1024).to_string(),
+            problem.memory_limit_kib.to_string(),
         );
 
         let self_clone = std::sync::Arc::clone(self);
@@ -416,7 +416,7 @@ impl<
 
         let mut total_score: i64 = 0; // summary phase から取ってくる
         let mut max_time_ms: i32 = 0; // summary phase から取ってくる
-        let mut max_memory_mib: i32 = 0; // summary phase から取ってくる
+        let mut max_memory_kib: i32 = 0; // summary phase から取ってくる
         let mut overall_status = "IE".to_string(); // summary phase から -> compile phase から取る
         let mut testcase_results: Vec<CreateJudgeResult> = Vec::new();
 
@@ -448,13 +448,13 @@ impl<
                                 judge_status: format!("{:?}", res.status),
                                 score: res.score,
                                 time_ms: res.time as i32,
-                                memory_mib: (res.memory / 1024.) as i32,
+                                memory_kib: res.memory as i32,
                             });
                         }
                         if testcase_name == judge_core::constant::job_name::SUMMARY_PHASE {
                             total_score = res.score;
                             max_time_ms = res.time as i32;
-                            max_memory_mib = (res.memory / 1024.) as i32;
+                            max_memory_kib = res.memory as i32;
                             overall_status = format!("{:?}", res.status);
                         }
                         if testcase_name == judge_core::constant::job_name::COMPILE_PHASE
@@ -480,7 +480,7 @@ impl<
                 UpdateSubmission {
                     total_score,
                     max_time_ms,
-                    max_memory_mib,
+                    max_memory_kib,
                     judge_status: overall_status,
                 },
             )
@@ -498,7 +498,7 @@ impl<
             testcase_count,
             total_score,
             max_time_ms,
-            max_memory_mib,
+            max_memory_kib,
             overall_status = %overall_status_str,
             "judge finished"
         );

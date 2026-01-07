@@ -34,7 +34,7 @@ impl From<SubmissionDto> for SubmissionResponse {
             language_id: val.language_id,
             total_score: val.total_score,
             max_time: val.max_time_ms,
-            max_memory: val.max_memory_mib,
+            max_memory: val.max_memory_kib,
             code_length: val.code_length,
             overall_judge_status: val.overall_judge_status,
             judge_results: val.judge_results.into_iter().map(|x| x.into()).collect(),
@@ -61,7 +61,7 @@ impl From<JudgeResultDto> for JudgeResultResponse {
             judge_status: val.judge_status,
             score: val.score,
             time: val.time_ms,
-            memory: val.memory_mib,
+            memory: val.memory_kib,
         }
     }
 }
@@ -123,7 +123,7 @@ impl From<SubmissionSummaryDto> for SubmissionSummaryResponse {
             language_id: submission.language_id,
             total_score: submission.total_score,
             max_time: submission.max_time_ms,
-            max_memory: submission.max_memory_mib,
+            max_memory: submission.max_memory_kib,
             code_length: submission.code_length,
             judge_status: submission.judge_status,
         }

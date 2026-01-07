@@ -92,7 +92,7 @@ pub async fn put_problem(
                 statement: body.statement,
                 difficulty: body.difficulty,
                 time_limit_ms: body.time_limit,
-                memory_limit_mib: body.memory_limit,
+                memory_limit_kib: body.memory_limit,
                 is_public: body.is_public,
             },
         )
@@ -119,7 +119,7 @@ pub async fn post_problem(
                 statement: body.statement,
                 difficulty: body.difficulty,
                 time_limit_ms: body.time_limit,
-                memory_limit_mib: body.memory_limit,
+                memory_limit_kib: body.memory_limit,
             },
         )
         .await

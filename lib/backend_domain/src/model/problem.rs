@@ -7,7 +7,7 @@ pub struct NormalProblem {
     pub title: String,
     pub statement: String,
     pub time_limit_ms: i32,
-    pub memory_limit_mib: i32,
+    pub memory_limit_kib: i32,
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
@@ -21,7 +21,7 @@ pub struct UpdateNormalProblem {
     pub difficulty: i32,
     pub statement: String,
     pub time_limit_ms: i32,
-    pub memory_limit_mib: i32,
+    pub memory_limit_kib: i32,
 }
 
 pub struct CreateNormalProblem {
@@ -29,7 +29,7 @@ pub struct CreateNormalProblem {
     pub title: String,
     pub statement: String,
     pub time_limit_ms: i32,
-    pub memory_limit_mib: i32,
+    pub memory_limit_kib: i32,
     pub difficulty: i32,
 }
 

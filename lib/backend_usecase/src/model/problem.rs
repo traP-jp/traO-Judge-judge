@@ -9,8 +9,8 @@ pub struct UpdateNormalProblemData {
     pub statement: Option<String>,
     #[validate(range(min = 1, max = 65535))]
     pub time_limit_ms: Option<i32>,
-    #[validate(range(min = 1, max = 65535))]
-    pub memory_limit_mib: Option<i32>,
+    #[validate(range(min = 1, max = 67108863))]
+    pub memory_limit_kib: Option<i32>,
     #[validate(range(min = 1, max = 10))]
     pub difficulty: Option<i32>,
     pub is_public: Option<bool>,
@@ -23,8 +23,8 @@ pub struct CreateNormalProblemData {
     pub statement: String,
     #[validate(range(min = 1, max = 65535))]
     pub time_limit_ms: i32,
-    #[validate(range(min = 1, max = 65535))]
-    pub memory_limit_mib: i32,
+    #[validate(range(min = 1, max = 67108863))] // 64 GiB
+    pub memory_limit_kib: i32,
     #[validate(range(min = 1, max = 10))]
     pub difficulty: i32,
 }
@@ -52,7 +52,7 @@ pub struct NormalProblemDto {
     pub title: String,
     pub statement: String,
     pub time_limit_ms: i32,
-    pub memory_limit_mib: i32,
+    pub memory_limit_kib: i32,
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
@@ -69,7 +69,7 @@ impl From<NormalProblem> for NormalProblemDto {
             title: problem.title,
             statement: problem.statement,
             time_limit_ms: problem.time_limit_ms,
-            memory_limit_mib: problem.memory_limit_mib,
+            memory_limit_kib: problem.memory_limit_kib,
             difficulty: problem.difficulty,
             is_public: problem.is_public,
             solved_count: problem.solved_count,
@@ -85,7 +85,7 @@ pub struct NormalProblemSummaryDto {
     pub author_id: String,
     pub title: String,
     pub time_limit_ms: i32,
-    pub memory_limit_mib: i32,
+    pub memory_limit_kib: i32,
     pub difficulty: i32,
     pub is_public: bool,
     pub solved_count: i32,
@@ -105,7 +105,7 @@ impl From<NormalProblem> for NormalProblemSummaryDto {
             author_id: problem.author_id.to_string(),
             title: problem.title,
             time_limit_ms: problem.time_limit_ms,
-            memory_limit_mib: problem.memory_limit_mib,
+            memory_limit_kib: problem.memory_limit_kib,
             difficulty: problem.difficulty,
             is_public: problem.is_public,
             solved_count: problem.solved_count,

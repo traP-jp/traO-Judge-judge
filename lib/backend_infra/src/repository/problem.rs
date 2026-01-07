@@ -132,14 +132,14 @@ impl ProblemRepository for ProblemRepositoryImpl {
         update_prblem: UpdateNormalProblem,
     ) -> anyhow::Result<()> {
         sqlx::query(
-            "UPDATE normal_problems SET title = ?, is_public = ?, difficulty = ?, statement = ?, time_limit_ms = ?, memory_limit_mib = ? WHERE id = ?",
+            "UPDATE normal_problems SET title = ?, is_public = ?, difficulty = ?, statement = ?, time_limit_ms = ?, memory_limit_kib = ? WHERE id = ?",
         )
         .bind(update_prblem.title)
         .bind(update_prblem.is_public)
         .bind(update_prblem.difficulty)
         .bind(update_prblem.statement)
         .bind(update_prblem.time_limit_ms)
-        .bind(update_prblem.memory_limit_mib)
+        .bind(update_prblem.memory_limit_kib)
         .bind(id)
         .execute(&self.pool)
         .await
@@ -153,13 +153,13 @@ impl ProblemRepository for ProblemRepositoryImpl {
 
     async fn create_problem(&self, create_problem: CreateNormalProblem) -> anyhow::Result<i64> {
         let problem_id = sqlx::query(
-            "INSERT INTO normal_problems (author_id, title, statement, time_limit_ms, memory_limit_mib, difficulty) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO normal_problems (author_id, title, statement, time_limit_ms, memory_limit_kib, difficulty) VALUES (?, ?, ?, ?, ?, ?)",
         )
         .bind(create_problem.author_id)
         .bind(create_problem.title)
         .bind(create_problem.statement)
         .bind(create_problem.time_limit_ms)
-        .bind(create_problem.memory_limit_mib)
+        .bind(create_problem.memory_limit_kib)
         .bind(create_problem.difficulty)
         .execute(&self.pool)
         .await

@@ -12,7 +12,7 @@ pub struct SubmissionDto {
     pub language_id: String,
     pub total_score: i64,
     pub max_time_ms: i32,
-    pub max_memory_mib: i32,
+    pub max_memory_kib: i32,
     pub code_length: i32,
     pub overall_judge_status: String,
     pub judge_results: Vec<JudgeResultDto>,
@@ -25,7 +25,7 @@ pub struct JudgeResultDto {
     pub judge_status: String,
     pub score: i64,
     pub time_ms: i32,
-    pub memory_mib: i32,
+    pub memory_kib: i32,
 }
 
 #[derive(Debug, Clone)]
@@ -39,7 +39,7 @@ pub struct SubmissionSummaryDto {
     pub language_id: String,
     pub total_score: i64,
     pub max_time_ms: i32,
-    pub max_memory_mib: i32,
+    pub max_memory_kib: i32,
     pub code_length: i32,
     pub judge_status: String,
 }
@@ -56,7 +56,7 @@ impl From<Submission> for SubmissionSummaryDto {
             language_id: submission.language_id,
             total_score: submission.total_score,
             max_time_ms: submission.max_time_ms,
-            max_memory_mib: submission.max_memory_mib,
+            max_memory_kib: submission.max_memory_kib,
             code_length: submission.source.len() as i32,
             judge_status: submission.overall_judge_status,
         }
