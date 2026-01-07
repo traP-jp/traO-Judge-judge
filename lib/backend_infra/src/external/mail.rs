@@ -47,7 +47,10 @@ impl MailClient for MailClientImpl {
                     .body(body.to_string()),
             )?;
 
-        self.mailer.send(&email)?;
+        let mailer = self.mailer.clone();
+        tokio::task::spawn_blocking(move || {
+            mailer.send(&email)
+        });
 
         Ok(())
     }
