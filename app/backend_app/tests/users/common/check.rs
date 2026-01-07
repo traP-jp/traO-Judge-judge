@@ -118,7 +118,7 @@ pub fn users_me_check_by_id(id: i64, resp_json: &mut Value) -> anyhow::Result<()
             "createdAt": "2023-01-01T09:15:32Z",
             "updatedAt": "2023-01-01T10:20:47Z",
             "authentication": {
-                "email": "test1@example.com",
+                "emailAuth": "test1@example.com",
                 "googleAuth": null,
                 "githubAuth": null,
                 "traqAuth": null
@@ -144,7 +144,7 @@ pub fn users_me_check_by_id(id: i64, resp_json: &mut Value) -> anyhow::Result<()
             "createdAt": "2023-02-12T14:05:12Z",
             "updatedAt": "2023-02-12T15:30:00Z",
             "authentication": {
-                "email": null,
+                "emailAuth": null,
                 "googleAuth": "test_google_oauth_2",
                 "githubAuth": null,
                 "traqAuth": "test_traq_oauth_2"
@@ -170,7 +170,7 @@ pub fn users_me_check_by_id(id: i64, resp_json: &mut Value) -> anyhow::Result<()
             "createdAt": "2023-03-20T08:00:00Z",
             "updatedAt": "2023-03-20T08:45:00Z",
             "authentication": {
-                "email": "test3@example.com",
+                "emailAuth": "test3@example.com",
                 "googleAuth": "test_google_oauth_3",
                 "githubAuth": "test_github_oauth_3",
                 "traqAuth": "test_traq_oauth_3"

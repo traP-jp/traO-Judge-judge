@@ -86,7 +86,7 @@ pub struct UserMeResponse {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserAuthentication {
-    pub email: Option<String>,
+    pub email_auth: Option<String>,
     pub github_auth: Option<String>,
     pub google_auth: Option<String>,
     pub traq_auth: Option<String>,
@@ -114,7 +114,7 @@ impl From<UserMeDto> for UserMeResponse {
             created_at: user.created_at,
             updated_at: user.updated_at,
             authentication: UserAuthentication {
-                email: user.authentication.email,
+                email_auth: user.authentication.email,
                 github_auth: user.authentication.github_oauth,
                 google_auth: user.authentication.google_oauth,
                 traq_auth: user.authentication.traq_oauth,
