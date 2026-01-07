@@ -179,7 +179,7 @@ impl<
         let language_id = if let Some(lang_str) = query.language {
             let lang_id = self
                 .language_repository
-                .language_to_id(&lang_str)
+                .language_to_id(lang_str)
                 .await
                 .map_err(UsecaseError::internal_server_error_map())?
                 .ok_or(UsecaseError::ValidateError)?;
@@ -280,14 +280,9 @@ impl<
             return Err(UsecaseError::NotFound);
         }
 
-        let language_id: i32 = body
-            .language_id
-            .parse()
-            .map_err(|_| UsecaseError::ValidateError)?;
-
         let language = self
             .language_repository
-            .id_to_language(language_id)
+            .id_to_language(body.language_id.clone())
             .await
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::ValidateError)?;
@@ -306,7 +301,7 @@ impl<
         let submission = CreateSubmission {
             problem_id,
             user_id: display_id,
-            language_id: language_id,
+            language_id: body.language_id,
             source: body.source.clone(),
             judge_status: "WJ".to_string(),
             total_score: 0,

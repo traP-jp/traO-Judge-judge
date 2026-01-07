@@ -11,7 +11,7 @@ pub struct SubmissionRow {
     pub problem_title: String,
     pub user_id: i64,
     pub user_name: String,
-    pub language_id: i32,
+    pub language_id: String,
     pub source: String,
     pub judge_status: String,
     pub total_score: i64,

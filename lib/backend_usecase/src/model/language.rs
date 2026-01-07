@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LanguageDto {
-    pub id: i32,
+    pub id: String,
     pub name: String,
 }
 
