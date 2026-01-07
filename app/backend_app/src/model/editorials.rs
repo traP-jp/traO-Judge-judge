@@ -36,6 +36,7 @@ impl From<EditorialDto> for EditorialResponse {
 #[serde(rename_all = "camelCase")]
 pub struct EditorialSummaryResponse {
     pub id: String,
+    pub title: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
     pub problem_id: String,
@@ -47,6 +48,7 @@ impl From<EditorialSummaryDto> for EditorialSummaryResponse {
     fn from(value: EditorialSummaryDto) -> Self {
         EditorialSummaryResponse {
             id: value.id,
+            title: value.title,
             created_at: value.created_at,
             updated_at: value.updated_at,
             problem_id: value.problem_id.to_string(),
