@@ -53,7 +53,7 @@ impl From<Submission> for SubmissionSummaryDto {
             user_id: submission.user_id.to_string(),
             user_name: submission.user_name,
             submitted_at: submission.submitted_at,
-            language_id: submission.language_id.to_string(),
+            language_id: submission.language_id,
             total_score: submission.total_score,
             max_time_ms: submission.max_time_ms,
             max_memory_mib: submission.max_memory_mib,

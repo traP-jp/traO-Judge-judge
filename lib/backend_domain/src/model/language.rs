@@ -1,5 +1,5 @@
 #[derive(Clone)]
 pub struct Language {
-    pub id: i32,
+    pub id: String,
     pub name: String,
 }
