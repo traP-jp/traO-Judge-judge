@@ -43,8 +43,9 @@ impl JobService {
         GF: Fn(Ipv4Addr) -> GFut + Send + Sync + Clone + 'static,
     {
         let (instance_pool_tx, instance_pool_rx) = mpsc::unbounded_channel();
+        let pool_tx = instance_pool_tx.clone();
         tokio::spawn(async move {
-            InstancePool::new(instance_pool_rx, aws_client, grpc_client_factory)
+            InstancePool::new(instance_pool_rx, pool_tx, aws_client, grpc_client_factory)
                 .await
                 .run()
                 .await;
