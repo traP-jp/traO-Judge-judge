@@ -75,7 +75,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
         .bind(query.author_id)
         .bind(query.statement)
         .bind(query.is_public)
-        .bind("解説".to_string())
+        .bind(query.title)
         .execute(&self.pool)
         .await?;
 
@@ -86,7 +86,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
         sqlx::query("UPDATE editorials SET statement = ?, is_public = ? , title = ? WHERE id = ?")
             .bind(query.statement)
             .bind(query.is_public)
-            .bind("解説".to_string())
+            .bind(query.title)
             .bind(UuidRow(query.id))
             .execute(&self.pool)
             .await?;
