@@ -60,9 +60,10 @@ impl ExecApp {
         containers.iter().any(|container| {
             container
                 .names
-                .clone()
-                .unwrap_or(vec![])
-                .contains(&ExecApp::DOCKER_CONTAINER_NAME.to_string())
+                .as_ref()
+                .unwrap_or(&vec![])
+                .iter()
+                .any(|name| name == format!("/{}", ExecApp::DOCKER_CONTAINER_NAME).as_str())
         })
     }
 
