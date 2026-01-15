@@ -393,8 +393,26 @@ impl<
                 procedure,
                 runtime_texts,
             })
-            .await
-            .map_err(UsecaseError::internal_server_error_map())?;
+            .await;
+
+        let judge_response = match judge_response {
+            Ok(res) => res,
+            Err(e) => {
+                self.submission_repository
+                    .update_submission(
+                        submission_id,
+                        UpdateSubmission {
+                            total_score: 0,
+                            max_time_ms: 0,
+                            max_memory_kib: 0,
+                            judge_status: "IE".to_string(),
+                        },
+                    )
+                    .await
+                    .map_err(UsecaseError::internal_server_error_map())?;
+                return Err(UsecaseError::internal_server_error(e));
+            }
+        };
 
         let keys = judge_response.keys().cloned().collect::<Vec<_>>();
         let testcase_names = self
