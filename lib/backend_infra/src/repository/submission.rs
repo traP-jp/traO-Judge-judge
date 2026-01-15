@@ -257,4 +257,15 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         query_builder.build().execute(&self.pool).await?;
         Ok(())
     }
+
+    async fn delete_judge_results_by_submission_id(
+        &self,
+        submission_id: Uuid,
+    ) -> anyhow::Result<()> {
+        sqlx::query("DELETE FROM submission_testcases WHERE submission_id = ?")
+            .bind(UuidRow(submission_id))
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
 }

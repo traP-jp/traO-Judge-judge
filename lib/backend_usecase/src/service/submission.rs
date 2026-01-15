@@ -477,8 +477,10 @@ impl<
             .await
             .map_err(UsecaseError::internal_server_error_map())?;
         // テストケースを消す (todo)
-
-
+        self.submission_repository
+            .delete_judge_results_by_submission_id(submission_id)
+            .await
+            .map_err(UsecaseError::internal_server_error_map())?;
 
         let self_clone = std::sync::Arc::clone(self);
 
