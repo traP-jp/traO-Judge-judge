@@ -113,3 +113,20 @@ pub async fn post_submission(
         Err(e) => Err(AppError(e).into()),
     }
 }
+
+pub async fn post_rejudge_submission(
+    State(di_container): State<DiContainer>,
+    TypedHeader(cookie): TypedHeader<Cookie>,
+    Path(submission_id): Path<String>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let session_id = cookie.get("session_id");
+
+    match di_container
+        .submission_service()
+        .rejudge_submission(session_id, submission_id)
+        .await
+    {
+        Ok(()) => Ok(StatusCode::NO_CONTENT),
+        Err(e) => Err(AppError(e).into()),
+    }
+}

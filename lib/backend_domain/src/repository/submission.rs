@@ -26,4 +26,8 @@ pub trait SubmissionRepository {
         submission: UpdateSubmission,
     ) -> anyhow::Result<()>;
     async fn create_judge_results(&self, results: Vec<CreateJudgeResult>) -> anyhow::Result<()>;
+    async fn delete_judge_results_by_submission_id(
+        &self,
+        submission_id: Uuid,
+    ) -> anyhow::Result<()>;
 }

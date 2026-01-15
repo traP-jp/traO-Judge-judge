@@ -6,13 +6,17 @@ use crate::model::{
     },
 };
 use domain::{
-    model::submission::{
-        CreateJudgeResult, CreateSubmission, SubmissionGetQuery, SubmissionOrderBy,
-        UpdateSubmission,
+    model::{
+        submission::{
+            CreateJudgeResult, CreateSubmission, SubmissionGetQuery, SubmissionOrderBy,
+            UpdateSubmission,
+        },
+        user::UserRole,
     },
     repository::{
         language::LanguageRepository, problem::ProblemRepository, procedure::ProcedureRepository,
         session::SessionRepository, submission::SubmissionRepository, testcase::TestcaseRepository,
+        user::UserRepository,
     },
 };
 use judge_core::{
@@ -29,6 +33,7 @@ use uuid::Uuid;
 #[derive(Clone)]
 pub struct SubmissionService<
     SeR: SessionRepository + Send + Sync + 'static,
+    UR: UserRepository + Send + Sync + 'static,
     SuR: SubmissionRepository + Send + Sync + 'static,
     PR: ProblemRepository + Send + Sync + 'static,
     PcR: ProcedureRepository + Send + Sync + 'static,
@@ -38,6 +43,7 @@ pub struct SubmissionService<
     JS: JudgeService + Send + Sync + 'static,
 > {
     session_repository: SeR,
+    user_repository: UR,
     submission_repository: SuR,
     problem_repository: PR,
     procedure_repository: PcR,
@@ -49,6 +55,7 @@ pub struct SubmissionService<
 
 impl<
     SeR: SessionRepository + Send + Sync + 'static,
+    UR: UserRepository + Send + Sync + 'static,
     SuR: SubmissionRepository + Send + Sync + 'static,
     PR: ProblemRepository + Send + Sync + 'static,
     PcR: ProcedureRepository + Send + Sync + 'static,
@@ -56,10 +63,11 @@ impl<
     LR: LanguageRepository + Send + Sync + 'static,
     DNR: DepNameRepository<i64> + Send + Sync + 'static,
     JS: JudgeService + Send + Sync + 'static,
-> SubmissionService<SeR, SuR, PR, PcR, TR, LR, DNR, JS>
+> SubmissionService<SeR, UR, SuR, PR, PcR, TR, LR, DNR, JS>
 {
     pub fn new(
         session_repository: SeR,
+        user_repository: UR,
         submission_repository: SuR,
         problem_repository: PR,
         procedure_repository: PcR,
@@ -70,6 +78,7 @@ impl<
     ) -> Self {
         Self {
             session_repository,
+            user_repository,
             submission_repository,
             problem_repository,
             procedure_repository,
@@ -83,6 +92,7 @@ impl<
 
 impl<
     SeR: SessionRepository + Send + Sync + 'static,
+    UR: UserRepository + Send + Sync + 'static,
     SuR: SubmissionRepository + Send + Sync + 'static,
     PR: ProblemRepository + Send + Sync + 'static,
     PcR: ProcedureRepository + Send + Sync + 'static,
@@ -90,7 +100,7 @@ impl<
     LR: LanguageRepository + Send + Sync + 'static,
     DNR: DepNameRepository<i64> + Send + Sync + 'static,
     JS: JudgeService + Send + Sync + 'static,
-> SubmissionService<SeR, SuR, PR, PcR, TR, LR, DNR, JS>
+> SubmissionService<SeR, UR, SuR, PR, PcR, TR, LR, DNR, JS>
 {
     pub async fn get_submission(
         &self,
@@ -377,6 +387,146 @@ impl<
 
         self.get_submission(session_id, submission_id.to_string())
             .await
+    }
+
+    pub async fn rejudge_submission(
+        self: &std::sync::Arc<Self>,
+        session_id: Option<&str>,
+        submission_id: String,
+    ) -> anyhow::Result<(), UsecaseError> {
+        // admin 専用 にする
+        let user_id = match session_id {
+            Some(session_id) => self
+                .session_repository
+                .get_user_id_by_session_id(session_id)
+                .await
+                .map_err(UsecaseError::internal_server_error_map())?,
+            None => None,
+        };
+        let user_id = user_id.ok_or(UsecaseError::Forbidden)?;
+        let user = self
+            .user_repository
+            .get_user_by_user_id(user_id)
+            .await
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::Forbidden)?;
+        if user.role != UserRole::Admin {
+            return Err(UsecaseError::Forbidden);
+        }
+
+        let submission_id =
+            Uuid::parse_str(&submission_id).map_err(|_| UsecaseError::ValidateError)?;
+
+        let submission = self
+            .submission_repository
+            .get_submission(submission_id)
+            .await
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::NotFound)?;
+
+        let problem = self
+            .problem_repository
+            .get_problem(submission.problem_id)
+            .await
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::NotFound)?;
+
+        let procedure = self
+            .procedure_repository
+            .get_procedure(problem.id)
+            .await
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or_else(|| {
+                UsecaseError::internal_server_error_msg(
+                    "procedure not found for problem when rejudging submission",
+                )
+            })?;
+
+        let language = self
+            .language_repository
+            .id_to_language(submission.language_id.clone())
+            .await
+            .map_err(UsecaseError::internal_server_error_map())?
+            .ok_or(UsecaseError::ValidateError)?;
+
+        let mut runtime_texts = HashMap::new();
+        runtime_texts.insert(
+            single_judge::SUBMISSION_SOURCE.to_string(),
+            submission.source.clone(),
+        );
+        runtime_texts.insert(single_judge::LANGUAGE_TAG.to_string(), language.clone());
+        runtime_texts.insert(
+            single_judge::TIME_LIMIT_MS.to_string(),
+            problem.time_limit_ms.to_string(),
+        );
+        runtime_texts.insert(
+            single_judge::MEMORY_LIMIT_KIB.to_string(),
+            problem.memory_limit_kib.to_string(),
+        );
+
+        self.submission_repository
+            .update_submission(
+                submission_id,
+                UpdateSubmission {
+                    total_score: 0,
+                    max_time_ms: 0,
+                    max_memory_kib: 0,
+                    judge_status: "WJ".to_string(),
+                },
+            )
+            .await
+            .map_err(UsecaseError::internal_server_error_map())?;
+        self.submission_repository
+            .delete_judge_results_by_submission_id(submission_id)
+            .await
+            .map_err(UsecaseError::internal_server_error_map())?;
+
+        let self_clone = std::sync::Arc::clone(self);
+
+        tracing::info!(
+            %submission_id,
+            problem_id = problem.id,
+            user_id = submission.user_id,
+            language = %language,
+            "spawning rejudge task"
+        );
+
+        tokio::spawn(async move {
+            tracing::info!(%submission_id, problem_id = problem.id, "rejudge task started");
+            if let Err(e) = self_clone
+                .async_judge_submission(submission_id, problem.id, procedure, runtime_texts)
+                .await
+            {
+                match e {
+                    UsecaseError::InternalServerError {
+                        message,
+                        file,
+                        line,
+                        column,
+                    } => {
+                        tracing::error!(
+                            %submission_id,
+                            problem_id = problem.id,
+                            %message,
+                            file,
+                            line,
+                            column,
+                            "rejudge task failed"
+                        );
+                    }
+                    other => {
+                        tracing::warn!(
+                            %submission_id,
+                            problem_id = problem.id,
+                            error = ?other,
+                            "rejudge task failed"
+                        );
+                    }
+                }
+            }
+        });
+
+        Ok(())
     }
 
     #[tracing::instrument(skip(self, procedure, runtime_texts), fields(%submission_id, problem_id))]
