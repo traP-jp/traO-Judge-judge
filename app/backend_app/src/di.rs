@@ -86,6 +86,7 @@ pub struct DiContainer {
     submission_service: std::sync::Arc<
         SubmissionService<
             SessionRepositoryImpl,
+            UserRepositoryImpl,
             SubmissionRepositoryImpl,
             ProblemRepositoryImpl,
             ProcedureRepositoryImpl,
@@ -166,6 +167,7 @@ impl DiContainer {
             icon_service: IconService::new(provider.provide_icon_repository()),
             submission_service: std::sync::Arc::new(SubmissionService::new(
                 provider.provide_session_repository(),
+                provider.provide_user_repository(),
                 provider.provide_submission_repository(),
                 provider.provide_problem_repository(),
                 provider.provide_procedure_repository(),
@@ -241,6 +243,7 @@ impl DiContainer {
     ) -> &std::sync::Arc<
         SubmissionService<
             SessionRepositoryImpl,
+            UserRepositoryImpl,
             SubmissionRepositoryImpl,
             ProblemRepositoryImpl,
             ProcedureRepositoryImpl,

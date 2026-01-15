@@ -36,7 +36,11 @@ pub fn make_router(di_container: DiContainer) -> Router {
 
     let submission_router = Router::new()
         .route("/", get(submissions::get_submissions))
-        .route("/:submissionId", get(submissions::get_submission));
+        .route("/:submissionId", get(submissions::get_submission))
+        .route(
+            "/:submissionId/rejudge",
+            post(submissions::post_rejudge_submission),
+        );
 
     let problem_router = Router::new()
         .route(
