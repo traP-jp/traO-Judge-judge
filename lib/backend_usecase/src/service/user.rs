@@ -419,7 +419,7 @@ impl<
             .await
             .map_err(UsecaseError::internal_server_error_map())?
         {
-            return Err(UsecaseError::ValidateError);
+            return Ok(()); // メール送信は行わない
         }
 
         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
