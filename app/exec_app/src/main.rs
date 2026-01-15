@@ -57,7 +57,14 @@ impl ExecApp {
             .list_containers(None::<ListContainersOptions<String>>)
             .await
             .unwrap();
-        containers.iter().size() > 0
+        containers.iter().any(|container| {
+            container
+                .names
+                .as_ref()
+                .unwrap_or(&vec![])
+                .iter()
+                .any(|name| name == format!("/{}", ExecApp::DOCKER_CONTAINER_NAME).as_str())
+        })
     }
 
     async fn terminate_container(&self) {
