@@ -394,13 +394,16 @@ impl<
         session_id: Option<&str>,
         submission_id: String,
     ) -> anyhow::Result<(), UsecaseError> {
-        // admin 専用
-        let user_id = self
-            .session_repository
-            .get_user_id_by_session_id(session_id.unwrap())
-            .await
-            .map_err(UsecaseError::internal_server_error_map())?
-            .ok_or(UsecaseError::Forbidden)?;
+        // admin 専用 にする
+        let user_id = match session_id {
+            Some(session_id) => self
+                .session_repository
+                .get_user_id_by_session_id(session_id)
+                .await
+                .map_err(UsecaseError::internal_server_error_map())?,
+            None => None,
+        };
+        let user_id = user_id.ok_or(UsecaseError::Forbidden)?;
         let user = self
             .user_repository
             .get_user_by_user_id(user_id)
@@ -473,6 +476,9 @@ impl<
             )
             .await
             .map_err(UsecaseError::internal_server_error_map())?;
+        // テストケースを消す (todo)
+
+
 
         let self_clone = std::sync::Arc::clone(self);
 
