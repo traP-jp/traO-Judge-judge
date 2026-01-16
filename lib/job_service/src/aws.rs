@@ -58,7 +58,10 @@ impl aws::AwsClient for AwsClient {
             .user_data(
                 BASE64_STANDARD
                     .encode(format!(
-                        "#!/bin/bash\nDOCKER_IMAGE_NAME={} RUST_LOG=TRACE /root/exec-app >> /log.txt 2>&1",
+                        "#!/bin/bash
+                        sudo aws s3 cp s3://trao-infra-resources/exec-app/exec-app /root/exec-app >> /log.txt 2>&1
+                        sudo chmod +x /root/exec-app
+                        DOCKER_IMAGE_NAME={} RUST_LOG=TRACE /root/exec-app >> /log.txt 2>&1",
                         docker_image_name
                     ))
                     .to_string(),
