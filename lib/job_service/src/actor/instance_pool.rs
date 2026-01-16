@@ -183,6 +183,6 @@ where
 
     fn desired_instance_count(&self) -> usize {
         // TODO: consider this function
-        self.reservation_count
+        self.reservation_count.min(1)
     }
 }
