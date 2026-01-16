@@ -241,14 +241,14 @@ impl ExecApp {
                         return Ok(ExecuteResponse {
                             output: Some(Output {
                                 exit_code: 0,
-                                stdout: serde_derive::to_string(ExecutionResult::Displayable(judge_core::model::judge_output::DisplayableExecutionResult {
-                                    status: JudgeStatus::IE,
+                                stdout: serde_json::to_string(&ExecutionResult::Displayable(judge_core::model::judge_output::DisplayableExecutionResult {
+                                    status: JudgeStatus::TLE,
                                     time: 0.0,
                                     memory: 0.0,
                                     score: 0,
                                     message: "Time limit exceeded (Container limit)".to_string().into(),
                                     continue_status: judge_core::model::judge_output::ContinueStatus::Stop,
-                                })).await.unwrap(),
+                                })).unwrap(),
                                 stderr: "Time limit exceeded (Container limit)\n".to_string(),
                             }),
                             outcome: vec![],
