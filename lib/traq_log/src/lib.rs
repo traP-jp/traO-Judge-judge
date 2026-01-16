@@ -12,21 +12,24 @@
 /// ```md
 /// This is a test message
 /// ```
-pub async fn send_message(
-    content: String
-) -> anyhow::Result<()> {
-    let webhook_id = std::env::var("TRAQ_WEBHOOK_ID").map_err(|e| anyhow::anyhow!("TRAQ_WEBHOOK_ID env var missing: {}", e))?;
+pub async fn send_message(content: String) -> anyhow::Result<()> {
+    let webhook_id = std::env::var("TRAQ_WEBHOOK_ID")
+        .map_err(|e| anyhow::anyhow!("TRAQ_WEBHOOK_ID env var missing: {}", e))?;
     let url = format!("https://q.trap.jp/api/v3/webhooks/{}", webhook_id);
     let client = reqwest::Client::new();
-    
-    let res = client.post(&url)
+
+    let res = client
+        .post(&url)
         .header("Content-Type", "text/plain; charset=utf-8")
         .body(content)
         .send()
         .await?;
 
     if !res.status().is_success() {
-        return Err(anyhow::anyhow!("Failed to send message to traQ webhook: HTTP {}", res.status()));
+        return Err(anyhow::anyhow!(
+            "Failed to send message to traQ webhook: HTTP {}",
+            res.status()
+        ));
     }
 
     Ok(())
@@ -36,22 +39,19 @@ pub async fn send_message(
 /// ### 例
 /// ```rust,no_run
 /// use traq_log::send_info_message;
-/// 
+///
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
 ///     send_info_message(Some("CREATE PROBLEM"), "This is an info message".to_string()).await?;
 ///     Ok(())
 /// }
-/// ``` 
+/// ```
 /// traQ 上でのメッセージ:
 /// ```md
 /// # :information_source.large: CREATE PROBLEM
 /// This is an info message
 /// ```
-pub async fn send_info_message(
-    title: Option<String>,
-    content: String,
-) -> anyhow::Result<()> {
+pub async fn send_info_message(title: Option<String>, content: String) -> anyhow::Result<()> {
     let content = if let Some(t) = title {
         format!("# :information_source.large: {}\n{}", t, content)
     } else {
@@ -78,10 +78,7 @@ pub async fn send_info_message(
 /// # :warning.large: WRITTER ERROR
 /// This is a warning message
 /// ```
-pub async fn send_warning_message(
-    title: Option<String>,
-    content: String,
-) -> anyhow::Result<()> {
+pub async fn send_warning_message(title: Option<String>, content: String) -> anyhow::Result<()> {
     let content = if let Some(t) = title {
         format!("# :warning.large: {}\n{}", t, content)
     } else {
@@ -108,10 +105,7 @@ pub async fn send_warning_message(
 /// # :fire.large: INTERNAL ERROR
 /// This is an error message
 /// ```
-pub async fn send_error_message(
-    title: Option<String>,
-    content: String,
-) -> anyhow::Result<()> {
+pub async fn send_error_message(title: Option<String>, content: String) -> anyhow::Result<()> {
     let content = if let Some(t) = title {
         format!("# :fire.large: {}\n{}", t, content)
     } else {
