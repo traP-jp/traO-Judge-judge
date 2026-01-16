@@ -19,14 +19,14 @@ UPDATE normal_problems SET solved_count = solved_count + 1 WHERE id = NEW.proble
 CREATE TRIGGER `trigger_solved_remove`
 AFTER DELETE ON `solved_status`
 FOR EACH ROW
-UPDATE normal_problems SET solved_count = solved_count - 1 WHERE id = OLD.problem_id;
+UPDATE normal_problems SET solved_count = GREATEST(0, solved_count - 1) WHERE id = OLD.problem_id;
 
 -- submissions の変更に伴って solved_status に insert したり delete したりする
 CREATE TRIGGER `trigger_submission_update`
 AFTER UPDATE ON submissions
 FOR EACH ROW
 BEGIN
-    -- AC になった時
+    -- AC になった時 (WJ -> AC なので、INSERT は無視しても良い)
     IF (OLD.judge_status != 'AC' OR OLD.judge_status IS NULL) AND NEW.judge_status = 'AC' THEN
         INSERT IGNORE INTO solved_status (user_id, problem_id)
         VALUES (NEW.user_id, NEW.problem_id);
@@ -64,3 +64,6 @@ BEGIN
         END IF;
     END IF;
 END;
+
+
+CREATE INDEX sub_user_prolem_status_idx ON submissions (user_id, problem_id, judge_status);
