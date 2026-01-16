@@ -222,6 +222,13 @@ impl ExecApp {
                     let current_secs = total_usage as f64 / 1_000_000_000.0;
                     tracing::info!("Current CPU usage sum: {:.2}s", current_secs);
 
+                    if let Ok(exec_info) = self.docker_api.inspect_exec(&message.id).await {
+                        if !exec_info.running.unwrap_or(false) {
+                            tracing::info!("Exec process has finished");
+                            break;
+                        }
+                    }
+
                     if current_secs > time_limit_ms / 1000.0 {
                         tracing::info!(
                             "Container [{}] exceeded CPU limit: {:.2}s",
