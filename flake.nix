@@ -31,7 +31,10 @@
           buildInputs = [
             pkgs.protobuf_27
             pkgs.openssl.dev
+            pkgs.pkg-config
             toolchain
+            pkgs.graphviz
+            pkgs.python312
           ];
         };
         formatter = pkgs.alejandra;
