@@ -132,20 +132,9 @@ impl job::JobService<ReservationToken, OutcomeToken> for JobService {
         count: usize,
     ) -> Result<Vec<ReservationToken>, job::ReservationError> {
         tracing::debug!("[JobService::reserve_execution] BEGIN");
-        let (tx, rx) = oneshot::channel();
-        let _ = self
-            .inner
-            .instance_pool_tx
-            .send(InstancePoolMessage::Reservation {
-                count,
-                respond_to: tx,
-            }); // if this send fails, so does the recv.await below
-        let res = rx.await.map_err(|e| {
-            tracing::error!("InstancePool task has been killed: {e}");
-            job::ReservationError::ReserveFailed(format!("InstancePool task has been killed: {e}"))
-        })?;
+        let result = (0..count).map(|_| ReservationToken {}).collect();
         tracing::debug!("[JobService::reserve_execution] END");
-        res
+        Ok(result)
     }
 
     async fn execute(
