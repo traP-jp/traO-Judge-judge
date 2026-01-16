@@ -14,6 +14,7 @@ members = [
   "lib/judge_exec_grpc",
   "lib/judge_infra_mock",
   "lib/problem_registry",
+  "lib/traq_log",
   "pylib/traopy_builder",
   "pylib/traopy_util",
 ]
