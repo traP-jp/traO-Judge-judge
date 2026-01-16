@@ -255,16 +255,6 @@ impl ExecuteService for ExecApp {
         &self,
         request: Request<ExecuteRequest>,
     ) -> Result<Response<ExecuteResponse>, Status> {
-        if self.executing().await {
-            return Ok(Response::new(ExecuteResponse {
-                output: Some(Output {
-                    exit_code: 1,
-                    stdout: "judging".to_string(),
-                    stderr: "".to_string(),
-                }),
-                outcome: vec![],
-            }));
-        }
         let request = request.into_inner();
         let exec_result = timeout(
             std::time::Duration::from_millis(request.exec_time_ms as u64),
