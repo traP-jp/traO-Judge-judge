@@ -1,7 +1,8 @@
 use anyhow::Context as _;
 use bollard::Docker;
 use bollard::container::{
-    Config, CreateContainerOptions, DownloadFromContainerOptions, ListContainersOptions, LogOutput, RemoveContainerOptions, StartContainerOptions, StatsOptions, UploadToContainerOptions
+    Config, CreateContainerOptions, DownloadFromContainerOptions, ListContainersOptions, LogOutput,
+    RemoveContainerOptions, StartContainerOptions, StatsOptions, UploadToContainerOptions,
 };
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::models::{HostConfig, Mount, MountTypeEnum};
@@ -203,7 +204,8 @@ impl ExecApp {
             .next()
             .unwrap_or("2000".to_string())
             .parse::<f64>()
-            .unwrap_or(2000.0) * 1.5; // TLの1.5倍
+            .unwrap_or(2000.0)
+            * 1.5; // TLの1.5倍
 
         let mut stats_stream = self.docker_api.stats(
             ExecApp::DOCKER_CONTAINER_NAME,
@@ -221,14 +223,18 @@ impl ExecApp {
                     tracing::info!("Current CPU usage sum: {:.2}s", current_secs);
 
                     if current_secs > time_limit_ms / 1000.0 {
-                        tracing::info!("Container [{}] exceeded CPU limit: {:.2}s", ExecApp::DOCKER_CONTAINER_NAME, current_secs);
-            
+                        tracing::info!(
+                            "Container [{}] exceeded CPU limit: {:.2}s",
+                            ExecApp::DOCKER_CONTAINER_NAME,
+                            current_secs
+                        );
+
                         self.terminate_container().await;
                         return Ok(ExecuteResponse {
                             output: Some(Output {
                                 exit_code: 1,
                                 stdout: "{\"Displayable\":{\"status\":\"IE\",\"time\":0.0,\"memory\":0.0,\"score\":0,\"message\":null,\"continue_status\":\"Stop\"}}\n".to_string(),
-                                stderr: "Time limit exceeded (Container limit)".to_string(),
+                                stderr: "Time limit exceeded (Container limit)\n".to_string(),
                             }),
                             outcome: vec![],
                         });
