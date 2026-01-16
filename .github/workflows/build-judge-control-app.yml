@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - dev-v1
 
 jobs:
   build-judge-control-app:

@@ -6,7 +6,7 @@ permissions:
 on:
     workflow_call:
     pull_request:
-      branches: [ "develop" ]  
+      branches: [ "develop", "dev-v1" ]  
 
 jobs:
   cargo-build:
