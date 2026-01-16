@@ -6,22 +6,27 @@ CREATE TABLE IF NOT EXISTS `resource_id_counter` (
     INDEX idx_ref_updated (ref_count, updated_at)
 );
 
-ALTER TABLE procedures CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci;
 
 INSERT INTO resource_id_counter (resource_id, ref_count)
-SELECT 
-    t.resource_id,
-    COUNT(*) as ref_count
-FROM procedures p,
-JSON_TABLE(
-    p.`procedure`,
-    '$.texts[*]' COLUMNS (
-        resource_id VARCHAR(36) COLLATE utf8mb4_uca1400_ai_ci PATH '$.resource_id'
-    )
-) AS t
-WHERE t.resource_id IS NOT NULL
-GROUP BY t.resource_id
-ON DUPLICATE KEY UPDATE ref_count = VALUES(ref_count);
+SELECT
+    resource_id,
+    new_ref_count
+FROM (
+    SELECT
+        jt.resource_id AS resource_id,
+        COUNT(*)       AS new_ref_count
+    FROM procedures AS p
+    CROSS JOIN JSON_TABLE(
+        p.`procedure`,
+        '$.texts[*]' COLUMNS (
+            resource_id VARCHAR(36) COLLATE utf8mb4_uca1400_ai_ci PATH '$.resource_id'
+        )
+    ) AS jt
+    WHERE jt.resource_id IS NOT NULL
+    GROUP BY jt.resource_id
+) AS src
+ON DUPLICATE KEY UPDATE
+    ref_count = new_ref_count;
 
 DROP TRIGGER IF EXISTS trigger_procedures_insert;
 DROP TRIGGER IF EXISTS trigger_procedures_delete;
