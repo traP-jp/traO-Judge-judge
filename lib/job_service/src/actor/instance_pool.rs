@@ -14,10 +14,6 @@ use crate::{
 };
 
 pub enum InstancePoolMessage {
-    Reservation {
-        count: usize,
-        respond_to: oneshot::Sender<Result<Vec<ReservationToken>, job::ReservationError>>,
-    },
     Execution {
         reservation: ReservationToken,
         outcome_id_for_res: Uuid,
@@ -33,7 +29,7 @@ pub struct InstancePool<A, GF> {
     pool_tx: mpsc::UnboundedSender<InstancePoolMessage>,
     instance_tx: async_channel::Sender<InstanceMessage>,
     instance_rx: async_channel::Receiver<InstanceMessage>,
-    reservation_count: usize,
+    running_job_count: usize,
     actual_instance_count: usize,
     aws_client: A,
     grpc_client_factory: GF,
@@ -58,7 +54,7 @@ where
             pool_tx,
             instance_tx,
             instance_rx,
-            reservation_count: 0,
+            running_job_count: 0,
             actual_instance_count: 0,
             aws_client,
             grpc_client_factory,
@@ -75,11 +71,6 @@ where
     }
     async fn handle(&mut self, msg: InstancePoolMessage) -> Running {
         match msg {
-            InstancePoolMessage::Reservation { count, respond_to } => {
-                let result = self.handle_reservation(count).await;
-                let _ = respond_to.send(result); // if this send fails, so does the recv.await after
-                Running::Continue
-            }
             InstancePoolMessage::Execution {
                 reservation,
                 outcome_id_for_res,
@@ -96,17 +87,17 @@ where
             }
         }
     }
-    async fn handle_reservation(
+    async fn handle_execution(
         &mut self,
-        count: usize,
-    ) -> Result<Vec<ReservationToken>, job::ReservationError> {
-        tracing::debug!("[InstancePool::handle_reservation] BEGIN");
-        let result = (0..count)
-            .map(|_| {
-                self.reservation_count += 1;
-                ReservationToken {}
-            })
-            .collect();
+        reservation: ReservationToken,
+        outcome_id_for_res: Uuid,
+        dependencies: Vec<job::Dependency<OutcomeToken>>,
+        respond_to: oneshot::Sender<
+            Result<(OutcomeToken, std::process::Output), job::ExecutionError>,
+        >,
+    ) {
+        tracing::debug!("[InstancePool::handle_execution] BEGIN");
+        self.running_job_count += 1;
         while self.actual_instance_count < self.desired_instance_count() {
             self.actual_instance_count += 1;
             let instance_rx = self.instance_rx.clone();
@@ -119,19 +110,6 @@ where
                     .await;
             });
         }
-        tracing::debug!("[InstancePool::handle_reservation] END");
-        Ok(result)
-    }
-    async fn handle_execution(
-        &mut self,
-        reservation: ReservationToken,
-        outcome_id_for_res: Uuid,
-        dependencies: Vec<job::Dependency<OutcomeToken>>,
-        respond_to: oneshot::Sender<
-            Result<(OutcomeToken, std::process::Output), job::ExecutionError>,
-        >,
-    ) {
-        tracing::debug!("[InstancePool::handle_execution] BEGIN");
         let instance_tx = self.instance_tx.clone();
         let pool_tx = self.pool_tx.clone();
         tokio::spawn(async move {
@@ -162,7 +140,7 @@ where
 
     async fn handle_completion(&mut self) {
         tracing::debug!("[InstancePool::handle_completion] BEGIN");
-        self.reservation_count = self.reservation_count.saturating_sub(1);
+        self.running_job_count = self.running_job_count.saturating_sub(1);
         while self.actual_instance_count > self.desired_instance_count() {
             self.actual_instance_count -= 1;
             let (tx, rx) = oneshot::channel();
@@ -182,7 +160,6 @@ where
     }
 
     fn desired_instance_count(&self) -> usize {
-        // TODO: consider this function
-        self.reservation_count
+        self.running_job_count
     }
 }
