@@ -11,6 +11,7 @@ use flate2::Compression;
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use judge_core::constant::env_var_exec::{OUTPUT_PATH, SCRIPT_PATH};
+use judge_core::model::judge_output::{ExecutionResult, JudgeStatus};
 use judge_exec_grpc::generated::execute_service_server::{ExecuteService, ExecuteServiceServer};
 use judge_exec_grpc::generated::{Dependency, ExecuteRequest, ExecuteResponse, Output};
 use sha2::{Digest, Sha256};
@@ -239,8 +240,15 @@ impl ExecApp {
                         self.terminate_container().await;
                         return Ok(ExecuteResponse {
                             output: Some(Output {
-                                exit_code: 1,
-                                stdout: "{\"Displayable\":{\"status\":\"IE\",\"time\":0.0,\"memory\":0.0,\"score\":0,\"message\":null,\"continue_status\":\"Stop\"}}\n".to_string(),
+                                exit_code: 0,
+                                stdout: serde_derive::to_string(ExecutionResult::Displayable(judge_core::model::judge_output::DisplayableExecutionResult {
+                                    status: JudgeStatus::IE,
+                                    time: 0.0,
+                                    memory: 0.0,
+                                    score: 0,
+                                    message: "Time limit exceeded (Container limit)".to_string().into(),
+                                    continue_status: judge_core::model::judge_output::ContinueStatus::Stop,
+                                })).await.unwrap(),
                                 stderr: "Time limit exceeded (Container limit)\n".to_string(),
                             }),
                             outcome: vec![],

@@ -16,3 +16,4 @@ tokio = { workspace = true }
 tonic = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+serde_derive = { workspace = true }
