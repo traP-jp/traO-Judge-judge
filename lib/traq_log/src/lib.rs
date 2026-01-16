@@ -1,3 +1,18 @@
+use std::sync::LazyLock;
+
+static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
+static WEBHOOK_URL: LazyLock<Option<String>> = LazyLock::new(|| {
+    std::env::var("TRAQ_WEBHOOK_ID")
+        .ok()
+        .map(|id| format!("https://q.trap.jp/api/v3/webhooks/{}", id))
+});
+
+fn get_webhook_url() -> anyhow::Result<&'static str> {
+    WEBHOOK_URL
+        .as_deref()
+        .ok_or_else(|| anyhow::anyhow!("TRAQ_WEBHOOK_ID env var missing"))
+}
+
 /// webhook を使って traQ にメッセージを送信します。
 /// ### 例
 /// ```rust,no_run
@@ -13,13 +28,10 @@
 /// This is a test message
 /// ```
 pub async fn send_message(content: &str) -> anyhow::Result<()> {
-    let webhook_id = std::env::var("TRAQ_WEBHOOK_ID")
-        .map_err(|e| anyhow::anyhow!("TRAQ_WEBHOOK_ID env var missing: {}", e))?;
-    let url = format!("https://q.trap.jp/api/v3/webhooks/{}", webhook_id);
-    let client = reqwest::Client::new();
+    let url = get_webhook_url()?;
 
-    let res = client
-        .post(&url)
+    let res = HTTP_CLIENT
+        .post(url)
         .header("Content-Type", "text/plain; charset=utf-8")
         .body(content.to_string())
         .send()
