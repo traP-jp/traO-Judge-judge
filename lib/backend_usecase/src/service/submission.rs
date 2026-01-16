@@ -157,6 +157,7 @@ impl<
             max_time_ms: submission.max_time_ms,
             max_memory_kib: submission.max_memory_kib,
             code_length: submission.source.len() as i32,
+            source_code: submission.source,
             overall_judge_status: submission.overall_judge_status,
             judge_results: judge_results
                 .into_iter()
