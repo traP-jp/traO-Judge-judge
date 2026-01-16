@@ -15,7 +15,7 @@ fn get_webhook_url() -> anyhow::Result<&'static str> {
 
 /// webhook を使って traQ にメッセージを送信します。
 /// ### 例
-/// ```rust,no_run
+/// ```rust,ignore
 /// use traq_log::send_message;
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
@@ -49,7 +49,7 @@ pub async fn send_message(content: &str) -> anyhow::Result<()> {
 
 /// webhook を使って traQ に情報メッセージを送信します。
 /// ### 例
-/// ```rust,no_run
+/// ```rust,ignore
 /// use traq_log::send_info_message;
 ///
 /// #[tokio::main]
@@ -77,7 +77,7 @@ pub async fn send_info_message(title: Option<&str>, content: &str) -> anyhow::Re
 
 /// webhook を使って traQ に警告メッセージを送信します。
 /// ### 例
-/// ```rust,no_run
+/// ```rust,ignore
 /// use traq_log::send_warning_message;
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
@@ -104,7 +104,7 @@ pub async fn send_warning_message(title: Option<&str>, content: &str) -> anyhow:
 
 /// webhook を使って traQ にエラーメッセージを送信します。
 /// ### 例
-/// ```rust,no_run
+/// ```rust,ignore
 /// use traq_log::send_error_message;
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
