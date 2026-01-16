@@ -82,9 +82,11 @@ async fn shutdown_signal() {
     let terminate = std::future::pending::<()>();
 
     tokio::select! {
-        _ = ctrl_c => {}
-        _ = terminate => {}
+        _ = ctrl_c => {
+            tracing::info!("Ctrl+C (SIGINT) received, starting graceful shutdown");
+        }
+        _ = terminate => {
+            tracing::info!("SIGTERM received, starting graceful shutdown");
+        }
     }
-
-    tracing::info!("signal received, starting graceful shutdown");
 }
