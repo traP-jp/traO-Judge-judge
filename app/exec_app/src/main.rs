@@ -243,7 +243,7 @@ impl ExecApp {
                                 exit_code: 0,
                                 stdout: serde_json::to_string(&ExecutionResult::Displayable(
                                     judge_core::model::judge_output::DisplayableExecutionResult {
-                                        status: JudgeStatus::TLE,
+                                        status: JudgeStatus::RE,
                                         time: 0.0,
                                         memory: 0.0,
                                         score: 0,
