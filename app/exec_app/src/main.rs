@@ -240,7 +240,7 @@ impl ExecApp {
                         return Ok(ExecuteResponse {
                             output: Some(Output {
                                 exit_code: 1,
-                                stdout: "{\"Displayable\":{\"status\":\"IE\",\"time\":0.0,\"memory\":0.0,\"score\":0,\"message\":null,\"continue_status\":\"Stop\"}}\n".to_string(),
+                                stdout: format!("{{\"Displayable\":{{\"status\":\"TLE\",\"time\":{:.2},\"memory\":0.0,\"score\":0,\"message\":null,\"continue_status\":\"Stop\"}}}}\n", current_secs),
                                 stderr: "Time limit exceeded (Container limit)\n".to_string(),
                             }),
                             outcome: vec![],
