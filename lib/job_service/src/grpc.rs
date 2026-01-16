@@ -28,7 +28,10 @@ impl GrpcClient {
                         .and_then(|s| s.source())
                         .and_then(|s| s.downcast_ref::<std::io::Error>())
                         .map(|e| e.kind())
-                        .is_some_and(|k| k == std::io::ErrorKind::ConnectionRefused)
+                        .is_some_and(|k| {
+                            k == std::io::ErrorKind::ConnectionRefused
+                                || k == std::io::ErrorKind::HostUnreachable
+                        })
                 },
             )
             .await
