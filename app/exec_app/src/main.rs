@@ -1,8 +1,7 @@
 use anyhow::Context as _;
 use bollard::Docker;
 use bollard::container::{
-    Config, CreateContainerOptions, DownloadFromContainerOptions, ListContainersOptions, LogOutput,
-    RemoveContainerOptions, StartContainerOptions, UploadToContainerOptions,
+    Config, CreateContainerOptions, DownloadFromContainerOptions, ListContainersOptions, LogOutput, RemoveContainerOptions, StartContainerOptions, StatsOptions, UploadToContainerOptions
 };
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::models::{HostConfig, Mount, MountTypeEnum};
@@ -15,7 +14,7 @@ use judge_exec_grpc::generated::execute_service_server::{ExecuteService, Execute
 use judge_exec_grpc::generated::{Dependency, ExecuteRequest, ExecuteResponse, Output};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::fs::Permissions;
+use std::fs::{File, Permissions};
 use std::io::Read;
 use std::ops::Not;
 use std::os::unix::fs::PermissionsExt;
@@ -103,7 +102,7 @@ impl ExecApp {
         }
 
         // create container
-        let mut env_vars: Vec<String> = dependency
+        let env_vars: Vec<String> = dependency
             .iter()
             .map(|dep| format!("{}=/outcomes/{}", &dep.envvar, dep.outcome_uuid))
             .collect();
@@ -124,6 +123,7 @@ impl ExecApp {
                     host_config: Some(HostConfig {
                         cpuset_cpus: Some("0".to_string()),
                         memory: Some(2 * 1024 * 1024 * 1024), // 2GiB
+                        pids_limit: Some(64),
                         mounts: Some(vec![Mount {
                             target: Some("/outcomes".to_string()),
                             source: Some("/outcomes".to_string()),
@@ -189,18 +189,61 @@ impl ExecApp {
             .await?;
         let mut stdout = String::new();
         let mut stderr = String::new();
+
+        let time_limit_ms = dependency
+            .iter()
+            .filter(|dep| dep.envvar == "EXEC_TIME_LIMIT_MS")
+            .map(|dep| {
+                let f = File::open(format!("/outcomes/{}", dep.outcome_uuid));
+                let mut buf_reader = std::io::BufReader::new(f.unwrap());
+                let mut contents = String::new();
+                buf_reader.read_to_string(&mut contents).unwrap();
+                contents
+            })
+            .next()
+            .unwrap_or("2000".to_string())
+            .parse::<f64>()
+            .unwrap_or(2000.0) * 1.5; // TLの1.5倍
+
+        let mut stats_stream = self.docker_api.stats(
+            ExecApp::DOCKER_CONTAINER_NAME,
+            Some(StatsOptions {
+                stream: true,
+                one_shot: false,
+            }),
+        );
+
         match result {
             StartExecResults::Attached { mut output, .. } => {
+                while let Some(Ok(stats)) = stats_stream.next().await {
+                    let total_usage = stats.cpu_stats.cpu_usage.total_usage;
+                    let current_secs = total_usage as f64 / 1_000_000_000.0;
+                    tracing::info!("Current CPU usage sum: {:.2}s", current_secs);
+
+                    if current_secs > time_limit_ms / 1000.0 {
+                        tracing::info!("Container [{}] exceeded CPU limit: {:.2}s", ExecApp::DOCKER_CONTAINER_NAME, current_secs);
+            
+                        self.terminate_container().await;
+                        return Ok(ExecuteResponse {
+                            output: Some(Output {
+                                exit_code: 1,
+                                stdout: "{\"Displayable\":{\"status\":\"IE\",\"time\":0.0,\"memory\":0.0,\"score\":0,\"message\":null,\"continue_status\":\"Stop\"}}\n".to_string(),
+                                stderr: "Time limit exceeded (Container limit)".to_string(),
+                            }),
+                            outcome: vec![],
+                        });
+                    }
+                }
                 while let Some(Ok(msg)) = output.next().await {
                     match msg {
                         LogOutput::StdErr { message } => {
                             let str = String::from_utf8_lossy(&message);
-                            println!("stderr: {}", str); // todo
+                            tracing::info!("stderr: {}", str);
                             stderr.push_str(&str);
                         }
                         LogOutput::StdOut { message } => {
                             let str = String::from_utf8_lossy(&message);
-                            println!("stdout: {}", str); // todo
+                            tracing::info!("stdout: {}", str);
                             stdout.push_str(&str);
                         }
                         _default => {}
@@ -208,7 +251,7 @@ impl ExecApp {
                 }
             }
             StartExecResults::Detached => {
-                println!("Detached");
+                tracing::info!("Detached");
             }
         }
 
