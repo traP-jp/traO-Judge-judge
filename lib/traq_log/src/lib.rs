@@ -39,19 +39,24 @@ pub async fn send_message(
 /// 
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
-///     send_info_message("This is an info message".to_string()).await?;
+///     send_info_message(Some("CREATE PROBLEM"), "This is an info message".to_string()).await?;
 ///     Ok(())
 /// }
 /// ``` 
 /// traQ 上でのメッセージ:
 /// ```md
-/// # :information_source.large: INFOMATION
+/// # :information_source.large: CREATE PROBLEM
 /// This is an info message
-/// ``````
+/// ```
 pub async fn send_info_message(
+    title: Option<String>,
     content: String,
 ) -> anyhow::Result<()> {
-    let content = format!("# :information_source.large: INFOMATION\n{}", content);
+    let content = if let Some(t) = title {
+        format!("# :information_source.large: {}\n{}", t, content)
+    } else {
+        format!("# :information_source.large: INFOMATION\n{}", content)
+    };
 
     send_message(content).await?;
 
@@ -64,19 +69,24 @@ pub async fn send_info_message(
 /// use traq_log::send_warning_message;
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
-///     send_warning_message("This is a warning message".to_string()).await?;
+///     send_warning_message(Some("WRITTER ERROR"), "This is a warning message".to_string()).await?;
 ///     Ok(())
 /// }
 /// ```
 /// traQ 上でのメッセージ:
 /// ```md
-/// # :warning.large: WARNING
+/// # :warning.large: WRITTER ERROR
 /// This is a warning message
 /// ```
 pub async fn send_warning_message(
+    title: Option<String>,
     content: String,
 ) -> anyhow::Result<()> {
-    let content = format!("# :warning.large: WARNING\n{}", content);
+    let content = if let Some(t) = title {
+        format!("# :warning.large: {}\n{}", t, content)
+    } else {
+        format!("# :warning.large: WARNING\n{}", content)
+    };
 
     send_message(content).await?;
 
@@ -89,19 +99,24 @@ pub async fn send_warning_message(
 /// use traq_log::send_error_message;
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
-///     send_error_message("This is an error message".to_string()).await?;
+///     send_error_message(Some("INTERNAL ERROR"), "This is an error message".to_string()).await?;
 ///     Ok(())
 /// }
 /// ```
 /// traQ 上でのメッセージ:
 /// ```md
-/// # :fire.large: ERROR
+/// # :fire.large: INTERNAL ERROR
 /// This is an error message
 /// ```
 pub async fn send_error_message(
+    title: Option<String>,
     content: String,
 ) -> anyhow::Result<()> {
-    let content = format!("# :fire.large: ERROR\n{}", content);
+    let content = if let Some(t) = title {
+        format!("# :fire.large: {}\n{}", t, content)
+    } else {
+        format!("# :fire.large: ERROR\n{}", content)
+    };
 
     send_message(content).await?;
 
