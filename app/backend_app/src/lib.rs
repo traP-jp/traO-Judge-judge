@@ -14,7 +14,7 @@ pub mod model;
 mod scheduler;
 
 pub async fn run() -> anyhow::Result<()> {
-    let provider: Provider = Provider::new().await.map_err(|e| {
+    let provider = Provider::new().await.map_err(|e| {
         tracing::error!("Failed to create provider: {}", e);
         e
     })?;
