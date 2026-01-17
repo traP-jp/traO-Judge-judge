@@ -25,6 +25,10 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
         problem_id: i64,
         dep_id_to_name: HashMap<DepId, String>,
     ) -> anyhow::Result<()> {
+        if dep_id_to_name.is_empty() {
+            return Ok(());
+        }
+
         let mut query_builder =
             QueryBuilder::new("INSERT INTO dep_name (problem_id, dep_id, name) VALUES ");
 
@@ -47,6 +51,10 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
         &self,
         dep_ids: Vec<DepId>,
     ) -> anyhow::Result<HashMap<DepId, Option<String>>> {
+        if dep_ids.is_empty() {
+            return Ok(HashMap::new());
+        }
+
         let mut query_builder =
             QueryBuilder::new("SELECT dep_id, name FROM dep_name WHERE dep_id IN (");
 
