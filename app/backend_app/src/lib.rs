@@ -19,7 +19,8 @@ pub async fn run() -> anyhow::Result<()> {
         e
     })?;
 
-    scheduler::init_scheduler(&provider).await?;
+    let sched = scheduler::init_scheduler(&provider).await?;
+    sched.start().await?;
 
     let di_container = DiContainer::new(provider).await;
 

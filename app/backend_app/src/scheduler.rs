@@ -5,7 +5,7 @@ use infra::provider::Provider;
 use judge_core::model::{identifiers::ResourceId, problem_registry::ProblemRegistryServer};
 use tokio_cron_scheduler::{Job, JobScheduler};
 
-pub async fn init_scheduler(provider: &Provider) -> anyhow::Result<()> {
+pub async fn init_scheduler(provider: &Provider) -> anyhow::Result<JobScheduler> {
     let sched = JobScheduler::new().await?;
 
     let resource_id_counter_repo = Arc::new(provider.provide_resource_id_counter_repository());
@@ -28,8 +28,7 @@ pub async fn init_scheduler(provider: &Provider) -> anyhow::Result<()> {
             let mut failed = vec![];
 
             for uuid in deletable_ids {
-                let resource_id = uuid;
-                if let Err(e) = problem_registry_server.remove(resource_id.into()).await {
+                if let Err(e) = problem_registry_server.remove(uuid.into()).await {
                     tracing::error!(
                         "Failed to delete resource {} from registry server: {}",
                         uuid,
@@ -42,14 +41,14 @@ pub async fn init_scheduler(provider: &Provider) -> anyhow::Result<()> {
             }
 
             resource_id_counter_repo
-                .delete_resource_ids(deleted.clone())
+                .delete_resource_ids(deleted)
                 .await
                 .unwrap_or_else(|e| {
                     tracing::error!("Failed to delete resource IDs from DB: {}", e);
                 });
 
             resource_id_counter_repo
-                .update_timestamp_ids(failed.clone())
+                .update_timestamp_ids(failed)
                 .await
                 .unwrap_or_else(|e| {
                     tracing::error!(
@@ -61,7 +60,6 @@ pub async fn init_scheduler(provider: &Provider) -> anyhow::Result<()> {
     })?;
 
     sched.add(job).await?;
-    sched.start().await?;
 
-    Ok(())
+    Ok(sched)
 }
