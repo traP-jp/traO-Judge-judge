@@ -13,7 +13,10 @@ use domain::{
     },
 };
 use judge_core::{
-    logic::{problem_presets::normal_judge::create_normal_judge_procedure, registered_procedure_remover::remove, writer_schema_registerer::register},
+    logic::{
+        problem_presets::normal_judge::create_normal_judge_procedure,
+        registered_procedure_remover::remove, writer_schema_registerer::register,
+    },
     model::{
         dep_name_repository::DepNameRepository, problem_registry::ProblemRegistryServer,
         procedure::registered::Procedure,
