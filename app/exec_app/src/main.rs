@@ -225,7 +225,7 @@ impl ExecApp {
 
                         return Err(anyhow::anyhow!(
                             "Execution time limit exceeded: {:.2}s",
-                            time_limit_ms / 1000.0
+                            current_secs
                         ));
                     }
                 }
