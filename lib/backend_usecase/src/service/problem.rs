@@ -13,7 +13,7 @@ use domain::{
     },
 };
 use judge_core::{
-    logic::registered_procedure_remover::remove,
+    logic::{problem_presets::normal_judge::create_normal_judge_procedure, registered_procedure_remover::remove, writer_schema_registerer::register},
     model::{
         dep_name_repository::DepNameRepository, problem_registry::ProblemRegistryServer,
         procedure::registered::Procedure,
@@ -294,11 +294,21 @@ impl<
             .await
             .map_err(UsecaseError::internal_server_error_map())?;
 
-        let procedure = Procedure::default();
+        let procedure = create_normal_judge_procedure(vec![])
+            .map_err(UsecaseError::internal_server_error_map())?;
+
+        let registered_procedure = register(
+            procedure,
+            self.problem_registry_server.clone(),
+            self.dep_name_repository.clone(),
+            problem_id,
+        )
+        .await
+        .map_err(UsecaseError::internal_server_error_map())?;
 
         if self
             .procedure_repository
-            .create_procedure(problem_id, procedure)
+            .create_procedure(problem_id, registered_procedure)
             .await
             .is_err()
         {
