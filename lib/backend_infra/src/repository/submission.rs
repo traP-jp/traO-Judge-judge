@@ -233,6 +233,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         if results.is_empty() {
             return Ok(());
         }
+
         let mut query_builder = QueryBuilder::new(
             "INSERT INTO submission_testcases (submission_id, testcase_id, testcase_name, judge_status, score, time_ms, memory_kib) VALUES ",
         );
