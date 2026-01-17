@@ -12,7 +12,7 @@ pub async fn init_scheduler(provider: &Provider) -> anyhow::Result<JobScheduler>
     let pr_server = provider.provide_problem_registry_server();
     #[cfg(feature = "prod")]
     let pr_server = ProblemRegistryServer::new().await;
-    
+
     let resource_id_counter_repo = Arc::new(provider.provide_resource_id_counter_repository());
     let problem_registry_server = Arc::new(pr_server);
 
