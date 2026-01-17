@@ -57,11 +57,7 @@ pub async fn run() -> anyhow::Result<()> {
     tracing::info!("listening on {}", listener.local_addr()?);
 
     #[cfg(feature = "prod")]
-    traq_log::send_info_message(
-        Some("BACKEND APP START"),
-        "サーバーが起動されました。",
-    )
-    .await;
+    traq_log::send_info_message(Some("BACKEND APP START"), "サーバーが起動されました。").await;
 
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
@@ -101,6 +97,6 @@ async fn shutdown_signal() {
     traq_log::send_warning_message(
         Some("BACKEND APP SHUTDOWN"),
         "サーバーがシャットダウンされました。",
-    ).await;
-    
+    )
+    .await;
 }
