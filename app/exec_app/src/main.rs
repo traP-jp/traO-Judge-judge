@@ -192,22 +192,6 @@ impl ExecApp {
         let mut stdout = String::new();
         let mut stderr = String::new();
 
-        let time_limit_ms = dependency
-            .iter()
-            .filter(|dep| dep.envvar == "EXEC_TIME_LIMIT_MS")
-            .map(|dep| {
-                let f = File::open(format!("/outcomes/{}", dep.outcome_uuid));
-                let mut buf_reader = std::io::BufReader::new(f.unwrap());
-                let mut contents = String::new();
-                buf_reader.read_to_string(&mut contents).unwrap();
-                contents
-            })
-            .next()
-            .unwrap_or("2000".to_string())
-            .parse::<f64>()
-            .unwrap_or(2000.0)
-            * 1.5; // TLの1.5倍
-
         let mut stats_stream = self.docker_api.stats(
             ExecApp::DOCKER_CONTAINER_NAME,
             Some(StatsOptions {
@@ -230,7 +214,7 @@ impl ExecApp {
                         }
                     }
 
-                    if current_secs > time_limit_ms / 1000.0 {
+                    if current_secs > 60.0 {
                         tracing::info!(
                             "Container [{}] exceeded CPU limit: {:.2}s",
                             ExecApp::DOCKER_CONTAINER_NAME,
