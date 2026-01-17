@@ -251,7 +251,7 @@ impl ExecApp {
                                             .to_string()
                                             .into(),
                                         continue_status:
-                                            judge_core::model::judge_output::ContinueStatus::Stop,
+                                            judge_core::model::judge_output::ContinueStatus::Continue,
                                     },
                                 ))
                                 .unwrap(),
