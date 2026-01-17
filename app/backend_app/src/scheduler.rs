@@ -5,7 +5,7 @@ use infra::provider::Provider;
 use judge_core::model::problem_registry::ProblemRegistryServer;
 
 #[cfg(feature = "prod")]
-use problem_registry::{server::ProblemRegistryServer as ProdProblemRegistryServer};
+use problem_registry::server::ProblemRegistryServer as ProdProblemRegistryServer;
 use tokio_cron_scheduler::{Job, JobScheduler};
 
 pub async fn init_scheduler(provider: &Provider) -> anyhow::Result<JobScheduler> {
