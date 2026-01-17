@@ -238,6 +238,31 @@ impl ExecApp {
                         );
 
                         self.terminate_container().await;
+
+                        let mut ouput = self.docker_api.download_from_container(
+                            ExecApp::DOCKER_CONTAINER_NAME,
+                            Some(DownloadFromContainerOptions::<String> {
+                                path: dependency
+                                    .iter()
+                                    .filter(|dep| dep.envvar == OUTPUT_PATH)
+                                    .map(|dep| format!("/outcomes/{}", dep.outcome_uuid))
+                                    .next()
+                                    .expect(
+                                        format!("outcome \"{}\" not found", OUTPUT_PATH).as_str(),
+                                    ),
+                            }),
+                        );
+
+                        let mut tar_bytes: Vec<u8> = vec![];
+                        while let Some(Ok(chunk)) = ouput.next().await {
+                            tar_bytes.extend_from_slice(&chunk);
+                        }
+
+                        let mut gz_bytes = vec![];
+                        let mut encoder = GzEncoder::new(&mut gz_bytes, Compression::default());
+                        std::io::Write::write_all(&mut encoder, &tar_bytes)?;
+
+                        encoder.finish()?;
                         return Ok(ExecuteResponse {
                             output: Some(Output {
                                 exit_code: 0,
@@ -257,7 +282,7 @@ impl ExecApp {
                                 .unwrap(),
                                 stderr: "Time limit exceeded (Container limit)\n".to_string(),
                             }),
-                            outcome: vec![],
+                            outcome: gz_bytes,
                         });
                     }
                 }
