@@ -60,14 +60,14 @@ pub async fn send_message(content: &str) -> anyhow::Result<()> {
 /// ```
 /// traQ 上でのメッセージ:
 /// ```md
-/// # :information_source.large: CREATE PROBLEM
+/// ## :information_source.large: CREATE PROBLEM
 /// This is an info message
 /// ```
 pub async fn send_info_message(title: Option<&str>, content: &str) -> anyhow::Result<()> {
     let content = if let Some(t) = title {
-        format!("# :information_source.large: {}\n{}", t, content)
+        format!("## :information_source.large: {}\n{}", t, content)
     } else {
-        format!("# :information_source.large: INFORMATION\n{}", content)
+        format!("## :information_source.large: INFORMATION\n{}", content)
     };
 
     send_message(&content).await?;
@@ -87,14 +87,14 @@ pub async fn send_info_message(title: Option<&str>, content: &str) -> anyhow::Re
 /// ```
 /// traQ 上でのメッセージ:
 /// ```md
-/// # :warning.large: WRITTER ERROR
+/// ## :warning.large: WRITTER ERROR
 /// This is a warning message
 /// ```
 pub async fn send_warning_message(title: Option<&str>, content: &str) -> anyhow::Result<()> {
     let content = if let Some(t) = title {
-        format!("# :warning.large: {}\n{}", t, content)
+        format!("## :warning.large: {}\n{}", t, content)
     } else {
-        format!("# :warning.large: WARNING\n{}", content)
+        format!("## :warning.large: WARNING\n{}", content)
     };
 
     send_message(&content).await?;
@@ -114,14 +114,14 @@ pub async fn send_warning_message(title: Option<&str>, content: &str) -> anyhow:
 /// ```
 /// traQ 上でのメッセージ:
 /// ```md
-/// # :fire.large: INTERNAL ERROR
+/// ## :fire.large: INTERNAL ERROR
 /// This is an error message
 /// ```
 pub async fn send_error_message(title: Option<&str>, content: &str) -> anyhow::Result<()> {
     let content = if let Some(t) = title {
-        format!("# :fire.large: {}\n{}", t, content)
+        format!("## :fire.large: {}\n{}", t, content)
     } else {
-        format!("# :fire.large: ERROR\n{}", content)
+        format!("## :fire.large: ERROR\n{}", content)
     };
 
     send_message(&content).await?;
