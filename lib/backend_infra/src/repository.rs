@@ -5,6 +5,7 @@ pub mod icon;
 pub mod language;
 pub mod problem;
 pub mod procedure;
+pub mod resource_id_counter;
 pub mod session;
 pub mod submission;
 pub mod testcase;

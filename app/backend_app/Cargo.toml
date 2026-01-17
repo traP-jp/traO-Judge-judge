@@ -9,6 +9,7 @@ async-session = { workspace = true }
 axum = { workspace = true }
 axum-extra = { workspace = true }
 bcrypt = { workspace = true }
+domain = { path = "../../lib/backend_domain" }
 fancy-regex = { workspace = true }
 http-body-util = { workspace = true }
 infra = { path = "../../lib/backend_infra" }
@@ -24,17 +25,13 @@ serde_json = { workspace = true }
 sqlx = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
+tokio-cron-scheduler = { workspace = true }
 tower = { workspace = true }
 tower-http = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 usecase = { path = "../../lib/backend_usecase" }
 uuid = { workspace = true }
-
-[dev-dependencies]
-domain = { path = "../../lib/backend_domain" }
-
-
 
 [features]
 default = ["dev"]

@@ -11,12 +11,17 @@ use tracing::Level;
 pub mod di;
 pub mod handler;
 pub mod model;
+mod scheduler;
 
 pub async fn run() -> anyhow::Result<()> {
     let provider = Provider::new().await.map_err(|e| {
         tracing::error!("Failed to create provider: {}", e);
         e
     })?;
+
+    let sched = scheduler::init_scheduler(&provider).await?;
+    sched.start().await?;
+
     let di_container = DiContainer::new(provider).await;
 
     let origins = [

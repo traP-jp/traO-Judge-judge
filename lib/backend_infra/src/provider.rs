@@ -123,6 +123,14 @@ impl Provider {
         DepNameRepositoryImpl::new(self.pool.clone())
     }
 
+    pub fn provide_resource_id_counter_repository(
+        &self,
+    ) -> crate::repository::resource_id_counter::ResourceIdCounterRepositoryImpl {
+        crate::repository::resource_id_counter::ResourceIdCounterRepositoryImpl::new(
+            self.pool.clone(),
+        )
+    }
+
     pub fn provide_mail_client(&self) -> MailClientImpl {
         MailClientImpl::new().unwrap()
     }
