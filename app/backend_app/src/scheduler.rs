@@ -8,8 +8,13 @@ use tokio_cron_scheduler::{Job, JobScheduler};
 pub async fn init_scheduler(provider: &Provider) -> anyhow::Result<JobScheduler> {
     let sched = JobScheduler::new().await?;
 
+    #[cfg(feature = "dev")]
+    let pr_server = provider.provide_problem_registry_server();
+    #[cfg(feature = "prod")]
+    let pr_server = ProblemRegistryServer::new().await;
+    
     let resource_id_counter_repo = Arc::new(provider.provide_resource_id_counter_repository());
-    let problem_registry_server = Arc::new(provider.provide_problem_registry_server());
+    let problem_registry_server = Arc::new(pr_server);
 
     let job = Job::new_async("0 */1 * * * *", move |_uuid, _l| {
         let resource_id_counter_repo = Arc::clone(&resource_id_counter_repo);
