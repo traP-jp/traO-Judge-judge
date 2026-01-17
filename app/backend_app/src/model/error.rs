@@ -25,6 +25,16 @@ impl From<AppError> for StatusCode {
                     column,
                     message
                 );
+                #[cfg(feature = "prod")]
+                {
+                    // message に 機密情報が含まれてたらまずいのでとりあえず "todo" にしておく
+                    let error_message =
+                        format!("Location: {}:{}:{}\nmessage: todo", file, line, column);
+                    tokio::spawn(async move {
+                        traq_log::send_error_message(Some("INTERNAL SERVER ERROR"), &error_message)
+                            .await;
+                    });
+                }
                 StatusCode::INTERNAL_SERVER_ERROR
             }
             UsecaseError::ConflictError => StatusCode::CONFLICT,
