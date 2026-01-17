@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use domain::repository::resource_id_counter::ResourceIdCounterRepository;
 use infra::provider::Provider;
-use judge_core::model::{identifiers::ResourceId, problem_registry::ProblemRegistryServer};
+use judge_core::model::problem_registry::ProblemRegistryServer;
+
+#[cfg(feature = "prod")]
+use problem_registry::{server::ProblemRegistryServer as ProdProblemRegistryServer};
 use tokio_cron_scheduler::{Job, JobScheduler};
 
 pub async fn init_scheduler(provider: &Provider) -> anyhow::Result<JobScheduler> {
@@ -11,7 +14,7 @@ pub async fn init_scheduler(provider: &Provider) -> anyhow::Result<JobScheduler>
     #[cfg(feature = "dev")]
     let pr_server = provider.provide_problem_registry_server();
     #[cfg(feature = "prod")]
-    let pr_server = ProblemRegistryServer::new().await;
+    let pr_server = ProdProblemRegistryServer::new().await;
 
     let resource_id_counter_repo = Arc::new(provider.provide_resource_id_counter_repository());
     let problem_registry_server = Arc::new(pr_server);
