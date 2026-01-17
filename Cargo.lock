@@ -1752,6 +1752,7 @@ dependencies = [
  "flate2",
  "judge_core",
  "judge_exec_grpc",
+ "serde_json",
  "sha2 0.10.9",
  "tar",
  "tokio",
@@ -5630,6 +5631,14 @@ dependencies = [
  "pyo3-stub-gen",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "traq_log"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "reqwest",
 ]
 
 [[package]]

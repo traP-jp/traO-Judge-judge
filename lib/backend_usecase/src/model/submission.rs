@@ -13,6 +13,7 @@ pub struct SubmissionDto {
     pub total_score: i64,
     pub max_time_ms: i32,
     pub max_memory_kib: i32,
+    pub source_code: String,
     pub code_length: i32,
     pub overall_judge_status: String,
     pub judge_results: Vec<JudgeResultDto>,
