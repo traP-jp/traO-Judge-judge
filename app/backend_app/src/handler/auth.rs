@@ -1,4 +1,5 @@
 use crate::di::DiContainer;
+use crate::handler::SESSION_COOKIE_MAX_AGE_SECS;
 use crate::model::auth::{LogIn, ResetPassword, ResetPasswordRequest, SignUp, SignUpRequest};
 use crate::model::error::AppError;
 use axum::{
@@ -37,7 +38,9 @@ pub async fn signup(
             let mut headers = HeaderMap::new();
             headers.insert(
                 SET_COOKIE,
-                format!("session_id={session_id}; Path=/; HttpOnly; Secure; SameSite=Lax")
+                format!(
+                    "session_id={session_id}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age={SESSION_COOKIE_MAX_AGE_SECS}"
+                )
                     .parse()
                     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
             );
@@ -64,7 +67,9 @@ pub async fn login(
             let mut headers = HeaderMap::new();
             headers.insert(
                 SET_COOKIE,
-                format!("session_id={session_id}; Path=/; HttpOnly; Secure; SameSite=Lax")
+                format!(
+                    "session_id={session_id}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age={SESSION_COOKIE_MAX_AGE_SECS}"
+                )
                     .parse()
                     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
             );

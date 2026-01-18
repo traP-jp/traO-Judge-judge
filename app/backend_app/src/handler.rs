@@ -16,6 +16,8 @@ pub mod testcase;
 pub mod traq_oauth2;
 pub mod users;
 
+pub const SESSION_COOKIE_MAX_AGE_SECS: i64 = 60 * 60 * 24 * 30 * 6;
+
 pub fn make_router(di_container: DiContainer) -> Router {
     let auth_router = Router::new()
         .route("/signup/request", post(auth::signup_request))
