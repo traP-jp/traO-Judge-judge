@@ -47,7 +47,7 @@ pub async fn post_google_oauth2_authorize(
                 headers.insert(
                     SET_COOKIE,
                     format!(
-                        "session_id={}; HttpOnly; Path=/; SameSite=Lax",
+                        "session_id={}; HttpOnly; Secure; Path=/; SameSite=Lax",
                         login_session_id
                     )
                     .parse()
