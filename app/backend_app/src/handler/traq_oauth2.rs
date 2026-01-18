@@ -28,7 +28,7 @@ pub async fn post_traq_oauth2_authorize(
                 let mut headers = HeaderMap::new();
                 headers.insert(
                     SET_COOKIE,
-                    format!("session_id={session_id}; HttpOnly; Path=/; SameSite=Lax")
+                    format!("session_id={session_id}; HttpOnly; Secure; Path=/; SameSite=Lax")
                         .parse()
                         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
                 );

@@ -37,7 +37,7 @@ pub async fn signup(
             let mut headers = HeaderMap::new();
             headers.insert(
                 SET_COOKIE,
-                format!("session_id={session_id}; Path=/; HttpOnly; SameSite=Lax")
+                format!("session_id={session_id}; Path=/; HttpOnly; Secure; SameSite=Lax")
                     .parse()
                     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
             );
@@ -64,7 +64,7 @@ pub async fn login(
             let mut headers = HeaderMap::new();
             headers.insert(
                 SET_COOKIE,
-                format!("session_id={session_id}; Path=/; HttpOnly; SameSite=Lax")
+                format!("session_id={session_id}; Path=/; HttpOnly; Secure; SameSite=Lax")
                     .parse()
                     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
             );
@@ -86,7 +86,7 @@ pub async fn logout(
             let mut headers = HeaderMap::new();
             headers.insert(
                 SET_COOKIE,
-                "session_id=; HttpOnly; Path=/; SameSite=Lax; Max-Age=-1"
+                "session_id=; HttpOnly; Secure; Path=/; SameSite=Lax; Max-Age=-1"
                     .parse()
                     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
             );
