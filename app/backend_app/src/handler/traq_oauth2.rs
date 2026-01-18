@@ -1,4 +1,4 @@
-use crate::{di::DiContainer, model::error::AppError};
+use crate::{di::DiContainer, handler::SESSION_COOKIE_MAX_AGE_SECS, model::error::AppError};
 use axum::{
     extract::{Path, State},
     http::{HeaderMap, StatusCode, header::SET_COOKIE},
@@ -28,7 +28,9 @@ pub async fn post_traq_oauth2_authorize(
                 let mut headers = HeaderMap::new();
                 headers.insert(
                     SET_COOKIE,
-                    format!("session_id={session_id}; HttpOnly; Secure; Path=/; SameSite=Lax")
+                    format!(
+                        "session_id={session_id}; HttpOnly; Secure; Path=/; SameSite=Lax; Max-Age={SESSION_COOKIE_MAX_AGE_SECS}"
+                    )
                         .parse()
                         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
                 );

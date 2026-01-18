@@ -1,4 +1,5 @@
 use crate::di::DiContainer;
+use crate::handler::SESSION_COOKIE_MAX_AGE_SECS;
 use crate::model::error::AppError;
 use crate::model::google_oauth2::{
     GoogleOAuth2AuthorizeRequest, GoogleOAuth2AuthorizeResponse, GoogleOAuth2ParamsResponse,
@@ -47,7 +48,7 @@ pub async fn post_google_oauth2_authorize(
                 headers.insert(
                     SET_COOKIE,
                     format!(
-                        "session_id={}; HttpOnly; Secure; Path=/; SameSite=Lax",
+                        "session_id={}; HttpOnly; Secure; Path=/; SameSite=Lax; Max-Age={SESSION_COOKIE_MAX_AGE_SECS}",
                         login_session_id
                     )
                     .parse()
