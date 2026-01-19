@@ -30,7 +30,7 @@ async def main():
             trau.build_output_envvar(): f"{build_output_path}/main.out",
             trau.build_source_envvar(): source_path,
         },
-        time_limit_ms=time_limit_ms * 1.1,
+        time_limit_ms=int(time_limit_ms * 1.1),
     )
 
     if exec_stats is None:
