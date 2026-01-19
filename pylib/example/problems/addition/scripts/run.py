@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-from traopy_util.util import v0 as trau # type: ignore[reportMissingModuleSource]
-from traopy_util.util import common as trau_common # type: ignore[reportMissingModuleSource]
+from traopy_util.util import v0 as trau  # type: ignore[reportMissingModuleSource]
+from traopy_util.util import common as trau_common  # type: ignore[reportMissingModuleSource]
 import asyncio
 import os
 import subprocess
+
 
 async def main():
     language_tag = trau_common.read_file_with_envvar("LANGUAGE_TAG")
@@ -22,21 +23,20 @@ async def main():
     subprocess.run(["chmod", "777", f"{build_output_path}/main.out"], check=True)
     subprocess.run(["chmod", "777", source_path], check=True)
     subprocess.run(["chmod", "777", input_file_path], check=True)
-    subprocess.run(["chmod", "777", os.environ.get('TEMP_DIR')], check=True)
+    subprocess.run(["chmod", "777", os.environ.get("TEMP_DIR")], check=True)
     exec_stats = await trau.exec_with_stats(
         cmd=command,
         envs={
             trau.build_output_envvar(): f"{build_output_path}/main.out",
             trau.build_source_envvar(): source_path,
         },
-        time_limit_ms=2000,
+        time_limit_ms=time_limit_ms * 1.1,
     )
-
 
     if exec_stats is None:
         json = trau.jsonify_displayable_output(
             status=trau.JudgeStatus.TLE,
-            time_ms=2000,
+            time_ms=time_limit_ms,
             memory_kib=0,
             score=0,
             continue_next=True,
@@ -93,6 +93,7 @@ async def main():
     outcome_path = os.environ.get(trau.exec_job_outcome_path_envvar())
     with open(f"{outcome_path}/out.json", "w") as f:
         f.write(json)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
