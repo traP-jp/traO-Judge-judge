@@ -1,0 +1,19 @@
+[package]
+name = "exec_app"
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+bollard = { workspace = true }
+bytes = { workspace = true }
+flate2 = { workspace = true }
+judge_core = { path = "../../lib/judge_core" }
+judge_exec_grpc = { path = "../../lib/judge_exec_grpc" }
+sha2 = { workspace = true }
+tar = { workspace = true }
+tokio = { workspace = true }
+tonic = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde_json = { workspace = true }

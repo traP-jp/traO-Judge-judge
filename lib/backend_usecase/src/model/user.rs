@@ -1,0 +1,146 @@
+use domain::model::{
+    auth::UserAuthentication,
+    rules::RuleType,
+    user::{User, UserRole},
+};
+use sqlx::types::chrono;
+use uuid::Uuid;
+
+use super::{problem::NormalProblemsDto, submission::SubmissionsDto};
+
+pub struct UpdateUserData {
+    pub user_name: String,
+    pub icon: Option<String>,
+    pub github_id: Option<String>,
+    pub x_id: Option<String>,
+    pub self_introduction: String,
+}
+
+impl UpdateUserData {
+    pub fn validate(&self) -> anyhow::Result<()> {
+        let mut rules = vec![
+            (&self.user_name, RuleType::UserName),
+            (&self.self_introduction, RuleType::SelfIntroduction),
+        ];
+
+        if let Some(github_id) = &self.github_id {
+            rules.push((github_id, RuleType::GitHubId));
+        }
+        if let Some(x_id) = &self.x_id {
+            rules.push((x_id, RuleType::XId));
+        }
+
+        for (value, rule) in rules {
+            rule.validate(value)?;
+        }
+        Ok(())
+    }
+}
+
+pub struct UpdatePasswordData {
+    pub old_password: String,
+    pub new_password: String,
+}
+
+impl UpdatePasswordData {
+    pub fn validate(&self) -> anyhow::Result<()> {
+        RuleType::Password.validate(&self.old_password)?;
+        RuleType::Password.validate(&self.new_password)?;
+        Ok(())
+    }
+}
+
+pub enum UserRoleDto {
+    Admin,
+    CommonUser,
+    TrapUser,
+}
+
+impl From<UserRole> for UserRoleDto {
+    fn from(role: UserRole) -> Self {
+        match role {
+            UserRole::Admin => UserRoleDto::Admin,
+            UserRole::CommonUser => UserRoleDto::CommonUser,
+            UserRole::TrapUser => UserRoleDto::TrapUser,
+        }
+    }
+}
+
+pub struct UserDto {
+    pub id: Uuid,
+    pub display_id: i64,
+    pub name: String,
+    pub traq_id: Option<String>,
+    pub github_id: Option<String>,
+    pub icon_id: Option<Uuid>,
+    pub post_problems: NormalProblemsDto,
+    pub submit_problems: SubmissionsDto,
+    pub x_id: Option<String>,
+    pub self_introduction: String,
+    pub role: UserRoleDto,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl UserDto {
+    pub fn new(user: User, problems: NormalProblemsDto, submissions: SubmissionsDto) -> Self {
+        UserDto {
+            id: user.id.0,
+            display_id: user.display_id,
+            name: user.name,
+            traq_id: user.traq_id,
+            github_id: user.github_id,
+            icon_id: user.icon_id,
+            post_problems: problems,
+            submit_problems: submissions,
+            x_id: user.x_id,
+            self_introduction: user.self_introduction,
+            role: user.role.into(),
+            created_at: user.created_at,
+            updated_at: user.updated_at,
+        }
+    }
+}
+
+pub struct UserMeDto {
+    pub id: Uuid,
+    pub display_id: i64,
+    pub name: String,
+    pub traq_id: Option<String>,
+    pub github_id: Option<String>,
+    pub icon_id: Option<Uuid>,
+    pub post_problems: NormalProblemsDto,
+    pub submit_problems: SubmissionsDto,
+    pub x_id: Option<String>,
+    pub self_introduction: String,
+    pub role: UserRoleDto,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+    pub authentication: UserAuthentication,
+}
+
+impl UserMeDto {
+    pub fn new(
+        user: User,
+        problems: NormalProblemsDto,
+        submissions: SubmissionsDto,
+        authentication: UserAuthentication,
+    ) -> Self {
+        UserMeDto {
+            id: user.id.0,
+            display_id: user.display_id,
+            name: user.name,
+            traq_id: user.traq_id,
+            github_id: user.github_id,
+            icon_id: user.icon_id,
+            post_problems: problems,
+            submit_problems: submissions,
+            x_id: user.x_id,
+            self_introduction: user.self_introduction,
+            role: user.role.into(),
+            created_at: user.created_at,
+            updated_at: user.updated_at,
+            authentication,
+        }
+    }
+}

@@ -1,0 +1,16 @@
+FROM rust:bullseye AS builder
+
+WORKDIR /app
+COPY . .
+RUN cargo build --manifest-path app/backend_app/Cargo.toml --bin backend_app --no-default-features --features prod --release
+
+FROM debian:bullseye
+
+RUN apt-get -y update \
+    && apt-get -y install build-essential libssl-dev ca-certificates \
+    && update-ca-certificates --fresh
+WORKDIR /app
+COPY --from=builder /app/target/release/backend_app ./backend_app
+COPY --from=builder /app/pylib/example/languages.json /app/languages.json
+
+CMD ["./backend_app"]

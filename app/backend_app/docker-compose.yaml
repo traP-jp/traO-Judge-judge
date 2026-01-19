@@ -1,0 +1,16 @@
+services:
+  mariadb:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: ${NS_MARIADB_PASSWORD}
+      MYSQL_DATABASE: ${NS_MARIADB_DATABASE}
+      TZ: Asia/Tokyo
+    expose:
+      - 3306
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql:/var/lib/mysql
+
+volumes:
+  mysql:

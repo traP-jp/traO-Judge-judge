@@ -1,0 +1,17 @@
+name: CI (release)
+
+permissions:
+  contents: read
+
+on:
+    push:
+      branches:
+        - release
+        - develop
+    pull_request:
+      branches:
+        - release
+
+jobs:
+  develop-ci:
+    uses: ./.github/workflows/develop.yml

@@ -1,0 +1,10 @@
+[package]
+name = "problem_registry"
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+aws-config = { workspace = true }
+aws-sdk-s3 = { workspace = true }
+axum = { workspace = true }
+judge_core = { path = "../judge_core" }

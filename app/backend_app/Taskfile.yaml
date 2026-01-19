@@ -1,0 +1,17 @@
+# https://taskfile.dev
+
+version: "3"
+
+tasks:
+  up:
+    cmds:
+      - docker compose up -d
+  down:
+    cmds:
+      - docker compose down
+  reset:
+    cmds:
+      - docker compose down -v
+  db:
+    cmds:
+      - docker compose exec mariadb bash

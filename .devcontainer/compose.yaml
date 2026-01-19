@@ -1,0 +1,14 @@
+services:
+  devcontainer:
+    container_name: devcontainer
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    command: sleep infinity
+    volumes:
+      - ..:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+      - nix-cache:/nix
+
+volumes:
+  nix-cache:

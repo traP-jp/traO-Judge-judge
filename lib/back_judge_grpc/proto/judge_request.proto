@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+import "common.proto";
+
+message RuntimeText {
+    string label = 1;
+    Uuid dep_id = 2;
+}
+
+message Text {
+    Uuid resource_id = 1;
+    Uuid dep_id = 2;
+}
+
+message EmptyDirectory {
+    Uuid dep_id = 1;
+}
+
+message Dependency {
+    Uuid dep_id = 1;
+    string envvar_name = 2;
+}
+
+message Execution {
+    Uuid dep_id = 1;
+    repeated Dependency dependencies = 2;
+    uint64 time_reserved_ms = 3;
+}
+
+message Procedure {
+    repeated RuntimeText runtime_texts = 1;
+    repeated Text texts = 2;
+    repeated EmptyDirectory empty_directories = 3;
+    repeated Execution executions = 4;
+}
+
+message RuntimeTextContent {
+    string label = 1;
+    string content = 2;
+}
+
+message JudgeRequest {
+    Procedure procedure = 1;
+    repeated RuntimeTextContent runtime_text_contents = 2;
+}

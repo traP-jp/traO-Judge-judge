@@ -1,0 +1,28 @@
+[project]
+name = "traojudge-judge-workspace"
+version = "0.1.0"
+description = "Rye workspace for traO-Judge-judge repository"
+readme = "README.md"
+requires-python = ">= 3.10"
+dependencies = [
+  "dotenv==0.9.9",
+  "ipykernel==6.29.5",
+  "traopy_builder",
+  "traopy_util",
+  "traopy_visualize",
+]
+
+[tool.uv]
+managed = true
+
+[tool.uv.sources]
+traopy_util = { workspace = true }
+traopy_builder = { workspace = true }
+traopy_visualize = { workspace = true }
+
+[tool.uv.workspace]
+members = [
+  "./pylib/traopy_util",
+  "./pylib/traopy_builder",
+  "./pylib/traopy_visualize",
+]

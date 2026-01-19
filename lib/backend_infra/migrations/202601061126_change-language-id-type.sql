@@ -1,0 +1,1 @@
+ALTER TABLE `submissions` MODIFY `language_id` varchar(32) NOT NULL;

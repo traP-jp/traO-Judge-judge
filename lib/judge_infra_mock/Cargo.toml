@@ -1,0 +1,13 @@
+[package]
+name = "judge_infra_mock"
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+axum = { workspace = true }
+bollard = { workspace = true }
+futures = { workspace = true }
+judge_core = { path = "../judge_core" }
+tokio = { workspace = true }
+uuid = { workspace = true }

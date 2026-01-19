@@ -1,0 +1,93 @@
+[workspace]
+resolver = "2"
+members = [
+  "app/backend_app",
+  "app/exec_app",
+  "app/judge_control_app",
+  "lib/back_judge_grpc",
+  "lib/backend_domain",
+  "lib/backend_infra",
+  "lib/backend_infra_mock",
+  "lib/backend_usecase",
+  "lib/job_service",
+  "lib/judge_core",
+  "lib/judge_exec_grpc",
+  "lib/judge_infra_mock",
+  "lib/problem_registry",
+  "lib/traq_log",
+  "pylib/traopy_builder",
+  "pylib/traopy_util",
+]
+
+[workspace.package]
+name = "traojudge"
+version = "0.1.0"
+edition = "2024"
+
+[workspace.dependencies]
+aes-gcm = "0.10.3"
+again = "0.1.2"
+anyhow = "1.0"
+async-channel = "2.3.1"
+async-session = "3.0.0"
+async-std = { version = "1.13", features = ["attributes"] }
+aws-config = { version = "1.5.13", features = ["behavior-version-latest"] }
+aws-sdk-ec2 = "1.116.0"
+aws-sdk-s3 = { version = "1.68.0", features = ["behavior-version-latest"] }
+axum = "0.7"
+axum-extra = { version = "0.9", features = ["typed-header"] }
+base64 = "0.22.1"
+bcrypt = "0.15"
+bollard = "0.18.1"
+bytes = "1.10.1"
+chrono = "0.4.39"
+dotenv = "0.15.0"
+fancy-regex = "0.14.0"
+flate2 = "1.1.0"
+futures = "0.3.31"
+http-body-util = "0.1.0"
+infer = "0.19.0"
+jsonwebtoken = "9.3.0"
+lettre = "0.11.7"
+mockall = "0.13.1"
+# Note: `nix` is not for Nix Package Manager, but for syscalls of Unix-like OS.
+nix = "0.29.0"
+prost = "0.13.4"
+prost-types = "0.13.4"
+pyo3 = { version = "0.23.4", features = [
+  "experimental-async",
+  "extension-module",
+] }
+pyo3-stub-gen = "0.7.0"
+reqwest = "0.12.5"
+rstest = "0.25.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10.8"
+sqlx = { version = "0.7", features = [
+  "chrono",
+  "json",
+  "migrate",
+  "mysql",
+  "runtime-tokio",
+  "uuid",
+] }
+tar = "0.4.44"
+thiserror = "1.0.63"
+tokio = { version = "1.0", features = ["full"] }
+tokio-cron-scheduler = "0.15.1"
+tonic = "0.12.3"
+tonic-build = "0.12.3"
+tonic-types = "0.12.3"
+tonic-web = "0.12.3"
+tower = { version = "0.4", features = ["full"] }
+tower-http = { version = "0.5.0", features = [
+  "add-extension",
+  "cors",
+  "fs",
+  "trace",
+] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1.0", features = ["serde", "v4", "v7"] }
+validator = { version = "0.20.0", features = ["derive"] }

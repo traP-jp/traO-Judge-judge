@@ -1,0 +1,37 @@
+[package]
+name = "usecase"
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+async-session = { workspace = true }
+async-std = { workspace = true }
+aws-config = { workspace = true }
+aws-sdk-s3 = { workspace = true }
+axum-extra = { workspace = true }
+base64 = { workspace = true }
+bcrypt = { workspace = true }
+domain = { path = "../backend_domain" }
+fancy-regex = { workspace = true }
+http-body-util = { workspace = true }
+infer = { workspace = true }
+jsonwebtoken = { workspace = true }
+judge_core = { path = "../judge_core" }
+lettre = { workspace = true }
+mockall = { workspace = true }
+rstest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid = { workspace = true }
+validator = { workspace = true }
+
+[dev-dependencies]
+domain = { features = ["mockall"], path = "../backend_domain" }
