@@ -266,6 +266,11 @@ impl<
         problem_id: String,
         body: CreateSubmissionData,
     ) -> anyhow::Result<SubmissionDto, UsecaseError> {
+        // dbのtext型の最大値に合わせる
+        if body.source.len() > 65_535 {
+            return Err(UsecaseError::ValidateError);
+        }
+
         let problem_id: i64 = problem_id
             .parse()
             .map_err(|_| UsecaseError::ValidateError)?;
