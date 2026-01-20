@@ -266,6 +266,12 @@ impl<
         problem_id: String,
         body: CreateSubmissionData,
     ) -> anyhow::Result<SubmissionDto, UsecaseError> {
+        
+        // 具体的にはsqlのtext型の最大長を超えないようにする 65,535文字 
+        if body.source.len() > 65_535 {
+            return Err(UsecaseError::ValidateError);
+        }
+
         let problem_id: i64 = problem_id
             .parse()
             .map_err(|_| UsecaseError::ValidateError)?;
