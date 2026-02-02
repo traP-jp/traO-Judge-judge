@@ -69,8 +69,6 @@ pub struct Execution {
     pub dependencies: ::prost::alloc::vec::Vec<Dependency>,
     #[prost(uint64, tag = "3")]
     pub time_reserved_ms: u64,
-    #[prost(int64, tag = "4")]
-    pub display_priority: i64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Procedure {
