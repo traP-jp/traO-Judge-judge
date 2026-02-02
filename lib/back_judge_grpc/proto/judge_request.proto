@@ -25,6 +25,7 @@ message Execution {
     Uuid dep_id = 1;
     repeated Dependency dependencies = 2;
     uint64 time_reserved_ms = 3;
+    int64 display_priority = 4;
 }
 
 message Procedure {
@@ -36,7 +37,7 @@ message Procedure {
 
 message RuntimeTextContent {
     string label = 1;
-    string content = 2;
+    bytes content = 2;
 }
 
 message JudgeRequest {

@@ -9,53 +9,16 @@ pub struct Uuid {
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct Unit {}
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct DisplayableExecutionResult {
-    #[prost(enumeration = "JudgeStatus", tag = "1")]
-    pub status: i32,
-    #[prost(string, optional, tag = "2")]
-    pub message: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(int64, tag = "3")]
-    pub score: i64,
-    #[prost(double, tag = "4")]
-    pub execution_time: f64,
-    #[prost(double, tag = "5")]
-    pub used_memory: f64,
-    #[prost(enumeration = "ContinueStatus", tag = "6")]
-    pub continue_status: i32,
-}
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
-pub struct HiddenExecutionResult {
-    #[prost(enumeration = "ContinueStatus", tag = "1")]
-    pub continue_status: i32,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ExecutionJobResult {
-    #[prost(oneof = "execution_job_result::Result", tags = "1, 2, 3")]
-    pub result: ::core::option::Option<execution_job_result::Result>,
-}
-/// Nested message and enum types in `ExecutionJobResult`.
-pub mod execution_job_result {
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum Result {
-        #[prost(message, tag = "1")]
-        DisplayableExecutionResult(super::DisplayableExecutionResult),
-        #[prost(message, tag = "2")]
-        HiddenExecutionResult(super::HiddenExecutionResult),
-        #[prost(message, tag = "3")]
-        EarlyReturn(super::Unit),
-    }
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ExecutionJobResultWithDepId {
-    #[prost(message, optional, tag = "1")]
-    pub execution_job_result: ::core::option::Option<ExecutionJobResult>,
+pub struct ExecutionJobJOutput {
+    #[prost(bytes = "vec", optional, tag = "1")]
+    pub stdout: ::core::option::Option<::prost::alloc::vec::Vec<u8>>,
     #[prost(message, optional, tag = "2")]
     pub dep_id: ::core::option::Option<Uuid>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ExecutionJobResults {
+pub struct ExecutionJobJOutputs {
     #[prost(message, repeated, tag = "1")]
-    pub execution_job_results: ::prost::alloc::vec::Vec<ExecutionJobResultWithDepId>,
+    pub execution_job_j_outputs: ::prost::alloc::vec::Vec<ExecutionJobJOutput>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct JudgeResponse {
@@ -67,79 +30,9 @@ pub mod judge_response {
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Result {
         #[prost(message, tag = "1")]
-        ExecutionJobResults(super::ExecutionJobResults),
+        ExecutionJobJOutputs(super::ExecutionJobJOutputs),
         #[prost(string, tag = "2")]
         ErrorMessage(::prost::alloc::string::String),
-    }
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum JudgeStatus {
-    Ac = 0,
-    Wa = 1,
-    Tle = 2,
-    Mle = 3,
-    Ole = 4,
-    Re = 5,
-    Ce = 6,
-    We = 7,
-}
-impl JudgeStatus {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            Self::Ac => "AC",
-            Self::Wa => "WA",
-            Self::Tle => "TLE",
-            Self::Mle => "MLE",
-            Self::Ole => "OLE",
-            Self::Re => "RE",
-            Self::Ce => "CE",
-            Self::We => "WE",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "AC" => Some(Self::Ac),
-            "WA" => Some(Self::Wa),
-            "TLE" => Some(Self::Tle),
-            "MLE" => Some(Self::Mle),
-            "OLE" => Some(Self::Ole),
-            "RE" => Some(Self::Re),
-            "CE" => Some(Self::Ce),
-            "WE" => Some(Self::We),
-            _ => None,
-        }
-    }
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum ContinueStatus {
-    Continue = 0,
-    Stop = 1,
-}
-impl ContinueStatus {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            Self::Continue => "CONTINUE",
-            Self::Stop => "STOP",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "CONTINUE" => Some(Self::Continue),
-            "STOP" => Some(Self::Stop),
-            _ => None,
-        }
     }
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -176,6 +69,8 @@ pub struct Execution {
     pub dependencies: ::prost::alloc::vec::Vec<Dependency>,
     #[prost(uint64, tag = "3")]
     pub time_reserved_ms: u64,
+    #[prost(int64, tag = "4")]
+    pub display_priority: i64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Procedure {
@@ -192,8 +87,8 @@ pub struct Procedure {
 pub struct RuntimeTextContent {
     #[prost(string, tag = "1")]
     pub label: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub content: ::prost::alloc::string::String,
+    #[prost(bytes = "vec", tag = "2")]
+    pub content: ::prost::alloc::vec::Vec<u8>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct JudgeRequest {
@@ -213,6 +108,7 @@ pub mod judge_service_client {
     )]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
+    /// JudgeService is the gRPC service for multi process judges.
     #[derive(Debug, Clone)]
     pub struct JudgeServiceClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -293,6 +189,7 @@ pub mod judge_service_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
+        /// Judge performs judging based on the JudgeRequest and returns a JudgeResponse.
         pub async fn judge(
             &mut self,
             request: impl tonic::IntoRequest<super::JudgeRequest>,
@@ -326,11 +223,13 @@ pub mod judge_service_server {
     /// Generated trait containing gRPC methods that should be implemented for use with JudgeServiceServer.
     #[async_trait]
     pub trait JudgeService: std::marker::Send + std::marker::Sync + 'static {
+        /// Judge performs judging based on the JudgeRequest and returns a JudgeResponse.
         async fn judge(
             &self,
             request: tonic::Request<super::JudgeRequest>,
         ) -> std::result::Result<tonic::Response<super::JudgeResponse>, tonic::Status>;
     }
+    /// JudgeService is the gRPC service for multi process judges.
     #[derive(Debug)]
     pub struct JudgeServiceServer<T> {
         inner: Arc<T>,
