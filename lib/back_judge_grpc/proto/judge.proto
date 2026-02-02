@@ -3,6 +3,8 @@ syntax = "proto3";
 import "judge_response.proto";
 import "judge_request.proto";
 
+// JudgeService is the gRPC service for multi process judges.
 service JudgeService {
+    // Judge performs judging based on the JudgeRequest and returns a JudgeResponse.
     rpc Judge(JudgeRequest) returns (JudgeResponse) {}
 }

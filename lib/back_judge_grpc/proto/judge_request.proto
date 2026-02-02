@@ -36,7 +36,7 @@ message Procedure {
 
 message RuntimeTextContent {
     string label = 1;
-    string content = 2;
+    bytes content = 2;
 }
 
 message JudgeRequest {
