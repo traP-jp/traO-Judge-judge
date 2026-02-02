@@ -56,64 +56,74 @@ type JudgeSvcImpl = JudgeServiceImpl<
 #[cfg(feature = "prod")]
 type JudgeSvcImpl = RemoteJudgeServiceClient;
 
+type AuthSvc = AuthenticationService<
+    AuthRepositoryImpl,
+    UserRepositoryImpl,
+    SessionRepositoryImpl,
+    MailClientImpl,
+>;
+type ProblemSvc = ProblemService<
+    ProblemRepositoryImpl,
+    UserRepositoryImpl,
+    SessionRepositoryImpl,
+    TestcaseRepositoryImpl,
+    ProcedureRepositoryImpl,
+    RegistryServerImpl,
+    DepNameRepositoryImpl,
+>;
+type UserSvc = UserService<
+    UserRepositoryImpl,
+    SessionRepositoryImpl,
+    AuthRepositoryImpl,
+    IconRepositoryImpl,
+    ProblemRepositoryImpl,
+    SubmissionRepositoryImpl,
+    MailClientImpl,
+>;
+type IconSvc = IconService<IconRepositoryImpl>;
+type SubmissionSvc = SubmissionService<
+    SessionRepositoryImpl,
+    UserRepositoryImpl,
+    SubmissionRepositoryImpl,
+    ProblemRepositoryImpl,
+    ProcedureRepositoryImpl,
+    TestcaseRepositoryImpl,
+    LanguageRepositoryImpl,
+    DepNameRepositoryImpl,
+    JudgeSvcImpl,
+>;
+type EditorialSvc =
+    EditorialService<SessionRepositoryImpl, EditorialRepositoryImpl, ProblemRepositoryImpl>;
+type TestcaseSvc = TestcaseService<
+    ProblemRepositoryImpl,
+    SessionRepositoryImpl,
+    TestcaseRepositoryImpl,
+    ProcedureRepositoryImpl,
+    RegistryClientImpl,
+    RegistryServerImpl,
+    DepNameRepositoryImpl,
+>;
+type LanguageSvc = LanguageService<LanguageRepositoryImpl>;
+type GoogleOAuth2Svc =
+    GoogleOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl>;
+type GitHubOAuth2Svc =
+    GitHubOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl>;
+type TraqOAuth2Svc =
+    TraqOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl>;
+
 #[derive(Clone)]
 pub struct DiContainer {
-    auth_service: AuthenticationService<
-        AuthRepositoryImpl,
-        UserRepositoryImpl,
-        SessionRepositoryImpl,
-        MailClientImpl,
-    >,
-    problem_service: ProblemService<
-        ProblemRepositoryImpl,
-        UserRepositoryImpl,
-        SessionRepositoryImpl,
-        TestcaseRepositoryImpl,
-        ProcedureRepositoryImpl,
-        RegistryServerImpl,
-        DepNameRepositoryImpl,
-    >,
-    user_service: UserService<
-        UserRepositoryImpl,
-        SessionRepositoryImpl,
-        AuthRepositoryImpl,
-        IconRepositoryImpl,
-        ProblemRepositoryImpl,
-        SubmissionRepositoryImpl,
-        MailClientImpl,
-    >,
-    icon_service: IconService<IconRepositoryImpl>,
-    submission_service: std::sync::Arc<
-        SubmissionService<
-            SessionRepositoryImpl,
-            UserRepositoryImpl,
-            SubmissionRepositoryImpl,
-            ProblemRepositoryImpl,
-            ProcedureRepositoryImpl,
-            TestcaseRepositoryImpl,
-            LanguageRepositoryImpl,
-            DepNameRepositoryImpl,
-            JudgeSvcImpl,
-        >,
-    >,
-    editorial_service:
-        EditorialService<SessionRepositoryImpl, EditorialRepositoryImpl, ProblemRepositoryImpl>,
-    testcase_service: TestcaseService<
-        ProblemRepositoryImpl,
-        SessionRepositoryImpl,
-        TestcaseRepositoryImpl,
-        ProcedureRepositoryImpl,
-        RegistryClientImpl,
-        RegistryServerImpl,
-        DepNameRepositoryImpl,
-    >,
-    language_service: LanguageService<LanguageRepositoryImpl>,
-    google_oauth2_service:
-        GoogleOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl>,
-    github_oauth2_service:
-        GitHubOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl>,
-    traq_oauth2_service:
-        TraqOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl>,
+    auth_service: AuthSvc,
+    problem_service: ProblemSvc,
+    user_service: UserSvc,
+    icon_service: IconSvc,
+    submission_service: std::sync::Arc<SubmissionSvc>,
+    editorial_service: EditorialSvc,
+    testcase_service: TestcaseSvc,
+    language_service: LanguageSvc,
+    google_oauth2_service: GoogleOAuth2Svc,
+    github_oauth2_service: GitHubOAuth2Svc,
+    traq_oauth2_service: TraqOAuth2Svc,
 }
 
 impl DiContainer {
@@ -186,7 +196,7 @@ impl DiContainer {
                 provider.provide_session_repository(),
                 provider.provide_testcase_repository(),
                 provider.provide_procedure_repository(),
-                pr_client.clone(),
+                pr_client,
                 pr_server,
                 provider.provide_dep_name_repository(),
             ),
@@ -209,107 +219,47 @@ impl DiContainer {
         }
     }
 
-    pub fn user_service(
-        &self,
-    ) -> &UserService<
-        UserRepositoryImpl,
-        SessionRepositoryImpl,
-        AuthRepositoryImpl,
-        IconRepositoryImpl,
-        ProblemRepositoryImpl,
-        SubmissionRepositoryImpl,
-        MailClientImpl,
-    > {
+    pub fn user_service(&self) -> &UserSvc {
         &self.user_service
     }
 
-    pub fn auth_service(
-        &self,
-    ) -> &AuthenticationService<
-        AuthRepositoryImpl,
-        UserRepositoryImpl,
-        SessionRepositoryImpl,
-        MailClientImpl,
-    > {
+    pub fn auth_service(&self) -> &AuthSvc {
         &self.auth_service
     }
 
-    pub fn icon_service(&self) -> &IconService<IconRepositoryImpl> {
+    pub fn icon_service(&self) -> &IconSvc {
         &self.icon_service
     }
 
-    pub fn submission_service(
-        &self,
-    ) -> &std::sync::Arc<
-        SubmissionService<
-            SessionRepositoryImpl,
-            UserRepositoryImpl,
-            SubmissionRepositoryImpl,
-            ProblemRepositoryImpl,
-            ProcedureRepositoryImpl,
-            TestcaseRepositoryImpl,
-            LanguageRepositoryImpl,
-            DepNameRepositoryImpl,
-            JudgeSvcImpl,
-        >,
-    > {
+    pub fn submission_service(&self) -> &std::sync::Arc<SubmissionSvc> {
         &self.submission_service
     }
 
-    pub fn problem_service(
-        &self,
-    ) -> &ProblemService<
-        ProblemRepositoryImpl,
-        UserRepositoryImpl,
-        SessionRepositoryImpl,
-        TestcaseRepositoryImpl,
-        ProcedureRepositoryImpl,
-        RegistryServerImpl,
-        DepNameRepositoryImpl,
-    > {
+    pub fn problem_service(&self) -> &ProblemSvc {
         &self.problem_service
     }
 
-    pub fn editorial_service(
-        &self,
-    ) -> &EditorialService<SessionRepositoryImpl, EditorialRepositoryImpl, ProblemRepositoryImpl>
-    {
+    pub fn editorial_service(&self) -> &EditorialSvc {
         &self.editorial_service
     }
 
-    pub fn testcase_service(
-        &self,
-    ) -> &TestcaseService<
-        ProblemRepositoryImpl,
-        SessionRepositoryImpl,
-        TestcaseRepositoryImpl,
-        ProcedureRepositoryImpl,
-        RegistryClientImpl,
-        RegistryServerImpl,
-        DepNameRepositoryImpl,
-    > {
+    pub fn testcase_service(&self) -> &TestcaseSvc {
         &self.testcase_service
     }
 
-    pub fn language_service(&self) -> &LanguageService<LanguageRepositoryImpl> {
+    pub fn language_service(&self) -> &LanguageSvc {
         &self.language_service
     }
 
-    pub fn google_oauth2_service(
-        &self,
-    ) -> &GoogleOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl> {
+    pub fn google_oauth2_service(&self) -> &GoogleOAuth2Svc {
         &self.google_oauth2_service
     }
 
-    pub fn github_oauth2_service(
-        &self,
-    ) -> &GitHubOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl> {
+    pub fn github_oauth2_service(&self) -> &GitHubOAuth2Svc {
         &self.github_oauth2_service
     }
 
-    pub fn traq_oauth2_service(
-        &self,
-    ) -> &TraqOAuth2Service<AuthRepositoryImpl, SessionRepositoryImpl, UserRepositoryImpl> {
+    pub fn traq_oauth2_service(&self) -> &TraqOAuth2Svc {
         &self.traq_oauth2_service
     }
 }
