@@ -224,15 +224,11 @@ impl TryFrom<Procedure> for registered::Procedure {
 
 impl From<judge::JudgeRequest> for JudgeRequest {
     fn from(judge_request: judge::JudgeRequest) -> Self {
-        let procedure: registered::Procedure = judge_request.procedure.into();
-        let procedure: Procedure = procedure.into();
+        let procedure: Procedure = judge_request.procedure.into();
         let runtime_text_contents = judge_request
             .runtime_texts
             .into_iter()
-            .map(|(k, v)| RuntimeTextContent {
-                label: k,
-                content: v,
-            })
+            .map(|(label, content)| RuntimeTextContent { label, content })
             .collect::<prost::alloc::vec::Vec<_>>();
         Self {
             procedure: Some(procedure),
@@ -253,112 +249,11 @@ impl TryFrom<JudgeRequest> for judge::JudgeRequest {
             .runtime_text_contents
             .into_iter()
             .map(|content| (content.label, content.content))
-            .collect::<HashMap<String, String>>();
+            .collect::<HashMap<String, Vec<u8>>>();
         Ok(judge::JudgeRequest {
             procedure,
             runtime_texts,
         })
-    }
-}
-
-impl From<judge_output::JudgeStatus> for JudgeStatus {
-    fn from(judge_status: judge_output::JudgeStatus) -> Self {
-        match judge_status {
-            judge_output::JudgeStatus::AC => Self::Ac,
-            judge_output::JudgeStatus::WA => Self::Wa,
-            judge_output::JudgeStatus::TLE => Self::Tle,
-            judge_output::JudgeStatus::RE => Self::Re,
-            judge_output::JudgeStatus::CE => Self::Ce,
-            judge_output::JudgeStatus::MLE => Self::Mle,
-            judge_output::JudgeStatus::OLE => Self::Ole,
-            judge_output::JudgeStatus::WE => Self::We,
-        }
-    }
-}
-
-impl From<JudgeStatus> for judge_output::JudgeStatus {
-    fn from(judge_status: JudgeStatus) -> Self {
-        match judge_status {
-            JudgeStatus::Ac => Self::AC,
-            JudgeStatus::Wa => Self::WA,
-            JudgeStatus::Tle => Self::TLE,
-            JudgeStatus::Re => Self::RE,
-            JudgeStatus::Ce => Self::CE,
-            JudgeStatus::Mle => Self::MLE,
-            JudgeStatus::Ole => Self::OLE,
-            JudgeStatus::We => Self::WE,
-        }
-    }
-}
-
-impl From<judge_output::ContinueStatus> for ContinueStatus {
-    fn from(continue_status: judge_output::ContinueStatus) -> Self {
-        match continue_status {
-            judge_output::ContinueStatus::Continue => Self::Continue,
-            judge_output::ContinueStatus::Stop => Self::Stop,
-        }
-    }
-}
-
-impl From<ContinueStatus> for judge_output::ContinueStatus {
-    fn from(continue_status: ContinueStatus) -> Self {
-        match continue_status {
-            ContinueStatus::Continue => Self::Continue,
-            ContinueStatus::Stop => Self::Stop,
-        }
-    }
-}
-
-impl From<judge_output::DisplayableExecutionResult> for DisplayableExecutionResult {
-    fn from(displayable_execution_result: judge_output::DisplayableExecutionResult) -> Self {
-        let stauts: JudgeStatus = displayable_execution_result.status.into();
-        let status: i32 = stauts.into();
-        let continue_status: ContinueStatus = displayable_execution_result.continue_status.into();
-        let continue_status: i32 = continue_status.into();
-        Self {
-            status,
-            execution_time: displayable_execution_result.time,
-            used_memory: displayable_execution_result.memory,
-            score: displayable_execution_result.score,
-            message: displayable_execution_result.message,
-            continue_status,
-        }
-    }
-}
-
-impl TryFrom<DisplayableExecutionResult> for judge_output::DisplayableExecutionResult {
-    type Error = Error;
-    fn try_from(displayable_execution_result: DisplayableExecutionResult) -> Result<Self> {
-        let status = JudgeStatus::try_from(displayable_execution_result.status)?;
-        let status: judge_output::JudgeStatus = status.into();
-        let continue_status =
-            ContinueStatus::try_from(displayable_execution_result.continue_status)?;
-        let continue_status: judge_output::ContinueStatus = continue_status.into();
-        Ok(judge_output::DisplayableExecutionResult {
-            status,
-            time: displayable_execution_result.execution_time,
-            memory: displayable_execution_result.used_memory,
-            score: displayable_execution_result.score,
-            message: displayable_execution_result.message,
-            continue_status,
-        })
-    }
-}
-
-impl From<judge_output::HiddenExecutionResult> for HiddenExecutionResult {
-    fn from(hidden_execution_result: judge_output::HiddenExecutionResult) -> Self {
-        let continue_status: ContinueStatus = hidden_execution_result.continue_status.into();
-        let continue_status: i32 = continue_status.into();
-        Self { continue_status }
-    }
-}
-
-impl TryFrom<HiddenExecutionResult> for judge_output::HiddenExecutionResult {
-    type Error = Error;
-    fn try_from(hidden_execution_result: HiddenExecutionResult) -> Result<Self> {
-        let continue_status = ContinueStatus::try_from(hidden_execution_result.continue_status)?;
-        let continue_status: judge_output::ContinueStatus = continue_status.into();
-        Ok(judge_output::HiddenExecutionResult { continue_status })
     }
 }
 
@@ -417,8 +312,8 @@ impl TryFrom<ExecutionJobResult> for judge_output::ExecutionJobResult {
 impl From<judge::JudgeResponse> for JudgeResponse {
     fn from(judge_response: judge::JudgeResponse) -> Self {
         match judge_response {
-            Ok(results) => {
-                let results = results
+            judge::JudgeResponse::Success(outputs) => {
+                let outputs = outputs
                     .into_iter()
                     .map(|(k, v)| {
                         let uuid: uuid::Uuid = k.into();
@@ -431,15 +326,12 @@ impl From<judge::JudgeResponse> for JudgeResponse {
                         result_with_id
                     })
                     .collect::<prost::alloc::vec::Vec<_>>();
-                let results = ExecutionJobResults {
-                    execution_job_results: results,
-                };
-                let results = judge_response::Result::ExecutionJobResults(results);
+                let results = judge_response::Result::ExecutionJobResults(outputs);
                 Self {
                     result: Some(results),
                 }
             }
-            Err(err) => Self {
+            JudgeResponse::WriterProcessError(err) => Self {
                 result: Some(judge_response::Result::ErrorMessage(err.to_string())),
             },
         }
@@ -452,8 +344,8 @@ impl From<JudgeResponse> for judge::JudgeResponse {
             .result
             .ok_or(anyhow::anyhow!("result is missing"))?;
         match results {
-            judge_response::Result::ExecutionJobResults(results) => {
-                let results = results.execution_job_results
+            judge_response::Result::ExecutionJobResults(outputs) => {
+                let outputs = outputs.execution_job_results
                     .into_iter()
                     .map(|result| {
                         let dep_id = result.dep_id.ok_or(anyhow::anyhow!("dep_id is missing"))?;
@@ -464,9 +356,11 @@ impl From<JudgeResponse> for judge::JudgeResponse {
                         Ok((dep_id, result))
                     })
                     .collect::<Result<HashMap<identifiers::DepId, judge_output::ExecutionJobResult>>>()?;
-                Ok(results)
+                judge::JudgeResponse::Success(outputs)
             }
-            judge_response::Result::ErrorMessage(err) => Err(anyhow::anyhow!(err)),
+            judge_response::Result::ErrorMessage(err) => judge::JudgeResponse::WriterProcessError(
+                judge::WriterProcessError::ProcessFailed(err),
+            ),
         }
     }
 }
