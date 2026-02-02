@@ -25,7 +25,6 @@ message Execution {
     Uuid dep_id = 1;
     repeated Dependency dependencies = 2;
     uint64 time_reserved_ms = 3;
-    int64 display_priority = 4;
 }
 
 message Procedure {
