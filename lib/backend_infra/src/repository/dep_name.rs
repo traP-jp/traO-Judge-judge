@@ -106,7 +106,7 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
             DepNameRow,
             r#"
             SELECT 
-                dep_id as "dep_id: UuidRow", 
+                dep_id as "dep_id: _", 
                 name 
             FROM 
                 dep_name 

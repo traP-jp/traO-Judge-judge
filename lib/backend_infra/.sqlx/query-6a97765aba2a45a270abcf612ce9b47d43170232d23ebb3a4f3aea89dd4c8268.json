@@ -1,11 +1,11 @@
 {
   "db_name": "MySQL",
-  "query": "\n            SELECT \n                dep_id as \"dep_id: UuidRow\", \n                name \n            FROM \n                dep_name \n            WHERE \n            problem_id = ?\n            ",
+  "query": "\n            SELECT \n                dep_id as \"dep_id: _\", \n                name \n            FROM \n                dep_name \n            WHERE \n            problem_id = ?\n            ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "dep_id: UuidRow",
+        "name": "dep_id: _",
         "type_info": {
           "type": "String",
           "flags": "NOT_NULL | PRIMARY_KEY | BINARY | NO_DEFAULT_VALUE",
@@ -32,5 +32,5 @@
       false
     ]
   },
-  "hash": "89168d91286ba71a878e2893fc309f69e72536d792354180b708397198463dd8"
+  "hash": "6a97765aba2a45a270abcf612ce9b47d43170232d23ebb3a4f3aea89dd4c8268"
 }
