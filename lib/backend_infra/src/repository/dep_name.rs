@@ -31,14 +31,14 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
 
         let mut query_builder = QueryBuilder::new(
             r#"
-                INSERT INTO 
-                    dep_name (
-                        problem_id, 
-                        dep_id, 
-                        name
-                    ) 
-                VALUES
-                "#,
+            INSERT INTO 
+                dep_name (
+                    problem_id, 
+                    dep_id, 
+                    name
+                ) 
+            VALUES
+            "#,
         );
 
         let mut separated = query_builder.separated(", ");
@@ -66,15 +66,15 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
 
         let mut query_builder = QueryBuilder::new(
             r#"
-                SELECT 
-                    dep_id, 
-                    name
-                FROM 
-                    dep_name
-                WHERE
-                    dep_id 
-                        IN (
-                "#,
+            SELECT 
+                dep_id, 
+                name
+            FROM 
+                dep_name
+            WHERE
+                dep_id 
+                    IN (
+            "#,
         );
 
         let mut separated = query_builder.separated(", ");

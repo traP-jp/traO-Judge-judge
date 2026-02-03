@@ -65,7 +65,8 @@ impl ProblemRepository for ProblemRepositoryImpl {
                 INNER JOIN 
                     users 
                         ON normal_problems.author_id = users.display_id 
-            WHERE"#,
+            WHERE
+            "#,
         );
 
         query_builder.push(" (normal_problems.is_public = TRUE");
@@ -124,7 +125,16 @@ impl ProblemRepository for ProblemRepositoryImpl {
 
     async fn get_problems_by_query_count(&self, query: ProblemGetQuery) -> anyhow::Result<i64> {
         let mut query_builder = QueryBuilder::new(
-            "SELECT COUNT(1) FROM normal_problems LEFT JOIN users ON normal_problems.author_id = users.display_id WHERE",
+            r#"
+            SELECT 
+                COUNT(1) 
+            FROM 
+                normal_problems 
+                LEFT JOIN 
+                    users 
+                        ON normal_problems.author_id = users.display_id
+            WHERE
+            "#,
         );
 
         query_builder.push(" (normal_problems.is_public = TRUE");

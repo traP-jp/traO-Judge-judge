@@ -55,8 +55,7 @@ impl ResourceIdCounterRepository for ResourceIdCounterRepositoryImpl {
                     resource_id_counter
                 WHERE
                     resource_id
-                IN
-                    (
+                        IN (
                 "#,
         );
 
@@ -84,8 +83,8 @@ impl ResourceIdCounterRepository for ResourceIdCounterRepositoryImpl {
                 updated_at = NOW() 
             WHERE 
                 resource_id 
-            IN 
-                ("#,
+                    IN (
+            "#,
         );
 
         let mut separated = query_builder.separated(", ");
