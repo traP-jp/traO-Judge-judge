@@ -1,6 +1,6 @@
 {
   "db_name": "MySQL",
-  "query": "\n            SELECT\n                COUNT(*) AS \"count: i64\"\n            FROM\n                user_authentications\n            WHERE\n                email = ?\n            ",
+  "query": "\n            SELECT\n                COUNT(1) AS \"count: i64\"\n            FROM\n                user_authentications\n            WHERE\n                email = ?\n            ",
   "describe": {
     "columns": [
       {
@@ -21,5 +21,5 @@
       false
     ]
   },
-  "hash": "135adef4cf52cbcb6c197fa07841598c269328cad8afb1676d1c29912d5dee68"
+  "hash": "27fa02bb6c54a93332abe73548ef0e88c35b708b98debc1e8ea228a1248a4577"
 }

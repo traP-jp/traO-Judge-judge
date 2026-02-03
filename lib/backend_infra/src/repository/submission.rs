@@ -144,7 +144,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         query: SubmissionGetQuery,
     ) -> anyhow::Result<i64> {
         let mut query_builder = QueryBuilder::new(
-            "SELECT COUNT(*) FROM submissions INNER JOIN normal_problems ON normal_problems.id = submissions.problem_id LEFT JOIN users ON users.display_id = submissions.user_id \nWHERE",
+            "SELECT COUNT(1) FROM submissions INNER JOIN normal_problems ON normal_problems.id = submissions.problem_id LEFT JOIN users ON users.display_id = submissions.user_id \nWHERE",
         );
 
         query_builder.push(" (normal_problems.is_public = TRUE");

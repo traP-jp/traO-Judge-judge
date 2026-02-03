@@ -175,7 +175,7 @@ impl AuthRepository for AuthRepositoryImpl {
         let exists = sqlx::query_scalar!(
             r#"
             SELECT
-                COUNT(*) AS "count: i64"
+                COUNT(1) AS "count: i64"
             FROM
                 user_authentications
             WHERE

@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            DELETE FROM \n                editorials \n            WHERE \n                id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "99e5b42605d35f7cf8dfde931422ff0159dc40bb57e2098f7f2a4e20450141ae"
+}

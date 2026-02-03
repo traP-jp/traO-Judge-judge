@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            INSERT INTO \n                editorials (\n                    id, \n                    problem_id, \n                    author_id, \n                    statement, \n                    is_public, \n                    title\n                ) \n            VALUES \n                (?, ?, ?, ?, ?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "ff479e2bcc7d89728aa94f20ee33fb8579d30db627f6d740c3e52a6d21d20e94"
+}
