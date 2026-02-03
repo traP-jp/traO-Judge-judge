@@ -1,6 +1,6 @@
 {
   "db_name": "MySQL",
-  "query": "\n                SELECT \n                    id AS \"id: _\",\n                    author_id AS \"author_id: _\",\n                    title AS \"title: _\",\n                    statement AS \"statement: _\",\n                    is_public AS \"is_public!: _\",\n                    time_limit_ms AS \"time_limit_ms: _\",\n                    memory_limit_kib AS \"memory_limit_kib: _\",\n                    difficulty AS \"difficulty: _\",\n                    created_at AS \"created_at: _\",\n                    updated_at AS \"updated_at: _\",\n                    solved_count AS \"solved_count: _\"\n                FROM\n                    normal_problems \n                WHERE\n                    id = ?\n                ",
+  "query": "\n            SELECT\n                id AS \"id: _\",\n                author_id AS \"author_id: _\",\n                title AS \"title: _\",\n                statement AS \"statement: _\",\n                is_public AS \"is_public!: _\",\n                time_limit_ms AS \"time_limit_ms: _\",\n                memory_limit_kib AS \"memory_limit_kib: _\",\n                difficulty AS \"difficulty: _\",\n                created_at AS \"created_at: _\",\n                updated_at AS \"updated_at: _\",\n                solved_count AS \"solved_count: _\"\n            FROM\n                normal_problems \n            WHERE\n                id = ?\n            ",
   "describe": {
     "columns": [
       {
@@ -131,5 +131,5 @@
       false
     ]
   },
-  "hash": "8f1e56dfe4c83c30f6527bb19b2aa90c027b086a03db2649a0fb990e1d4308f5"
+  "hash": "71a4ccb18b2a0ed5039aad259c15f970f33dfee11942d0e6d5800f316c81bf5d"
 }

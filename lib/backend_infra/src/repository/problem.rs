@@ -25,23 +25,23 @@ impl ProblemRepository for ProblemRepositoryImpl {
         let problem = sqlx::query_as!(
             NormalProblemRow,
             r#"
-                SELECT 
-                    id AS "id: _",
-                    author_id AS "author_id: _",
-                    title AS "title: _",
-                    statement AS "statement: _",
-                    is_public AS "is_public!: _",
-                    time_limit_ms AS "time_limit_ms: _",
-                    memory_limit_kib AS "memory_limit_kib: _",
-                    difficulty AS "difficulty: _",
-                    created_at AS "created_at: _",
-                    updated_at AS "updated_at: _",
-                    solved_count AS "solved_count: _"
-                FROM
-                    normal_problems 
-                WHERE
-                    id = ?
-                "#,
+            SELECT
+                id AS "id: _",
+                author_id AS "author_id: _",
+                title AS "title: _",
+                statement AS "statement: _",
+                is_public AS "is_public!: _",
+                time_limit_ms AS "time_limit_ms: _",
+                memory_limit_kib AS "memory_limit_kib: _",
+                difficulty AS "difficulty: _",
+                created_at AS "created_at: _",
+                updated_at AS "updated_at: _",
+                solved_count AS "solved_count: _"
+            FROM
+                normal_problems 
+            WHERE
+                id = ?
+            "#,
             id
         )
         .fetch_optional(&self.pool)
