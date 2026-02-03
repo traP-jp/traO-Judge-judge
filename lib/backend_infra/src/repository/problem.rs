@@ -22,11 +22,30 @@ impl ProblemRepositoryImpl {
 #[async_trait]
 impl ProblemRepository for ProblemRepositoryImpl {
     async fn get_problem(&self, id: i64) -> anyhow::Result<Option<NormalProblem>> {
-        let problem =
-            sqlx::query_as::<_, NormalProblemRow>("SELECT * FROM normal_problems WHERE id = ?")
-                .bind(id)
-                .fetch_optional(&self.pool)
-                .await?;
+        let problem = sqlx::query_as!(
+            NormalProblemRow,
+            r#"
+                SELECT 
+                    id AS "id: _",
+                    author_id AS "author_id: _",
+                    title AS "title: _",
+                    statement AS "statement: _",
+                    is_public AS "is_public!: _",
+                    time_limit_ms AS "time_limit_ms: _",
+                    memory_limit_kib AS "memory_limit_kib: _",
+                    difficulty AS "difficulty: _",
+                    created_at AS "created_at: _",
+                    updated_at AS "updated_at: _",
+                    solved_count AS "solved_count: _"
+                FROM
+                    normal_problems 
+                WHERE
+                    id = ?
+                "#,
+            id
+        )
+        .fetch_optional(&self.pool)
+        .await?;
 
         Ok(problem.map(|problem| problem.into()))
     }
@@ -131,16 +150,28 @@ impl ProblemRepository for ProblemRepositoryImpl {
         id: i64,
         update_prblem: UpdateNormalProblem,
     ) -> anyhow::Result<()> {
-        sqlx::query(
-            "UPDATE normal_problems SET title = ?, is_public = ?, difficulty = ?, statement = ?, time_limit_ms = ?, memory_limit_kib = ? WHERE id = ?",
+        sqlx::query!(
+            r#"
+            UPDATE 
+                normal_problems
+            SET 
+                title = ?,
+                is_public = ?,
+                difficulty = ?,
+                statement = ?,
+                time_limit_ms = ?,
+                memory_limit_kib = ?
+            WHERE
+                id = ?
+            "#,
+            update_prblem.title,
+            update_prblem.is_public,
+            update_prblem.difficulty,
+            update_prblem.statement,
+            update_prblem.time_limit_ms,
+            update_prblem.memory_limit_kib,
+            id
         )
-        .bind(update_prblem.title)
-        .bind(update_prblem.is_public)
-        .bind(update_prblem.difficulty)
-        .bind(update_prblem.statement)
-        .bind(update_prblem.time_limit_ms)
-        .bind(update_prblem.memory_limit_kib)
-        .bind(id)
         .execute(&self.pool)
         .await
         .map_err(|e| {
@@ -152,15 +183,26 @@ impl ProblemRepository for ProblemRepositoryImpl {
     }
 
     async fn create_problem(&self, create_problem: CreateNormalProblem) -> anyhow::Result<i64> {
-        let problem_id = sqlx::query(
-            "INSERT INTO normal_problems (author_id, title, statement, time_limit_ms, memory_limit_kib, difficulty) VALUES (?, ?, ?, ?, ?, ?)",
+        let problem_id = sqlx::query!(
+            r#"
+            INSERT INTO 
+                normal_problems (
+                    author_id, 
+                    title, 
+                    statement, 
+                    time_limit_ms, 
+                    memory_limit_kib, 
+                    difficulty
+                ) 
+            VALUES (?, ?, ?, ?, ?, ?)
+            "#,
+            create_problem.author_id,
+            create_problem.title,
+            create_problem.statement,
+            create_problem.time_limit_ms,
+            create_problem.memory_limit_kib,
+            create_problem.difficulty
         )
-        .bind(create_problem.author_id)
-        .bind(create_problem.title)
-        .bind(create_problem.statement)
-        .bind(create_problem.time_limit_ms)
-        .bind(create_problem.memory_limit_kib)
-        .bind(create_problem.difficulty)
         .execute(&self.pool)
         .await
         .map_err(|e| {
@@ -172,10 +214,17 @@ impl ProblemRepository for ProblemRepositoryImpl {
     }
 
     async fn delete_problem(&self, id: i64) -> anyhow::Result<()> {
-        sqlx::query("DELETE FROM normal_problems WHERE id = ?")
-            .bind(id)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            DELETE FROM 
+                normal_problems 
+            WHERE 
+                id = ?
+            "#,
+            id
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
