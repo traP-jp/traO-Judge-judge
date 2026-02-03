@@ -18,18 +18,6 @@ impl UserRepositoryImpl {
     }
 }
 
-// pub id: UuidRow,
-// pub display_id: i64,
-// pub name: String,
-// pub traq_id: Option<String>,
-// pub github_id: Option<String>,
-// pub icon_id: Option<UuidRow>,
-// pub x_id: Option<String>,
-// pub self_introduction: String,
-// pub role: i32,
-// pub created_at: chrono::DateTime<chrono::Utc>,
-// pub updated_at: chrono::DateTime<chrono::Utc>,
-
 #[async_trait]
 impl UserRepository for UserRepositoryImpl {
     async fn get_user_by_display_id(&self, display_id: i64) -> anyhow::Result<Option<User>> {
