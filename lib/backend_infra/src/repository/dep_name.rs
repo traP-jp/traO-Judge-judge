@@ -84,10 +84,17 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
     }
 
     async fn remove_many(&self, problem_id: i64) -> anyhow::Result<()> {
-        sqlx::query("DELETE FROM dep_name WHERE problem_id = ?")
-            .bind(problem_id)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            DELETE FROM 
+                dep_name 
+            WHERE 
+                problem_id = ?
+            "#,
+            problem_id
+        )
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
 
@@ -95,10 +102,19 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
         &self,
         problem_id: i64,
     ) -> anyhow::Result<HashMap<DepId, String>> {
-        let dep_names: Vec<DepNameRow> = sqlx::query_as::<_, DepNameRow>(
-            "SELECT dep_id, name FROM dep_name WHERE problem_id = ?",
+        let dep_names: Vec<DepNameRow> = sqlx::query_as!(
+            DepNameRow,
+            r#"
+            SELECT 
+                dep_id as "dep_id: UuidRow", 
+                name 
+            FROM 
+                dep_name 
+            WHERE 
+            problem_id = ?
+            "#,
+            problem_id
         )
-        .bind(problem_id)
         .fetch_all(&self.pool)
         .await?;
 
