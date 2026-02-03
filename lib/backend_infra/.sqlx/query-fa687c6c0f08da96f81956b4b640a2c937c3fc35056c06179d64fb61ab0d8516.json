@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            UPDATE \n                submissions \n            SET \n                judge_status = ?, \n                total_score = ?, \n                max_time_ms = ?, \n                max_memory_kib = ? \n            WHERE \n                id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "fa687c6c0f08da96f81956b4b640a2c937c3fc35056c06179d64fb61ab0d8516"
+}

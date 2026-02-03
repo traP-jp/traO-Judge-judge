@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            DELETE FROM \n                submission_testcases\n            WHERE\n                submission_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "bdd55fac4f1accac335d67da72761c30db2007699db4ba9cc37d4345583f5c61"
+}
