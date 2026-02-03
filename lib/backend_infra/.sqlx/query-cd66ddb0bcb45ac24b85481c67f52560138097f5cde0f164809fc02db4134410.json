@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            INSERT INTO \n                `procedures` (\n                    `problem_id`, \n                    `procedure`\n                ) \n            VALUES \n                (?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "cd66ddb0bcb45ac24b85481c67f52560138097f5cde0f164809fc02db4134410"
+}

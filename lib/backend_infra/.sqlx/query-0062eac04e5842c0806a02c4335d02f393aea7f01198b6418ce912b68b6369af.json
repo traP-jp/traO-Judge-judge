@@ -1,6 +1,6 @@
 {
   "db_name": "MySQL",
-  "query": "\n            SELECT \n                dep_id as \"dep_id: _\", \n                name \n            FROM \n                dep_name \n            WHERE \n            problem_id = ?\n            ",
+  "query": "\n            SELECT \n                dep_id as \"dep_id: _\", \n                name \n            FROM \n                dep_name \n            WHERE \n                problem_id = ?\n            ",
   "describe": {
     "columns": [
       {
@@ -32,5 +32,5 @@
       false
     ]
   },
-  "hash": "6a97765aba2a45a270abcf612ce9b47d43170232d23ebb3a4f3aea89dd4c8268"
+  "hash": "0062eac04e5842c0806a02c4335d02f393aea7f01198b6418ce912b68b6369af"
 }

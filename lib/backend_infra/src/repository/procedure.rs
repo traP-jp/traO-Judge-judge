@@ -1,4 +1,4 @@
-use axum::async_trait;
+use axum::{Json, async_trait};
 use domain::repository::procedure::ProcedureRepository;
 use judge_core::model::procedure::registered::Procedure;
 use sqlx::MySqlPool;
@@ -21,31 +21,56 @@ impl ProcedureRepository for ProcedureRepositoryImpl {
     async fn create_procedure(&self, problem_id: i64, procedure: Procedure) -> anyhow::Result<()> {
         let procedure = ProcedureJson::from(procedure);
 
-        sqlx::query("INSERT INTO `procedures` (`problem_id`, `procedure`) VALUES (?, ?)")
-            .bind(problem_id)
-            .bind(sqlx::types::Json(procedure))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            INSERT INTO 
+                `procedures` (
+                    `problem_id`, 
+                    `procedure`
+                ) 
+            VALUES 
+                (?, ?)
+            "#,
+            problem_id,
+            sqlx::types::Json(procedure)
+        )
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
 
     async fn update_procedure(&self, problem_id: i64, procedure: Procedure) -> anyhow::Result<()> {
         let procedure = ProcedureJson::from(procedure);
 
-        sqlx::query("UPDATE `procedures` SET `procedure` = ? WHERE `problem_id` = ?")
-            .bind(sqlx::types::Json(procedure))
-            .bind(problem_id)
-            .execute(&self.pool)
-            .await?;
-
+        sqlx::query!(
+            r#"
+            UPDATE 
+                `procedures` 
+            SET 
+                `procedure` = ? 
+            WHERE 
+                `problem_id` = ?"#,
+            sqlx::types::Json(procedure),
+            problem_id
+        )
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
 
     async fn get_procedure(&self, problem_id: i64) -> anyhow::Result<Option<Procedure>> {
-        let procedure_row = sqlx::query_as::<_, ProcedureRow>(
-            "SELECT `procedure` FROM `procedures` WHERE `problem_id` = ?",
+        let procedure_row = sqlx::query_as_unchecked!(
+            ProcedureRow,
+            r#"
+            SELECT 
+                `procedure` 
+            FROM 
+                `procedures` 
+            WHERE 
+                `problem_id` = ?
+            "#,
+            problem_id
         )
-        .bind(problem_id)
         .fetch_optional(&self.pool)
         .await?;
 
@@ -53,10 +78,17 @@ impl ProcedureRepository for ProcedureRepositoryImpl {
     }
 
     async fn delete_procedure(&self, problem_id: i64) -> anyhow::Result<()> {
-        sqlx::query("DELETE FROM `procedures` WHERE `problem_id` = ?")
-            .bind(problem_id)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            DELETE FROM 
+                `procedures` 
+            WHERE 
+                `problem_id` = ?
+            "#,
+            problem_id
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }

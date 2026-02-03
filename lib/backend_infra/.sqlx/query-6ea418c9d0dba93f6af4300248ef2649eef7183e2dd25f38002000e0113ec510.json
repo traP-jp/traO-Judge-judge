@@ -1,6 +1,6 @@
 {
   "db_name": "MySQL",
-  "query": "\n            SELECT\n                id AS \"id: _\",\n                problem_id,\n                author_id,\n                statement,\n                created_at AS \"created_at: _\",\n                updated_at AS \"updated_at: _\",\n                is_public AS \"is_public: _\",\n                title\n            FROM editorials\n            WHERE id = ?\n            ",
+  "query": "\n            SELECT\n                id AS \"id: _\",\n                problem_id,\n                author_id,\n                statement,\n                created_at AS \"created_at: _\",\n                updated_at AS \"updated_at: _\",\n                is_public AS \"is_public: _\",\n                title\n            FROM \n                editorials\n            WHERE \n                id = ?\n            ",
   "describe": {
     "columns": [
       {
@@ -98,5 +98,5 @@
       false
     ]
   },
-  "hash": "06c460e4f062cedc8f6031f8726d842eb8ccdf8dc7ae9537e7cd0a90a8b824f4"
+  "hash": "6ea418c9d0dba93f6af4300248ef2649eef7183e2dd25f38002000e0113ec510"
 }

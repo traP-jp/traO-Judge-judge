@@ -194,7 +194,8 @@ impl ProblemRepository for ProblemRepositoryImpl {
                     memory_limit_kib, 
                     difficulty
                 ) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES 
+                (?, ?, ?, ?, ?, ?)
             "#,
             create_problem.author_id,
             create_problem.title,

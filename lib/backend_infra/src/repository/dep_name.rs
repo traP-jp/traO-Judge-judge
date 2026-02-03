@@ -111,7 +111,7 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
             FROM 
                 dep_name 
             WHERE 
-            problem_id = ?
+                problem_id = ?
             "#,
             problem_id
         )

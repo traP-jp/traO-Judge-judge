@@ -38,8 +38,10 @@ impl EditorialRepository for EditorialRepositoryImpl {
                 updated_at AS "updated_at: _",
                 is_public AS "is_public: _",
                 title
-            FROM editorials
-            WHERE id = ?
+            FROM 
+                editorials
+            WHERE 
+                id = ?
             "#,
             id
         )
