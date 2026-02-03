@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            UPDATE \n                normal_problems\n            SET \n                title = ?,\n                is_public = ?,\n                difficulty = ?,\n                statement = ?,\n                time_limit_ms = ?,\n                memory_limit_kib = ?\n            WHERE\n                id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "a582d0443ed0cc1a0ba1d1eb169a03d9d6b4965e1f458db9b4c8bdfef2a28b4c"
+}

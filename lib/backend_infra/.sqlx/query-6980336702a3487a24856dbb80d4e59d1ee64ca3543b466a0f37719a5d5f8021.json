@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            UPDATE\n                users\n            SET\n                name = ?,\n                icon_id = ?,\n                github_id = ?,\n                x_id = ?,\n                self_introduction = ?\n            WHERE\n                display_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "6980336702a3487a24856dbb80d4e59d1ee64ca3543b466a0f37719a5d5f8021"
+}

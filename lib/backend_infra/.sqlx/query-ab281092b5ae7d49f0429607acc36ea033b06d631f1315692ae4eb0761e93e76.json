@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            UPDATE\n                editorials\n            SET\n                statement = ?,\n                is_public = ?,\n                title = ?\n            WHERE \n                id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "ab281092b5ae7d49f0429607acc36ea033b06d631f1315692ae4eb0761e93e76"
+}

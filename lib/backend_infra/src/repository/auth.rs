@@ -26,10 +26,21 @@ impl AuthRepository for AuthRepositoryImpl {
         &self,
         id: UserId,
     ) -> anyhow::Result<UserAuthentication> {
-        let record = sqlx::query_as::<_, UserAuthenticationRow>(
-            "SELECT email, google_oauth, github_oauth, traq_oauth FROM user_authentications WHERE user_id = ?",
+        let record = sqlx::query_as!(
+            UserAuthenticationRow,
+            r#"
+            SELECT
+                email,
+                google_oauth,
+                github_oauth,
+                traq_oauth
+            FROM
+                user_authentications
+            WHERE
+                user_id = ?
+            "#,
+            UuidRow(id.into())
         )
-        .bind(UuidRow(id.into()))
         .fetch_one(&self.pool)
         .await?;
 
@@ -37,10 +48,22 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn count_authentication_methods(&self, id: UserId) -> anyhow::Result<i64> {
-        let count = sqlx::query_scalar::<_, i64>(
-            "SELECT (IF(password IS NOT NULL, 1, 0) + IF(github_oauth IS NOT NULL, 1, 0) + IF(google_oauth IS NOT NULL, 1, 0) + IF(traq_oauth IS NOT NULL, 1, 0)) AS authentication_count FROM user_authentications WHERE user_id = ?",
+        let count = sqlx::query_scalar!(
+            r#"
+            SELECT
+                (
+                    IF(password IS NOT NULL, 1, 0) +
+                    IF(github_oauth IS NOT NULL, 1, 0) +
+                    IF(google_oauth IS NOT NULL, 1, 0) +
+                    IF(traq_oauth IS NOT NULL, 1, 0)
+                ) AS "authentication_count: i64"
+            FROM
+                user_authentications
+            WHERE
+                user_id = ?
+            "#,
+            UuidRow(id.into())
         )
-        .bind(UuidRow(id.into()))
         .fetch_one(&self.pool)
         .await?;
 
@@ -55,12 +78,19 @@ impl AuthRepository for AuthRepositoryImpl {
     ) -> anyhow::Result<()> {
         let hash = bcrypt::hash(password, self.bcrypt_cost)?;
 
-        sqlx::query("INSERT INTO user_authentications (user_id, email, password) VALUES (?, ?, ?)")
-            .bind(UuidRow(id.into()))
-            .bind(email)
-            .bind(&hash)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            INSERT INTO 
+                user_authentications (user_id, email, password)
+            VALUES 
+                (?, ?, ?)
+            "#,
+            UuidRow(id.into()),
+            email,
+            &hash
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
@@ -68,41 +98,77 @@ impl AuthRepository for AuthRepositoryImpl {
     async fn update_user_password(&self, id: UserId, password: &str) -> anyhow::Result<()> {
         let hash = bcrypt::hash(password, self.bcrypt_cost)?;
 
-        sqlx::query("UPDATE user_authentications SET password = ? WHERE user_id = ?")
-            .bind(&hash)
-            .bind(UuidRow(id.into()))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            UPDATE 
+                user_authentications
+            SET 
+                password = ?
+            WHERE 
+                user_id = ?
+            "#,
+            &hash,
+            UuidRow(id.into())
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
 
     async fn verify_user_password(&self, id: UserId, password: &str) -> anyhow::Result<bool> {
-        let hash = sqlx::query_scalar::<_, String>(
-            "SELECT password FROM user_authentications WHERE user_id = ?",
+        let hash = sqlx::query_scalar!(
+            r#"
+            SELECT
+                password
+            FROM
+                user_authentications
+            WHERE
+                user_id = ?
+            "#,
+            UuidRow(id.into())
         )
-        .bind(UuidRow(id.into()))
         .fetch_one(&self.pool)
         .await?;
 
-        Ok(bcrypt::verify(password, &hash)?)
+        if let Some(hash) = hash {
+            Ok(bcrypt::verify(password, &hash)?)
+        } else {
+            Ok(false)
+        }
     }
 
     async fn update_user_email(&self, id: UserId, email: &str) -> anyhow::Result<()> {
-        sqlx::query("UPDATE user_authentications SET email = ? WHERE user_id = ?")
-            .bind(email)
-            .bind(UuidRow(id.into()))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            UPDATE 
+                user_authentications
+            SET 
+                email = ?
+            WHERE 
+                user_id = ?
+            "#,
+            email,
+            UuidRow(id.into())
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
 
     async fn get_user_id_by_email(&self, email: &str) -> anyhow::Result<Option<UserId>> {
-        let user_id = sqlx::query_scalar::<_, UuidRow>(
-            "SELECT user_id FROM user_authentications WHERE email = ?",
+        let user_id = sqlx::query_scalar!(
+            r#"
+            SELECT
+                user_id AS "user_id: UuidRow"
+            FROM
+                user_authentications
+            WHERE
+                email = ?
+            "#,
+            email
         )
-        .bind(email)
         .fetch_optional(&self.pool)
         .await?;
 
@@ -110,10 +176,17 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn is_exist_email(&self, email: &str) -> anyhow::Result<bool> {
-        let exists = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM user_authentications WHERE email = ?",
+        let exists = sqlx::query_scalar!(
+            r#"
+            SELECT
+                COUNT(1) AS "count: i64"
+            FROM
+                user_authentications
+            WHERE
+                email = ?
+            "#,
+            email
         )
-        .bind(email)
         .fetch_one(&self.pool)
         .await?;
 
@@ -190,30 +263,55 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn save_user_google_oauth(&self, id: UserId, google_oauth: &str) -> anyhow::Result<()> {
-        sqlx::query("INSERT INTO user_authentications (user_id, google_oauth) VALUES (?, ?)")
-            .bind(UuidRow(id.into()))
-            .bind(google_oauth)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            INSERT INTO 
+                user_authentications (
+                    user_id, 
+                    google_oauth
+                )
+            VALUES 
+                (?, ?)
+            "#,
+            UuidRow(id.into()),
+            google_oauth
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
 
     async fn update_user_google_oauth(&self, id: UserId, google_oauth: &str) -> anyhow::Result<()> {
-        sqlx::query("UPDATE user_authentications SET google_oauth = ? WHERE user_id = ?")
-            .bind(google_oauth)
-            .bind(UuidRow(id.into()))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            UPDATE 
+                user_authentications
+            SET 
+            google_oauth = ?
+            WHERE user_id = ?
+            "#,
+            google_oauth,
+            UuidRow(id.into())
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
 
     async fn verify_user_google_oauth(&self, id: UserId) -> anyhow::Result<bool> {
-        let google_oauth = sqlx::query_scalar::<_, Option<String>>(
-            "SELECT google_oauth FROM user_authentications WHERE user_id = ?",
+        let google_oauth = sqlx::query_scalar!(
+            r#"
+            SELECT
+                google_oauth
+            FROM
+                user_authentications
+            WHERE
+                user_id = ?
+            "#,
+            UuidRow(id.into())
         )
-        .bind(UuidRow(id.into()))
         .fetch_optional(&self.pool)
         .await?;
 
@@ -221,10 +319,19 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn delete_user_google_oauth(&self, id: UserId) -> anyhow::Result<bool> {
-        sqlx::query("UPDATE user_authentications SET google_oauth = NULL WHERE user_id = ?")
-            .bind(UuidRow(id.into()))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            UPDATE 
+                user_authentications
+            SET 
+                google_oauth = NULL
+            WHERE 
+                user_id = ?
+            "#,
+            UuidRow(id.into())
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(true)
     }
@@ -233,10 +340,17 @@ impl AuthRepository for AuthRepositoryImpl {
         &self,
         google_oauth: &str,
     ) -> anyhow::Result<Option<UserId>> {
-        let user_id = sqlx::query_scalar::<_, UuidRow>(
-            "SELECT user_id FROM user_authentications WHERE google_oauth = ?",
+        let user_id = sqlx::query_scalar!(
+            r#"
+            SELECT
+                user_id AS "user_id: UuidRow"
+            FROM
+                user_authentications
+            WHERE
+                google_oauth = ?
+            "#,
+            google_oauth
         )
-        .bind(google_oauth)
         .fetch_optional(&self.pool)
         .await?;
 
@@ -320,41 +434,73 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn save_user_github_oauth(&self, id: UserId, github_oauth: &str) -> anyhow::Result<()> {
-        sqlx::query("INSERT INTO user_authentications (user_id, github_oauth) VALUES (?, ?)")
-            .bind(UuidRow(id.into()))
-            .bind(github_oauth)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            INSERT INTO 
+                user_authentications (user_id, github_oauth)
+            VALUES 
+                (?, ?)
+            "#,
+            UuidRow(id.into()),
+            github_oauth
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
 
     async fn update_user_github_oauth(&self, id: UserId, github_oauth: &str) -> anyhow::Result<()> {
-        sqlx::query("UPDATE user_authentications SET github_oauth = ? WHERE user_id = ?")
-            .bind(github_oauth)
-            .bind(UuidRow(id.into()))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            UPDATE 
+                user_authentications
+            SET 
+                github_oauth = ?
+            WHERE 
+                user_id = ?
+            "#,
+            github_oauth,
+            UuidRow(id.into())
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
 
     async fn verify_user_github_oauth(&self, id: UserId) -> anyhow::Result<bool> {
-        let github_oauth = sqlx::query_scalar::<_, Option<String>>(
-            "SELECT github_oauth FROM user_authentications WHERE user_id = ?",
+        let github_oauth = sqlx::query_scalar!(
+            r#"
+            SELECT
+                github_oauth
+            FROM
+                user_authentications
+            WHERE
+                user_id = ?
+            "#,
+            UuidRow(id.into())
         )
-        .bind(UuidRow(id.into()))
-        .fetch_optional(&self.pool)
+        .fetch_one(&self.pool)
         .await?;
 
         Ok(github_oauth.is_some())
     }
 
     async fn delete_user_github_oauth(&self, id: UserId) -> anyhow::Result<bool> {
-        sqlx::query("UPDATE user_authentications SET github_oauth = NULL WHERE user_id = ?")
-            .bind(UuidRow(id.into()))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            UPDATE 
+                user_authentications
+            SET 
+                github_oauth = NULL
+            WHERE 
+                user_id = ?
+            "#,
+            UuidRow(id.into())
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(true)
     }
@@ -363,10 +509,17 @@ impl AuthRepository for AuthRepositoryImpl {
         &self,
         github_oauth: &str,
     ) -> anyhow::Result<Option<UserId>> {
-        let user_id = sqlx::query_scalar::<_, UuidRow>(
-            "SELECT user_id FROM user_authentications WHERE github_oauth = ?",
+        let user_id = sqlx::query_scalar!(
+            r#"
+            SELECT
+                user_id AS "user_id: UuidRow"
+            FROM
+                user_authentications
+            WHERE
+                github_oauth = ?
+            "#,
+            github_oauth
         )
-        .bind(github_oauth)
         .fetch_optional(&self.pool)
         .await?;
 
@@ -374,30 +527,56 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn save_user_traq_oauth(&self, id: UserId, traq_oauth: &str) -> anyhow::Result<()> {
-        sqlx::query("INSERT INTO user_authentications (user_id, traq_oauth) VALUES (?, ?)")
-            .bind(UuidRow(id.into()))
-            .bind(traq_oauth)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            INSERT INTO 
+                user_authentications (
+                    user_id, 
+                    traq_oauth
+                )
+            VALUES 
+                (?, ?)
+            "#,
+            UuidRow(id.into()),
+            traq_oauth
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
 
     async fn update_user_traq_oauth(&self, id: UserId, traq_oauth: &str) -> anyhow::Result<()> {
-        sqlx::query("UPDATE user_authentications SET traq_oauth = ? WHERE user_id = ?")
-            .bind(traq_oauth)
-            .bind(UuidRow(id.into()))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            UPDATE 
+                user_authentications
+            SET 
+                traq_oauth = ?
+            WHERE 
+                user_id = ?
+            "#,
+            traq_oauth,
+            UuidRow(id.into())
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
 
     async fn verify_user_traq_oauth(&self, id: UserId) -> anyhow::Result<bool> {
-        let traq_oauth = sqlx::query_scalar::<_, Option<String>>(
-            "SELECT traq_oauth FROM user_authentications WHERE user_id = ?",
+        let traq_oauth = sqlx::query_scalar!(
+            r#"
+            SELECT
+                traq_oauth
+            FROM
+                user_authentications
+            WHERE
+                user_id = ?
+            "#,
+            UuidRow(id.into())
         )
-        .bind(UuidRow(id.into()))
         .fetch_optional(&self.pool)
         .await?;
 
@@ -405,19 +584,35 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn delete_user_traq_oauth(&self, id: UserId) -> anyhow::Result<bool> {
-        sqlx::query("UPDATE user_authentications SET traq_oauth = NULL WHERE user_id = ?")
-            .bind(UuidRow(id.into()))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            UPDATE 
+                user_authentications
+            SET 
+                traq_oauth = NULL
+            WHERE 
+                user_id = ?
+            "#,
+            UuidRow(id.into())
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(true)
     }
 
     async fn get_user_id_by_traq_oauth(&self, traq_oauth: &str) -> anyhow::Result<Option<UserId>> {
-        let user_id = sqlx::query_scalar::<_, UuidRow>(
-            "SELECT user_id FROM user_authentications WHERE traq_oauth = ?",
+        let user_id = sqlx::query_scalar!(
+            r#"
+            SELECT
+                user_id AS "user_id: UuidRow"
+            FROM
+                user_authentications
+            WHERE
+                traq_oauth = ?
+            "#,
+            traq_oauth
         )
-        .bind(traq_oauth)
         .fetch_optional(&self.pool)
         .await?;
 

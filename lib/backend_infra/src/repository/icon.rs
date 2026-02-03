@@ -19,30 +19,60 @@ impl IconRepositoryImpl {
 #[async_trait]
 impl IconRepository for IconRepositoryImpl {
     async fn get_icon(&self, id: Uuid) -> anyhow::Result<Option<Icon>> {
-        let icon = sqlx::query_as::<_, IconRow>("SELECT * FROM icons WHERE id = ?")
-            .bind(UuidRow(id))
-            .fetch_optional(&self.pool)
-            .await?;
+        let icon = sqlx::query_as!(
+            IconRow,
+            r#"
+            SELECT
+                id AS "id: _",
+                content_type,
+                icon
+            FROM 
+                icons 
+            WHERE 
+                id = ?
+            "#,
+            UuidRow(id)
+        )
+        .fetch_optional(&self.pool)
+        .await?;
 
         Ok(icon.map(|row| row.into()))
     }
 
     async fn create_icon(&self, icon: Icon) -> anyhow::Result<()> {
-        sqlx::query("INSERT INTO icons (id, content_type, icon) VALUES (?, ?, ?)")
-            .bind(UuidRow(icon.id))
-            .bind(icon.content_type)
-            .bind(&icon.icon)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            INSERT INTO 
+                icons (
+                    id, 
+                    content_type, 
+                    icon
+                ) 
+            VALUES 
+                (?, ?, ?)
+            "#,
+            UuidRow(icon.id),
+            icon.content_type,
+            &icon.icon
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
 
     async fn delete_icon(&self, id: Uuid) -> anyhow::Result<()> {
-        sqlx::query("DELETE FROM icons WHERE id = ?")
-            .bind(UuidRow(id))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            DELETE FROM 
+                icons 
+            WHERE 
+                id = ?
+            "#,
+            UuidRow(id)
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }

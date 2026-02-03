@@ -21,19 +21,59 @@ impl UserRepositoryImpl {
 #[async_trait]
 impl UserRepository for UserRepositoryImpl {
     async fn get_user_by_display_id(&self, display_id: i64) -> anyhow::Result<Option<User>> {
-        let user = sqlx::query_as::<_, UserRow>("SELECT * FROM users WHERE display_id = ?")
-            .bind(display_id)
-            .fetch_optional(&self.pool)
-            .await?;
+        let user = sqlx::query_as!(
+            UserRow,
+            r#"
+            SELECT 
+                display_id,
+                id AS "id: _",
+                name,
+                traq_id,
+                icon_id AS "icon_id: _",
+                github_id,
+                x_id,
+                self_introduction,
+                role,
+                created_at AS "created_at!: _",
+                updated_at AS "updated_at!: _"
+            FROM
+                users 
+            WHERE
+                display_id = ?
+            "#,
+            display_id
+        )
+        .fetch_optional(&self.pool)
+        .await?;
 
         Ok(user.map(|user| user.into()))
     }
 
     async fn get_user_by_user_id(&self, id: UserId) -> anyhow::Result<Option<User>> {
-        let user = sqlx::query_as::<_, UserRow>("SELECT * FROM users WHERE id = ?")
-            .bind(UuidRow(id.into()))
-            .fetch_optional(&self.pool)
-            .await?;
+        let user = sqlx::query_as!(
+            UserRow,
+            r#"
+            SELECT 
+                display_id,
+                id AS "id: _",
+                name,
+                traq_id,
+                icon_id AS "icon_id: _",
+                github_id,
+                x_id,
+                self_introduction,
+                role,
+                created_at AS "created_at!: _",
+                updated_at AS "updated_at!: _"
+            FROM
+                users 
+            WHERE
+                id = ?
+            "#,
+            UuidRow(id.into())
+        )
+        .fetch_optional(&self.pool)
+        .await?;
 
         Ok(user.map(|user| user.into()))
     }
@@ -41,34 +81,66 @@ impl UserRepository for UserRepositoryImpl {
     async fn create_user(&self, name: &str) -> anyhow::Result<UserId> {
         let id = UuidRow::new(Uuid::now_v7());
 
-        sqlx::query("INSERT INTO users (id, name) VALUES (?, ?)")
-            .bind(id)
-            .bind(name)
-            .execute(&self.pool)
-            .await?;
-
+        sqlx::query!(
+            r#"
+            INSERT INTO 
+                users (
+                    id,
+                    name
+                ) 
+            VALUES 
+                (?, ?)
+            "#,
+            id,
+            name
+        )
+        .execute(&self.pool)
+        .await?;
         Ok(UserId(id.0))
     }
 
     async fn update_user(&self, display_id: i64, body: UpdateUser) -> anyhow::Result<()> {
-        sqlx::query("UPDATE users SET name = ?, icon_id = ?, github_id = ?, x_id = ?, self_introduction = ? WHERE display_id = ?")
-            .bind(body.user_name)
-            .bind(body.icon_id.map(UuidRow))
-            .bind(body.github_id)
-            .bind(body.x_id)
-            .bind(body.self_introduction)
-            .bind(display_id)
-            .execute(&self.pool).await?;
+        sqlx::query!(
+            r#"
+            UPDATE
+                users
+            SET
+                name = ?,
+                icon_id = ?,
+                github_id = ?,
+                x_id = ?,
+                self_introduction = ?
+            WHERE
+                display_id = ?
+            "#,
+            body.user_name,
+            body.icon_id.map(UuidRow),
+            body.github_id,
+            body.x_id,
+            body.self_introduction,
+            display_id
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
 
     async fn change_user_role(&self, user_id: UserId, role: UserRole) -> anyhow::Result<()> {
-        sqlx::query("UPDATE users SET role = ? WHERE id = ?")
-            .bind(role as i32)
-            .bind(UuidRow(user_id.into()))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            UPDATE
+                users
+            SET
+                role = ?
+            WHERE
+                id = ?
+            "#,
+            role as i32,
+            UuidRow(user_id.into())
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }

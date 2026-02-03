@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            INSERT INTO \n                icons (\n                    id, \n                    content_type, \n                    icon\n                ) \n            VALUES \n                (?, ?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "bc750f0a4a9478ff37905ff85fc9a14d476a44bb7fa8a5cd1cb9e4ef5344b385"
+}

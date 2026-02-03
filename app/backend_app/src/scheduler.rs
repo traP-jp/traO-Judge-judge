@@ -1,20 +1,48 @@
 use std::sync::Arc;
 
+use crate::config::AppMode;
 use domain::repository::resource_id_counter::ResourceIdCounterRepository;
 use infra::provider::Provider;
-use judge_core::model::problem_registry::ProblemRegistryServer;
-
-#[cfg(feature = "prod")]
+use judge_core::model::identifiers::ResourceId;
+use judge_core::model::problem_registry::{ProblemRegistryServer, RegistrationError, RemovalError};
+use judge_infra_mock::multi_proc_problem_registry::registry_server::RegistryServer as MockRegistryServer;
 use problem_registry::server::ProblemRegistryServer as ProdProblemRegistryServer;
 use tokio_cron_scheduler::{Job, JobScheduler};
+
+#[derive(Clone)]
+enum RegistryServerRuntime {
+    Dev(MockRegistryServer),
+    Prod(ProdProblemRegistryServer),
+}
+
+#[axum::async_trait]
+impl ProblemRegistryServer for RegistryServerRuntime {
+    async fn register(
+        &self,
+        resource_id: ResourceId,
+        content: String,
+    ) -> Result<(), RegistrationError> {
+        match self {
+            RegistryServerRuntime::Dev(inner) => inner.register(resource_id, content).await,
+            RegistryServerRuntime::Prod(inner) => inner.register(resource_id, content).await,
+        }
+    }
+
+    async fn remove(&self, resource_id: ResourceId) -> Result<(), RemovalError> {
+        match self {
+            RegistryServerRuntime::Dev(inner) => inner.remove(resource_id).await,
+            RegistryServerRuntime::Prod(inner) => inner.remove(resource_id).await,
+        }
+    }
+}
 
 pub async fn init_scheduler(provider: &Provider) -> anyhow::Result<JobScheduler> {
     let sched = JobScheduler::new().await?;
 
-    #[cfg(feature = "dev")]
-    let pr_server = provider.provide_problem_registry_server();
-    #[cfg(feature = "prod")]
-    let pr_server = ProdProblemRegistryServer::new().await;
+    let pr_server = match AppMode::from_env() {
+        AppMode::Dev => RegistryServerRuntime::Dev(provider.provide_problem_registry_server()),
+        AppMode::Prod => RegistryServerRuntime::Prod(ProdProblemRegistryServer::new().await),
+    };
 
     let resource_id_counter_repo = Arc::new(provider.provide_resource_id_counter_repository());
     let problem_registry_server = Arc::new(pr_server);

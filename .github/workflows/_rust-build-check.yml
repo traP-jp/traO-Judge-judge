@@ -31,4 +31,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo-
     - name: Build applications
+      env:
+        SQLX_OFFLINE: true
       run: cargo build --locked --release --verbose --bin judge_control_app --bin backend_app --bin exec_app

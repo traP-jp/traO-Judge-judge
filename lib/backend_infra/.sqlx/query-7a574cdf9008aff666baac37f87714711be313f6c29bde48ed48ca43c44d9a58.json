@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            UPDATE \n                user_authentications\n            SET \n                password = ?\n            WHERE \n                user_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "7a574cdf9008aff666baac37f87714711be313f6c29bde48ed48ca43c44d9a58"
+}
