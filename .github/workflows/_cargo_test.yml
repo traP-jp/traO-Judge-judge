@@ -31,4 +31,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo-
     - name: Cargo test
+      env:
+        SQLX_OFFLINE: true
       run: cargo test --locked
