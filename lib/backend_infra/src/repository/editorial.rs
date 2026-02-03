@@ -43,7 +43,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
             WHERE 
                 id = ?
             "#,
-            id
+            UuidRow(id)
         )
         .fetch_optional(&self.pool)
         .await?;
@@ -129,7 +129,8 @@ impl EditorialRepository for EditorialRepositoryImpl {
                 is_public = ?,
                 title = ?
             WHERE 
-                id = ?"#,
+                id = ?
+            "#,
             query.statement,
             query.is_public,
             query.title,

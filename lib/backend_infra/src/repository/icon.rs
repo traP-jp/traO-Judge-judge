@@ -69,7 +69,7 @@ impl IconRepository for IconRepositoryImpl {
             WHERE 
                 id = ?
             "#,
-            UuidRow(id),
+            UuidRow(id)
         )
         .execute(&self.pool)
         .await?;

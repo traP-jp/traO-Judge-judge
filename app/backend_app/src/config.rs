@@ -1,4 +1,8 @@
+use std::sync::LazyLock;
+
 pub const APP_MODE_ENV: &str = "BACKEND_APP_MODE";
+
+static APP_MODE: LazyLock<Option<String>> = LazyLock::new(|| std::env::var(APP_MODE_ENV).ok());
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AppMode {
@@ -8,7 +12,7 @@ pub enum AppMode {
 
 impl AppMode {
     pub fn from_env() -> Self {
-        match std::env::var(APP_MODE_ENV).ok().as_deref() {
+        match APP_MODE.as_deref() {
             Some(value)
                 if value.eq_ignore_ascii_case("prod")
                     || value.eq_ignore_ascii_case("production") =>

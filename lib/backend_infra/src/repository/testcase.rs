@@ -63,7 +63,7 @@ impl TestcaseRepository for TestcaseRepositoryImpl {
             WHERE 
                 `id` = ?
             "#,
-            id
+            UuidRow(id)
         )
         .fetch_optional(&self.pool)
         .await?;
