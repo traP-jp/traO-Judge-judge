@@ -63,8 +63,9 @@ pub async fn run() -> anyhow::Result<()> {
     tracing::info!("listening on {}", listener.local_addr()?);
 
     if config::is_prod() {
-        let _ = traq_log::send_info_message(Some("BACKEND APP START"), "サーバーが起動されました。")
-            .await;
+        let _ =
+            traq_log::send_info_message(Some("BACKEND APP START"), "サーバーが起動されました。")
+                .await;
     }
 
     axum::serve(listener, app)

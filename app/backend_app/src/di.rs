@@ -1,4 +1,5 @@
 use crate::config::AppMode;
+use back_judge_grpc::client::RemoteJudgeServiceClient;
 use infra::{
     external::mail::MailClientImpl,
     provider::Provider,
@@ -11,7 +12,6 @@ use infra::{
         user::UserRepositoryImpl,
     },
 };
-use back_judge_grpc::client::RemoteJudgeServiceClient;
 use judge_core::{
     logic::judge_service_impl::JudgeServiceImpl,
     model::{

@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::config::AppMode;
 use domain::repository::resource_id_counter::ResourceIdCounterRepository;
 use infra::provider::Provider;
 use judge_core::model::identifiers::ResourceId;
@@ -7,7 +8,6 @@ use judge_core::model::problem_registry::{ProblemRegistryServer, RegistrationErr
 use judge_infra_mock::multi_proc_problem_registry::registry_server::RegistryServer as MockRegistryServer;
 use problem_registry::server::ProblemRegistryServer as ProdProblemRegistryServer;
 use tokio_cron_scheduler::{Job, JobScheduler};
-use crate::config::AppMode;
 
 #[derive(Clone)]
 enum RegistryServerRuntime {
