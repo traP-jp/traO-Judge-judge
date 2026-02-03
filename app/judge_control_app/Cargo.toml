@@ -5,7 +5,6 @@ edition = { workspace = true }
 
 [dependencies]
 anyhow = { workspace = true }
-back_judge_grpc = { path = "../../lib/back_judge_grpc" }
 job_service = { path = "../../lib/job_service" }
 judge_core = { path = "../../lib/judge_core" }
 judge_infra_mock = { path = "../../lib/judge_infra_mock" }
