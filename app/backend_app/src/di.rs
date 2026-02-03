@@ -1,9 +1,4 @@
-#[cfg(all(feature = "dev", feature = "prod"))]
-compile_error!("Cannot enable both 'dev' and 'prod' features");
-
-#[cfg(not(any(feature = "dev", feature = "prod")))]
-compile_error!("Either 'dev' or 'prod' feature must be enabled");
-
+use crate::config::AppMode;
 use infra::{
     external::mail::MailClientImpl,
     provider::Provider,
@@ -16,7 +11,27 @@ use infra::{
         user::UserRepositoryImpl,
     },
 };
-use judge_core::logic::judge_service_impl::JudgeServiceImpl;
+use back_judge_grpc::client::RemoteJudgeServiceClient;
+use judge_core::{
+    logic::judge_service_impl::JudgeServiceImpl,
+    model::{
+        identifiers::ResourceId,
+        judge::{JudgeRequest, JudgeResponse, JudgeService},
+        problem_registry::{
+            ProblemRegistryClient, ProblemRegistryServer, RegistrationError, RemovalError,
+            ResourceFetchError,
+        },
+    },
+};
+use judge_infra_mock::job_service::{job_service as mock_job_service, tokens as mock_tokens};
+use judge_infra_mock::multi_proc_problem_registry::{
+    registry_client::RegistryClient as MockRegistryClient,
+    registry_server::RegistryServer as MockRegistryServer,
+};
+use problem_registry::{
+    client::ProblemRegistryClient as ProdProblemRegistryClient,
+    server::ProblemRegistryServer as ProdProblemRegistryServer,
+};
 use usecase::service::{
     auth::AuthenticationService, editorial::EditorialService, github_oauth2::GitHubOAuth2Service,
     google_oauth2::GoogleOAuth2Service, icon::IconService, language::LanguageService,
@@ -24,37 +39,74 @@ use usecase::service::{
     traq_oauth2::TraqOAuth2Service, user::UserService,
 };
 
-#[cfg(feature = "dev")]
-use judge_infra_mock::job_service::{job_service as mock_job_service, tokens as mock_tokens};
-#[cfg(feature = "dev")]
-use judge_infra_mock::multi_proc_problem_registry::{
-    registry_client::RegistryClient as MockRegistryClient,
-    registry_server::RegistryServer as MockRegistryServer,
-};
-
-#[cfg(feature = "prod")]
-use back_judge_grpc::client::RemoteJudgeServiceClient;
-#[cfg(feature = "prod")]
-use problem_registry::{client::ProblemRegistryClient, server::ProblemRegistryServer};
-
-#[cfg(feature = "dev")]
-type RegistryServerImpl = MockRegistryServer;
-#[cfg(feature = "dev")]
-type RegistryClientImpl = MockRegistryClient;
-
-#[cfg(feature = "prod")]
-type RegistryServerImpl = ProblemRegistryServer;
-#[cfg(feature = "prod")]
-type RegistryClientImpl = ProblemRegistryClient;
-
-#[cfg(feature = "dev")]
-type JudgeSvcImpl = JudgeServiceImpl<
+type DevJudgeService = JudgeServiceImpl<
     mock_tokens::RegistrationToken,
     mock_tokens::OutcomeToken,
     mock_job_service::JobService<MockRegistryClient>,
 >;
-#[cfg(feature = "prod")]
-type JudgeSvcImpl = RemoteJudgeServiceClient;
+
+#[derive(Clone)]
+enum RegistryServerRuntime {
+    Dev(MockRegistryServer),
+    Prod(ProdProblemRegistryServer),
+}
+
+#[axum::async_trait]
+impl ProblemRegistryServer for RegistryServerRuntime {
+    async fn register(
+        &self,
+        resource_id: ResourceId,
+        content: String,
+    ) -> Result<(), RegistrationError> {
+        match self {
+            RegistryServerRuntime::Dev(inner) => inner.register(resource_id, content).await,
+            RegistryServerRuntime::Prod(inner) => inner.register(resource_id, content).await,
+        }
+    }
+
+    async fn remove(&self, resource_id: ResourceId) -> Result<(), RemovalError> {
+        match self {
+            RegistryServerRuntime::Dev(inner) => inner.remove(resource_id).await,
+            RegistryServerRuntime::Prod(inner) => inner.remove(resource_id).await,
+        }
+    }
+}
+
+#[derive(Clone)]
+enum RegistryClientRuntime {
+    Dev(MockRegistryClient),
+    Prod(ProdProblemRegistryClient),
+}
+
+#[axum::async_trait]
+impl ProblemRegistryClient for RegistryClientRuntime {
+    async fn fetch(&self, resource_id: ResourceId) -> Result<String, ResourceFetchError> {
+        match self {
+            RegistryClientRuntime::Dev(inner) => inner.fetch(resource_id).await,
+            RegistryClientRuntime::Prod(inner) => inner.fetch(resource_id).await,
+        }
+    }
+}
+
+#[derive(Clone)]
+enum JudgeServiceRuntime {
+    Dev(DevJudgeService),
+    Prod(RemoteJudgeServiceClient),
+}
+
+#[axum::async_trait]
+impl JudgeService for JudgeServiceRuntime {
+    async fn judge(&self, request: JudgeRequest) -> JudgeResponse {
+        match self {
+            JudgeServiceRuntime::Dev(inner) => inner.judge(request).await,
+            JudgeServiceRuntime::Prod(inner) => inner.judge(request).await,
+        }
+    }
+}
+
+type RegistryServerImpl = RegistryServerRuntime;
+type RegistryClientImpl = RegistryClientRuntime;
+type JudgeSvcImpl = JudgeServiceRuntime;
 
 type AuthSvc = AuthenticationService<
     AuthRepositoryImpl,
@@ -128,25 +180,27 @@ pub struct DiContainer {
 
 impl DiContainer {
     pub async fn new(provider: Provider) -> Self {
-        #[cfg(feature = "dev")]
-        let pr_server: RegistryServerImpl = provider.provide_problem_registry_server();
-        #[cfg(feature = "dev")]
-        let pr_client: RegistryClientImpl = provider.provide_problem_registry_client();
+        let mode = AppMode::from_env();
 
-        #[cfg(feature = "prod")]
-        let pr_server: RegistryServerImpl = ProblemRegistryServer::new().await;
-        #[cfg(feature = "prod")]
-        let pr_client: RegistryClientImpl = ProblemRegistryClient::new().await;
+        let pr_server: RegistryServerImpl = match mode {
+            AppMode::Dev => RegistryServerRuntime::Dev(provider.provide_problem_registry_server()),
+            AppMode::Prod => RegistryServerRuntime::Prod(ProdProblemRegistryServer::new().await),
+        };
+        let pr_client: RegistryClientImpl = match mode {
+            AppMode::Dev => RegistryClientRuntime::Dev(provider.provide_problem_registry_client()),
+            AppMode::Prod => RegistryClientRuntime::Prod(ProdProblemRegistryClient::new().await),
+        };
 
-        #[cfg(feature = "dev")]
-        let judge_service: JudgeSvcImpl = provider.provide_judge_service();
-        #[cfg(feature = "prod")]
-        let judge_service: JudgeSvcImpl = {
-            let uri = std::env::var("JUDGE_SERVICE_GRPC_URI")
-                .unwrap_or_else(|_| "http://localhost:50051".to_string());
-            RemoteJudgeServiceClient::new(&uri)
-                .await
-                .expect("Failed to create RemoteJudgeServiceClient")
+        let judge_service: JudgeSvcImpl = match mode {
+            AppMode::Dev => JudgeServiceRuntime::Dev(provider.provide_judge_service()),
+            AppMode::Prod => {
+                let uri = std::env::var("JUDGE_SERVICE_GRPC_URI")
+                    .unwrap_or_else(|_| "http://localhost:50051".to_string());
+                let client = RemoteJudgeServiceClient::new(&uri)
+                    .await
+                    .expect("Failed to create RemoteJudgeServiceClient");
+                JudgeServiceRuntime::Prod(client)
+            }
         };
 
         Self {

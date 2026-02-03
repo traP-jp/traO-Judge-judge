@@ -15,10 +15,10 @@ http-body-util = { workspace = true }
 infra = { path = "../../lib/backend_infra" }
 jsonwebtoken = { workspace = true }
 judge_core = { version = "0.1.0", path = "../../lib/judge_core" }
-judge_infra_mock = { path = "../../lib/judge_infra_mock", optional = true }
-problem_registry = { path = "../../lib/problem_registry", optional = true }
-back_judge_grpc = { path = "../../lib/back_judge_grpc", optional = true }
-traq_log = { path = "../../lib/traq_log", optional = true }
+judge_infra_mock = { path = "../../lib/judge_infra_mock" }
+problem_registry = { path = "../../lib/problem_registry" }
+back_judge_grpc = { path = "../../lib/back_judge_grpc" }
+traq_log = { path = "../../lib/traq_log" }
 lettre = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -32,8 +32,3 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 usecase = { path = "../../lib/backend_usecase" }
 uuid = { workspace = true }
-
-[features]
-default = ["dev"]
-dev = ["judge_infra_mock"]
-prod = ["problem_registry", "back_judge_grpc", "traq_log"]
