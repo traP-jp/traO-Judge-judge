@@ -59,11 +59,11 @@ impl ProcedureRepository for ProcedureRepositoryImpl {
     }
 
     async fn get_procedure(&self, problem_id: i64) -> anyhow::Result<Option<Procedure>> {
-        let procedure_row = sqlx::query_as_unchecked!(
+        let procedure_row = sqlx::query_as!(
             ProcedureRow,
             r#"
             SELECT 
-                `procedure` 
+                `procedure` AS "procedure: _"
             FROM 
                 `procedures` 
             WHERE 

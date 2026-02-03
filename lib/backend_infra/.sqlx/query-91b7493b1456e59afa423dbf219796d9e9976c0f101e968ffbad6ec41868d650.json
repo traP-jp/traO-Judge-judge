@@ -1,11 +1,11 @@
 {
   "db_name": "MySQL",
-  "query": "\n            SELECT \n                `procedure` \n            FROM \n                `procedures` \n            WHERE \n                `problem_id` = ?\n            ",
+  "query": "\n            SELECT \n                `procedure` AS \"procedure: _\"\n            FROM \n                `procedures` \n            WHERE \n                `problem_id` = ?\n            ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "procedure",
+        "name": "procedure: _",
         "type_info": {
           "type": "Blob",
           "flags": "NOT_NULL | BLOB | NO_DEFAULT_VALUE",
@@ -21,5 +21,5 @@
       false
     ]
   },
-  "hash": "2ecba612c2c7d754f3f954a026e69b5ef81f524a91f7032e27053a6202215ea5"
+  "hash": "91b7493b1456e59afa423dbf219796d9e9976c0f101e968ffbad6ec41868d650"
 }
