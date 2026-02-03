@@ -266,7 +266,10 @@ impl AuthRepository for AuthRepositoryImpl {
         sqlx::query!(
             r#"
             INSERT INTO 
-                user_authentications (user_id, google_oauth)
+                user_authentications (
+                    user_id, 
+                    google_oauth
+                )
             VALUES 
                 (?, ?)
             "#,
