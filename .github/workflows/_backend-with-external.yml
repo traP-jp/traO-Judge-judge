@@ -36,15 +36,17 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}_Integration_test(backend)
-        
-    - name: run minio
-      run: |
-          docker run -d -p 9000:9000 --name minio \
-                     -e "MINIO_ACCESS_KEY=access_key" \
-                     -e "MINIO_SECRET_KEY=secret_key" \
-                     -v /tmp/data:/data \
-                     -v /tmp/config:/root/.minio \
-                     minio/minio server /data
+      
+    - name: Install sqlx-cli
+      uses: taiki-e/install-action@v2
+      with:
+        tool: sqlx-cli
+
+    - name: Run migrate
+      working-directory: lib/backend_infra
+      env:
+        DATABASE_URL: mysql://root:password@localhost:3306/world
+      run: cargo sqlx migrate run 
 
     - name: Run migrate
       working-directory: lib/backend_infra
@@ -55,4 +57,6 @@ jobs:
     - name: Run backend test
       env:
         CODEGEN_SKIP: true
-      run: source app/backend_app/.env.dev && cargo test -- --ignored backend
+      run: |
+        source app/backend_app/.env.dev
+        cargo test -- --ignored backend
