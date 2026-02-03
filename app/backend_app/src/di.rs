@@ -46,7 +46,7 @@ type DevJudgeService = JudgeServiceImpl<
 >;
 
 #[derive(Clone)]
-enum RegistryServerRuntime {
+pub enum RegistryServerRuntime {
     Dev(MockRegistryServer),
     Prod(ProdProblemRegistryServer),
 }
@@ -73,7 +73,7 @@ impl ProblemRegistryServer for RegistryServerRuntime {
 }
 
 #[derive(Clone)]
-enum RegistryClientRuntime {
+pub enum RegistryClientRuntime {
     Dev(MockRegistryClient),
     Prod(ProdProblemRegistryClient),
 }
@@ -89,7 +89,7 @@ impl ProblemRegistryClient for RegistryClientRuntime {
 }
 
 #[derive(Clone)]
-enum JudgeServiceRuntime {
+pub enum JudgeServiceRuntime {
     Dev(DevJudgeService),
     Prod(RemoteJudgeServiceClient),
 }
