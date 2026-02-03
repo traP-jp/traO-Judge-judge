@@ -22,20 +22,51 @@ impl TestcaseRepositoryImpl {
 #[async_trait]
 impl TestcaseRepository for TestcaseRepositoryImpl {
     async fn get_testcases(&self, problem_id: i64) -> anyhow::Result<Vec<TestcaseSummary>> {
-        let testcases =
-            sqlx::query_as::<_, TestcaseRow>("SELECT * FROM `testcases` WHERE `problem_id` = ?")
-                .bind(problem_id)
-                .fetch_all(&self.pool)
-                .await?;
+        let testcases = sqlx::query_as!(
+            TestcaseRow,
+            r#"
+                SELECT 
+                    id AS "id: _",
+                    name,
+                    problem_id,
+                    input_id AS "input_id: _",
+                    output_id AS "output_id: _",
+                    created_at AS "created_at: _",
+                    updated_at AS "updated_at: _"
+                FROM 
+                    `testcases` 
+                WHERE 
+                    `problem_id` = ?
+                "#,
+            problem_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(testcases.into_iter().map(|row| row.into()).collect())
     }
 
     async fn get_testcase(&self, id: Uuid) -> anyhow::Result<Option<TestcaseSummary>> {
-        let testcase = sqlx::query_as::<_, TestcaseRow>("SELECT * FROM `testcases` WHERE `id` = ?")
-            .bind(id)
-            .fetch_optional(&self.pool)
-            .await?;
+        let testcase = sqlx::query_as!(
+            TestcaseRow,
+            r#"
+            SELECT
+                id AS "id: _",
+                name,
+                problem_id,
+                input_id AS "input_id: _",
+                output_id AS "output_id: _",
+                created_at AS "created_at: _",
+                updated_at AS "updated_at: _"
+            FROM 
+                `testcases` 
+            WHERE 
+                `id` = ?
+            "#,
+            id
+        )
+        .fetch_optional(&self.pool)
+        .await?;
 
         Ok(testcase.map(|row| row.into()))
     }
@@ -46,7 +77,17 @@ impl TestcaseRepository for TestcaseRepositoryImpl {
         }
 
         let mut query_builder = sqlx::QueryBuilder::new(
-            "INSERT INTO `testcases` (`id`, `problem_id`, `name`, `input_id`, `output_id`) VALUES ",
+            r#"
+            INSERT INTO 
+                `testcases` (
+                    `id`, 
+                    `problem_id`, 
+                    `name`, 
+                    `input_id`, 
+                    `output_id`
+                ) 
+            VALUES 
+            "#,
         );
 
         let mut separated = query_builder.separated(", ");
@@ -70,10 +111,17 @@ impl TestcaseRepository for TestcaseRepositoryImpl {
     }
 
     async fn delete_testcases(&self, problem_id: i64) -> anyhow::Result<()> {
-        sqlx::query("DELETE FROM `testcases` WHERE `problem_id` = ?")
-            .bind(problem_id)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            DELETE FROM 
+                `testcases` 
+            WHERE 
+                `problem_id` = ?
+            "#,
+            problem_id
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }

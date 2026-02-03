@@ -55,7 +55,17 @@ impl ProblemRepository for ProblemRepositoryImpl {
         query: ProblemGetQuery,
     ) -> anyhow::Result<Vec<NormalProblem>> {
         let mut query_builder = QueryBuilder::new(
-            "SELECT normal_problems.*, users.name, users.display_id FROM normal_problems LEFT JOIN users ON normal_problems.author_id = users.display_id WHERE",
+            r#"
+            SELECT 
+                normal_problems.*, 
+                users.name, 
+                users.display_id 
+            FROM 
+                normal_problems
+                INNER JOIN 
+                    users 
+                        ON normal_problems.author_id = users.display_id 
+            WHERE"#,
         );
 
         query_builder.push(" (normal_problems.is_public = TRUE");

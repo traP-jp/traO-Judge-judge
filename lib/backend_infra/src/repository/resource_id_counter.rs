@@ -49,8 +49,16 @@ impl ResourceIdCounterRepository for ResourceIdCounterRepositoryImpl {
             return Ok(());
         }
 
-        let mut query_builder =
-            sqlx::QueryBuilder::new("DELETE FROM resource_id_counter WHERE resource_id IN (");
+        let mut query_builder = sqlx::QueryBuilder::new(
+            r#"
+                DELETE FROM 
+                    resource_id_counter
+                WHERE
+                    resource_id
+                IN
+                    (
+                "#,
+        );
 
         let mut separated = query_builder.separated(", ");
         for id in ids.iter() {
@@ -69,7 +77,15 @@ impl ResourceIdCounterRepository for ResourceIdCounterRepositoryImpl {
         }
 
         let mut query_builder = sqlx::QueryBuilder::new(
-            "UPDATE resource_id_counter SET updated_at = NOW() WHERE resource_id IN (",
+            r#"
+            UPDATE 
+                resource_id_counter
+            SET 
+                updated_at = NOW() 
+            WHERE 
+                resource_id 
+            IN 
+                ("#,
         );
 
         let mut separated = query_builder.separated(", ");
