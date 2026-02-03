@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            DELETE FROM \n                icons \n            WHERE \n                id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "30f036b12350ddd460aa874607e9a9f057f7d38484b75e3cbef17489336de860"
+}
