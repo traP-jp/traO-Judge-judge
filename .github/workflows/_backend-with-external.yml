@@ -47,4 +47,7 @@ jobs:
                      minio/minio server /data
 
     - name: Run test
-      run: export CODEGEN_SKIP=true && source app/backend_app/.env.dev && cargo test -- --ignored backend
+      env:
+        CODEGEN_SKIP: true
+        SQLX_OFFLINE: true
+      run: source app/backend_app/.env.dev && cargo test -- --ignored backend
