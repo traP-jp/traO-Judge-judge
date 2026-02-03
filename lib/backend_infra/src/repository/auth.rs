@@ -120,7 +120,7 @@ impl AuthRepository for AuthRepositoryImpl {
         let hash = sqlx::query_scalar!(
             r#"
             SELECT
-                password AS "password!"
+                password
             FROM
                 user_authentications
             WHERE
@@ -131,7 +131,11 @@ impl AuthRepository for AuthRepositoryImpl {
         .fetch_one(&self.pool)
         .await?;
 
-        Ok(bcrypt::verify(password, &hash)?)
+        if let Some(hash) = hash {
+            Ok(bcrypt::verify(password, &hash)?)
+        } else {
+            Ok(false)
+        }
     }
 
     async fn update_user_email(&self, id: UserId, email: &str) -> anyhow::Result<()> {

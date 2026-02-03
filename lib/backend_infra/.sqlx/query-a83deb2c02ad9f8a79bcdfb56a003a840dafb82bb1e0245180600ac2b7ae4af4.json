@@ -1,11 +1,11 @@
 {
   "db_name": "MySQL",
-  "query": "\n            SELECT\n                password AS \"password!\"\n            FROM\n                user_authentications\n            WHERE\n                user_id = ?\n            ",
+  "query": "\n            SELECT\n                password\n            FROM\n                user_authentications\n            WHERE\n                user_id = ?\n            ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "password!",
+        "name": "password",
         "type_info": {
           "type": "VarString",
           "flags": "",
@@ -21,5 +21,5 @@
       true
     ]
   },
-  "hash": "2e97784fc1f3631e8d2fb5286cb2d514292f37ad49883328bf7360a7976bacb9"
+  "hash": "a83deb2c02ad9f8a79bcdfb56a003a840dafb82bb1e0245180600ac2b7ae4af4"
 }
