@@ -875,23 +875,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "back_judge_grpc"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "judge_core",
- "prost",
- "prost-types",
- "tonic",
- "tonic-build",
- "tonic-types",
- "tonic-web",
- "tracing",
- "uuid",
-]
-
-[[package]]
 name = "backend_app"
 version = "0.1.0"
 dependencies = [
@@ -899,7 +882,6 @@ dependencies = [
  "async-session",
  "axum",
  "axum-extra",
- "back_judge_grpc",
  "bcrypt",
  "domain",
  "fancy-regex",
@@ -2927,7 +2909,6 @@ name = "judge_control_app"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "back_judge_grpc",
  "job_service",
  "judge_core",
  "judge_infra_mock",
