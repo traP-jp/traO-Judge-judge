@@ -79,7 +79,7 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
 
         let mut separated = query_builder.separated(", ");
         for dep_id in dep_ids.iter() {
-            separated.push_bind(UuidRow(dep_id.clone().into()));
+            separated.push_bind(UuidRow((*dep_id).into()));
         }
         query_builder.push(")");
 
@@ -94,9 +94,7 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
         }
 
         for dep_id in dep_ids {
-            if !dep_id_to_name.contains_key(&dep_id) {
-                dep_id_to_name.insert(dep_id, None);
-            }
+            dep_id_to_name.entry(dep_id).or_insert(None);
         }
 
         Ok(dep_id_to_name)

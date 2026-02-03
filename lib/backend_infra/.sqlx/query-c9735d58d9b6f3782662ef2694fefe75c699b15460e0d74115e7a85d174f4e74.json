@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            UPDATE \n                `procedures` \n            SET \n                `procedure` = ? \n            WHERE \n                `problem_id` = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "c9735d58d9b6f3782662ef2694fefe75c699b15460e0d74115e7a85d174f4e74"
+}

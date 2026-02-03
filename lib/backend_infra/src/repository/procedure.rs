@@ -1,4 +1,4 @@
-use axum::{Json, async_trait};
+use axum::async_trait;
 use domain::repository::procedure::ProcedureRepository;
 use judge_core::model::procedure::registered::Procedure;
 use sqlx::MySqlPool;
@@ -49,7 +49,8 @@ impl ProcedureRepository for ProcedureRepositoryImpl {
             SET 
                 `procedure` = ? 
             WHERE 
-                `problem_id` = ?"#,
+                `problem_id` = ?
+            "#,
             sqlx::types::Json(procedure),
             problem_id
         )

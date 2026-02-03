@@ -13,7 +13,7 @@ pub struct LanguageRepositoryImpl {
 impl LanguageRepositoryImpl {
     pub fn new() -> Self {
         LanguageRepositoryImpl {
-            languages: load_languages().unwrap_or(Vec::new()),
+            languages: load_languages().unwrap_or_default(),
         }
     }
 }
