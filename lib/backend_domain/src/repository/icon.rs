@@ -1,11 +1,10 @@
 use axum::async_trait;
-use uuid::Uuid;
 
-use crate::model::icon::Icon;
+use crate::model::icon::{CreateIcon, Icon, IconId};
 
 #[async_trait]
 pub trait IconRepository {
-    async fn get_icon(&self, id: Uuid) -> anyhow::Result<Option<Icon>>;
-    async fn create_icon(&self, icon: Icon) -> anyhow::Result<()>;
-    async fn delete_icon(&self, id: Uuid) -> anyhow::Result<()>;
+    async fn get_icon(&self, id: IconId) -> anyhow::Result<Option<Icon>>;
+    async fn create_icon(&self, create_icon: CreateIcon) -> anyhow::Result<IconId>;
+    async fn delete_icon(&self, id: IconId) -> anyhow::Result<()>;
 }

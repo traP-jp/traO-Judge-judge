@@ -1,3 +1,4 @@
+use crate::model::user::UserDisplayId;
 use aes_gcm::{
     Aes256Gcm, KeyInit,
     aead::{Aead, AeadCore, OsRng},
@@ -92,7 +93,7 @@ impl AuthToken {
         jwt: &str,
         encode_key: &str,
         encrypt_key: &str,
-    ) -> anyhow::Result<(Option<String>, Option<i64>)> {
+    ) -> anyhow::Result<(Option<String>, Option<UserDisplayId>)> {
         let token = jsonwebtoken::decode::<Self>(
             jwt,
             &jsonwebtoken::DecodingKey::from_secret(encode_key.as_ref()),
@@ -101,7 +102,10 @@ impl AuthToken {
 
         let auth_info = AuthInfo::decrypt(&token.claims.payload, encrypt_key)?;
 
-        Ok((auth_info.email, auth_info.user_id))
+        Ok((
+            auth_info.email,
+            auth_info.user_id.map(|id| UserDisplayId(id)),
+        ))
     }
 
     pub fn get_email(
