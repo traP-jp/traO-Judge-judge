@@ -3,28 +3,7 @@ use sqlx::types::chrono;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UserId(pub Uuid);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UserDisplayId(pub i64);
-
-impl std::fmt::Display for UserDisplayId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl Into<i64> for UserDisplayId {
-    fn into(self) -> i64 {
-        self.0
-    }
-}
-
-impl From<i64> for UserDisplayId {
-    fn from(id: i64) -> Self {
-        Self(id)
-    }
-}
+pub struct UserId(Uuid);
 
 impl UserId {
     pub fn new(id: Uuid) -> Self {
@@ -47,6 +26,27 @@ impl From<UserId> for Uuid {
 impl std::fmt::Display for UserId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct UserDisplayId(i64);
+
+impl std::fmt::Display for UserDisplayId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Into<i64> for UserDisplayId {
+    fn into(self) -> i64 {
+        self.0
+    }
+}
+
+impl From<i64> for UserDisplayId {
+    fn from(id: i64) -> Self {
+        Self(id)
     }
 }
 
