@@ -521,8 +521,8 @@ mod signup_tests {
 
     fn get_user() -> User {
         User {
-            id: UserId(Uuid::now_v7()),
-            display_id: 0,
+            id: Uuid::now_v7().into(),
+            display_id: 0.into(),
             name: "name".to_string(),
             traq_id: None,
             github_id: None,
@@ -622,7 +622,7 @@ mod login_tests {
     use super::*;
     use domain::{
         external::mail::MockMailClient,
-        model::user::{User, UserId, UserRole},
+        model::user::{User, UserRole},
         repository::{
             auth::MockAuthRepository, session::MockSessionRepository, user::MockUserRepository,
         },
@@ -633,8 +633,8 @@ mod login_tests {
 
     fn get_user() -> User {
         User {
-            id: UserId(Uuid::now_v7()),
-            display_id: 0,
+            id: Uuid::now_v7().into(),
+            display_id: 0.into(),
             name: "name".to_string(),
             traq_id: None,
             github_id: None,
@@ -914,8 +914,8 @@ mod reset_password_tests {
 
     fn get_user() -> User {
         User {
-            id: UserId(Uuid::now_v7()),
-            display_id: 0,
+            id: Uuid::now_v7().into(),
+            display_id: 0.into(),
             name: "name".to_string(),
             traq_id: None,
             github_id: None,
@@ -947,7 +947,7 @@ mod reset_password_tests {
 
         auth_mock
             .expect_get_user_id_by_email()
-            .returning(|_| Ok(Some(UserId(Uuid::now_v7()))));
+            .returning(|_| Ok(Some(Uuid::now_v7().into())));
         auth_mock
             .expect_update_user_password()
             .returning(|_, _| Ok(()));

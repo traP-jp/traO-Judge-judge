@@ -100,10 +100,11 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
                 let session_id = session_id.ok_or(UsecaseError::Unauthorized)?;
                 let user_id = self
                     .session_repository
-                    .get_user_id_by_session_id(session_id)
+                    .get_session_user(session_id)
                     .await
                     .map_err(UsecaseError::internal_server_error_map())?
-                    .ok_or(UsecaseError::Unauthorized)?;
+                    .ok_or(UsecaseError::Unauthorized)?
+                    .user_id;
                 self.auth_repository
                     .update_user_google_oauth(user_id, &google_oauth)
                     .await
@@ -125,10 +126,11 @@ impl<AR: AuthRepository, SR: SessionRepository, UR: UserRepository>
     ) -> anyhow::Result<(), UsecaseError> {
         let user_id = if let Some(session_id) = session_id {
             self.session_repository
-                .get_user_id_by_session_id(session_id)
+                .get_session_user(session_id)
                 .await
                 .map_err(UsecaseError::internal_server_error_map())?
                 .ok_or(UsecaseError::BadRequest)?
+                .user_id
         } else {
             return Err(UsecaseError::BadRequest);
         };

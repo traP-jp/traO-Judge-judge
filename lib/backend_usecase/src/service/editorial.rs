@@ -2,13 +2,15 @@ use crate::model::{
     editorial::{CreateEditorialData, EditorialDto, EditorialSummaryDto, UpdateEditorialData},
     error::UsecaseError,
 };
+use domain::model::editorial::EditorialId;
+use domain::model::problem::ProblemId;
+use domain::model::session::SessionUser;
 use domain::{
     model::editorial::{CreateEditorial, EditorialGetQuery, UpdateEditorial},
     repository::{
         editorial::EditorialRepository, problem::ProblemRepository, session::SessionRepository,
     },
 };
-use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct EditorialService<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository> {
@@ -34,21 +36,9 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
 {
     pub async fn get_editorial(
         &self,
-        session_id: Option<&str>,
-        editorial_id: String,
+        session_user: Option<SessionUser>,
+        editorial_id: EditorialId,
     ) -> anyhow::Result<EditorialDto, UsecaseError> {
-        let editorial_id =
-            Uuid::parse_str(&editorial_id).map_err(|_| UsecaseError::ValidateError)?;
-
-        let user_id = match session_id {
-            Some(session_id) => self
-                .session_repository
-                .get_display_id_by_session_id(session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?,
-            None => None,
-        };
-
         let editorial = self
             .editorial_repository
             .get_editorial(editorial_id)
@@ -56,7 +46,11 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
-        if !editorial.is_public && user_id.is_none_or(|x| x != editorial.author_id) {
+        if !editorial.is_public
+            && session_user
+                .as_ref()
+                .is_none_or(|x| x.display_id != editorial.author_id)
+        {
             return Err(UsecaseError::NotFound);
         }
 
@@ -67,7 +61,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
-        if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
+        if !problem.is_public && session_user.is_none_or(|x| x.display_id != problem.author_id) {
             return Err(UsecaseError::NotFound);
         }
 
@@ -76,22 +70,9 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
 
     pub async fn get_editorials(
         &self,
-        session_id: Option<&str>,
-        problem_id: String,
+        session_user: Option<SessionUser>,
+        problem_id: ProblemId,
     ) -> anyhow::Result<Vec<EditorialSummaryDto>, UsecaseError> {
-        let problem_id: i64 = problem_id
-            .parse()
-            .map_err(|_| UsecaseError::ValidateError)?;
-
-        let user_id = match session_id {
-            Some(session_id) => self
-                .session_repository
-                .get_display_id_by_session_id(session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?,
-            None => None,
-        };
-
         let problem = self
             .problem_repository
             .get_problem(problem_id)
@@ -99,12 +80,16 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
-        if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
+        if !problem.is_public
+            && session_user
+                .as_ref()
+                .is_none_or(|x| x.display_id != problem.author_id)
+        {
             return Err(UsecaseError::NotFound);
         }
 
         let query = EditorialGetQuery {
-            user_id,
+            user_id: session_user.as_ref().map(|u| u.display_id),
             problem_id,
             limit: 50,
             offset: 0,
@@ -121,14 +106,10 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
 
     pub async fn post_editorial(
         &self,
-        session_id: Option<&str>,
-        problem_id: String,
+        session_user: Option<SessionUser>,
+        problem_id: ProblemId,
         query: CreateEditorialData,
     ) -> anyhow::Result<EditorialDto, UsecaseError> {
-        let problem_id: i64 = problem_id
-            .parse()
-            .map_err(|_| UsecaseError::ValidateError)?;
-
         let problem = self
             .problem_repository
             .get_problem(problem_id)
@@ -136,24 +117,21 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
-        let user_id = match session_id {
-            Some(session_id) => self
-                .session_repository
-                .get_display_id_by_session_id(session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?,
-            None => None,
-        };
+        let session_user = session_user.ok_or_else(|| {
+            if !problem.is_public {
+                UsecaseError::NotFound
+            } else {
+                UsecaseError::Forbidden
+            }
+        })?;
 
-        if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
+        if !problem.is_public && session_user.display_id != problem.author_id {
             return Err(UsecaseError::NotFound);
         }
 
-        let user_id = user_id.ok_or(UsecaseError::Forbidden)?;
-
         let editorial = CreateEditorial {
             problem_id,
-            author_id: user_id,
+            author_id: session_user.display_id,
             title: query.title,
             statement: query.statement,
             is_public: query.is_public,
@@ -181,31 +159,28 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
 
     pub async fn put_editorial(
         &self,
-        session_id: Option<&str>,
-        editorial_id: String,
+        session_user: Option<SessionUser>,
+        editorial_id: EditorialId,
         query: UpdateEditorialData,
     ) -> anyhow::Result<(), UsecaseError> {
-        let editorial_id =
-            Uuid::parse_str(&editorial_id).map_err(|_| UsecaseError::ValidateError)?;
-
-        let user_id = match session_id {
-            Some(session_id) => self
-                .session_repository
-                .get_display_id_by_session_id(session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?,
-            None => None,
-        };
-
         let editorial = self
             .editorial_repository
             .get_editorial(editorial_id)
             .await
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
-
-        if !editorial.is_public && user_id.is_none_or(|x| x != editorial.author_id) {
+        let session_user = session_user.ok_or_else(|| {
+            if !editorial.is_public {
+                UsecaseError::NotFound
+            } else {
+                UsecaseError::Forbidden
+            }
+        })?;
+        if !editorial.is_public && session_user.display_id != editorial.author_id {
             return Err(UsecaseError::NotFound);
+        }
+        if session_user.display_id != editorial.author_id {
+            return Err(UsecaseError::Forbidden);
         }
 
         let problem = self
@@ -214,15 +189,8 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .await
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
-
-        if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
+        if !problem.is_public && session_user.display_id != problem.author_id {
             return Err(UsecaseError::NotFound);
-        }
-
-        let user_id = user_id.ok_or(UsecaseError::Forbidden)?;
-
-        if user_id != editorial.author_id {
-            return Err(UsecaseError::Forbidden);
         }
 
         let editorial = UpdateEditorial {
@@ -242,30 +210,28 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
 
     pub async fn delete_editorial(
         &self,
-        session_id: Option<&str>,
-        editorial_id: String,
+        session_id: Option<SessionUser>,
+        editorial_id: EditorialId,
     ) -> anyhow::Result<(), UsecaseError> {
-        let editorial_id =
-            Uuid::parse_str(&editorial_id).map_err(|_| UsecaseError::ValidateError)?;
-
-        let user_id = match session_id {
-            Some(session_id) => self
-                .session_repository
-                .get_display_id_by_session_id(session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?,
-            None => None,
-        };
-
         let editorial = self
             .editorial_repository
             .get_editorial(editorial_id)
             .await
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
+        let session_user = session_id.ok_or_else(|| {
+            if !editorial.is_public {
+                UsecaseError::NotFound
+            } else {
+                UsecaseError::Forbidden
+            }
+        })?;
 
-        if !editorial.is_public && user_id.is_none_or(|x| x != editorial.author_id) {
+        if !editorial.is_public && session_user.display_id != editorial.author_id {
             return Err(UsecaseError::NotFound);
+        }
+        if session_user.display_id != editorial.author_id {
+            return Err(UsecaseError::Forbidden);
         }
 
         let problem = self
@@ -274,14 +240,8 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .await
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
-        if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
+        if !problem.is_public && session_user.display_id != problem.author_id {
             return Err(UsecaseError::NotFound);
-        }
-
-        let user_id = user_id.ok_or(UsecaseError::Forbidden)?;
-
-        if user_id != editorial.author_id {
-            return Err(UsecaseError::Forbidden);
         }
 
         self.editorial_repository

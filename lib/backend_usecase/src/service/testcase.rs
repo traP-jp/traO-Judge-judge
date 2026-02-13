@@ -1,8 +1,11 @@
 use domain::{
-    model::testcase::CreateTestcase,
+    model::{
+        problem::ProblemId,
+        session::{self, SessionUser},
+        testcase::{CreateTestcase, TestcaseId},
+    },
     repository::{
-        problem::ProblemRepository, procedure::ProcedureRepository, session::SessionRepository,
-        testcase::TestcaseRepository,
+        problem::ProblemRepository, procedure::ProcedureRepository, testcase::TestcaseRepository,
     },
 };
 use judge_core::{
@@ -16,7 +19,6 @@ use judge_core::{
         problem_registry::{ProblemRegistryClient, ProblemRegistryServer},
     },
 };
-use uuid::Uuid;
 
 use crate::model::{
     error::UsecaseError,
@@ -26,15 +28,13 @@ use crate::model::{
 #[derive(Clone)]
 pub struct TestcaseService<
     PR: ProblemRepository,
-    SR: SessionRepository,
     TR: TestcaseRepository,
     PcR: ProcedureRepository,
     RPC: ProblemRegistryClient,
     PRS: ProblemRegistryServer,
-    DNR: DepNameRepository<i64>,
+    DNR: DepNameRepository<ProblemId>,
 > {
     problem_repository: PR,
-    session_repository: SR,
     testcase_repository: TR,
     procedure_repository: PcR,
     problem_registry_client: RPC,
@@ -44,17 +44,15 @@ pub struct TestcaseService<
 
 impl<
     PR: ProblemRepository,
-    SR: SessionRepository,
     TR: TestcaseRepository,
     PcR: ProcedureRepository,
     RPC: ProblemRegistryClient,
     PRS: ProblemRegistryServer,
-    DNR: DepNameRepository<i64>,
-> TestcaseService<PR, SR, TR, PcR, RPC, PRS, DNR>
+    DNR: DepNameRepository<ProblemId>,
+> TestcaseService<PR, TR, PcR, RPC, PRS, DNR>
 {
     pub fn new(
         problem_repository: PR,
-        session_repository: SR,
         testcase_repository: TR,
         procedure_repository: PcR,
         problem_registry_client: RPC,
@@ -63,7 +61,6 @@ impl<
     ) -> Self {
         Self {
             problem_repository,
-            session_repository,
             testcase_repository,
             procedure_repository,
             problem_registry_client,
@@ -75,23 +72,18 @@ impl<
 
 impl<
     PR: ProblemRepository,
-    SR: SessionRepository,
     TR: TestcaseRepository,
     PcR: ProcedureRepository,
     RPC: ProblemRegistryClient,
     PRS: ProblemRegistryServer,
-    DNR: DepNameRepository<i64>,
-> TestcaseService<PR, SR, TR, PcR, RPC, PRS, DNR>
+    DNR: DepNameRepository<ProblemId>,
+> TestcaseService<PR, TR, PcR, RPC, PRS, DNR>
 {
     pub async fn get_testcases(
         &self,
-        session_id: Option<&str>,
-        problem_id: String,
+        session_user: Option<SessionUser>,
+        problem_id: ProblemId,
     ) -> Result<Vec<TestcaseSummaryDto>, UsecaseError> {
-        let problem_id = problem_id
-            .parse::<i64>()
-            .map_err(|_| UsecaseError::ValidateError)?;
-
         let problem = self
             .problem_repository
             .get_problem(problem_id)
@@ -101,16 +93,9 @@ impl<
         match problem {
             Some(problem) => {
                 if !problem.is_public {
-                    let session_id = session_id.ok_or(UsecaseError::NotFound)?;
+                    let session_user = session_user.ok_or(UsecaseError::NotFound)?;
 
-                    let user_id = self
-                        .session_repository
-                        .get_display_id_by_session_id(session_id)
-                        .await
-                        .map_err(UsecaseError::internal_server_error_map())?
-                        .ok_or(UsecaseError::NotFound)?;
-
-                    if problem.author_id != user_id {
+                    if problem.author_id != session_user.display_id {
                         return Err(UsecaseError::NotFound);
                     }
                 }
@@ -129,11 +114,9 @@ impl<
 
     pub async fn get_testcase(
         &self,
-        session_id: Option<&str>,
-        testcase_id: String,
+        session_user: Option<SessionUser>,
+        testcase_id: TestcaseId,
     ) -> Result<TestcaseDto, UsecaseError> {
-        let testcase_id = Uuid::parse_str(&testcase_id).map_err(|_| UsecaseError::ValidateError)?;
-
         let testcase = self
             .testcase_repository
             .get_testcase(testcase_id)
@@ -149,16 +132,9 @@ impl<
             .ok_or(UsecaseError::NotFound)?;
 
         if !problem.is_public {
-            let session_id = session_id.ok_or(UsecaseError::NotFound)?;
+            let session_user = session_user.ok_or(UsecaseError::NotFound)?;
 
-            let user_id = self
-                .session_repository
-                .get_display_id_by_session_id(session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?
-                .ok_or(UsecaseError::NotFound)?;
-
-            if problem.author_id != user_id {
+            if problem.author_id != session_user.display_id {
                 return Err(UsecaseError::NotFound);
             }
         }
@@ -188,14 +164,10 @@ impl<
 
     pub async fn post_testcases(
         &self,
-        session_id: Option<&str>,
-        problem_id: String,
+        session_user: Option<SessionUser>,
+        problem_id: ProblemId,
         testcases: Vec<CreateTestcaseData>,
     ) -> Result<(), UsecaseError> {
-        let problem_id = problem_id
-            .parse::<i64>()
-            .map_err(|_| UsecaseError::ValidateError)?;
-
         let problem = self
             .problem_repository
             .get_problem(problem_id)
@@ -203,20 +175,18 @@ impl<
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
-        let user_id = match session_id {
-            Some(session_id) => self
-                .session_repository
-                .get_display_id_by_session_id(session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?,
-            None => None,
-        };
-
-        if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
+        if !problem.is_public
+            && session_user
+                .as_ref()
+                .is_none_or(|x| x.display_id != problem.author_id)
+        {
             return Err(UsecaseError::NotFound);
         }
 
-        if user_id.is_none_or(|x| x != problem.author_id) {
+        if session_user
+            .as_ref()
+            .is_none_or(|x| x.display_id != problem.author_id)
+        {
             return Err(UsecaseError::Forbidden);
         }
 
@@ -373,7 +343,7 @@ impl<
             })?;
 
             new_testcases.push(CreateTestcase {
-                id: Uuid::now_v7(),
+                id: TestcaseId::default(),
                 problem_id,
                 name: testcase.name,
                 input_id: input_id.to_owned().into(),
@@ -396,11 +366,9 @@ impl<
 
     pub async fn delete_testcase(
         &self,
-        session_id: Option<&str>,
-        testcase_id: String,
+        session_user: Option<SessionUser>,
+        testcase_id: TestcaseId,
     ) -> Result<(), UsecaseError> {
-        let testcase_id = Uuid::parse_str(&testcase_id).map_err(|_| UsecaseError::ValidateError)?;
-
         let testcase = self
             .testcase_repository
             .get_testcase(testcase_id)
@@ -415,20 +383,18 @@ impl<
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
-        let user_id = match session_id {
-            Some(session_id) => self
-                .session_repository
-                .get_display_id_by_session_id(session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?,
-            None => None,
-        };
-
-        if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
+        if !problem.is_public
+            && session_user
+                .as_ref()
+                .is_none_or(|x| x.display_id != problem.author_id)
+        {
             return Err(UsecaseError::NotFound);
         }
 
-        if user_id.is_none_or(|x| x != problem.author_id) {
+        if session_user
+            .as_ref()
+            .is_none_or(|x| x.display_id != problem.author_id)
+        {
             return Err(UsecaseError::Forbidden);
         }
 
@@ -557,12 +523,10 @@ impl<
 
     pub async fn put_testcase(
         &self,
-        session_id: Option<&str>,
-        testcase_id: String,
+        session_user: Option<SessionUser>,
+        testcase_id: TestcaseId,
         put_testcase: UpdateTestcaseData,
     ) -> Result<(), UsecaseError> {
-        let testcase_id = Uuid::parse_str(&testcase_id).map_err(|_| UsecaseError::ValidateError)?;
-
         let testcase = self
             .testcase_repository
             .get_testcase(testcase_id)
@@ -577,20 +541,18 @@ impl<
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
-        let user_id = match session_id {
-            Some(session_id) => self
-                .session_repository
-                .get_display_id_by_session_id(session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?,
-            None => None,
-        };
-
-        if !problem.is_public && user_id.is_none_or(|x| x != problem.author_id) {
+        if !problem.is_public
+            && session_user
+                .as_ref()
+                .is_none_or(|x| x.display_id != problem.author_id)
+        {
             return Err(UsecaseError::NotFound);
         }
 
-        if user_id.is_none_or(|x| x != problem.author_id) {
+        if session_user
+            .as_ref()
+            .is_none_or(|x| x.display_id != problem.author_id)
+        {
             return Err(UsecaseError::Forbidden);
         }
 
