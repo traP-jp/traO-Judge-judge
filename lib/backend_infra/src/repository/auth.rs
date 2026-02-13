@@ -172,7 +172,7 @@ impl AuthRepository for AuthRepositoryImpl {
         .fetch_optional(&self.pool)
         .await?;
 
-        Ok(user_id.map(|id| UserId(id.0)))
+        Ok(user_id.map(|id| id.0.into()))
     }
 
     async fn is_exist_email(&self, email: &str) -> anyhow::Result<bool> {
@@ -354,7 +354,7 @@ impl AuthRepository for AuthRepositoryImpl {
         .fetch_optional(&self.pool)
         .await?;
 
-        Ok(user_id.map(|id| UserId(id.0)))
+        Ok(user_id.map(|id| id.0.into()))
     }
 
     async fn get_github_oauth2_url(&self, oauth_action: &str) -> anyhow::Result<String> {
@@ -523,7 +523,7 @@ impl AuthRepository for AuthRepositoryImpl {
         .fetch_optional(&self.pool)
         .await?;
 
-        Ok(user_id.map(|id| UserId(id.0)))
+        Ok(user_id.map(|id| id.0.into()))
     }
 
     async fn save_user_traq_oauth(&self, id: UserId, traq_oauth: &str) -> anyhow::Result<()> {
@@ -616,6 +616,6 @@ impl AuthRepository for AuthRepositoryImpl {
         .fetch_optional(&self.pool)
         .await?;
 
-        Ok(user_id.map(|id| UserId(id.0)))
+        Ok(user_id.map(|id| id.0.into()))
     }
 }

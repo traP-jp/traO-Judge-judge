@@ -1,5 +1,8 @@
 use axum::async_trait;
-use domain::{model::icon::Icon, repository::icon::IconRepository};
+use domain::{
+    model::icon::{CreateIcon, Icon, IconId},
+    repository::icon::IconRepository,
+};
 use sqlx::MySqlPool;
 use uuid::Uuid;
 
@@ -18,7 +21,7 @@ impl IconRepositoryImpl {
 
 #[async_trait]
 impl IconRepository for IconRepositoryImpl {
-    async fn get_icon(&self, id: Uuid) -> anyhow::Result<Option<Icon>> {
+    async fn get_icon(&self, id: IconId) -> anyhow::Result<Option<Icon>> {
         let icon = sqlx::query_as!(
             IconRow,
             r#"
@@ -31,7 +34,7 @@ impl IconRepository for IconRepositoryImpl {
             WHERE 
                 id = ?
             "#,
-            UuidRow(id)
+            UuidRow(id.into())
         )
         .fetch_optional(&self.pool)
         .await?;
@@ -39,7 +42,8 @@ impl IconRepository for IconRepositoryImpl {
         Ok(icon.map(|row| row.into()))
     }
 
-    async fn create_icon(&self, icon: Icon) -> anyhow::Result<()> {
+    async fn create_icon(&self, icon: CreateIcon) -> anyhow::Result<IconId> {
+        let uuid = Uuid::new_v4();
         sqlx::query!(
             r#"
             INSERT INTO 
@@ -51,17 +55,17 @@ impl IconRepository for IconRepositoryImpl {
             VALUES 
                 (?, ?, ?)
             "#,
-            UuidRow(icon.id),
+            UuidRow(uuid),
             icon.content_type,
             &icon.icon
         )
         .execute(&self.pool)
         .await?;
 
-        Ok(())
+        Ok(uuid.into())
     }
 
-    async fn delete_icon(&self, id: Uuid) -> anyhow::Result<()> {
+    async fn delete_icon(&self, id: IconId) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
             DELETE FROM 
@@ -69,7 +73,7 @@ impl IconRepository for IconRepositoryImpl {
             WHERE 
                 id = ?
             "#,
-            UuidRow(id)
+            UuidRow(id.into())
         )
         .execute(&self.pool)
         .await?;

@@ -1,7 +1,7 @@
 use crate::model::{user::UserRow, uuid::UuidRow};
 use axum::async_trait;
 use domain::{
-    model::user::{UpdateUser, User, UserId, UserRole},
+    model::user::{UpdateUser, User, UserDisplayId, UserId, UserRole},
     repository::user::UserRepository,
 };
 use sqlx::MySqlPool;
@@ -20,7 +20,10 @@ impl UserRepositoryImpl {
 
 #[async_trait]
 impl UserRepository for UserRepositoryImpl {
-    async fn get_user_by_display_id(&self, display_id: i64) -> anyhow::Result<Option<User>> {
+    async fn get_user_by_display_id(
+        &self,
+        display_id: UserDisplayId,
+    ) -> anyhow::Result<Option<User>> {
         let user = sqlx::query_as!(
             UserRow,
             r#"
@@ -41,7 +44,7 @@ impl UserRepository for UserRepositoryImpl {
             WHERE
                 display_id = ?
             "#,
-            display_id
+            <UserDisplayId as Into<i64>>::into(display_id)
         )
         .fetch_optional(&self.pool)
         .await?;
@@ -96,10 +99,10 @@ impl UserRepository for UserRepositoryImpl {
         )
         .execute(&self.pool)
         .await?;
-        Ok(UserId(id.0))
+        Ok(id.0.into())
     }
 
-    async fn update_user(&self, display_id: i64, body: UpdateUser) -> anyhow::Result<()> {
+    async fn update_user(&self, display_id: UserDisplayId, body: UpdateUser) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
             UPDATE
@@ -114,11 +117,11 @@ impl UserRepository for UserRepositoryImpl {
                 display_id = ?
             "#,
             body.user_name,
-            body.icon_id.map(UuidRow),
+            body.icon_id.map(|icon_id| UuidRow(icon_id.into())),
             body.github_id,
             body.x_id,
             body.self_introduction,
-            display_id
+            <UserDisplayId as Into<i64>>::into(display_id)
         )
         .execute(&self.pool)
         .await?;
