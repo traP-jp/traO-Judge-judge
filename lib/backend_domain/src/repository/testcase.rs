@@ -1,5 +1,4 @@
 use axum::async_trait;
-use uuid::Uuid;
 
 use crate::model::problem::ProblemId;
 use crate::model::testcase::{CreateTestcase, TestcaseId, TestcaseSummary};

@@ -1,5 +1,4 @@
 use axum::async_trait;
-use uuid::Uuid;
 
 use crate::model::submission::{
     CreateJudgeResult, CreateSubmission, JudgeResult, Submission, SubmissionGetQuery, SubmissionId,
