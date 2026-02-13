@@ -23,6 +23,12 @@ impl From<Uuid> for TestcaseId {
     }
 }
 
+impl Default for TestcaseId {
+    fn default() -> Self {
+        Self(Uuid::new_v4())
+    }
+}
+
 pub struct TestcaseSummary {
     pub id: TestcaseId,
     pub name: String,
