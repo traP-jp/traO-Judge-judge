@@ -10,7 +10,7 @@ use super::{problem::NormalProblemsDto, submission::SubmissionsDto};
 
 pub struct UpdateUserData {
     pub user_name: String,
-    pub icon: Option<IconId>,
+    pub icon: Option<String>,
     pub github_id: Option<String>,
     pub x_id: Option<String>,
     pub self_introduction: String,
