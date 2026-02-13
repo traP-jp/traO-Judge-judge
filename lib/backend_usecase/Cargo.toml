@@ -34,3 +34,4 @@ validator = { workspace = true }
 
 [dev-dependencies]
 domain = { features = ["mockall"], path = "../backend_domain" }
+uuid = { workspace = true }
