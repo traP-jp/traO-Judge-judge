@@ -1,7 +1,7 @@
 use axum::async_trait;
 
 use crate::model::session::SessionUser;
-use crate::model::user::{User, UserDisplayId, UserId};
+use crate::model::user::User;
 
 #[cfg_attr(feature = "mockall", mockall::automock)]
 #[async_trait]
