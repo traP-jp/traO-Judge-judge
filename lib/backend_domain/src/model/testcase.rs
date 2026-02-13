@@ -3,7 +3,7 @@ use sqlx::types::chrono;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
-pub struct TestcaseId(pub(crate) Uuid);
+pub struct TestcaseId(Uuid);
 
 impl std::fmt::Display for TestcaseId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
