@@ -423,14 +423,14 @@ impl<
 
         tracing::info!(
             %submission_id,
-            ?problem.id,
-            ?submission.user_id,
+            problem_id = ?problem.id,
+            user_id = ?submission.user_id,
             language = %language,
             "spawning rejudge task"
         );
 
         tokio::spawn(async move {
-            tracing::info!(%submission_id, ?problem.id, "rejudge task started");
+            tracing::info!(%submission_id, problem_id = ?problem.id, "rejudge task started");
             if let Err(e) = self_clone
                 .async_judge_submission(submission_id, problem.id, procedure, runtime_texts)
                 .await
