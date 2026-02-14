@@ -117,7 +117,6 @@ type AuthSvc = AuthenticationService<
 type ProblemSvc = ProblemService<
     ProblemRepositoryImpl,
     UserRepositoryImpl,
-    SessionRepositoryImpl,
     TestcaseRepositoryImpl,
     ProcedureRepositoryImpl,
     RegistryServerImpl,
@@ -125,7 +124,6 @@ type ProblemSvc = ProblemService<
 >;
 type UserSvc = UserService<
     UserRepositoryImpl,
-    SessionRepositoryImpl,
     AuthRepositoryImpl,
     IconRepositoryImpl,
     ProblemRepositoryImpl,
@@ -134,7 +132,6 @@ type UserSvc = UserService<
 >;
 type IconSvc = IconService<IconRepositoryImpl>;
 type SubmissionSvc = SubmissionService<
-    SessionRepositoryImpl,
     UserRepositoryImpl,
     SubmissionRepositoryImpl,
     ProblemRepositoryImpl,
@@ -148,7 +145,6 @@ type EditorialSvc =
     EditorialService<SessionRepositoryImpl, EditorialRepositoryImpl, ProblemRepositoryImpl>;
 type TestcaseSvc = TestcaseService<
     ProblemRepositoryImpl,
-    SessionRepositoryImpl,
     TestcaseRepositoryImpl,
     ProcedureRepositoryImpl,
     RegistryClientImpl,
@@ -176,6 +172,7 @@ pub struct DiContainer {
     google_oauth2_service: GoogleOAuth2Svc,
     github_oauth2_service: GitHubOAuth2Svc,
     traq_oauth2_service: TraqOAuth2Svc,
+    session_repository: SessionRepositoryImpl,
 }
 
 impl DiContainer {
@@ -213,7 +210,6 @@ impl DiContainer {
             problem_service: ProblemService::new(
                 provider.provide_problem_repository(),
                 provider.provide_user_repository(),
-                provider.provide_session_repository(),
                 provider.provide_testcase_repository(),
                 provider.provide_procedure_repository(),
                 pr_server.clone(),
@@ -221,7 +217,6 @@ impl DiContainer {
             ),
             user_service: UserService::new(
                 provider.provide_user_repository(),
-                provider.provide_session_repository(),
                 provider.provide_auth_repository(),
                 provider.provide_icon_repository(),
                 provider.provide_problem_repository(),
@@ -230,7 +225,6 @@ impl DiContainer {
             ),
             icon_service: IconService::new(provider.provide_icon_repository()),
             submission_service: std::sync::Arc::new(SubmissionService::new(
-                provider.provide_session_repository(),
                 provider.provide_user_repository(),
                 provider.provide_submission_repository(),
                 provider.provide_problem_repository(),
@@ -247,7 +241,6 @@ impl DiContainer {
             ),
             testcase_service: TestcaseService::new(
                 provider.provide_problem_repository(),
-                provider.provide_session_repository(),
                 provider.provide_testcase_repository(),
                 provider.provide_procedure_repository(),
                 pr_client,
@@ -270,6 +263,7 @@ impl DiContainer {
                 provider.provide_session_repository(),
                 provider.provide_user_repository(),
             ),
+            session_repository: provider.provide_session_repository(),
         }
     }
 
@@ -315,5 +309,9 @@ impl DiContainer {
 
     pub fn traq_oauth2_service(&self) -> &TraqOAuth2Svc {
         &self.traq_oauth2_service
+    }
+
+    pub fn session_repository(&self) -> &SessionRepositoryImpl {
+        &self.session_repository
     }
 }
