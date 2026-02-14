@@ -1,3 +1,6 @@
+use std::f64::consts::E;
+
+use crate::extractor::session::ExtractedSessionUser;
 use crate::model::error::AppError;
 use crate::model::submissions::{
     CreateSubmission, SubmissionOrderBy, SubmissionResponse, SubmissionSummariesResponse,
@@ -17,14 +20,15 @@ use usecase::model::submission::{
 
 pub async fn get_submission(
     State(di_container): State<DiContainer>,
-    TypedHeader(cookie): TypedHeader<Cookie>,
+    ExtractedSessionUser(session_user): ExtractedSessionUser,
     Path(submission_id): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id");
-
+    let submission_id = uuid::Uuid::parse_str(&submission_id)
+        .map_err(|_| StatusCode::BAD_REQUEST)?
+        .into();
     match di_container
         .submission_service()
-        .get_submission(session_id, submission_id)
+        .get_submission(session_user, submission_id)
         .await
     {
         Ok(user) => {
@@ -37,45 +41,14 @@ pub async fn get_submission(
 
 pub async fn get_submissions(
     State(di_container): State<DiContainer>,
-    TypedHeader(cookie): TypedHeader<Cookie>,
+    ExtractedSessionUser(session_user): ExtractedSessionUser,
     Query(query): Query<SubmissionGetQuery>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id");
-
-    let query = SubmissionGetQueryData {
-        limit: query.limit,
-        offset: query.offset,
-        judge_status: query.status,
-        problem_id: query.problem_id_in_query,
-        language: query.language,
-        user_name: query.username,
-        user_query: query.user_id,
-        order_by: match query.order_by {
-            Some(order_by) => match order_by {
-                SubmissionOrderBy::SubmittedAtAsc => SubmissionOrderByData::SubmittedAtAsc,
-                SubmissionOrderBy::SubmittedAtDesc => SubmissionOrderByData::SubmittedAtDesc,
-                SubmissionOrderBy::TimeConsumptionAsc => SubmissionOrderByData::TimeConsumptionAsc,
-                SubmissionOrderBy::TimeConsumptionDesc => {
-                    SubmissionOrderByData::TimeConsumptionDesc
-                }
-                SubmissionOrderBy::ScoreAsc => SubmissionOrderByData::ScoreAsc,
-                SubmissionOrderBy::ScoreDesc => SubmissionOrderByData::ScoreDesc,
-                SubmissionOrderBy::MemoryConsumptionAsc => {
-                    SubmissionOrderByData::MemoryConsumptionAsc
-                }
-                SubmissionOrderBy::MemoryConsumptionDesc => {
-                    SubmissionOrderByData::MemoryConsumptionDesc
-                }
-                SubmissionOrderBy::CodeLengthAsc => SubmissionOrderByData::CodeLengthAsc,
-                SubmissionOrderBy::CodeLengthDesc => SubmissionOrderByData::CodeLengthDesc,
-            },
-            None => SubmissionOrderByData::SubmittedAtDesc,
-        },
-    };
+    let query = query.try_into()?;
 
     match di_container
         .submission_service()
-        .get_submissions(session_id, query)
+        .get_submissions(session_user, query)
         .await
     {
         Ok(submissions) => {
@@ -88,17 +61,18 @@ pub async fn get_submissions(
 
 pub async fn post_submission(
     State(di_container): State<DiContainer>,
-    TypedHeader(cookie): TypedHeader<Cookie>,
+    ExtractedSessionUser(session_user): ExtractedSessionUser,
     Path(problem_id): Path<String>,
     Json(body): Json<CreateSubmission>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id");
-
     match di_container
         .submission_service()
         .create_submission(
-            session_id,
-            problem_id,
+            session_user,
+            problem_id
+                .parse::<i64>()
+                .map_err(|_| StatusCode::BAD_REQUEST)?
+                .into(),
             CreateSubmissionData {
                 language_id: body.language_id,
                 source: body.source,
@@ -116,14 +90,17 @@ pub async fn post_submission(
 
 pub async fn post_rejudge_submission(
     State(di_container): State<DiContainer>,
-    TypedHeader(cookie): TypedHeader<Cookie>,
+    ExtractedSessionUser(session_user): ExtractedSessionUser,
     Path(submission_id): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id");
-
     match di_container
         .submission_service()
-        .rejudge_submission(session_id, submission_id)
+        .rejudge_submission(
+            session_user,
+            uuid::Uuid::parse_str(&submission_id)
+                .map_err(|_| StatusCode::BAD_REQUEST)?
+                .into(),
+        )
         .await
     {
         Ok(()) => Ok(StatusCode::NO_CONTENT),
