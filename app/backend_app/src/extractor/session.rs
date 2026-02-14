@@ -19,7 +19,7 @@ impl FromRequestParts<DiContainer> for ExtractedSessionUser {
     ) -> Result<Self, Self::Rejection> {
         let jar = CookieJar::from_request_parts(parts, di_container)
             .await
-            .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Cookie parse error"))?;
+            .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid Cookie header"))?;
 
         if let Some(session_id) = jar.get("session_id") {
             let session_user = di_container
