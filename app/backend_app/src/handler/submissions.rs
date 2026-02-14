@@ -1,9 +1,7 @@
-use std::f64::consts::E;
-
 use crate::extractor::session::ExtractedSessionUser;
 use crate::model::error::AppError;
 use crate::model::submissions::{
-    CreateSubmission, SubmissionOrderBy, SubmissionResponse, SubmissionSummariesResponse,
+    CreateSubmission, SubmissionResponse, SubmissionSummariesResponse,
 };
 use crate::{di::DiContainer, model::submissions::SubmissionGetQuery};
 use axum::extract::Query;
@@ -13,10 +11,7 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
-use axum_extra::{TypedHeader, headers::Cookie};
-use usecase::model::submission::{
-    CreateSubmissionData, SubmissionGetQueryData, SubmissionOrderByData,
-};
+use usecase::model::submission::CreateSubmissionData;
 
 pub async fn get_submission(
     State(di_container): State<DiContainer>,

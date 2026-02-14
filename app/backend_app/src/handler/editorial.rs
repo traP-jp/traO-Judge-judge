@@ -8,7 +8,6 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
-use axum_extra::{TypedHeader, headers::Cookie};
 
 pub async fn get_editorial(
     State(di_container): State<DiContainer>,
