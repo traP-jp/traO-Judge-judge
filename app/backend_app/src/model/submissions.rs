@@ -1,8 +1,14 @@
 use async_session::chrono;
+use axum::http::StatusCode;
+use domain::model::{
+    problem::ProblemId, submission::SubmissionId, testcase::TestcaseId, user::UserDisplayId,
+};
 use serde::{Deserialize, Serialize};
 use usecase::model::submission::{
-    JudgeResultDto, SubmissionDto, SubmissionSummaryDto, SubmissionsDto,
+    JudgeResultDto, SubmissionDto, SubmissionGetQueryData, SubmissionOrderByData,
+    SubmissionSummaryDto, SubmissionsDto,
 };
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -26,10 +32,10 @@ pub struct SubmissionResponse {
 impl From<SubmissionDto> for SubmissionResponse {
     fn from(val: SubmissionDto) -> Self {
         SubmissionResponse {
-            id: val.id,
-            user_id: val.user_id,
+            id: <SubmissionId as Into<Uuid>>::into(val.id).to_string(),
+            user_id: <UserDisplayId as Into<i64>>::into(val.user_id).to_string(),
             user_name: val.user_name,
-            problem_id: val.problem_id,
+            problem_id: <ProblemId as Into<i64>>::into(val.problem_id).to_string(),
             title: val.problem_title,
             submitted_at: val.submitted_at,
             language_id: val.language_id,
@@ -58,7 +64,7 @@ pub struct JudgeResultResponse {
 impl From<JudgeResultDto> for JudgeResultResponse {
     fn from(val: JudgeResultDto) -> Self {
         JudgeResultResponse {
-            testcase_id: val.testcase_id,
+            testcase_id: <TestcaseId as Into<Uuid>>::into(val.testcase_id).to_string(),
             testcase_name: val.testcase_name,
             judge_status: val.judge_status,
             score: val.score,
@@ -96,6 +102,54 @@ pub struct SubmissionGetQuery {
     pub problem_id_in_query: Option<String>,
 }
 
+impl TryInto<SubmissionGetQueryData> for SubmissionGetQuery {
+    type Error = StatusCode;
+    fn try_into(self) -> Result<SubmissionGetQueryData, StatusCode> {
+        Ok(SubmissionGetQueryData {
+            limit: self.limit,
+            offset: self.offset,
+            judge_status: self.status,
+            problem_id: self
+                .problem_id_in_query
+                .map(|id| id.parse::<i64>())
+                .transpose()
+                .map_err(|_| StatusCode::BAD_REQUEST)?
+                .map(|id| id.into()),
+            language: self.language,
+            user_name: self.username,
+            user_query: self
+                .user_id
+                .map(|id| id.parse::<i64>())
+                .transpose()
+                .map_err(|_| StatusCode::BAD_REQUEST)?
+                .map(|id| id.into()),
+            order_by: match self.order_by {
+                Some(order_by) => match order_by {
+                    SubmissionOrderBy::SubmittedAtAsc => SubmissionOrderByData::SubmittedAtAsc,
+                    SubmissionOrderBy::SubmittedAtDesc => SubmissionOrderByData::SubmittedAtDesc,
+                    SubmissionOrderBy::TimeConsumptionAsc => {
+                        SubmissionOrderByData::TimeConsumptionAsc
+                    }
+                    SubmissionOrderBy::TimeConsumptionDesc => {
+                        SubmissionOrderByData::TimeConsumptionDesc
+                    }
+                    SubmissionOrderBy::ScoreAsc => SubmissionOrderByData::ScoreAsc,
+                    SubmissionOrderBy::ScoreDesc => SubmissionOrderByData::ScoreDesc,
+                    SubmissionOrderBy::MemoryConsumptionAsc => {
+                        SubmissionOrderByData::MemoryConsumptionAsc
+                    }
+                    SubmissionOrderBy::MemoryConsumptionDesc => {
+                        SubmissionOrderByData::MemoryConsumptionDesc
+                    }
+                    SubmissionOrderBy::CodeLengthAsc => SubmissionOrderByData::CodeLengthAsc,
+                    SubmissionOrderBy::CodeLengthDesc => SubmissionOrderByData::CodeLengthDesc,
+                },
+                None => SubmissionOrderByData::SubmittedAtDesc,
+            },
+        })
+    }
+}
+
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubmissionSummaryResponse {
@@ -116,10 +170,10 @@ pub struct SubmissionSummaryResponse {
 impl From<SubmissionSummaryDto> for SubmissionSummaryResponse {
     fn from(submission: SubmissionSummaryDto) -> Self {
         SubmissionSummaryResponse {
-            id: submission.id,
-            user_id: submission.user_id,
+            id: <SubmissionId as Into<Uuid>>::into(submission.id).to_string(),
+            user_id: <UserDisplayId as Into<i64>>::into(submission.user_id).to_string(),
             user_name: submission.user_name,
-            problem_id: submission.problem_id,
+            problem_id: <ProblemId as Into<i64>>::into(submission.problem_id).to_string(),
             title: submission.problem_title,
             submitted_at: submission.submitted_at,
             language_id: submission.language_id,

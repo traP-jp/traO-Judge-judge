@@ -1,5 +1,6 @@
 use crate::model::testcase::TestcaseSummaryResponse;
 use async_session::chrono;
+use domain::model::{problem::ProblemId, user::UserDisplayId};
 use serde::{Deserialize, Serialize};
 use usecase::model::problem::{NormalProblemDto, NormalProblemSummaryDto, NormalProblemsDto};
 
@@ -23,8 +24,8 @@ pub struct ProblemResponse {
 impl From<NormalProblemDto> for ProblemResponse {
     fn from(problem: NormalProblemDto) -> Self {
         ProblemResponse {
-            id: problem.id,
-            author_id: problem.author_id,
+            id: <ProblemId as Into<i64>>::into(problem.id).to_string(),
+            author_id: <UserDisplayId as Into<i64>>::into(problem.author_id).to_string(),
             title: problem.title,
             statement: problem.statement,
             time_limit: problem.time_limit_ms,
@@ -57,8 +58,8 @@ pub struct ProblemSummaryResponse {
 impl From<NormalProblemSummaryDto> for ProblemSummaryResponse {
     fn from(problem: NormalProblemSummaryDto) -> Self {
         ProblemSummaryResponse {
-            id: problem.id,
-            author_id: problem.author_id,
+            id: <ProblemId as Into<i64>>::into(problem.id).to_string(),
+            author_id: <UserDisplayId as Into<i64>>::into(problem.author_id).to_string(),
             title: problem.title,
             time_limit: problem.time_limit_ms,
             memory_limit: problem.memory_limit_kib,
