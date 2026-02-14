@@ -23,14 +23,13 @@ use domain::{
     },
     repository::{
         auth::AuthRepository, icon::IconRepository, problem::ProblemRepository,
-        session::SessionRepository, submission::SubmissionRepository, user::UserRepository,
+        submission::SubmissionRepository, user::UserRepository,
     },
 };
 
 #[derive(Clone)]
 pub struct UserService<
     UR: UserRepository,
-    SR: SessionRepository,
     AR: AuthRepository,
     IR: IconRepository,
     PR: ProblemRepository,
@@ -38,7 +37,6 @@ pub struct UserService<
     C: MailClient,
 > {
     user_repository: UR,
-    session_repository: SR,
     auth_repository: AR,
     icon_repository: IR,
     problem_repository: PR,
@@ -49,17 +47,15 @@ pub struct UserService<
 
 impl<
     UR: UserRepository,
-    SR: SessionRepository,
     AR: AuthRepository,
     IR: IconRepository,
     PR: ProblemRepository,
     SubR: SubmissionRepository,
     C: MailClient,
-> UserService<UR, SR, AR, IR, PR, SubR, C>
+> UserService<UR, AR, IR, PR, SubR, C>
 {
     pub fn new(
         user_repository: UR,
-        session_repository: SR,
         auth_repository: AR,
         icon_repository: IR,
         problem_repository: PR,
@@ -68,7 +64,6 @@ impl<
     ) -> Self {
         Self {
             user_repository,
-            session_repository,
             auth_repository,
             icon_repository,
             problem_repository,
@@ -81,13 +76,12 @@ impl<
 
 impl<
     UR: UserRepository,
-    SR: SessionRepository,
     AR: AuthRepository,
     IR: IconRepository,
     PR: ProblemRepository,
     SubR: SubmissionRepository,
     C: MailClient,
-> UserService<UR, SR, AR, IR, PR, SubR, C>
+> UserService<UR, AR, IR, PR, SubR, C>
 {
     pub async fn get_user(
         &self,

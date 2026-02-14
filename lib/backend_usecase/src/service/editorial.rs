@@ -210,7 +210,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
 
     pub async fn delete_editorial(
         &self,
-        session_id: Option<SessionUser>,
+        session_user: Option<SessionUser>,
         editorial_id: EditorialId,
     ) -> anyhow::Result<(), UsecaseError> {
         let editorial = self
@@ -219,7 +219,7 @@ impl<SR: SessionRepository, ER: EditorialRepository, PR: ProblemRepository>
             .await
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
-        let session_user = session_id.ok_or_else(|| {
+        let session_user = session_user.ok_or_else(|| {
             if !editorial.is_public {
                 UsecaseError::NotFound
             } else {

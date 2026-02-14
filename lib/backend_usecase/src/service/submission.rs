@@ -38,7 +38,7 @@ pub struct SubmissionService<
     PcR: ProcedureRepository + Send + Sync + 'static,
     TR: TestcaseRepository + Send + Sync + 'static,
     LR: LanguageRepository + Send + Sync + 'static,
-    DNR: DepNameRepository<i64> + Send + Sync + 'static,
+    DNR: DepNameRepository<ProblemId> + Send + Sync + 'static,
     JS: JudgeService + Send + Sync + 'static,
 > {
     user_repository: UR,
@@ -58,7 +58,7 @@ impl<
     PcR: ProcedureRepository + Send + Sync + 'static,
     TR: TestcaseRepository + Send + Sync + 'static,
     LR: LanguageRepository + Send + Sync + 'static,
-    DNR: DepNameRepository<i64> + Send + Sync + 'static,
+    DNR: DepNameRepository<ProblemId> + Send + Sync + 'static,
     JS: JudgeService + Send + Sync + 'static,
 > SubmissionService<UR, SuR, PR, PcR, TR, LR, DNR, JS>
 {
@@ -92,7 +92,7 @@ impl<
     PcR: ProcedureRepository + Send + Sync + 'static,
     TR: TestcaseRepository + Send + Sync + 'static,
     LR: LanguageRepository + Send + Sync + 'static,
-    DNR: DepNameRepository<i64> + Send + Sync + 'static,
+    DNR: DepNameRepository<ProblemId> + Send + Sync + 'static,
     JS: JudgeService + Send + Sync + 'static,
 > SubmissionService<UR, SuR, PR, PcR, TR, LR, DNR, JS>
 {
