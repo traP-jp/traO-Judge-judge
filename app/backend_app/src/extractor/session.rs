@@ -26,7 +26,7 @@ impl FromRequestParts<DiContainer> for ExtractedSessionUser {
                 .session_repository()
                 .get_session_user(session_id.value())
                 .await
-                .map_err(|_| (StatusCode::UNAUTHORIZED, "Unauthorized"))?;
+                .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Session retrieval error"))?;
             Ok(ExtractedSessionUser(session_user))
         } else {
             Ok(ExtractedSessionUser(None))
