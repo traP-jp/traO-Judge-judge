@@ -375,7 +375,7 @@ mod tests {
     use uuid::Uuid;
 
     fn create_test_user_id() -> UserId {
-        UserId(Uuid::new_v4())
+        Uuid::new_v4().into()
     }
 
     #[tokio::test]

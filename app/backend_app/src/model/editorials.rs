@@ -1,8 +1,10 @@
+use domain::model::editorial::EditorialId;
 use serde::{Deserialize, Serialize};
 use sqlx::types::chrono;
 use usecase::model::editorial::{
     CreateEditorialData, EditorialDto, EditorialSummaryDto, UpdateEditorialData,
 };
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -20,7 +22,7 @@ pub struct EditorialResponse {
 impl From<EditorialDto> for EditorialResponse {
     fn from(value: EditorialDto) -> Self {
         EditorialResponse {
-            id: value.id,
+            id: <EditorialId as Into<Uuid>>::into(value.id).to_string(),
             created_at: value.created_at,
             updated_at: value.updated_at,
             problem_id: value.problem_id.to_string(),
@@ -47,7 +49,7 @@ pub struct EditorialSummaryResponse {
 impl From<EditorialSummaryDto> for EditorialSummaryResponse {
     fn from(value: EditorialSummaryDto) -> Self {
         EditorialSummaryResponse {
-            id: value.id,
+            id: <EditorialId as Into<Uuid>>::into(value.id).to_string(),
             title: value.title,
             created_at: value.created_at,
             updated_at: value.updated_at,

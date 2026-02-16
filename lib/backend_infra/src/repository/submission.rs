@@ -4,10 +4,12 @@ use crate::model::{
 };
 use axum::async_trait;
 use domain::{
+    model::problem::ProblemId,
     model::submission::{
         CreateJudgeResult, CreateSubmission, JudgeResult, Submission, SubmissionGetQuery,
-        SubmissionOrderBy, UpdateSubmission,
+        SubmissionId, SubmissionOrderBy, UpdateSubmission,
     },
+    model::user::UserDisplayId,
     repository::submission::SubmissionRepository,
 };
 use sqlx::{MySqlPool, QueryBuilder};
@@ -26,7 +28,7 @@ impl SubmissionRepositoryImpl {
 
 #[async_trait]
 impl SubmissionRepository for SubmissionRepositoryImpl {
-    async fn get_submission(&self, id: Uuid) -> anyhow::Result<Option<Submission>> {
+    async fn get_submission(&self, id: SubmissionId) -> anyhow::Result<Option<Submission>> {
         let submission = sqlx::query_as!(
             SubmissionRow,
             r#"
@@ -54,7 +56,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
             WHERE
                 submissions.id = ?
             "#,
-            UuidRow(id)
+            UuidRow(id.into())
         )
         .fetch_optional(&self.pool)
         .await?;
@@ -62,7 +64,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         Ok(submission.map(|submission| submission.into()))
     }
 
-    async fn get_submission_results(&self, id: Uuid) -> anyhow::Result<Vec<JudgeResult>> {
+    async fn get_submission_results(&self, id: SubmissionId) -> anyhow::Result<Vec<JudgeResult>> {
         let results = sqlx::query_as!(
             JudgeResultRow,
             r#"
@@ -78,7 +80,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
                 submission_testcases 
             WHERE 
                 submission_id = ?"#,
-            UuidRow(id)
+            UuidRow(id.into())
         )
         .fetch_all(&self.pool)
         .await?;
@@ -112,14 +114,14 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         if let Some(user_id) = query.user_id {
             query_builder
                 .push(" OR normal_problems.author_id = ")
-                .push_bind(user_id);
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_id));
         }
         query_builder.push(")");
 
         if let Some(user_query) = query.user_query {
             query_builder
                 .push(" AND submissions.user_id = ")
-                .push_bind(user_query);
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_query));
         }
         if let Some(user_name) = query.user_name {
             query_builder
@@ -139,7 +141,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         if let Some(problem_id) = query.problem_id {
             query_builder
                 .push(" AND submissions.problem_id = ")
-                .push_bind(problem_id);
+                .push_bind(<ProblemId as Into<i64>>::into(problem_id));
         }
 
         query_builder.push(" ORDER BY ");
@@ -215,14 +217,14 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         if let Some(user_id) = query.user_id {
             query_builder
                 .push(" OR normal_problems.author_id = ")
-                .push_bind(user_id);
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_id));
         }
         query_builder.push(")");
 
         if let Some(user_query) = query.user_query {
             query_builder
                 .push(" AND submissions.user_id = ")
-                .push_bind(user_query);
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_query));
         }
         if let Some(user_name) = query.user_name {
             query_builder
@@ -242,7 +244,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         if let Some(problem_id) = query.problem_id {
             query_builder
                 .push(" AND submissions.problem_id = ")
-                .push_bind(problem_id);
+                .push_bind(<ProblemId as Into<i64>>::into(problem_id));
         }
 
         let count = query_builder
@@ -253,9 +255,11 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         Ok(count)
     }
 
-    async fn create_submission(&self, submission: CreateSubmission) -> anyhow::Result<Uuid> {
+    async fn create_submission(
+        &self,
+        submission: CreateSubmission,
+    ) -> anyhow::Result<SubmissionId> {
         let submission_id = Uuid::now_v7();
-
         sqlx::query!(
             r#"
             INSERT INTO 
@@ -273,9 +277,9 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
             VALUES 
                 (?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#,
-            UuidRow(submission_id),
-            submission.problem_id,
-            submission.user_id,
+            UuidRow(submission_id.into()),
+            <ProblemId as Into<i64>>::into(submission.problem_id),
+            <UserDisplayId as Into<i64>>::into(submission.user_id),
             submission.language_id,
             submission.source,
             submission.judge_status,
@@ -286,12 +290,12 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         .execute(&self.pool)
         .await?;
 
-        Ok(submission_id)
+        Ok(submission_id.into())
     }
 
     async fn update_submission(
         &self,
-        submission_id: Uuid,
+        submission_id: SubmissionId,
         submission: UpdateSubmission,
     ) -> anyhow::Result<()> {
         sqlx::query!(
@@ -310,7 +314,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
             submission.total_score,
             submission.max_time_ms,
             submission.max_memory_kib,
-            UuidRow(submission_id)
+            UuidRow(submission_id.into())
         )
         .execute(&self.pool)
         .await?;
@@ -341,9 +345,9 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         let mut separated = query_builder.separated(", ");
         for r in results.into_iter() {
             separated.push("(");
-            separated.push_bind_unseparated(UuidRow(r.submission_id));
+            separated.push_bind_unseparated(UuidRow(r.submission_id.into()));
             separated.push_unseparated(", ");
-            separated.push_bind_unseparated(UuidRow(r.testcase_id));
+            separated.push_bind_unseparated(UuidRow(r.testcase_id.into()));
             separated.push_unseparated(", ");
             separated.push_bind_unseparated(r.testcase_name);
             separated.push_unseparated(", ");
@@ -362,7 +366,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
 
     async fn delete_judge_results_by_submission_id(
         &self,
-        submission_id: Uuid,
+        submission_id: SubmissionId,
     ) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -371,7 +375,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
             WHERE
                 submission_id = ?
             "#,
-            UuidRow(submission_id)
+            UuidRow(submission_id.into())
         )
         .execute(&self.pool)
         .await?;

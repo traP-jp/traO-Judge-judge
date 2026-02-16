@@ -1,4 +1,4 @@
-use domain::model::user::{User, UserId, UserRole};
+use domain::model::user::{User, UserRole};
 use sqlx::types::chrono;
 
 use super::uuid::UuidRow;
@@ -21,12 +21,12 @@ pub struct UserRow {
 impl From<UserRow> for User {
     fn from(row: UserRow) -> Self {
         Self {
-            id: UserId(row.id.0),
-            display_id: row.display_id,
+            id: row.id.0.into(),
+            display_id: row.display_id.into(),
             name: row.name,
             traq_id: row.traq_id,
             github_id: row.github_id,
-            icon_id: row.icon_id.map(|uuid_row| uuid_row.0),
+            icon_id: row.icon_id.map(|uuid_row| uuid_row.0.into()),
             x_id: row.x_id,
             self_introduction: row.self_introduction,
             role: UserRole::new(row.role).unwrap(),

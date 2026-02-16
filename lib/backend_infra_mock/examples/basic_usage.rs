@@ -3,7 +3,6 @@
 use backend_infra_mock::auth::AuthRepositoryMock;
 use backend_infra_mock::mail::MailClientMock;
 use domain::external::mail::MailClient;
-use domain::model::user::UserId;
 use domain::repository::auth::AuthRepository;
 use lettre::Address;
 use uuid::Uuid;
@@ -44,8 +43,8 @@ async fn main() -> anyhow::Result<()> {
     // === Auth Repository Mock Example ===
     println!("\n--- Auth Repository Mock Example ---");
     let auth_repo = AuthRepositoryMock::new();
-    let user_id = UserId(Uuid::new_v4());
-    println!("Created test user with ID: {}", user_id.0);
+    let user_id = Uuid::new_v4().into();
+    println!("Created test user with ID: {}", user_id);
 
     // Password authentication
     println!("\n1. Password Authentication:");
@@ -110,7 +109,7 @@ async fn main() -> anyhow::Result<()> {
         .get_user_id_by_google_oauth(&google_oauth_id)
         .await?;
     match found_user {
-        Some(id) => println!("✓ Found user by Google OAuth: {}", id.0),
+        Some(id) => println!("✓ Found user by Google OAuth: {}", id),
         None => println!("✗ User not found"),
     }
 

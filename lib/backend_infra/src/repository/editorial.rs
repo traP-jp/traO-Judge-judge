@@ -5,8 +5,11 @@ use crate::model::{
 use axum::async_trait;
 use domain::{
     model::editorial::{
-        CreateEditorial, Editorial, EditorialGetQuery, EditorialSummary, UpdateEditorial,
+        CreateEditorial, Editorial, EditorialGetQuery, EditorialId, EditorialSummary,
+        UpdateEditorial,
     },
+    model::problem::ProblemId,
+    model::user::UserDisplayId,
     repository::editorial::EditorialRepository,
 };
 use sqlx::{MySqlPool, QueryBuilder};
@@ -25,7 +28,7 @@ impl EditorialRepositoryImpl {
 
 #[async_trait]
 impl EditorialRepository for EditorialRepositoryImpl {
-    async fn get_editorial(&self, id: Uuid) -> anyhow::Result<Option<Editorial>> {
+    async fn get_editorial(&self, id: EditorialId) -> anyhow::Result<Option<Editorial>> {
         let editorial = sqlx::query_as!(
             EditorialRow,
             r#"
@@ -43,7 +46,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
             WHERE 
                 id = ?
             "#,
-            UuidRow(id)
+            UuidRow(id.into())
         )
         .fetch_optional(&self.pool)
         .await?;
@@ -66,13 +69,15 @@ impl EditorialRepository for EditorialRepositoryImpl {
         );
         query_builder.push(" (is_public = TRUE");
         if let Some(user_id) = query.user_id {
-            query_builder.push(" OR author_id = ").push_bind(user_id);
+            query_builder
+                .push(" OR author_id = ")
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_id));
         }
         query_builder.push(")");
 
         query_builder
             .push(" AND problem_id = ")
-            .push_bind(query.problem_id);
+            .push_bind(<ProblemId as Into<i64>>::into(query.problem_id));
 
         query_builder.push(" ORDER BY created_at DESC");
         query_builder.push(" LIMIT ").push_bind(query.limit);
@@ -89,7 +94,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
             .collect())
     }
 
-    async fn create_editorial(&self, query: CreateEditorial) -> anyhow::Result<Uuid> {
+    async fn create_editorial(&self, query: CreateEditorial) -> anyhow::Result<EditorialId> {
         let id = Uuid::now_v7();
 
         sqlx::query!(
@@ -106,9 +111,9 @@ impl EditorialRepository for EditorialRepositoryImpl {
             VALUES 
                 (?, ?, ?, ?, ?, ?)
             "#,
-            UuidRow(id),
-            query.problem_id,
-            query.author_id,
+            UuidRow(id.into()),
+            <ProblemId as Into<i64>>::into(query.problem_id),
+            <UserDisplayId as Into<i64>>::into(query.author_id),
             query.statement,
             query.is_public,
             query.title
@@ -116,7 +121,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
         .execute(&self.pool)
         .await?;
 
-        Ok(id)
+        Ok(id.into())
     }
 
     async fn update_editorial(&self, query: UpdateEditorial) -> anyhow::Result<()> {
@@ -134,7 +139,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
             query.statement,
             query.is_public,
             query.title,
-            UuidRow(query.id)
+            UuidRow(query.id.into())
         )
         .execute(&self.pool)
         .await?;
@@ -142,7 +147,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
         Ok(())
     }
 
-    async fn delete_editorial(&self, id: Uuid) -> anyhow::Result<()> {
+    async fn delete_editorial(&self, id: EditorialId) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
             DELETE FROM 
@@ -150,7 +155,7 @@ impl EditorialRepository for EditorialRepositoryImpl {
             WHERE 
                 id = ?
             "#,
-            UuidRow(id)
+            UuidRow(id.into())
         )
         .execute(&self.pool)
         .await?;

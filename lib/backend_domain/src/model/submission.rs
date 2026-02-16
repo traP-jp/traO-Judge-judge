@@ -1,11 +1,35 @@
+use crate::model::problem::ProblemId;
+use crate::model::testcase::TestcaseId;
+use crate::model::user::UserDisplayId;
 use async_session::chrono;
 use uuid::Uuid;
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+pub struct SubmissionId(pub(crate) Uuid);
+
+impl std::fmt::Display for SubmissionId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Into<Uuid> for SubmissionId {
+    fn into(self) -> Uuid {
+        self.0
+    }
+}
+
+impl From<Uuid> for SubmissionId {
+    fn from(id: Uuid) -> Self {
+        Self(id)
+    }
+}
+
 pub struct Submission {
-    pub id: Uuid,
-    pub user_id: i64,
+    pub id: SubmissionId,
+    pub user_id: UserDisplayId,
     pub user_name: String,
-    pub problem_id: i64,
+    pub problem_id: ProblemId,
     pub problem_title: String,
     pub submitted_at: chrono::DateTime<chrono::Utc>,
     pub language_id: String,
@@ -17,7 +41,7 @@ pub struct Submission {
 }
 
 pub struct JudgeResult {
-    pub testcase_id: Uuid,
+    pub testcase_id: TestcaseId,
     pub testcase_name: String,
     pub judge_status: String,
     pub score: i64,
@@ -26,8 +50,8 @@ pub struct JudgeResult {
 }
 
 pub struct CreateSubmission {
-    pub problem_id: i64,
-    pub user_id: i64,
+    pub problem_id: ProblemId,
+    pub user_id: UserDisplayId,
     pub language_id: String,
     pub source: String,
     pub judge_status: String,
@@ -44,8 +68,8 @@ pub struct UpdateSubmission {
 }
 
 pub struct CreateJudgeResult {
-    pub submission_id: Uuid,
-    pub testcase_id: Uuid,
+    pub submission_id: SubmissionId,
+    pub testcase_id: TestcaseId,
     pub testcase_name: String,
     pub judge_status: String,
     pub score: i64,
@@ -69,13 +93,13 @@ pub enum SubmissionOrderBy {
 
 #[derive(Clone)]
 pub struct SubmissionGetQuery {
-    pub user_id: Option<i64>,
+    pub user_id: Option<UserDisplayId>,
     pub limit: i64,
     pub offset: i64,
     pub judge_status: Option<String>,
     pub language_id: Option<String>,
     pub user_name: Option<String>,
-    pub user_query: Option<i64>,
+    pub user_query: Option<UserDisplayId>,
     pub order_by: SubmissionOrderBy,
-    pub problem_id: Option<i64>,
+    pub problem_id: Option<ProblemId>,
 }

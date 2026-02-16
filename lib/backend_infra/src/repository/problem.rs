@@ -2,8 +2,10 @@ use crate::model::problem::NormalProblemRow;
 use axum::async_trait;
 use domain::{
     model::problem::{
-        CreateNormalProblem, NormalProblem, ProblemGetQuery, ProblemOrderBy, UpdateNormalProblem,
+        CreateNormalProblem, NormalProblem, ProblemGetQuery, ProblemId, ProblemOrderBy,
+        UpdateNormalProblem,
     },
+    model::user::UserDisplayId,
     repository::problem::ProblemRepository,
 };
 use sqlx::{MySqlPool, QueryBuilder};
@@ -21,7 +23,7 @@ impl ProblemRepositoryImpl {
 
 #[async_trait]
 impl ProblemRepository for ProblemRepositoryImpl {
-    async fn get_problem(&self, id: i64) -> anyhow::Result<Option<NormalProblem>> {
+    async fn get_problem(&self, id: ProblemId) -> anyhow::Result<Option<NormalProblem>> {
         let problem = sqlx::query_as!(
             NormalProblemRow,
             r#"
@@ -42,7 +44,7 @@ impl ProblemRepository for ProblemRepositoryImpl {
             WHERE
                 id = ?
             "#,
-            id
+            <ProblemId as Into<i64>>::into(id)
         )
         .fetch_optional(&self.pool)
         .await?;
@@ -73,14 +75,14 @@ impl ProblemRepository for ProblemRepositoryImpl {
         if let Some(user_id) = query.user_id {
             query_builder
                 .push(" OR normal_problems.author_id = ")
-                .push_bind(user_id);
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_id));
         }
         query_builder.push(")");
 
         if let Some(user_query) = query.user_query {
             query_builder
                 .push(" AND normal_problems.author_id = ")
-                .push_bind(user_query);
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_query));
         }
 
         if let Some(user_name) = query.user_name {
@@ -141,14 +143,14 @@ impl ProblemRepository for ProblemRepositoryImpl {
         if let Some(user_id) = query.user_id {
             query_builder
                 .push(" OR normal_problems.author_id = ")
-                .push_bind(user_id);
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_id));
         }
         query_builder.push(")");
 
         if let Some(user_query) = query.user_query {
             query_builder
                 .push(" AND normal_problems.author_id = ")
-                .push_bind(user_query);
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_query));
         }
 
         if let Some(user_name) = query.user_name {
@@ -167,7 +169,7 @@ impl ProblemRepository for ProblemRepositoryImpl {
 
     async fn update_problem(
         &self,
-        id: i64,
+        id: ProblemId,
         update_prblem: UpdateNormalProblem,
     ) -> anyhow::Result<()> {
         sqlx::query!(
@@ -190,7 +192,7 @@ impl ProblemRepository for ProblemRepositoryImpl {
             update_prblem.statement,
             update_prblem.time_limit_ms,
             update_prblem.memory_limit_kib,
-            id
+            <ProblemId as Into<i64>>::into(id)
         )
         .execute(&self.pool)
         .await
@@ -202,7 +204,10 @@ impl ProblemRepository for ProblemRepositoryImpl {
         Ok(())
     }
 
-    async fn create_problem(&self, create_problem: CreateNormalProblem) -> anyhow::Result<i64> {
+    async fn create_problem(
+        &self,
+        create_problem: CreateNormalProblem,
+    ) -> anyhow::Result<ProblemId> {
         let problem_id = sqlx::query!(
             r#"
             INSERT INTO 
@@ -217,7 +222,7 @@ impl ProblemRepository for ProblemRepositoryImpl {
             VALUES 
                 (?, ?, ?, ?, ?, ?)
             "#,
-            create_problem.author_id,
+            <UserDisplayId as Into<i64>>::into(create_problem.author_id),
             create_problem.title,
             create_problem.statement,
             create_problem.time_limit_ms,
@@ -231,10 +236,10 @@ impl ProblemRepository for ProblemRepositoryImpl {
             e
         })?;
 
-        Ok(problem_id.last_insert_id() as i64)
+        Ok((problem_id.last_insert_id() as i64).into())
     }
 
-    async fn delete_problem(&self, id: i64) -> anyhow::Result<()> {
+    async fn delete_problem(&self, id: ProblemId) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
             DELETE FROM 
@@ -242,7 +247,7 @@ impl ProblemRepository for ProblemRepositoryImpl {
             WHERE 
                 id = ?
             "#,
-            id
+            <ProblemId as Into<i64>>::into(id)
         )
         .execute(&self.pool)
         .await?;

@@ -23,10 +23,10 @@ pub struct SubmissionRow {
 impl From<SubmissionRow> for Submission {
     fn from(val: SubmissionRow) -> Self {
         Submission {
-            id: val.id.0,
-            problem_id: val.problem_id,
+            id: val.id.0.into(),
+            problem_id: val.problem_id.into(),
             problem_title: val.problem_title,
-            user_id: val.user_id,
+            user_id: val.user_id.into(),
             user_name: val.user_name,
             language_id: val.language_id,
             source: val.source,
@@ -53,7 +53,7 @@ pub struct JudgeResultRow {
 impl From<JudgeResultRow> for JudgeResult {
     fn from(val: JudgeResultRow) -> Self {
         JudgeResult {
-            testcase_id: val.testcase_id.0,
+            testcase_id: val.testcase_id.0.into(),
             testcase_name: val.testcase_name,
             judge_status: val.judge_status,
             score: val.score,

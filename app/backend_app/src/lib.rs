@@ -10,6 +10,7 @@ use tracing::Level;
 
 pub mod config;
 pub mod di;
+pub mod extractor;
 pub mod handler;
 pub mod model;
 mod scheduler;

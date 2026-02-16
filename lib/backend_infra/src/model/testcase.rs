@@ -17,9 +17,9 @@ pub struct TestcaseRow {
 impl From<TestcaseRow> for TestcaseSummary {
     fn from(val: TestcaseRow) -> Self {
         TestcaseSummary {
-            id: val.id.0,
+            id: val.id.0.into(),
             name: val.name,
-            problem_id: val.problem_id,
+            problem_id: val.problem_id.into(),
             input_id: val.input_id.0,
             output_id: val.output_id.0,
             created_at: val.created_at,

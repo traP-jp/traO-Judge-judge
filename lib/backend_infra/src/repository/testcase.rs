@@ -1,10 +1,10 @@
 use axum::async_trait;
 use domain::{
-    model::testcase::{CreateTestcase, TestcaseSummary},
+    model::problem::ProblemId,
+    model::testcase::{CreateTestcase, TestcaseId, TestcaseSummary},
     repository::testcase::TestcaseRepository,
 };
 use sqlx::MySqlPool;
-use uuid::Uuid;
 
 use crate::model::{testcase::TestcaseRow, uuid::UuidRow};
 
@@ -21,7 +21,7 @@ impl TestcaseRepositoryImpl {
 
 #[async_trait]
 impl TestcaseRepository for TestcaseRepositoryImpl {
-    async fn get_testcases(&self, problem_id: i64) -> anyhow::Result<Vec<TestcaseSummary>> {
+    async fn get_testcases(&self, problem_id: ProblemId) -> anyhow::Result<Vec<TestcaseSummary>> {
         let testcases = sqlx::query_as!(
             TestcaseRow,
             r#"
@@ -38,7 +38,7 @@ impl TestcaseRepository for TestcaseRepositoryImpl {
                 WHERE 
                     `problem_id` = ?
                 "#,
-            problem_id
+            <ProblemId as Into<i64>>::into(problem_id)
         )
         .fetch_all(&self.pool)
         .await?;
@@ -46,7 +46,7 @@ impl TestcaseRepository for TestcaseRepositoryImpl {
         Ok(testcases.into_iter().map(|row| row.into()).collect())
     }
 
-    async fn get_testcase(&self, id: Uuid) -> anyhow::Result<Option<TestcaseSummary>> {
+    async fn get_testcase(&self, id: TestcaseId) -> anyhow::Result<Option<TestcaseSummary>> {
         let testcase = sqlx::query_as!(
             TestcaseRow,
             r#"
@@ -63,7 +63,7 @@ impl TestcaseRepository for TestcaseRepositoryImpl {
             WHERE 
                 `id` = ?
             "#,
-            UuidRow(id)
+            UuidRow(id.into())
         )
         .fetch_optional(&self.pool)
         .await?;
@@ -93,9 +93,9 @@ impl TestcaseRepository for TestcaseRepositoryImpl {
         let mut separated = query_builder.separated(", ");
         for testcase in testcases {
             separated.push("(");
-            separated.push_bind_unseparated(UuidRow(testcase.id));
+            separated.push_bind_unseparated(UuidRow(testcase.id.into()));
             separated.push_unseparated(", ");
-            separated.push_bind_unseparated(testcase.problem_id);
+            separated.push_bind_unseparated(<ProblemId as Into<i64>>::into(testcase.problem_id));
             separated.push_unseparated(", ");
             separated.push_bind_unseparated(testcase.name);
             separated.push_unseparated(", ");
@@ -110,7 +110,7 @@ impl TestcaseRepository for TestcaseRepositoryImpl {
         Ok(())
     }
 
-    async fn delete_testcases(&self, problem_id: i64) -> anyhow::Result<()> {
+    async fn delete_testcases(&self, problem_id: ProblemId) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
             DELETE FROM 
@@ -118,7 +118,7 @@ impl TestcaseRepository for TestcaseRepositoryImpl {
             WHERE 
                 `problem_id` = ?
             "#,
-            problem_id
+            <ProblemId as Into<i64>>::into(problem_id)
         )
         .execute(&self.pool)
         .await?;

@@ -1,5 +1,7 @@
 use crate::model::testcase::TestcaseSummaryDto;
 use domain::model::problem::NormalProblem;
+use domain::model::problem::ProblemId;
+use domain::model::user::UserDisplayId;
 use sqlx::types::chrono;
 use validator::Validate;
 
@@ -43,12 +45,12 @@ pub struct ProblemGetQueryData {
     pub offset: Option<i64>,
     pub order_by: ProblemOrderByData,
     pub user_name: Option<String>,
-    pub user_query: Option<String>,
+    pub user_query: Option<UserDisplayId>,
 }
 
 pub struct NormalProblemDto {
-    pub id: String,
-    pub author_id: String,
+    pub id: ProblemId,
+    pub author_id: UserDisplayId,
     pub title: String,
     pub statement: String,
     pub time_limit_ms: i32,
@@ -64,8 +66,8 @@ pub struct NormalProblemDto {
 impl From<NormalProblem> for NormalProblemDto {
     fn from(problem: NormalProblem) -> Self {
         NormalProblemDto {
-            id: problem.id.to_string(),
-            author_id: problem.author_id.to_string(),
+            id: problem.id,
+            author_id: problem.author_id,
             title: problem.title,
             statement: problem.statement,
             time_limit_ms: problem.time_limit_ms,
@@ -81,8 +83,8 @@ impl From<NormalProblem> for NormalProblemDto {
 }
 
 pub struct NormalProblemSummaryDto {
-    pub id: String,
-    pub author_id: String,
+    pub id: ProblemId,
+    pub author_id: UserDisplayId,
     pub title: String,
     pub time_limit_ms: i32,
     pub memory_limit_kib: i32,
@@ -101,8 +103,8 @@ pub struct NormalProblemsDto {
 impl From<NormalProblem> for NormalProblemSummaryDto {
     fn from(problem: NormalProblem) -> Self {
         NormalProblemSummaryDto {
-            id: problem.id.to_string(),
-            author_id: problem.author_id.to_string(),
+            id: problem.id,
+            author_id: problem.author_id,
             title: problem.title,
             time_limit_ms: problem.time_limit_ms,
             memory_limit_kib: problem.memory_limit_kib,

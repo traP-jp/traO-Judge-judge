@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Ok;
 use axum::async_trait;
+use domain::model::problem::ProblemId;
 use judge_core::model::{dep_name_repository::DepNameRepository, identifiers::DepId};
 use sqlx::{MySqlPool, QueryBuilder};
 
@@ -19,10 +20,10 @@ impl DepNameRepositoryImpl {
 }
 
 #[async_trait]
-impl DepNameRepository<i64> for DepNameRepositoryImpl {
+impl DepNameRepository<ProblemId> for DepNameRepositoryImpl {
     async fn insert_many(
         &self,
-        problem_id: i64,
+        problem_id: ProblemId,
         dep_id_to_name: HashMap<DepId, String>,
     ) -> anyhow::Result<()> {
         if dep_id_to_name.is_empty() {
@@ -44,7 +45,7 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
         let mut separated = query_builder.separated(", ");
         for (dep_id, name) in dep_id_to_name {
             separated.push("(");
-            separated.push_bind_unseparated(problem_id);
+            separated.push_bind_unseparated(<ProblemId as Into<i64>>::into(problem_id));
             separated.push_unseparated(", ");
             separated.push_bind_unseparated(UuidRow(dep_id.into()));
             separated.push_unseparated(", ");
@@ -100,7 +101,7 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
         Ok(dep_id_to_name)
     }
 
-    async fn remove_many(&self, problem_id: i64) -> anyhow::Result<()> {
+    async fn remove_many(&self, problem_id: ProblemId) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
             DELETE FROM 
@@ -108,7 +109,7 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
             WHERE 
                 problem_id = ?
             "#,
-            problem_id
+            <ProblemId as Into<i64>>::into(problem_id)
         )
         .execute(&self.pool)
         .await?;
@@ -117,7 +118,7 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
 
     async fn get_many_by_problem_id(
         &self,
-        problem_id: i64,
+        problem_id: ProblemId,
     ) -> anyhow::Result<HashMap<DepId, String>> {
         let dep_names: Vec<DepNameRow> = sqlx::query_as!(
             DepNameRow,
@@ -130,7 +131,7 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
             WHERE 
                 problem_id = ?
             "#,
-            problem_id
+            <ProblemId as Into<i64>>::into(problem_id)
         )
         .fetch_all(&self.pool)
         .await?;

@@ -11,7 +11,7 @@ pub struct IconRow {
 impl From<IconRow> for Icon {
     fn from(val: IconRow) -> Self {
         Icon {
-            id: val.id.0,
+            id: val.id.0.into(),
             content_type: val.content_type,
             icon: val.icon,
         }
