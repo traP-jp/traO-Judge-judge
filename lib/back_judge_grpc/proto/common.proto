@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-message Uuid {
-    uint64 high = 1;
-    uint64 low = 2;
-}
-
-message Unit {}
