@@ -1,4 +1,4 @@
-use crate::model::{identifiers::RuntimeId, job, judge_output, procedure::runtime};
+use crate::model::{identifiers::RuntimeId, job, judge, procedure::runtime};
 use anyhow::Context;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -11,7 +11,7 @@ pub struct Runner<
 > {
     job_service: JobServiceType,
     outcomes: Arc<Mutex<HashMap<RuntimeId, OutcomeToken>>>,
-    outputs: Arc<Mutex<HashMap<RuntimeId, judge_output::ExecutionJobResult>>>,
+    outputs: Arc<Mutex<HashMap<RuntimeId, judge::ExecutionOutput>>>,
     exec_confs: Arc<Mutex<HashMap<RuntimeId, (ReservationToken, Vec<runtime::Dependency>)>>>,
     file_confs: HashMap<RuntimeId, job::FileConf>,
 }
@@ -38,7 +38,7 @@ impl<
     }
 
     #[tracing::instrument(skip(self))]
-    pub async fn run(self) -> anyhow::Result<HashMap<RuntimeId, judge_output::ExecutionJobResult>> {
+    pub async fn run(self) -> anyhow::Result<HashMap<RuntimeId, judge::ExecutionOutput>> {
         tracing::info!("Starting the runner");
         {
             let first_futures = {
@@ -59,11 +59,9 @@ impl<
             }
             let mut outputs = self.outputs.lock().await;
             let exec_confs = self.exec_confs.lock().await;
+            // former `EarlyExit`
             for (runtime_id, _) in exec_confs.iter() {
-                outputs.insert(
-                    runtime_id.clone(),
-                    judge_output::ExecutionJobResult::EarlyExit,
-                );
+                outputs.insert(runtime_id.clone(), judge::ExecutionOutput { stdout: None });
             }
             tracing::info!("Runner completed");
             Ok(outputs.clone())
@@ -154,30 +152,22 @@ impl<
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
         tracing::info!("Execution completed for {}", runtime_id);
-        let result = super::output_parser::parse(&output)
-            .map_err(|e| anyhow::anyhow!(e.to_string()))
-            .context("Failed to parse output")?;
-        tracing::info!("Output parsed for {}", runtime_id);
-        if match &result {
-            judge_output::ExecutionResult::Displayable(result_inner) => {
-                result_inner.continue_status.clone()
-            }
-            judge_output::ExecutionResult::Hidden(result_inner) => {
-                result_inner.continue_status.clone()
-            }
-        } == judge_output::ContinueStatus::Continue
-        {
+        // Starting next jobs if succeeded
+        if output.status.success() {
             let outcomes = self.new_outcome(runtime_id, outcome_token).await;
             self.run_next(&outcomes)
                 .await
                 .context(format!("Failed to run next job after {}", runtime_id))?;
         }
+        // Pushing output
         {
             let mut outputs = self.outputs.lock().await;
-            outputs.insert(
-                runtime_id,
-                judge_output::ExecutionJobResult::ExecutionResult(result),
-            );
+            let stdout = if output.status.success() {
+                Some(output.stdout)
+            } else {
+                None
+            };
+            outputs.insert(runtime_id, judge::ExecutionOutput { stdout });
             std::mem::drop(outputs);
         }
         tracing::info!("Returning from execution job for {}", runtime_id);

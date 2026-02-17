@@ -4,7 +4,6 @@ members = [
   "app/backend_app",
   "app/exec_app",
   "app/judge_control_app",
-  "lib/back_judge_grpc",
   "lib/backend_domain",
   "lib/backend_infra",
   "lib/backend_infra_mock",

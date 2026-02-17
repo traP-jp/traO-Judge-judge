@@ -1,6 +1,7 @@
 pub mod auth;
 pub mod editorial;
 pub mod icon;
+pub mod job;
 pub mod jwt;
 pub mod language;
 pub mod problem;
