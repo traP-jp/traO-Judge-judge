@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Ok;
 use axum::async_trait;
+use domain::model::problem::ProblemId;
 use judge_core::model::{dep_name_repository::DepNameRepository, identifiers::DepId};
 use sqlx::{MySqlPool, QueryBuilder};
 
@@ -19,23 +20,32 @@ impl DepNameRepositoryImpl {
 }
 
 #[async_trait]
-impl DepNameRepository<i64> for DepNameRepositoryImpl {
+impl DepNameRepository<ProblemId> for DepNameRepositoryImpl {
     async fn insert_many(
         &self,
-        problem_id: i64,
+        problem_id: ProblemId,
         dep_id_to_name: HashMap<DepId, String>,
     ) -> anyhow::Result<()> {
         if dep_id_to_name.is_empty() {
             return Ok(());
         }
 
-        let mut query_builder =
-            QueryBuilder::new("INSERT INTO dep_name (problem_id, dep_id, name) VALUES ");
+        let mut query_builder = QueryBuilder::new(
+            r#"
+            INSERT INTO 
+                dep_name (
+                    problem_id, 
+                    dep_id, 
+                    name
+                ) 
+            VALUES
+            "#,
+        );
 
         let mut separated = query_builder.separated(", ");
         for (dep_id, name) in dep_id_to_name {
             separated.push("(");
-            separated.push_bind_unseparated(problem_id);
+            separated.push_bind_unseparated(<ProblemId as Into<i64>>::into(problem_id));
             separated.push_unseparated(", ");
             separated.push_bind_unseparated(UuidRow(dep_id.into()));
             separated.push_unseparated(", ");
@@ -55,12 +65,22 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
             return Ok(HashMap::new());
         }
 
-        let mut query_builder =
-            QueryBuilder::new("SELECT dep_id, name FROM dep_name WHERE dep_id IN (");
+        let mut query_builder = QueryBuilder::new(
+            r#"
+            SELECT 
+                dep_id, 
+                name
+            FROM 
+                dep_name
+            WHERE
+                dep_id 
+                    IN (
+            "#,
+        );
 
         let mut separated = query_builder.separated(", ");
         for dep_id in dep_ids.iter() {
-            separated.push_bind(UuidRow(dep_id.clone().into()));
+            separated.push_bind(UuidRow((*dep_id).into()));
         }
         query_builder.push(")");
 
@@ -75,30 +95,44 @@ impl DepNameRepository<i64> for DepNameRepositoryImpl {
         }
 
         for dep_id in dep_ids {
-            if !dep_id_to_name.contains_key(&dep_id) {
-                dep_id_to_name.insert(dep_id, None);
-            }
+            dep_id_to_name.entry(dep_id).or_insert(None);
         }
 
         Ok(dep_id_to_name)
     }
 
-    async fn remove_many(&self, problem_id: i64) -> anyhow::Result<()> {
-        sqlx::query("DELETE FROM dep_name WHERE problem_id = ?")
-            .bind(problem_id)
-            .execute(&self.pool)
-            .await?;
+    async fn remove_many(&self, problem_id: ProblemId) -> anyhow::Result<()> {
+        sqlx::query!(
+            r#"
+            DELETE FROM 
+                dep_name 
+            WHERE 
+                problem_id = ?
+            "#,
+            <ProblemId as Into<i64>>::into(problem_id)
+        )
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
 
     async fn get_many_by_problem_id(
         &self,
-        problem_id: i64,
+        problem_id: ProblemId,
     ) -> anyhow::Result<HashMap<DepId, String>> {
-        let dep_names: Vec<DepNameRow> = sqlx::query_as::<_, DepNameRow>(
-            "SELECT dep_id, name FROM dep_name WHERE problem_id = ?",
+        let dep_names: Vec<DepNameRow> = sqlx::query_as!(
+            DepNameRow,
+            r#"
+            SELECT 
+                dep_id as "dep_id: _", 
+                name 
+            FROM 
+                dep_name 
+            WHERE 
+                problem_id = ?
+            "#,
+            <ProblemId as Into<i64>>::into(problem_id)
         )
-        .bind(problem_id)
         .fetch_all(&self.pool)
         .await?;
 

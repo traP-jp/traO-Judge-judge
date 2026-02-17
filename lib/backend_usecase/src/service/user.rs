@@ -15,18 +15,21 @@ use crate::{
 use domain::{
     external::mail::MailClient,
     model::{
-        jwt::AuthToken, problem::ProblemGetQuery, submission::SubmissionGetQuery, user::UpdateUser,
+        jwt::AuthToken,
+        problem::ProblemGetQuery,
+        session::SessionUser,
+        submission::SubmissionGetQuery,
+        user::{UpdateUser, UserDisplayId},
     },
     repository::{
         auth::AuthRepository, icon::IconRepository, problem::ProblemRepository,
-        session::SessionRepository, submission::SubmissionRepository, user::UserRepository,
+        submission::SubmissionRepository, user::UserRepository,
     },
 };
 
 #[derive(Clone)]
 pub struct UserService<
     UR: UserRepository,
-    SR: SessionRepository,
     AR: AuthRepository,
     IR: IconRepository,
     PR: ProblemRepository,
@@ -34,7 +37,6 @@ pub struct UserService<
     C: MailClient,
 > {
     user_repository: UR,
-    session_repository: SR,
     auth_repository: AR,
     icon_repository: IR,
     problem_repository: PR,
@@ -45,17 +47,15 @@ pub struct UserService<
 
 impl<
     UR: UserRepository,
-    SR: SessionRepository,
     AR: AuthRepository,
     IR: IconRepository,
     PR: ProblemRepository,
     SubR: SubmissionRepository,
     C: MailClient,
-> UserService<UR, SR, AR, IR, PR, SubR, C>
+> UserService<UR, AR, IR, PR, SubR, C>
 {
     pub fn new(
         user_repository: UR,
-        session_repository: SR,
         auth_repository: AR,
         icon_repository: IR,
         problem_repository: PR,
@@ -64,7 +64,6 @@ impl<
     ) -> Self {
         Self {
             user_repository,
-            session_repository,
             auth_repository,
             icon_repository,
             problem_repository,
@@ -77,45 +76,31 @@ impl<
 
 impl<
     UR: UserRepository,
-    SR: SessionRepository,
     AR: AuthRepository,
     IR: IconRepository,
     PR: ProblemRepository,
     SubR: SubmissionRepository,
     C: MailClient,
-> UserService<UR, SR, AR, IR, PR, SubR, C>
+> UserService<UR, AR, IR, PR, SubR, C>
 {
     pub async fn get_user(
         &self,
-        display_id: String,
-        session_id: Option<&str>,
+        target_display_id: UserDisplayId,
+        session_user: Option<SessionUser>,
     ) -> anyhow::Result<UserDto, UsecaseError> {
-        let user_id = match session_id {
-            Some(session_id) => self
-                .session_repository
-                .get_display_id_by_session_id(&session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?,
-            None => None,
-        };
-
-        let display_id = display_id
-            .parse::<i64>()
-            .map_err(|_| UsecaseError::ValidateError)?;
-
         let user = self
             .user_repository
-            .get_user_by_display_id(display_id)
+            .get_user_by_display_id(target_display_id)
             .await
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         let problem_query = ProblemGetQuery {
-            user_id: user_id,
+            user_id: session_user.as_ref().map(|u| u.display_id),
             limit: 50,
             offset: 0,
             order_by: domain::model::problem::ProblemOrderBy::CreatedAtDesc,
-            user_query: Some(display_id),
+            user_query: Some(target_display_id),
             user_name: None,
         };
 
@@ -131,13 +116,13 @@ impl<
             .map_err(UsecaseError::internal_server_error_map())?;
 
         let submission_query = SubmissionGetQuery {
-            user_id: user_id,
+            user_id: session_user.as_ref().map(|u| u.display_id),
             limit: 50,
             offset: 0,
             judge_status: None,
             language_id: None,
             user_name: None,
-            user_query: Some(display_id),
+            user_query: Some(target_display_id),
             order_by: domain::model::submission::SubmissionOrderBy::SubmittedAtDesc,
             problem_id: None,
         };
@@ -166,27 +151,25 @@ impl<
         ))
     }
 
-    pub async fn get_me(&self, session_id: &str) -> anyhow::Result<UserMeDto, UsecaseError> {
-        let user_id = self
-            .session_repository
-            .get_display_id_by_session_id(session_id)
-            .await
-            .map_err(UsecaseError::internal_server_error_map())?
-            .ok_or(UsecaseError::Unauthorized)?;
+    pub async fn get_me(
+        &self,
+        session_user: Option<SessionUser>,
+    ) -> anyhow::Result<UserMeDto, UsecaseError> {
+        let session_user = session_user.ok_or(UsecaseError::Unauthorized)?;
 
         let user = self
             .user_repository
-            .get_user_by_display_id(user_id)
+            .get_user_by_display_id(session_user.display_id)
             .await
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
         let problem_query = ProblemGetQuery {
-            user_id: Some(user_id),
+            user_id: Some(session_user.display_id),
             limit: 50,
             offset: 0,
             order_by: domain::model::problem::ProblemOrderBy::CreatedAtDesc,
-            user_query: Some(user_id),
+            user_query: Some(session_user.display_id),
             user_name: None,
         };
 
@@ -202,13 +185,13 @@ impl<
             .map_err(UsecaseError::internal_server_error_map())?;
 
         let submission_query = SubmissionGetQuery {
-            user_id: Some(user_id),
+            user_id: Some(session_user.display_id),
             limit: 50,
             offset: 0,
             judge_status: None,
             language_id: None,
             user_name: None,
-            user_query: Some(user_id),
+            user_query: Some(session_user.display_id),
             order_by: domain::model::submission::SubmissionOrderBy::SubmittedAtDesc,
             problem_id: None,
         };
@@ -247,21 +230,15 @@ impl<
 
     pub async fn update_me(
         &self,
-        session_id: &str,
+        session_user: Option<SessionUser>,
         body: UpdateUserData,
     ) -> anyhow::Result<UserMeDto, UsecaseError> {
         body.validate().map_err(|_| UsecaseError::ValidateError)?;
-
-        let user_id = self
-            .session_repository
-            .get_display_id_by_session_id(session_id)
-            .await
-            .map_err(UsecaseError::internal_server_error_map())?
-            .ok_or(UsecaseError::Unauthorized)?;
+        let session_user = session_user.ok_or(UsecaseError::Unauthorized)?;
 
         let user = self
             .user_repository
-            .get_user_by_display_id(user_id)
+            .get_user_by_display_id(session_user.display_id)
             .await
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or_else(|| {
@@ -293,27 +270,25 @@ impl<
                         .map_err(UsecaseError::internal_server_error_map())?;
                 }
 
-                let uuid = uuid::Uuid::now_v7();
-
-                let icon = domain::model::icon::Icon {
-                    id: uuid,
+                let create_icon = domain::model::icon::CreateIcon {
                     content_type: mime_type.to_string(),
                     icon: binary_data,
                 };
 
-                self.icon_repository
-                    .create_icon(icon)
+                let icon_id = self
+                    .icon_repository
+                    .create_icon(create_icon)
                     .await
                     .map_err(UsecaseError::internal_server_error_map())?;
 
-                Some(uuid)
+                Some(icon_id)
             }
             None => None,
         };
 
         self.user_repository
             .update_user(
-                user_id,
+                session_user.display_id,
                 UpdateUser {
                     user_name: body.user_name,
                     icon_id: icon_id.or(user.icon_id),
@@ -327,7 +302,7 @@ impl<
 
         let new_user = self
             .user_repository
-            .get_user_by_display_id(user_id)
+            .get_user_by_display_id(session_user.display_id)
             .await
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or_else(|| {
@@ -337,11 +312,11 @@ impl<
             })?;
 
         let problem_query = ProblemGetQuery {
-            user_id: Some(user_id),
+            user_id: Some(session_user.display_id),
             limit: 50,
             offset: 0,
             order_by: domain::model::problem::ProblemOrderBy::CreatedAtDesc,
-            user_query: Some(user_id),
+            user_query: Some(session_user.display_id),
             user_name: None,
         };
         let problem_count = self
@@ -356,13 +331,13 @@ impl<
             .map_err(UsecaseError::internal_server_error_map())?;
 
         let submission_query = SubmissionGetQuery {
-            user_id: Some(user_id),
+            user_id: Some(session_user.display_id),
             limit: 50,
             offset: 0,
             judge_status: None,
             language_id: None,
             user_name: None,
-            user_query: Some(user_id),
+            user_query: Some(session_user.display_id),
             order_by: domain::model::submission::SubmissionOrderBy::SubmittedAtDesc,
             problem_id: None,
         };
@@ -399,19 +374,14 @@ impl<
 
     pub async fn update_email(
         &self,
-        session_id: &str,
+        session_user: Option<SessionUser>,
         email: String,
     ) -> anyhow::Result<(), UsecaseError> {
+        let session_user = session_user.ok_or(UsecaseError::Unauthorized)?;
+
         let user_address = email
             .parse::<Address>()
             .map_err(|_| UsecaseError::ValidateError)?;
-
-        let display_id = self
-            .session_repository
-            .get_display_id_by_session_id(session_id)
-            .await
-            .map_err(UsecaseError::internal_server_error_map())?
-            .ok_or(UsecaseError::Unauthorized)?;
 
         if self
             .auth_repository
@@ -425,8 +395,13 @@ impl<
         let encode_key = std::env::var("JWT_SECRET_KEY").unwrap();
         let encrypt_key = std::env::var("JWT_PAYLOAD_ENCRYPT_SECRET_KEY").unwrap();
 
-        let jwt = AuthToken::encode_email_update_jwt(display_id, &email, &encode_key, &encrypt_key)
-            .map_err(UsecaseError::internal_server_error_map())?;
+        let jwt = AuthToken::encode_email_update_jwt(
+            session_user.display_id,
+            &email,
+            &encode_key,
+            &encrypt_key,
+        )
+        .map_err(UsecaseError::internal_server_error_map())?;
 
         let mail_content = self.mail_template_provider.change_email_request(&jwt);
 
@@ -440,26 +415,20 @@ impl<
 
     pub async fn update_password(
         &self,
-        session_id: &str,
+        session_user: Option<SessionUser>,
         data: UpdatePasswordData,
     ) -> anyhow::Result<(), UsecaseError> {
         data.validate().map_err(|_| UsecaseError::ValidateError)?;
-
-        let user_id = self
-            .session_repository
-            .get_user_id_by_session_id(session_id)
-            .await
-            .map_err(UsecaseError::internal_server_error_map())?
-            .ok_or(UsecaseError::Unauthorized)?;
+        let session_user = session_user.ok_or(UsecaseError::Unauthorized)?;
 
         match self
             .auth_repository
-            .verify_user_password(user_id, &data.old_password)
+            .verify_user_password(session_user.user_id, &data.old_password)
             .await
         {
             Ok(true) => {
                 self.auth_repository
-                    .update_user_password(user_id, &data.new_password)
+                    .update_user_password(session_user.user_id, &data.new_password)
                     .await
                     .map_err(UsecaseError::internal_server_error_map())?;
                 Ok(())

@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            DELETE FROM \n                dep_name \n            WHERE \n                problem_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "4b7cdf90c11e4d57a32ed79c7e6c26355a0b15775c1536d3ee0a09e2bf0875ae"
+}

@@ -1,4 +1,5 @@
 use async_session::chrono;
+use domain::model::user::UserDisplayId;
 use serde::{Deserialize, Serialize};
 use usecase::model::user::{UserDto, UserMeDto, UserRoleDto};
 
@@ -44,7 +45,7 @@ pub struct UserResponse {
 impl From<UserDto> for UserResponse {
     fn from(user: UserDto) -> Self {
         UserResponse {
-            id: user.display_id.to_string(),
+            id: <UserDisplayId as Into<i64>>::into(user.display_id).to_string(),
             name: user.name,
             traq_id: user.traq_id,
             github_id: user.github_id,
@@ -95,7 +96,7 @@ pub struct UserAuthentication {
 impl From<UserMeDto> for UserMeResponse {
     fn from(user: UserMeDto) -> Self {
         UserMeResponse {
-            id: user.display_id.to_string(),
+            id: <UserDisplayId as Into<i64>>::into(user.display_id).to_string(),
             name: user.name,
             traq_id: user.traq_id,
             github_id: user.github_id,

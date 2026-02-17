@@ -1,4 +1,5 @@
 use crate::di::DiContainer;
+use crate::extractor::session::ExtractedSessionUser;
 use crate::model::error::AppError;
 use crate::model::problems::{
     CreateNormalProblem, ProblemGetQuery, ProblemOrderBy, ProblemResponse,
@@ -10,21 +11,22 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
-use axum_extra::{TypedHeader, headers::Cookie};
 use usecase::model::problem::{
     CreateNormalProblemData, ProblemGetQueryData, ProblemOrderByData, UpdateNormalProblemData,
 };
 
 pub async fn get_problem(
     State(di_container): State<DiContainer>,
-    TypedHeader(cookie): TypedHeader<Cookie>,
+    ExtractedSessionUser(session_user): ExtractedSessionUser,
     Path(problem_id): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id");
-
+    let problem_id = problem_id
+        .parse::<i64>()
+        .map_err(|_| StatusCode::BAD_REQUEST)?
+        .into();
     match di_container
         .problem_service()
-        .get_problem(session_id, problem_id)
+        .get_problem(session_user, problem_id)
         .await
     {
         Ok(problem) => {
@@ -37,15 +39,13 @@ pub async fn get_problem(
 
 pub async fn get_problems(
     State(di_container): State<DiContainer>,
-    TypedHeader(cookie): TypedHeader<Cookie>,
+    ExtractedSessionUser(session_user): ExtractedSessionUser,
     Query(query): Query<ProblemGetQuery>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id");
-
     match di_container
         .problem_service()
         .get_problems_by_query(
-            session_id,
+            session_user,
             ProblemGetQueryData {
                 offset: query.offset,
                 limit: query.limit,
@@ -61,7 +61,15 @@ pub async fn get_problems(
                     None => ProblemOrderByData::CreatedAtDesc,
                 },
                 user_name: query.username,
-                user_query: query.user_id,
+                user_query: query
+                    .user_id
+                    .map(|user_id| {
+                        user_id
+                            .parse::<i64>()
+                            .map_err(|_| StatusCode::BAD_REQUEST)
+                            .map(|user_id| user_id.into())
+                    })
+                    .transpose()?,
             },
         )
         .await
@@ -76,17 +84,18 @@ pub async fn get_problems(
 
 pub async fn put_problem(
     State(di_container): State<DiContainer>,
-    TypedHeader(cookie): TypedHeader<Cookie>,
+    ExtractedSessionUser(session_user): ExtractedSessionUser,
     Path(problem_id): Path<String>,
     Json(body): Json<UpdateNormalProblem>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id");
-
     match di_container
         .problem_service()
         .update_problem(
-            session_id,
-            problem_id,
+            session_user,
+            problem_id
+                .parse::<i64>()
+                .map_err(|_| StatusCode::BAD_REQUEST)?
+                .into(),
             UpdateNormalProblemData {
                 title: body.title,
                 statement: body.statement,
@@ -105,15 +114,13 @@ pub async fn put_problem(
 
 pub async fn post_problem(
     State(di_container): State<DiContainer>,
-    TypedHeader(cookie): TypedHeader<Cookie>,
+    ExtractedSessionUser(session_user): ExtractedSessionUser,
     Json(body): Json<CreateNormalProblem>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id");
-
     match di_container
         .problem_service()
         .create_problem(
-            session_id,
+            session_user,
             CreateNormalProblemData {
                 title: body.title,
                 statement: body.statement,
@@ -134,14 +141,18 @@ pub async fn post_problem(
 
 pub async fn delete_problem(
     State(di_container): State<DiContainer>,
-    TypedHeader(cookie): TypedHeader<Cookie>,
+    ExtractedSessionUser(session_user): ExtractedSessionUser,
     Path(problem_id): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let session_id = cookie.get("session_id");
-
     match di_container
         .problem_service()
-        .delete_problem(session_id, problem_id)
+        .delete_problem(
+            session_user,
+            problem_id
+                .parse::<i64>()
+                .map_err(|_| StatusCode::BAD_REQUEST)?
+                .into(),
+        )
         .await
     {
         Ok(_) => Ok(StatusCode::NO_CONTENT),

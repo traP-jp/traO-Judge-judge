@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            INSERT INTO \n                normal_problems (\n                    author_id, \n                    title, \n                    statement, \n                    time_limit_ms, \n                    memory_limit_kib, \n                    difficulty\n                ) \n            VALUES \n                (?, ?, ?, ?, ?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "bc6864dce61aee02f6af7d759bc5c2173fbae3ac09bf8e9ba2664702a28d9bc2"
+}

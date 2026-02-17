@@ -1,5 +1,7 @@
-use domain::{model::icon::Icon, repository::icon::IconRepository};
-use uuid::Uuid;
+use domain::{
+    model::icon::{Icon, IconId},
+    repository::icon::IconRepository,
+};
 
 use crate::model::error::UsecaseError;
 
@@ -14,12 +16,7 @@ impl<IR: IconRepository> IconService<IR> {
 }
 
 impl<IR: IconRepository> IconService<IR> {
-    pub async fn get_icon(&self, id: String) -> anyhow::Result<Icon, UsecaseError> {
-        let id = match Uuid::parse_str(&id) {
-            Ok(id) => id,
-            Err(_) => return Err(UsecaseError::NotFound),
-        };
-
+    pub async fn get_icon(&self, id: IconId) -> anyhow::Result<Icon, UsecaseError> {
         let icon = self
             .icon_repository
             .get_icon(id)

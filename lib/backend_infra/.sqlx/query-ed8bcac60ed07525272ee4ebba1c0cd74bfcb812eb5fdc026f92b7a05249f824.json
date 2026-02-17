@@ -1,0 +1,25 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            SELECT\n                google_oauth\n            FROM\n                user_authentications\n            WHERE\n                user_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "google_oauth",
+        "type_info": {
+          "type": "VarString",
+          "flags": "UNIQUE_KEY",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "ed8bcac60ed07525272ee4ebba1c0cd74bfcb812eb5fdc026f92b7a05249f824"
+}

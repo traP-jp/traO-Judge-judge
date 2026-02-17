@@ -1,0 +1,135 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            SELECT \n                display_id,\n                id AS \"id: _\",\n                name,\n                traq_id,\n                icon_id AS \"icon_id: _\",\n                github_id,\n                x_id,\n                self_introduction,\n                role,\n                created_at AS \"created_at!: _\",\n                updated_at AS \"updated_at!: _\"\n            FROM\n                users \n            WHERE\n                display_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "display_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | UNIQUE_KEY | AUTO_INCREMENT",
+          "char_set": 63,
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "id: _",
+        "type_info": {
+          "type": "String",
+          "flags": "NOT_NULL | PRIMARY_KEY | BINARY | NO_DEFAULT_VALUE",
+          "char_set": 63,
+          "max_size": 16
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "traq_id",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "icon_id: _",
+        "type_info": {
+          "type": "String",
+          "flags": "BINARY",
+          "char_set": 63,
+          "max_size": 16
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "github_id",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "x_id",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "self_introduction",
+        "type_info": {
+          "type": "Blob",
+          "flags": "NOT_NULL | BLOB",
+          "char_set": 224,
+          "max_size": 262140
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "role",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "char_set": 63,
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at!: _",
+        "type_info": {
+          "type": "Datetime",
+          "flags": "NOT_NULL | BINARY",
+          "char_set": 63,
+          "max_size": 19
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at!: _",
+        "type_info": {
+          "type": "Datetime",
+          "flags": "NOT_NULL | BINARY | ON_UPDATE_NOW",
+          "char_set": 63,
+          "max_size": 19
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b2948c983190240140e298c1a79e09db91bcf1413cf62cd122cca6c4dfcc5eae"
+}

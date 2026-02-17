@@ -25,8 +25,7 @@ impl From<AppError> for StatusCode {
                     column,
                     message
                 );
-                #[cfg(feature = "prod")]
-                {
+                if crate::config::is_prod() {
                     // message に 機密情報が含まれてたらまずいのでとりあえず "todo" にしておく
                     let error_message =
                         format!("Location: {}:{}:{}\nmessage: todo", file, line, column);

@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            UPDATE \n                user_authentications\n            SET \n                github_oauth = ?\n            WHERE \n                user_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "e6d0fe2829b7d458e2c43f1bc6316bb27e6bf029c58b17cc4f9ae1fd00cd9d65"
+}

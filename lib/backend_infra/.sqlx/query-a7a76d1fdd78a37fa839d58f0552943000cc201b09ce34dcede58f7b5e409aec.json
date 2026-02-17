@@ -1,0 +1,146 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            SELECT \n                submissions.id AS \"id: _\",\n                submissions.problem_id,\n                submissions.user_id,\n                submissions.language_id,\n                submissions.source,\n                submissions.judge_status,\n                submissions.total_score,\n                submissions.max_time_ms,\n                submissions.max_memory_kib,\n                submissions.submitted_at AS \"submitted_at: _\",\n                normal_problems.title as problem_title,\n                users.name as user_name\n            FROM\n                submissions\n                INNER JOIN\n                    normal_problems \n                        ON normal_problems.id = submissions.problem_id\n                INNER JOIN\n                    users \n                        ON users.display_id = submissions.user_id\n            WHERE\n                submissions.id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: _",
+        "type_info": {
+          "type": "String",
+          "flags": "NOT_NULL | PRIMARY_KEY | BINARY | NO_DEFAULT_VALUE",
+          "char_set": 63,
+          "max_size": 16
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "problem_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "char_set": 63,
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | MULTIPLE_KEY | NO_DEFAULT_VALUE",
+          "char_set": 63,
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "language_id",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "char_set": 224,
+          "max_size": 128
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "source",
+        "type_info": {
+          "type": "Blob",
+          "flags": "NOT_NULL | BLOB | NO_DEFAULT_VALUE",
+          "char_set": 224,
+          "max_size": 262140
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "judge_status",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "char_set": 224,
+          "max_size": 16
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "total_score",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "char_set": 63,
+          "max_size": 20
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "max_time_ms",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "char_set": 63,
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "max_memory_kib",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "char_set": 63,
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "submitted_at: _",
+        "type_info": {
+          "type": "Datetime",
+          "flags": "NOT_NULL | BINARY",
+          "char_set": 63,
+          "max_size": 19
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "problem_title",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "user_name",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a7a76d1fdd78a37fa839d58f0552943000cc201b09ce34dcede58f7b5e409aec"
+}

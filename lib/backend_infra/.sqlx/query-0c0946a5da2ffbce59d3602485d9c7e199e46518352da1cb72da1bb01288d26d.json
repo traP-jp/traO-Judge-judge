@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            UPDATE \n                user_authentications\n            SET \n                traq_oauth = ?\n            WHERE \n                user_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "0c0946a5da2ffbce59d3602485d9c7e199e46518352da1cb72da1bb01288d26d"
+}

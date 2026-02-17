@@ -1,0 +1,25 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            SELECT\n                user_id AS \"user_id: UuidRow\"\n            FROM\n                user_authentications\n            WHERE\n                email = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id: UuidRow",
+        "type_info": {
+          "type": "String",
+          "flags": "NOT_NULL | PRIMARY_KEY | BINARY | NO_DEFAULT_VALUE",
+          "char_set": 63,
+          "max_size": 16
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "23541390afd353f98a6c5cc58ba21040ab26c7821d498ba567e0219707e09199"
+}

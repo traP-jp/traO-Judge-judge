@@ -1,12 +1,16 @@
+use domain::model::problem::ProblemId;
 use domain::model::submission::Submission;
+use domain::model::submission::SubmissionId;
+use domain::model::testcase::TestcaseId;
+use domain::model::user::UserDisplayId;
 use sqlx::types::chrono;
 
 #[derive(Debug, Clone)]
 pub struct SubmissionDto {
-    pub id: String,
-    pub user_id: String,
+    pub id: SubmissionId,
+    pub user_id: UserDisplayId,
     pub user_name: String,
-    pub problem_id: String,
+    pub problem_id: ProblemId,
     pub problem_title: String,
     pub submitted_at: chrono::DateTime<chrono::Utc>,
     pub language_id: String,
@@ -21,7 +25,7 @@ pub struct SubmissionDto {
 
 #[derive(Debug, Clone)]
 pub struct JudgeResultDto {
-    pub testcase_id: String,
+    pub testcase_id: TestcaseId,
     pub testcase_name: String,
     pub judge_status: String,
     pub score: i64,
@@ -31,10 +35,10 @@ pub struct JudgeResultDto {
 
 #[derive(Debug, Clone)]
 pub struct SubmissionSummaryDto {
-    pub id: String,
-    pub problem_id: String,
+    pub id: SubmissionId,
+    pub problem_id: ProblemId,
     pub problem_title: String,
-    pub user_id: String,
+    pub user_id: UserDisplayId,
     pub user_name: String,
     pub submitted_at: chrono::DateTime<chrono::Utc>,
     pub language_id: String,
@@ -48,10 +52,10 @@ pub struct SubmissionSummaryDto {
 impl From<Submission> for SubmissionSummaryDto {
     fn from(submission: Submission) -> Self {
         SubmissionSummaryDto {
-            id: submission.id.to_string(),
-            problem_id: submission.problem_id.to_string(),
+            id: submission.id,
+            problem_id: submission.problem_id,
             problem_title: submission.problem_title,
-            user_id: submission.user_id.to_string(),
+            user_id: submission.user_id,
             user_name: submission.user_name,
             submitted_at: submission.submitted_at,
             language_id: submission.language_id,
@@ -88,9 +92,9 @@ pub struct SubmissionGetQueryData {
     pub judge_status: Option<String>,
     pub language: Option<String>,
     pub user_name: Option<String>,
-    pub user_query: Option<String>,
+    pub user_query: Option<UserDisplayId>,
     pub order_by: SubmissionOrderByData,
-    pub problem_id: Option<String>,
+    pub problem_id: Option<ProblemId>,
 }
 
 #[derive(Debug, Clone)]

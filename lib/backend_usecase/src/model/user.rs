@@ -1,10 +1,10 @@
+use domain::model::icon::IconId;
 use domain::model::{
     auth::UserAuthentication,
     rules::RuleType,
-    user::{User, UserRole},
+    user::{User, UserDisplayId, UserId, UserRole},
 };
 use sqlx::types::chrono;
-use uuid::Uuid;
 
 use super::{problem::NormalProblemsDto, submission::SubmissionsDto};
 
@@ -67,12 +67,12 @@ impl From<UserRole> for UserRoleDto {
 }
 
 pub struct UserDto {
-    pub id: Uuid,
-    pub display_id: i64,
+    pub id: UserId,
+    pub display_id: UserDisplayId,
     pub name: String,
     pub traq_id: Option<String>,
     pub github_id: Option<String>,
-    pub icon_id: Option<Uuid>,
+    pub icon_id: Option<IconId>,
     pub post_problems: NormalProblemsDto,
     pub submit_problems: SubmissionsDto,
     pub x_id: Option<String>,
@@ -85,7 +85,7 @@ pub struct UserDto {
 impl UserDto {
     pub fn new(user: User, problems: NormalProblemsDto, submissions: SubmissionsDto) -> Self {
         UserDto {
-            id: user.id.0,
+            id: user.id,
             display_id: user.display_id,
             name: user.name,
             traq_id: user.traq_id,
@@ -103,12 +103,12 @@ impl UserDto {
 }
 
 pub struct UserMeDto {
-    pub id: Uuid,
-    pub display_id: i64,
+    pub id: UserId,
+    pub display_id: UserDisplayId,
     pub name: String,
     pub traq_id: Option<String>,
     pub github_id: Option<String>,
-    pub icon_id: Option<Uuid>,
+    pub icon_id: Option<IconId>,
     pub post_problems: NormalProblemsDto,
     pub submit_problems: SubmissionsDto,
     pub x_id: Option<String>,
@@ -127,7 +127,7 @@ impl UserMeDto {
         authentication: UserAuthentication,
     ) -> Self {
         UserMeDto {
-            id: user.id.0,
+            id: user.id,
             display_id: user.display_id,
             name: user.name,
             traq_id: user.traq_id,

@@ -4,10 +4,12 @@ use crate::model::{
 };
 use axum::async_trait;
 use domain::{
+    model::problem::ProblemId,
     model::submission::{
         CreateJudgeResult, CreateSubmission, JudgeResult, Submission, SubmissionGetQuery,
-        SubmissionOrderBy, UpdateSubmission,
+        SubmissionId, SubmissionOrderBy, UpdateSubmission,
     },
+    model::user::UserDisplayId,
     repository::submission::SubmissionRepository,
 };
 use sqlx::{MySqlPool, QueryBuilder};
@@ -26,22 +28,60 @@ impl SubmissionRepositoryImpl {
 
 #[async_trait]
 impl SubmissionRepository for SubmissionRepositoryImpl {
-    async fn get_submission(&self, id: Uuid) -> anyhow::Result<Option<Submission>> {
-        let submission = sqlx::query_as::<_, SubmissionRow>(
-            "SELECT submissions.*, normal_problems.title as problem_title, users.name as user_name FROM submissions INNER JOIN normal_problems ON normal_problems.id = submissions.problem_id LEFT JOIN users ON users.display_id = submissions.user_id WHERE submissions.id = ?"
+    async fn get_submission(&self, id: SubmissionId) -> anyhow::Result<Option<Submission>> {
+        let submission = sqlx::query_as!(
+            SubmissionRow,
+            r#"
+            SELECT 
+                submissions.id AS "id: _",
+                submissions.problem_id,
+                submissions.user_id,
+                submissions.language_id,
+                submissions.source,
+                submissions.judge_status,
+                submissions.total_score,
+                submissions.max_time_ms,
+                submissions.max_memory_kib,
+                submissions.submitted_at AS "submitted_at: _",
+                normal_problems.title as problem_title,
+                users.name as user_name
+            FROM
+                submissions
+                INNER JOIN
+                    normal_problems 
+                        ON normal_problems.id = submissions.problem_id
+                INNER JOIN
+                    users 
+                        ON users.display_id = submissions.user_id
+            WHERE
+                submissions.id = ?
+            "#,
+            UuidRow(id.into())
         )
-        .bind(UuidRow(id))
         .fetch_optional(&self.pool)
         .await?;
 
         Ok(submission.map(|submission| submission.into()))
     }
 
-    async fn get_submission_results(&self, id: Uuid) -> anyhow::Result<Vec<JudgeResult>> {
-        let results = sqlx::query_as::<_, JudgeResultRow>(
-            "SELECT * FROM submission_testcases WHERE submission_id = ?",
+    async fn get_submission_results(&self, id: SubmissionId) -> anyhow::Result<Vec<JudgeResult>> {
+        let results = sqlx::query_as!(
+            JudgeResultRow,
+            r#"
+            SELECT 
+                submission_id AS "submission_id: _",
+                testcase_id AS "testcase_id: _",
+                testcase_name,
+                judge_status,
+                score,
+                time_ms,
+                memory_kib 
+            FROM 
+                submission_testcases 
+            WHERE 
+                submission_id = ?"#,
+            UuidRow(id.into())
         )
-        .bind(UuidRow(id))
         .fetch_all(&self.pool)
         .await?;
 
@@ -53,21 +93,35 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         query: SubmissionGetQuery,
     ) -> anyhow::Result<Vec<Submission>> {
         let mut query_builder = QueryBuilder::new(
-            "SELECT submissions.*, normal_problems.title as problem_title, users.name as user_name FROM submissions INNER JOIN normal_problems ON normal_problems.id = submissions.problem_id LEFT JOIN users ON users.display_id = submissions.user_id WHERE",
+            r#"
+            SELECT 
+                submissions.*, 
+                normal_problems.title as problem_title, 
+                users.name as user_name 
+            FROM 
+                submissions 
+                    INNER JOIN 
+                        normal_problems 
+                            ON normal_problems.id = submissions.problem_id 
+                    INNER JOIN 
+                        users 
+                            ON users.display_id = submissions.user_id 
+            WHERE
+            "#,
         );
 
         query_builder.push(" (normal_problems.is_public = TRUE");
         if let Some(user_id) = query.user_id {
             query_builder
                 .push(" OR normal_problems.author_id = ")
-                .push_bind(user_id);
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_id));
         }
         query_builder.push(")");
 
         if let Some(user_query) = query.user_query {
             query_builder
                 .push(" AND submissions.user_id = ")
-                .push_bind(user_query);
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_query));
         }
         if let Some(user_name) = query.user_name {
             query_builder
@@ -87,7 +141,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         if let Some(problem_id) = query.problem_id {
             query_builder
                 .push(" AND submissions.problem_id = ")
-                .push_bind(problem_id);
+                .push_bind(<ProblemId as Into<i64>>::into(problem_id));
         }
 
         query_builder.push(" ORDER BY ");
@@ -144,21 +198,33 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         query: SubmissionGetQuery,
     ) -> anyhow::Result<i64> {
         let mut query_builder = QueryBuilder::new(
-            "SELECT COUNT(*) FROM submissions INNER JOIN normal_problems ON normal_problems.id = submissions.problem_id LEFT JOIN users ON users.display_id = submissions.user_id \nWHERE",
+            r#"
+            SELECT 
+                COUNT(1) 
+            FROM 
+                submissions 
+                INNER JOIN 
+                    normal_problems 
+                        ON normal_problems.id = submissions.problem_id 
+                INNER JOIN 
+                    users 
+                        ON users.display_id = submissions.user_id 
+            WHERE
+            "#,
         );
 
         query_builder.push(" (normal_problems.is_public = TRUE");
         if let Some(user_id) = query.user_id {
             query_builder
                 .push(" OR normal_problems.author_id = ")
-                .push_bind(user_id);
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_id));
         }
         query_builder.push(")");
 
         if let Some(user_query) = query.user_query {
             query_builder
                 .push(" AND submissions.user_id = ")
-                .push_bind(user_query);
+                .push_bind(<UserDisplayId as Into<i64>>::into(user_query));
         }
         if let Some(user_name) = query.user_name {
             query_builder
@@ -178,7 +244,7 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         if let Some(problem_id) = query.problem_id {
             query_builder
                 .push(" AND submissions.problem_id = ")
-                .push_bind(problem_id);
+                .push_bind(<ProblemId as Into<i64>>::into(problem_id));
         }
 
         let count = query_builder
@@ -189,40 +255,67 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         Ok(count)
     }
 
-    async fn create_submission(&self, submission: CreateSubmission) -> anyhow::Result<Uuid> {
+    async fn create_submission(
+        &self,
+        submission: CreateSubmission,
+    ) -> anyhow::Result<SubmissionId> {
         let submission_id = Uuid::now_v7();
-
-        sqlx::query(
-            "INSERT INTO submissions (id, problem_id, user_id, language_id, source, judge_status, total_score, max_time_ms, max_memory_kib) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        sqlx::query!(
+            r#"
+            INSERT INTO 
+                submissions (
+                    id, 
+                    problem_id, 
+                    user_id, 
+                    language_id, 
+                    source, 
+                    judge_status, 
+                    total_score, 
+                    max_time_ms, 
+                    max_memory_kib
+                ) 
+            VALUES 
+                (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            "#,
+            UuidRow(submission_id.into()),
+            <ProblemId as Into<i64>>::into(submission.problem_id),
+            <UserDisplayId as Into<i64>>::into(submission.user_id),
+            submission.language_id,
+            submission.source,
+            submission.judge_status,
+            submission.total_score,
+            submission.max_time_ms,
+            submission.max_memory_kib
         )
-        .bind(UuidRow(submission_id))
-        .bind(submission.problem_id)
-        .bind(submission.user_id)
-        .bind(submission.language_id)
-        .bind(submission.source)
-        .bind(submission.judge_status)
-        .bind(submission.total_score)
-        .bind(submission.max_time_ms)
-        .bind(submission.max_memory_kib)
         .execute(&self.pool)
         .await?;
 
-        Ok(submission_id)
+        Ok(submission_id.into())
     }
 
     async fn update_submission(
         &self,
-        submission_id: Uuid,
+        submission_id: SubmissionId,
         submission: UpdateSubmission,
     ) -> anyhow::Result<()> {
-        sqlx::query(
-            "UPDATE submissions SET judge_status = ?, total_score = ?, max_time_ms = ?, max_memory_kib = ? WHERE id = ?",
+        sqlx::query!(
+            r#"
+            UPDATE 
+                submissions 
+            SET 
+                judge_status = ?, 
+                total_score = ?, 
+                max_time_ms = ?, 
+                max_memory_kib = ? 
+            WHERE 
+                id = ?
+            "#,
+            submission.judge_status,
+            submission.total_score,
+            submission.max_time_ms,
+            submission.max_memory_kib,
+            UuidRow(submission_id.into())
         )
-        .bind(submission.judge_status)
-        .bind(submission.total_score)
-        .bind(submission.max_time_ms)
-        .bind(submission.max_memory_kib)
-        .bind(UuidRow(submission_id))
         .execute(&self.pool)
         .await?;
 
@@ -235,14 +328,26 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
         }
 
         let mut query_builder = QueryBuilder::new(
-            "INSERT INTO submission_testcases (submission_id, testcase_id, testcase_name, judge_status, score, time_ms, memory_kib) VALUES ",
+            r#"
+            INSERT INTO 
+                submission_testcases (
+                    submission_id, 
+                    testcase_id, 
+                    testcase_name, 
+                    judge_status, 
+                    score, 
+                    time_ms, 
+                    memory_kib
+                )
+            VALUES
+            "#,
         );
         let mut separated = query_builder.separated(", ");
         for r in results.into_iter() {
             separated.push("(");
-            separated.push_bind_unseparated(UuidRow(r.submission_id));
+            separated.push_bind_unseparated(UuidRow(r.submission_id.into()));
             separated.push_unseparated(", ");
-            separated.push_bind_unseparated(UuidRow(r.testcase_id));
+            separated.push_bind_unseparated(UuidRow(r.testcase_id.into()));
             separated.push_unseparated(", ");
             separated.push_bind_unseparated(r.testcase_name);
             separated.push_unseparated(", ");
@@ -261,12 +366,19 @@ impl SubmissionRepository for SubmissionRepositoryImpl {
 
     async fn delete_judge_results_by_submission_id(
         &self,
-        submission_id: Uuid,
+        submission_id: SubmissionId,
     ) -> anyhow::Result<()> {
-        sqlx::query("DELETE FROM submission_testcases WHERE submission_id = ?")
-            .bind(UuidRow(submission_id))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            DELETE FROM 
+                submission_testcases
+            WHERE
+                submission_id = ?
+            "#,
+            UuidRow(submission_id.into())
+        )
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
 }

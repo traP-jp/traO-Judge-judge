@@ -6,6 +6,7 @@ pub mod jwt;
 pub mod language;
 pub mod problem;
 pub mod rules;
+pub mod session;
 pub mod submission;
 pub mod testcase;
 pub mod user;

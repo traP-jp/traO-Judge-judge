@@ -3,7 +3,8 @@ use async_session::{Session, SessionStore};
 use async_sqlx_session::MySqlSessionStore;
 use axum::async_trait;
 use domain::{
-    model::user::{User, UserId},
+    model::session::SessionUser,
+    model::user::{User, UserDisplayId, UserId},
     repository::session::SessionRepository,
 };
 
@@ -26,7 +27,10 @@ impl SessionRepository for SessionRepositoryImpl {
             .insert("user_id", user.id.to_string())
             .with_context(|| "Failed to insert user_id to session")?;
         session
-            .insert("display_id", user.display_id)
+            .insert(
+                "display_id",
+                <UserDisplayId as Into<i64>>::into(user.display_id),
+            )
             .with_context(|| "Failed to insert display_id to session")?;
         let result = self
             .session_store
@@ -53,25 +57,30 @@ impl SessionRepository for SessionRepositoryImpl {
         Ok(Some(()))
     }
 
-    async fn get_user_id_by_session_id(&self, session_id: &str) -> anyhow::Result<Option<UserId>> {
+    async fn get_session_user(&self, session_id: &str) -> anyhow::Result<Option<SessionUser>> {
         let session = self
             .session_store
             .load_session(session_id.to_string())
             .await?;
 
-        let user_id = session
-            .and_then(|s| s.get("user_id"))
-            .map(|id: uuid::Uuid| id.into());
+        if let Some(session) = &session {
+            let user_id_str: String = session
+                .get("user_id")
+                .with_context(|| "Failed to get user_id from session")?;
+            let user_id_uuid = uuid::Uuid::parse_str(&user_id_str)
+                .with_context(|| "Failed to parse user_id from session")?;
+            let display_id_i64: i64 = session
+                .get("display_id")
+                .with_context(|| "Failed to get display_id from session")?;
+            let user_id = UserId::from(user_id_uuid);
+            let display_id = UserDisplayId::from(display_id_i64);
 
-        Ok(user_id)
-    }
-
-    async fn get_display_id_by_session_id(&self, session_id: &str) -> anyhow::Result<Option<i64>> {
-        let session = self
-            .session_store
-            .load_session(session_id.to_string())
-            .await?;
-
-        Ok(session.and_then(|s| s.get("display_id")))
+            Ok(Some(SessionUser {
+                user_id,
+                display_id,
+            }))
+        } else {
+            Ok(None)
+        }
     }
 }

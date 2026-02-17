@@ -20,8 +20,8 @@ pub struct NormalProblemRow {
 impl From<NormalProblemRow> for NormalProblem {
     fn from(val: NormalProblemRow) -> Self {
         NormalProblem {
-            id: val.id,
-            author_id: val.author_id,
+            id: val.id.into(),
+            author_id: val.author_id.into(),
             title: val.title,
             statement: val.statement,
             time_limit_ms: val.time_limit_ms,

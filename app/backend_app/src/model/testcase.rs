@@ -17,7 +17,7 @@ pub struct TestcaseSummaryResponse {
 impl From<TestcaseSummaryDto> for TestcaseSummaryResponse {
     fn from(testcase: TestcaseSummaryDto) -> Self {
         TestcaseSummaryResponse {
-            id: testcase.id,
+            id: testcase.id.into(),
             name: testcase.name,
             created_at: testcase.created_at,
             updated_at: testcase.updated_at,
@@ -39,7 +39,7 @@ pub struct TestcaseResponse {
 impl From<TestcaseDto> for TestcaseResponse {
     fn from(testcase: TestcaseDto) -> Self {
         TestcaseResponse {
-            id: testcase.id,
+            id: testcase.id.into(),
             name: testcase.name,
             test_input: testcase.input,
             test_output: testcase.output,

@@ -1,0 +1,25 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            SELECT \n                resource_id\n            FROM \n                resource_id_counter\n            WHERE \n                ref_count = 0\n                AND updated_at < (NOW() - INTERVAL 1 HOUR)\n            ORDER BY \n                updated_at ASC\n            LIMIT \n                ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "resource_id",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | PRIMARY_KEY | NO_DEFAULT_VALUE",
+          "char_set": 224,
+          "max_size": 144
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "887aa0bf3c3f340a1d67a25db3f5c1dcbd19e1c459414cef8556b0f2bd9af790"
+}

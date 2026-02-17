@@ -87,7 +87,7 @@ async fn get_user_me_backend(pool: sqlx::MySqlPool) -> anyhow::Result<()> {
             .create_session(
                 provider
                     .provide_user_repository()
-                    .get_user_by_display_id(id)
+                    .get_user_by_display_id(id.into())
                     .await?
                     .unwrap(),
             )

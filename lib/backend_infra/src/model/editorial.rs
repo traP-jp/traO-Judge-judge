@@ -19,9 +19,9 @@ pub struct EditorialRow {
 impl From<EditorialRow> for Editorial {
     fn from(val: EditorialRow) -> Self {
         Editorial {
-            id: val.id.0,
-            problem_id: val.problem_id,
-            author_id: val.author_id,
+            id: val.id.0.into(),
+            problem_id: val.problem_id.into(),
+            author_id: val.author_id.into(),
             title: val.title,
             statement: val.statement,
             created_at: val.created_at,
@@ -45,9 +45,9 @@ pub struct EditorialSummaryRow {
 impl From<EditorialSummaryRow> for EditorialSummary {
     fn from(val: EditorialSummaryRow) -> Self {
         EditorialSummary {
-            id: val.id.0,
-            problem_id: val.problem_id,
-            author_id: val.author_id,
+            id: val.id.0.into(),
+            problem_id: val.problem_id.into(),
+            author_id: val.author_id.into(),
             title: val.title,
             created_at: val.created_at,
             updated_at: val.updated_at,

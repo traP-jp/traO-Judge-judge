@@ -2,21 +2,22 @@ use crate::model::{
     error::UsecaseError,
     submission::{
         CreateSubmissionData, JudgeResultDto, SubmissionDto, SubmissionGetQueryData,
-        SubmissionOrderByData, SubmissionSummaryDto, SubmissionsDto,
+        SubmissionOrderByData, SubmissionsDto,
     },
 };
 use domain::{
     model::{
+        problem::ProblemId,
+        session::SessionUser,
         submission::{
-            CreateJudgeResult, CreateSubmission, SubmissionGetQuery, SubmissionOrderBy,
-            UpdateSubmission,
+            CreateJudgeResult, CreateSubmission, SubmissionGetQuery, SubmissionId,
+            SubmissionOrderBy, UpdateSubmission,
         },
         user::UserRole,
     },
     repository::{
         language::LanguageRepository, problem::ProblemRepository, procedure::ProcedureRepository,
-        session::SessionRepository, submission::SubmissionRepository, testcase::TestcaseRepository,
-        user::UserRepository,
+        submission::SubmissionRepository, testcase::TestcaseRepository, user::UserRepository,
     },
 };
 use judge_core::{
@@ -28,21 +29,18 @@ use judge_core::{
     },
 };
 use std::collections::HashMap;
-use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct SubmissionService<
-    SeR: SessionRepository + Send + Sync + 'static,
     UR: UserRepository + Send + Sync + 'static,
     SuR: SubmissionRepository + Send + Sync + 'static,
     PR: ProblemRepository + Send + Sync + 'static,
     PcR: ProcedureRepository + Send + Sync + 'static,
     TR: TestcaseRepository + Send + Sync + 'static,
     LR: LanguageRepository + Send + Sync + 'static,
-    DNR: DepNameRepository<i64> + Send + Sync + 'static,
+    DNR: DepNameRepository<ProblemId> + Send + Sync + 'static,
     JS: JudgeService + Send + Sync + 'static,
 > {
-    session_repository: SeR,
     user_repository: UR,
     submission_repository: SuR,
     problem_repository: PR,
@@ -54,19 +52,17 @@ pub struct SubmissionService<
 }
 
 impl<
-    SeR: SessionRepository + Send + Sync + 'static,
     UR: UserRepository + Send + Sync + 'static,
     SuR: SubmissionRepository + Send + Sync + 'static,
     PR: ProblemRepository + Send + Sync + 'static,
     PcR: ProcedureRepository + Send + Sync + 'static,
     TR: TestcaseRepository + Send + Sync + 'static,
     LR: LanguageRepository + Send + Sync + 'static,
-    DNR: DepNameRepository<i64> + Send + Sync + 'static,
+    DNR: DepNameRepository<ProblemId> + Send + Sync + 'static,
     JS: JudgeService + Send + Sync + 'static,
-> SubmissionService<SeR, UR, SuR, PR, PcR, TR, LR, DNR, JS>
+> SubmissionService<UR, SuR, PR, PcR, TR, LR, DNR, JS>
 {
     pub fn new(
-        session_repository: SeR,
         user_repository: UR,
         submission_repository: SuR,
         problem_repository: PR,
@@ -77,7 +73,6 @@ impl<
         judge_service: JS,
     ) -> Self {
         Self {
-            session_repository,
             user_repository,
             submission_repository,
             problem_repository,
@@ -91,25 +86,21 @@ impl<
 }
 
 impl<
-    SeR: SessionRepository + Send + Sync + 'static,
     UR: UserRepository + Send + Sync + 'static,
     SuR: SubmissionRepository + Send + Sync + 'static,
     PR: ProblemRepository + Send + Sync + 'static,
     PcR: ProcedureRepository + Send + Sync + 'static,
     TR: TestcaseRepository + Send + Sync + 'static,
     LR: LanguageRepository + Send + Sync + 'static,
-    DNR: DepNameRepository<i64> + Send + Sync + 'static,
+    DNR: DepNameRepository<ProblemId> + Send + Sync + 'static,
     JS: JudgeService + Send + Sync + 'static,
-> SubmissionService<SeR, UR, SuR, PR, PcR, TR, LR, DNR, JS>
+> SubmissionService<UR, SuR, PR, PcR, TR, LR, DNR, JS>
 {
     pub async fn get_submission(
         &self,
-        session_id: Option<&str>,
-        submission_id: String,
+        session_user: Option<SessionUser>,
+        submission_id: SubmissionId,
     ) -> anyhow::Result<SubmissionDto, UsecaseError> {
-        let submission_id =
-            Uuid::parse_str(&submission_id).map_err(|_| UsecaseError::ValidateError)?;
-
         let submission = self
             .submission_repository
             .get_submission(submission_id)
@@ -125,16 +116,9 @@ impl<
             .ok_or(UsecaseError::NotFound)?;
 
         if !problem.is_public {
-            let session_id = session_id.ok_or(UsecaseError::NotFound)?;
+            let session_user = session_user.ok_or(UsecaseError::NotFound)?;
 
-            let display_id = self
-                .session_repository
-                .get_display_id_by_session_id(&session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?
-                .ok_or(UsecaseError::NotFound)?;
-
-            if display_id != problem.author_id {
+            if session_user.display_id != problem.author_id {
                 return Err(UsecaseError::NotFound);
             }
         }
@@ -146,13 +130,13 @@ impl<
             .map_err(UsecaseError::internal_server_error_map())?;
 
         Ok(SubmissionDto {
-            id: submission.id.to_string(),
-            user_id: submission.user_id.to_string(),
+            id: submission.id,
+            user_id: submission.user_id,
             user_name: submission.user_name,
-            problem_id: submission.problem_id.to_string(),
+            problem_id: submission.problem_id,
             problem_title: submission.problem_title,
             submitted_at: submission.submitted_at,
-            language_id: submission.language_id.to_string(),
+            language_id: submission.language_id,
             total_score: submission.total_score,
             max_time_ms: submission.max_time_ms,
             max_memory_kib: submission.max_memory_kib,
@@ -162,7 +146,7 @@ impl<
             judge_results: judge_results
                 .into_iter()
                 .map(|testcase| JudgeResultDto {
-                    testcase_id: testcase.testcase_id.to_string(),
+                    testcase_id: testcase.testcase_id,
                     testcase_name: testcase.testcase_name,
                     judge_status: testcase.judge_status,
                     score: testcase.score,
@@ -175,18 +159,9 @@ impl<
 
     pub async fn get_submissions(
         &self,
-        session_id: Option<&str>,
+        session_user: Option<SessionUser>,
         query: SubmissionGetQueryData,
     ) -> anyhow::Result<SubmissionsDto, UsecaseError> {
-        let user_id = match session_id {
-            Some(session_id) => self
-                .session_repository
-                .get_display_id_by_session_id(&session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?,
-            None => None,
-        };
-
         let language_id = if let Some(lang_str) = query.language {
             let lang_id = self
                 .language_repository
@@ -199,28 +174,14 @@ impl<
             None
         };
 
-        let problem_id = query.problem_id.map_or(Ok(None), |prob_id_str| {
-            let prob_id: i64 = prob_id_str
-                .parse()
-                .map_err(|_| UsecaseError::ValidateError)?;
-            Ok(Some(prob_id))
-        })?;
-
-        let user_query = query.user_query.map_or(Ok(None), |user_id_str| {
-            let user_id: i64 = user_id_str
-                .parse()
-                .map_err(|_| UsecaseError::ValidateError)?;
-            Ok(Some(user_id))
-        })?;
-
         let query = SubmissionGetQuery {
-            user_id: user_id,
+            user_id: session_user.as_ref().map(|u| u.display_id),
             limit: query.limit.unwrap_or(50),
             offset: query.offset.unwrap_or(0),
             judge_status: query.judge_status,
             language_id: language_id,
             user_name: query.user_name,
-            user_query: user_query,
+            user_query: query.user_query,
             order_by: match query.order_by {
                 SubmissionOrderByData::SubmittedAtAsc => SubmissionOrderBy::SubmittedAtAsc,
                 SubmissionOrderByData::SubmittedAtDesc => SubmissionOrderBy::SubmittedAtDesc,
@@ -239,7 +200,7 @@ impl<
                 SubmissionOrderByData::CodeLengthAsc => SubmissionOrderBy::CodeLengthAsc,
                 SubmissionOrderByData::CodeLengthDesc => SubmissionOrderBy::CodeLengthDesc,
             },
-            problem_id: problem_id,
+            problem_id: query.problem_id,
         };
 
         let total = self
@@ -262,23 +223,11 @@ impl<
 
     pub async fn create_submission(
         self: &std::sync::Arc<Self>,
-        session_id: Option<&str>,
-        problem_id: String,
+        session_user: Option<SessionUser>,
+        problem_id: ProblemId,
         body: CreateSubmissionData,
     ) -> anyhow::Result<SubmissionDto, UsecaseError> {
-        let problem_id: i64 = problem_id
-            .parse()
-            .map_err(|_| UsecaseError::ValidateError)?;
-
-        let display_id = match session_id {
-            Some(session_id) => self
-                .session_repository
-                .get_display_id_by_session_id(session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?
-                .ok_or(UsecaseError::Forbidden)?,
-            None => return Err(UsecaseError::Forbidden),
-        };
+        let session_user = session_user.ok_or(UsecaseError::Forbidden)?;
 
         let problem = self
             .problem_repository
@@ -287,7 +236,7 @@ impl<
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::NotFound)?;
 
-        if !problem.is_public && problem.author_id != display_id {
+        if !problem.is_public && problem.author_id != session_user.display_id {
             return Err(UsecaseError::NotFound);
         }
 
@@ -311,7 +260,7 @@ impl<
 
         let submission = CreateSubmission {
             problem_id,
-            user_id: display_id,
+            user_id: session_user.display_id,
             language_id: body.language_id,
             source: body.source.clone(),
             judge_status: "WJ".to_string(),
@@ -344,15 +293,15 @@ impl<
         let self_clone = std::sync::Arc::clone(self);
 
         tracing::info!(
-            %submission_id,
-            problem_id,
-            user_id = display_id,
+            ?submission_id,
+            ?problem_id,
+            ?session_user.display_id,
             language = %language,
             "spawning judge task"
         );
 
         tokio::spawn(async move {
-            tracing::info!(%submission_id, problem_id, "judge task started");
+            tracing::info!(?submission_id, ?problem_id, "judge task started");
             if let Err(e) = self_clone
                 .async_judge_submission(submission_id, problem_id, procedure, runtime_texts)
                 .await
@@ -365,8 +314,8 @@ impl<
                         column,
                     } => {
                         tracing::error!(
-                            %submission_id,
-                            problem_id,
+                            ?submission_id,
+                            ?problem_id,
                             %message,
                             file,
                             line,
@@ -376,8 +325,8 @@ impl<
                     }
                     other => {
                         tracing::warn!(
-                            %submission_id,
-                            problem_id,
+                            ?submission_id,
+                            ?problem_id,
                             error = ?other,
                             "judge task failed"
                         );
@@ -386,37 +335,25 @@ impl<
             }
         });
 
-        self.get_submission(session_id, submission_id.to_string())
-            .await
+        self.get_submission(Some(session_user), submission_id).await
     }
 
     pub async fn rejudge_submission(
         self: &std::sync::Arc<Self>,
-        session_id: Option<&str>,
-        submission_id: String,
+        session_user: Option<SessionUser>,
+        submission_id: SubmissionId,
     ) -> anyhow::Result<(), UsecaseError> {
         // admin 専用 にする
-        let user_id = match session_id {
-            Some(session_id) => self
-                .session_repository
-                .get_user_id_by_session_id(session_id)
-                .await
-                .map_err(UsecaseError::internal_server_error_map())?,
-            None => None,
-        };
-        let user_id = user_id.ok_or(UsecaseError::Forbidden)?;
+        let session_user = session_user.ok_or(UsecaseError::Forbidden)?;
         let user = self
             .user_repository
-            .get_user_by_user_id(user_id)
+            .get_user_by_user_id(session_user.user_id)
             .await
             .map_err(UsecaseError::internal_server_error_map())?
             .ok_or(UsecaseError::Forbidden)?;
         if user.role != UserRole::Admin {
             return Err(UsecaseError::Forbidden);
         }
-
-        let submission_id =
-            Uuid::parse_str(&submission_id).map_err(|_| UsecaseError::ValidateError)?;
 
         let submission = self
             .submission_repository
@@ -486,14 +423,14 @@ impl<
 
         tracing::info!(
             %submission_id,
-            problem_id = problem.id,
-            user_id = submission.user_id,
+            ?problem.id,
+            ?submission.user_id,
             language = %language,
             "spawning rejudge task"
         );
 
         tokio::spawn(async move {
-            tracing::info!(%submission_id, problem_id = problem.id, "rejudge task started");
+            tracing::info!(%submission_id, ?problem.id, "rejudge task started");
             if let Err(e) = self_clone
                 .async_judge_submission(submission_id, problem.id, procedure, runtime_texts)
                 .await
@@ -506,8 +443,8 @@ impl<
                         column,
                     } => {
                         tracing::error!(
-                            %submission_id,
-                            problem_id = problem.id,
+                            ?submission_id,
+                            ?problem.id,
                             %message,
                             file,
                             line,
@@ -517,8 +454,8 @@ impl<
                     }
                     other => {
                         tracing::warn!(
-                            %submission_id,
-                            problem_id = problem.id,
+                            ?submission_id,
+                            ?problem.id,
                             error = ?other,
                             "rejudge task failed"
                         );
@@ -533,8 +470,8 @@ impl<
     #[tracing::instrument(skip(self, procedure, runtime_texts), fields(%submission_id, problem_id))]
     async fn async_judge_submission(
         &self,
-        submission_id: Uuid,
-        problem_id: i64,
+        submission_id: SubmissionId,
+        problem_id: ProblemId,
         procedure: judge_core::model::procedure::registered::Procedure,
         runtime_texts: HashMap<String, String>,
     ) -> anyhow::Result<(), UsecaseError> {
@@ -662,8 +599,8 @@ impl<
             .map_err(UsecaseError::internal_server_error_map())?;
 
         tracing::info!(
-            %submission_id,
-            problem_id,
+            ?submission_id,
+            ?problem_id,
             testcase_count,
             total_score,
             max_time_ms,

@@ -8,7 +8,9 @@ use tower_http::{
 };
 use tracing::Level;
 
+pub mod config;
 pub mod di;
+pub mod extractor;
 pub mod handler;
 pub mod model;
 mod scheduler;
@@ -61,8 +63,11 @@ pub async fn run() -> anyhow::Result<()> {
 
     tracing::info!("listening on {}", listener.local_addr()?);
 
-    #[cfg(feature = "prod")]
-    traq_log::send_info_message(Some("BACKEND APP START"), "サーバーが起動されました。").await;
+    if config::is_prod() {
+        let _ =
+            traq_log::send_info_message(Some("BACKEND APP START"), "サーバーが起動されました。")
+                .await;
+    }
 
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
@@ -98,10 +103,11 @@ async fn shutdown_signal() {
         }
     }
 
-    #[cfg(feature = "prod")]
-    traq_log::send_warning_message(
-        Some("BACKEND APP SHUTDOWN"),
-        "サーバーがシャットダウンされました。",
-    )
-    .await;
+    if config::is_prod() {
+        let _ = traq_log::send_warning_message(
+            Some("BACKEND APP SHUTDOWN"),
+            "サーバーがシャットダウンされました。",
+        )
+        .await;
+    }
 }

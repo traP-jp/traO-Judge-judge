@@ -1,0 +1,25 @@
+{
+  "db_name": "MySQL",
+  "query": "\n            SELECT\n                password\n            FROM\n                user_authentications\n            WHERE\n                user_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "password",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "a83deb2c02ad9f8a79bcdfb56a003a840dafb82bb1e0245180600ac2b7ae4af4"
+}
